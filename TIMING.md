@@ -18,7 +18,7 @@ In other units:
 
 * Each beat is 750 ms.
 * Each measure is 3000 ms (4 beats per measure).
-* Including the added silence at the start, it is about 90 measures and 2 beats long, or 362 beats long.
+* The song is about 90 measures and 2 beats long, or 362 beats long.
 
 
 

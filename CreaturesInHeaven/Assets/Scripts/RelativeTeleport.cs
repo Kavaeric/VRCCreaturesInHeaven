@@ -3,6 +3,8 @@ using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
 using VRC.Udon;
+using VRC.Udon.Common.Interfaces;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -29,6 +31,16 @@ public class RelativeTeleport : UdonSharpBehaviour
         if (!afterStart) // lock so it doesn't do anything until you intentionally enable it.
             return;
 
+        TriggerLocal();
+    }
+
+    public void _NetworkTrigger()
+    {
+        SendCustomNetworkEvent(NetworkEventTarget.All, nameof(TriggerLocal));
+    }
+
+    public void TriggerLocal()
+    {
         // Bring it into the anchor's local space
         Vector3 LocalPos = Anchor.InverseTransformPoint(Networking.LocalPlayer.GetPosition());
         Vector3 LocalForward = Anchor.InverseTransformDirection(Networking.LocalPlayer.GetRotation() * Vector3.forward);
@@ -45,7 +57,6 @@ public class RelativeTeleport : UdonSharpBehaviour
 
         Networking.LocalPlayer.TeleportTo(WorldPos, Quaternion.LookRotation(WorldForward));
     }
-
 
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
 
@@ -68,8 +79,8 @@ public class RelativeTeleport : UdonSharpBehaviour
         Gizmos.color = Color.magenta;
         Handles.color = Color.magenta;
         DrawArrow(ExampleTransform.position, ExampleTransform.forward);
-        Handles.DrawWireDisc(transform.position, Vector3.up, ClampRadius);
-        DrawArrow(Anchor.position, Anchor.forward, ClampRadius * 0.5f);
+        DrawArrow(Anchor.position, Anchor.forward, GrabRadius * 0.5f);
+        Handles.DrawWireDisc(Anchor.position, Vector3.up, GrabRadius);
 
         Gizmos.color = Color.cyan;
         Handles.color = Color.cyan;
@@ -86,8 +97,8 @@ public class RelativeTeleport : UdonSharpBehaviour
         Vector3 WorldPos = transform.TransformPoint(LocalPos);
         Vector3 WorldForward = transform.TransformDirection(LocalForward);
         DrawArrow(WorldPos, WorldForward);
-        
-        Handles.DrawWireDisc(Anchor.position, Vector3.up, GrabRadius);
+
+        Handles.DrawWireDisc(transform.position, Vector3.up, ClampRadius);
     }
 #endif
 }

@@ -11,14 +11,15 @@ using UnityEditor;
 
 public class RelativeTeleport : UdonSharpBehaviour
 {
-    public Transform Anchor;
+    public Transform Entry;
+    public Transform Exit;
     public Transform ExampleTransform;
 
-    [Tooltip("Radius to grab players at the anchor.")]
-    public float GrabRadius = 25;
-
-    [Tooltip("Clamp radius to force players into at the destination.")]
-    public float ClampRadius = 10;
+    //[Tooltip("Radius to grab players at the anchor.")]
+    //public float GrabRadius = 25;
+    //
+    //[Tooltip("Clamp radius to force players into at the destination.")]
+    //public float ClampRadius = 10;
 
     bool afterStart = false;
     void Start()
@@ -42,18 +43,23 @@ public class RelativeTeleport : UdonSharpBehaviour
     public void TriggerLocal()
     {
         // Bring it into the anchor's local space
-        Vector3 LocalPos = Anchor.InverseTransformPoint(Networking.LocalPlayer.GetPosition());
-        Vector3 LocalForward = Anchor.InverseTransformDirection(Networking.LocalPlayer.GetRotation() * Vector3.forward);
+        Vector3 LocalPos = Entry.InverseTransformPoint(Networking.LocalPlayer.GetPosition());
+        Vector3 LocalForward = Entry.InverseTransformDirection(Networking.LocalPlayer.GetRotation() * Vector3.forward);
 
-        if (LocalPos.magnitude > GrabRadius)
+        //if (LocalPos.magnitude > GrabRadius)
+        //    return;
+
+        // player is outside the teleport region, do nothing.
+        if (LocalPos.x < -1 || LocalPos.y < -1 || LocalPos.z < -1 || LocalPos.x > 1 || LocalPos.y > 1 || LocalPos.z > 1)
             return;
 
-        if (LocalPos.magnitude > ClampRadius)
-            LocalPos = LocalPos.normalized * ClampRadius;
+        
+        //if (LocalPos.magnitude > ClampRadius)
+        //    LocalPos = LocalPos.normalized * ClampRadius;
 
         // un-bring from the destination's world space
-        Vector3 WorldPos = transform.TransformPoint(LocalPos);
-        Vector3 WorldForward = transform.TransformDirection(LocalForward);
+        Vector3 WorldPos = Exit.TransformPoint(LocalPos);
+        Vector3 WorldForward = Exit.TransformDirection(LocalForward);
 
         Networking.LocalPlayer.TeleportTo(WorldPos, Quaternion.LookRotation(WorldForward));
     }
@@ -77,28 +83,35 @@ public class RelativeTeleport : UdonSharpBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.magenta;
-        Handles.color = Color.magenta;
+        //Handles.color = Color.magenta;
         DrawArrow(ExampleTransform.position, ExampleTransform.forward);
-        DrawArrow(Anchor.position, Anchor.forward, GrabRadius * 0.5f);
-        Handles.DrawWireDisc(Anchor.position, Vector3.up, GrabRadius);
+        DrawArrow(Entry.position, Entry.forward, Entry.localScale.z * 0.5f);
+        Gizmos.matrix = Entry.transform.localToWorldMatrix;
+        Gizmos.DrawWireCube(Vector3.zero, new Vector3(1, 0, 1));
+        Gizmos.matrix = Matrix4x4.identity;
+        //Handles.DrawWireDisc(Entry.position, Vector3.up, GrabRadius);
 
         Gizmos.color = Color.cyan;
-        Handles.color = Color.cyan;
-        DrawArrow(transform.position, transform.forward, ClampRadius * 0.5f);
+        //Handles.color = Color.cyan;
+        DrawArrow(Exit.position, Exit.forward, Exit.localScale.z * 0.5f);
 
         // Bring it into the anchor's local space
-        Vector3 LocalPos = Anchor.InverseTransformPoint(ExampleTransform.position);
-        Vector3 LocalForward = Anchor.InverseTransformDirection(ExampleTransform.forward);
+        Vector3 LocalPos = Entry.InverseTransformPoint(ExampleTransform.position);
+        Vector3 LocalForward = Entry.InverseTransformDirection(ExampleTransform.forward);
 
-        if (LocalPos.magnitude > ClampRadius)
-            LocalPos = LocalPos.normalized * ClampRadius;
+        LocalPos = new Vector3(Mathf.Clamp(LocalPos.x, -1, 1), Mathf.Clamp(LocalPos.y, -1, 1), Mathf.Clamp(LocalPos.z, -1, 1));
+        //if (LocalPos.magnitude > ClampRadius)
+        //    LocalPos = LocalPos.normalized * ClampRadius;
 
         // un-bring from the destination's world space
-        Vector3 WorldPos = transform.TransformPoint(LocalPos);
-        Vector3 WorldForward = transform.TransformDirection(LocalForward);
+        Vector3 WorldPos = Exit.TransformPoint(LocalPos);
+        Vector3 WorldForward = Exit.TransformDirection(LocalForward);
         DrawArrow(WorldPos, WorldForward);
 
-        Handles.DrawWireDisc(transform.position, Vector3.up, ClampRadius);
+        Gizmos.matrix = Exit.transform.localToWorldMatrix;
+        Gizmos.DrawWireCube(Vector3.zero, new Vector3(1,0,1));
+        Gizmos.matrix = Matrix4x4.identity;
+        //Handles.DrawWireDisc(Exit.position, Vector3.up, Exit.localScale.z);
     }
 #endif
 }

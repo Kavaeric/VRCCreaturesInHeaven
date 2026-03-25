@@ -12,16 +12,32 @@ public class RelativeTeleport : UdonSharpBehaviour
     public Transform Anchor;
     public Transform ExampleTransform;
 
-    public float Radius = 10;
+    [Tooltip("Radius to grab players at the anchor.")]
+    public float GrabRadius = 25;
 
+    [Tooltip("Clamp radius to force players into at the destination.")]
+    public float ClampRadius = 10;
+
+    bool afterStart = false;
+    void Start()
+    {
+        afterStart = true;
+    }
+    
     void OnEnable()
     {
+        if (!afterStart) // lock so it doesn't do anything until you intentionally enable it.
+            return;
+
         // Bring it into the anchor's local space
         Vector3 LocalPos = Anchor.InverseTransformPoint(Networking.LocalPlayer.GetPosition());
         Vector3 LocalForward = Anchor.InverseTransformDirection(Networking.LocalPlayer.GetRotation() * Vector3.forward);
 
-        if (LocalPos.magnitude > Radius)
-            LocalPos = LocalPos.normalized * Radius;
+        if (LocalPos.magnitude > GrabRadius)
+            return;
+
+        if (LocalPos.magnitude > ClampRadius)
+            LocalPos = LocalPos.normalized * ClampRadius;
 
         // un-bring from the destination's world space
         Vector3 WorldPos = transform.TransformPoint(LocalPos);
@@ -46,30 +62,32 @@ public class RelativeTeleport : UdonSharpBehaviour
         Gizmos.DrawLine(arrowTip, arrowTip + rightHead * 0.12f * length);
         Gizmos.DrawLine(arrowTip, arrowTip + leftHead * 0.12f * length);
     }
-
+    
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.magenta;
+        Handles.color = Color.magenta;
         DrawArrow(ExampleTransform.position, ExampleTransform.forward);
-        Handles.DrawWireDisc(transform.position, Vector3.up, Radius);
-        DrawArrow(Anchor.position, Anchor.forward, Radius * 0.5f);
+        Handles.DrawWireDisc(transform.position, Vector3.up, ClampRadius);
+        DrawArrow(Anchor.position, Anchor.forward, ClampRadius * 0.5f);
 
         Gizmos.color = Color.cyan;
-        DrawArrow(transform.position, transform.forward, Radius * 0.5f);
+        Handles.color = Color.cyan;
+        DrawArrow(transform.position, transform.forward, ClampRadius * 0.5f);
 
         // Bring it into the anchor's local space
         Vector3 LocalPos = Anchor.InverseTransformPoint(ExampleTransform.position);
         Vector3 LocalForward = Anchor.InverseTransformDirection(ExampleTransform.forward);
 
-        if (LocalPos.magnitude > Radius)
-            LocalPos = LocalPos.normalized * Radius;
+        if (LocalPos.magnitude > ClampRadius)
+            LocalPos = LocalPos.normalized * ClampRadius;
 
         // un-bring from the destination's world space
         Vector3 WorldPos = transform.TransformPoint(LocalPos);
         Vector3 WorldForward = transform.TransformDirection(LocalForward);
         DrawArrow(WorldPos, WorldForward);
-        Handles.DrawWireDisc(Anchor.position, Vector3.up, Radius);
         
+        Handles.DrawWireDisc(Anchor.position, Vector3.up, GrabRadius);
     }
 #endif
 }

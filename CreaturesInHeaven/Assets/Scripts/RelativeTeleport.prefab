@@ -121,7 +121,8 @@ MonoBehaviour:
   _udonSharpBackingUdonBehaviour: {fileID: 5486483483538036005}
   Anchor: {fileID: 6764351525869655932}
   ExampleTransform: {fileID: 897820612357565202}
-  Radius: 10
+  GrabRadius: 25
+  ClampRadius: 10
 --- !u!114 &5486483483538036005
 MonoBehaviour:
   m_ObjectHideFlags: 0

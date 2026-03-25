@@ -9,21 +9,29 @@ public class GroupTeleport : UdonSharpBehaviour
 {
     public Transform[] Slots;
 
+    bool afterStart = false;
+    void Start()
+    {
+        afterStart = true;
+    }
+
     void OnEnable()
     {
+        if (!afterStart) // lock so it doesn't do anything until you intentionally enable it.
+            return;
+
         if (!Networking.LocalPlayer.IsOwner(this.gameObject))
             return;
 
         int playerCount = VRCPlayerApi.GetPlayerCount();
         VRCPlayerApi[] players = new VRCPlayerApi[playerCount];
         VRCPlayerApi.GetPlayers(players);
-
         for (int i = 0; i < players.Length; i++)
         {
             if (!Slots[i])
                 continue;
 
-            Networking.LocalPlayer.TeleportTo(Slots[i].position, Slots[i].rotation);
+            players[i].TeleportTo(Slots[i].position, Slots[i].rotation);
         }
     }
 

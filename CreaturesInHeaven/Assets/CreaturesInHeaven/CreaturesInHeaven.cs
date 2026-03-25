@@ -10,11 +10,11 @@ using VRC.Udon.Common.Interfaces;
 [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
 public class CreaturesInHeaven : UdonSharpBehaviour
 {
-    public float SampleRate = 0;
-    public float SongLengthInSeconds = 0;
-    public int SongSampleCount = 0;
-    public int SongBeats = 0;
-    public int SongMeasures = 0;
+    float SampleRate = 0;
+    float SongLengthInSeconds = 0;
+    int SongSampleCount = 0;
+    int SongBeats = 0;
+    int SongMeasures = 0;
     
     public Text ButtonText;
 

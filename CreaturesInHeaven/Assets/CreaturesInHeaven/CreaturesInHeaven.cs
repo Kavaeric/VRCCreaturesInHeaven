@@ -16,7 +16,6 @@ public class CreaturesInHeaven : UdonSharpBehaviour
     public Animator animator;
 
     public Text debugText;
-    public bool currentlyPlaying;
 
     [UdonSynced]
     float currentAnimationTime;
@@ -54,7 +53,7 @@ public class CreaturesInHeaven : UdonSharpBehaviour
 
             animator.SetFloat("_Time", currentAnimationTime);
 
-            RequestSerialization(); // Always request serializatio for maximum sync speed
+            RequestSerialization(); // Request serialization every frame for maximum sync speed
         }
         else
         {
@@ -81,7 +80,6 @@ public class CreaturesInHeaven : UdonSharpBehaviour
         }
 
         debugText.text = "";
-        debugText.text += nameof(currentlyPlaying) + ": " + currentlyPlaying + "\n";
         debugText.text += nameof(currentAnimationTime) + ": " + currentAnimationTime + "\n";
     }
 }

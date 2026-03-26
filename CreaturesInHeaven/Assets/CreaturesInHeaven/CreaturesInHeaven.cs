@@ -80,7 +80,7 @@ public class CreaturesInHeaven : UdonSharpBehaviour
         // maybe kind of flake-y, but good enough for now
         bool PlayerInSpawn = Vector3.Distance(Networking.LocalPlayer.GetPosition(), this.transform.position) < 25;
 
-        SoundPlayerMuffled.volume = PlayerInSpawn ? 0.1f : 0;
+        SoundPlayerMuffled.volume = PlayerInSpawn ? 0.5f : 0;
         SoundPlayer.volume = PlayerInSpawn ? 0 : 1;
 
         ButtonText.text = playing ? "Join" : "Start";

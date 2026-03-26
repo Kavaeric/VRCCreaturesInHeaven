@@ -50,7 +50,7 @@ public class RelativeTeleport : UdonSharpBehaviour
         //    return;
 
         // player is outside the teleport region, do nothing.
-        if (LocalPos.x < -1 || LocalPos.y < -1 || LocalPos.z < -1 || LocalPos.x > 1 || LocalPos.y > 1 || LocalPos.z > 1)
+        if (LocalPos.x < -1 || LocalPos.z < -1 || LocalPos.x > 1 ||LocalPos.z > 1)
             return;
 
         

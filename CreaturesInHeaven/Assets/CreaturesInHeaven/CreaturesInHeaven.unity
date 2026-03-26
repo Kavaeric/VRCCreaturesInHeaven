@@ -230,6 +230,30 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &237220493 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2509597889353335013, guid: f3a5ecc365bcf0a4499768a99caf2b24,
+    type: 3}
+  m_PrefabInstance: {fileID: 4643811999136047176}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &237220496
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 237220493}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -617992517, guid: 661092b4961be7145bfbe56e1e62337b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Gain: 10
+  Far: 80
+  Near: 0
+  VolumetricRadius: 0
+  EnableSpatialization: 0
+  UseAudioSourceVolumeCurve: 0
 --- !u!1 &358170787
 GameObject:
   m_ObjectHideFlags: 0
@@ -695,6 +719,30 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 4990772533073157243}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1659359907 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8406501762486746539, guid: f3a5ecc365bcf0a4499768a99caf2b24,
+    type: 3}
+  m_PrefabInstance: {fileID: 4643811999136047176}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1659359910
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1659359907}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -617992517, guid: 661092b4961be7145bfbe56e1e62337b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Gain: 10
+  Far: 80
+  Near: 0
+  VolumetricRadius: 0
+  EnableSpatialization: 0
+  UseAudioSourceVolumeCurve: 0
 --- !u!1 &1728687089
 GameObject:
   m_ObjectHideFlags: 0
@@ -1433,6 +1481,16 @@ PrefabInstance:
       propertyPath: m_Name
       value: CreatuersInHeaven
       objectReference: {fileID: 0}
+    - target: {fileID: 3405217171717972434, guid: f3a5ecc365bcf0a4499768a99caf2b24,
+        type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 2100000, guid: 35630e38b4e5ffb40b44ec5348b4333f, type: 2}
+    - target: {fileID: 5503574548418384709, guid: f3a5ecc365bcf0a4499768a99caf2b24,
+        type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 2100000, guid: 35630e38b4e5ffb40b44ec5348b4333f, type: 2}
     - target: {fileID: 6946047854978522353, guid: f3a5ecc365bcf0a4499768a99caf2b24,
         type: 3}
       propertyPath: animator
@@ -1449,10 +1507,23 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 6946047854978522353, guid: f3a5ecc365bcf0a4499768a99caf2b24,
         type: 3}
+    - target: {fileID: 9009089732193806256, guid: f3a5ecc365bcf0a4499768a99caf2b24,
+        type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 2100000, guid: 35630e38b4e5ffb40b44ec5348b4333f, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2509597889353335013, guid: f3a5ecc365bcf0a4499768a99caf2b24,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 237220496}
+    - targetCorrespondingSourceObject: {fileID: 8406501762486746539, guid: f3a5ecc365bcf0a4499768a99caf2b24,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1659359910}
   m_SourcePrefab: {fileID: 100100000, guid: f3a5ecc365bcf0a4499768a99caf2b24, type: 3}
 --- !u!1001 &4990772533073157243
 PrefabInstance:
@@ -1674,10 +1745,10 @@ MonoBehaviour:
   DynamicPrefabs: []
   DynamicMaterials:
   - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
-  - {fileID: 2100000, guid: c24f1fae945b56e40a2c72bd0ec04489, type: 2}
-  - {fileID: 2100000, guid: ba190cf8403cfc84b95aa544cf23ef59, type: 2}
-  - {fileID: 2100000, guid: 024a2fffe672ba94abe5e5f17f361427, type: 2}
   - {fileID: 2100000, guid: 14ca4a13fa7f8d748aa603969204d682, type: 2}
+  - {fileID: 2100000, guid: 024a2fffe672ba94abe5e5f17f361427, type: 2}
+  - {fileID: 2100000, guid: ba190cf8403cfc84b95aa544cf23ef59, type: 2}
+  - {fileID: 2100000, guid: c24f1fae945b56e40a2c72bd0ec04489, type: 2}
   LightMapsNear: []
   LightMapsFar: []
   LightMode: 0

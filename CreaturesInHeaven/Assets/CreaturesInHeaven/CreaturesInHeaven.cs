@@ -40,7 +40,7 @@ public class CreaturesInHeaven : UdonSharpBehaviour
         SongLengthInSeconds = SoundPlayer.clip.length;
         SampleRate = SoundPlayer.clip.samples / SoundPlayer.clip.length;
         SongSampleCount = SoundPlayer.clip.samples;
-        SongBeats = (int)(SongLengthInSeconds * 1000.0f / 720.0f);
+        SongBeats = (int)(SongLengthInSeconds * 1000.0f / 750.0f);
         SongMeasures = SongBeats / 4;
     }
 
@@ -78,7 +78,7 @@ public class CreaturesInHeaven : UdonSharpBehaviour
     void Update()
     {
         // maybe kind of flake-y, but good enough for now
-        bool PlayerInSpawn = Vector3.Distance(Networking.LocalPlayer.GetPosition(), this.transform.position) < 25;
+        bool PlayerInSpawn = Vector3.Distance(Networking.LocalPlayer.GetPosition(), this.transform.position) < 2;
 
         SoundPlayerMuffled.volume = PlayerInSpawn ? 0.5f : 0;
         SoundPlayer.volume = PlayerInSpawn ? 0 : 1;
@@ -115,8 +115,15 @@ public class CreaturesInHeaven : UdonSharpBehaviour
         }
 
         debugText.text = "";
-        debugText.text += "Time: " + (currentAnimationTime * SongLengthInSeconds).ToString("0.0") + " / "+ SongLengthInSeconds.ToString("0") + "\n";
-        debugText.text += "Beat: " + Mathf.Floor(currentAnimationTime * SongBeats).ToString("0") + " / " + SongBeats.ToString("0") + "\n";
-        debugText.text += "Measure: " + Mathf.Floor(currentAnimationTime * SongMeasures).ToString("0") + " / " + SongMeasures.ToString("0") + "\n";
+        debugText.text += "Time [sec]: " + (currentAnimationTime * SongLengthInSeconds).ToString("0.0") + " / "+ SongLengthInSeconds.ToString("0") + "\n";
+        debugText.text += "Time [m:b:16]: " 
+            + Mathf.Floor(currentAnimationTime * SongMeasures + 1).ToString("0") 
+            + ":" 
+            + (Mathf.Floor(currentAnimationTime * SongBeats) % 4 + 1).ToString("0")
+            + "."
+            + Mathf.Floor(((currentAnimationTime * SongBeats) - Mathf.Floor(currentAnimationTime * SongBeats)) * 4 + 1).ToString("0")
+            + "\n";
+        debugText.text += "Beat index: " + Mathf.Floor(currentAnimationTime * SongBeats).ToString("0") + " / " + SongBeats.ToString("0") + "\n";
+        debugText.text += "Measure index: " + Mathf.Floor(currentAnimationTime * SongMeasures).ToString("0") + " / " + SongMeasures.ToString("0") + "\n";
     }
 }

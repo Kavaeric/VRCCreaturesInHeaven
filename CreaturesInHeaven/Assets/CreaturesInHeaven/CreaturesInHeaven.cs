@@ -10,11 +10,11 @@ using VRC.Udon.Common.Interfaces;
 [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
 public class CreaturesInHeaven : UdonSharpBehaviour
 {
-    float SampleRate = 0;
-    float SongLengthInSeconds = 0;
-    float SongSampleCount = 0;
-    float SongBeats = 0;
-    float SongMeasures = 0;
+    double SampleRate = 0;
+    double SongLengthInSeconds = 0;
+    double SongSampleCount = 0;
+    double SongBeats = 0;
+    double SongMeasures = 0;
     
     public Text ButtonText;
 
@@ -28,8 +28,8 @@ public class CreaturesInHeaven : UdonSharpBehaviour
     public Text debugText;
 
     [UdonSynced]
-    float currentAnimationTime;
-    float _currentAnimationTime;
+    double currentAnimationTime;
+    double _currentAnimationTime;
 
     [UdonSynced]
     bool playing = false;
@@ -80,19 +80,19 @@ public class CreaturesInHeaven : UdonSharpBehaviour
         // maybe kind of flake-y, but good enough for now
         bool PlayerInSpawn = Vector3.Distance(Networking.LocalPlayer.GetPosition(), this.transform.position) < 2;
 
-        SoundPlayerMuffled.volume = PlayerInSpawn ? 0.5f : 0;
+        SoundPlayerMuffled.volume = PlayerInSpawn ? 1 : 0;
         SoundPlayer.volume = PlayerInSpawn ? 0 : 1;
 
         ButtonText.text = playing ? "Join" : "Start";
 
 
-        float currentActualReallyAccurateTimeProbably = SoundPlayer.timeSamples / SampleRate;
+        double currentActualReallyAccurateTimeProbably = SoundPlayer.timeSamples / SampleRate;
 
         if (Networking.IsOwner(Networking.LocalPlayer, gameObject))
         {
             currentAnimationTime = currentActualReallyAccurateTimeProbably / SoundPlayer.clip.length;
 
-            animator.SetFloat("_Time", currentAnimationTime);
+            animator.SetFloat("_Time", (float)currentAnimationTime);
 
             RequestSerialization(); // Request serialization every frame for maximum sync speed
         }
@@ -100,9 +100,9 @@ public class CreaturesInHeaven : UdonSharpBehaviour
         {
             _currentAnimationTime = currentActualReallyAccurateTimeProbably / SoundPlayer.clip.length;
 
-            animator.SetFloat("_Time", _currentAnimationTime);
+            animator.SetFloat("_Time", (float)_currentAnimationTime);
 
-            if (Mathf.Abs(_currentAnimationTime - currentAnimationTime) > 1.0f) // out of sync by more than one second
+            if (Mathf.Abs((float)((_currentAnimationTime * SongLengthInSeconds) - (currentAnimationTime * SongLengthInSeconds))) > 1.0f) // out of sync by more than one second
             {
                 PlayAtSamples(SoundPlayer, (int)(currentAnimationTime * SongSampleCount));
             }
@@ -117,14 +117,16 @@ public class CreaturesInHeaven : UdonSharpBehaviour
         debugText.text = "";
         debugText.text += "Time [sec]: " + (currentAnimationTime * SongLengthInSeconds).ToString("0.0") + " / " + SongLengthInSeconds.ToString("0") + "\n";
         debugText.text += "Time local [sec]: " + (_currentAnimationTime * SongLengthInSeconds).ToString("0.0") + " / " + SongLengthInSeconds.ToString("0") + "\n";
+        debugText.text += "Network Delta [sec]: " + Mathf.Abs((float)((_currentAnimationTime * SongLengthInSeconds) - (currentAnimationTime * SongLengthInSeconds))) + "\n";
+        debugText.text += "IsOwner: " + Networking.IsOwner(Networking.LocalPlayer, gameObject) + "\n";
         debugText.text += "Time [m:b:16]: " 
-            + Mathf.Floor(currentAnimationTime * SongMeasures + 1).ToString("0") 
+            + Mathf.Floor((float)(currentAnimationTime * SongMeasures) + 1).ToString("0") 
             + ":" 
-            + (Mathf.Floor(currentAnimationTime * SongBeats) % 4 + 1).ToString("0")
+            + (Mathf.Floor((float)(currentAnimationTime * SongBeats)) % 4 + 1).ToString("0")
             + "."
-            + Mathf.Floor(((currentAnimationTime * SongBeats) - Mathf.Floor(currentAnimationTime * SongBeats)) * 4 + 1).ToString("0")
+            + Mathf.Floor(((float)(currentAnimationTime * SongBeats) - Mathf.Floor((float)(currentAnimationTime * SongBeats))) * 4 + 1).ToString("0")
             + "\n";
-        debugText.text += "Beat index: " + Mathf.Floor(currentAnimationTime * SongBeats).ToString("0") + " / " + SongBeats.ToString("0") + "\n";
-        debugText.text += "Measure index: " + Mathf.Floor(currentAnimationTime * SongMeasures).ToString("0") + " / " + SongMeasures.ToString("0") + "\n";
+        debugText.text += "Beat index: " + Mathf.Floor((float)(currentAnimationTime * SongBeats)).ToString("0") + " / " + SongBeats.ToString("0") + "\n";
+        debugText.text += "Measure index: " + Mathf.Floor((float)(currentAnimationTime * SongMeasures)).ToString("0") + " / " + SongMeasures.ToString("0") + "\n";
     }
 }

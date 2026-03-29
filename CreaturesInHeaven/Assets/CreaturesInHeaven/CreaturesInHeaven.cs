@@ -100,6 +100,8 @@ public class CreaturesInHeaven : UdonSharpBehaviour
         {
             _currentAnimationTime = currentActualReallyAccurateTimeProbably / SoundPlayer.clip.length;
 
+            animator.SetFloat("_Time", _currentAnimationTime);
+
             if (Mathf.Abs(_currentAnimationTime - currentAnimationTime) > 1.0f) // out of sync by more than one second
             {
                 _currentAnimationTime = currentAnimationTime;

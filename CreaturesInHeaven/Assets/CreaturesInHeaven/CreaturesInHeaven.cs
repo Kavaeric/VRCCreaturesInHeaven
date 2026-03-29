@@ -117,7 +117,8 @@ public class CreaturesInHeaven : UdonSharpBehaviour
         }
 
         debugText.text = "";
-        debugText.text += "Time [sec]: " + (currentAnimationTime * SongLengthInSeconds).ToString("0.0") + " / "+ SongLengthInSeconds.ToString("0") + "\n";
+        debugText.text += "Time [sec]: " + (currentAnimationTime * SongLengthInSeconds).ToString("0.0") + " / " + SongLengthInSeconds.ToString("0") + "\n";
+        debugText.text += "Time local [sec]: " + (_currentAnimationTime * SongLengthInSeconds).ToString("0.0") + " / " + SongLengthInSeconds.ToString("0") + "\n";
         debugText.text += "Time [m:b:16]: " 
             + Mathf.Floor(currentAnimationTime * SongMeasures + 1).ToString("0") 
             + ":" 

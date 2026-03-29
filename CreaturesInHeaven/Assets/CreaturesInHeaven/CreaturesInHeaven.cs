@@ -12,9 +12,9 @@ public class CreaturesInHeaven : UdonSharpBehaviour
 {
     float SampleRate = 0;
     float SongLengthInSeconds = 0;
-    int SongSampleCount = 0;
-    int SongBeats = 0;
-    int SongMeasures = 0;
+    float SongSampleCount = 0;
+    float SongBeats = 0;
+    float SongMeasures = 0;
     
     public Text ButtonText;
 
@@ -40,8 +40,8 @@ public class CreaturesInHeaven : UdonSharpBehaviour
         SongLengthInSeconds = SoundPlayer.clip.length;
         SampleRate = SoundPlayer.clip.samples / SoundPlayer.clip.length;
         SongSampleCount = SoundPlayer.clip.samples;
-        SongBeats = (int)(SongLengthInSeconds * 1000.0f / 750.0f);
-        SongMeasures = SongBeats / 4;
+        SongBeats = SongLengthInSeconds * 1000.0f / 750.0f;
+        SongMeasures = SongBeats / 4.0f;
     }
 
     public void _StartButtonPressed()
@@ -65,14 +65,14 @@ public class CreaturesInHeaven : UdonSharpBehaviour
     void PlayAtSamples(AudioSource source, int sampleIndex)
     {
         SoundPlayer.Stop();
-        SoundPlayer.timeSamples = (int)currentAnimationTime * SongSampleCount;
+        SoundPlayer.timeSamples = (int)(currentAnimationTime * SongSampleCount);
         SoundPlayer.Play();
-        SoundPlayer.timeSamples = (int)currentAnimationTime * SongSampleCount;
+        SoundPlayer.timeSamples = (int)(currentAnimationTime * SongSampleCount);
 
         SoundPlayerMuffled.Stop();
-        SoundPlayerMuffled.timeSamples = (int)currentAnimationTime * SongSampleCount;
+        SoundPlayerMuffled.timeSamples = (int)(currentAnimationTime * SongSampleCount);
         SoundPlayerMuffled.Play();
-        SoundPlayerMuffled.timeSamples = (int)currentAnimationTime * SongSampleCount;
+        SoundPlayerMuffled.timeSamples = (int)(currentAnimationTime * SongSampleCount);
     }
 
     void Update()
@@ -104,15 +104,13 @@ public class CreaturesInHeaven : UdonSharpBehaviour
 
             if (Mathf.Abs(_currentAnimationTime - currentAnimationTime) > 1.0f) // out of sync by more than one second
             {
-                _currentAnimationTime = currentAnimationTime;
-                PlayAtSamples(SoundPlayer, (int)currentAnimationTime * SongSampleCount);
+                PlayAtSamples(SoundPlayer, (int)(currentAnimationTime * SongSampleCount));
             }
 
             if (_playing != playing)
             {
                 _playing = playing;
-                _currentAnimationTime = currentAnimationTime;
-                PlayAtSamples(SoundPlayer, (int)currentAnimationTime * SongSampleCount);
+                PlayAtSamples(SoundPlayer, (int)(currentAnimationTime * SongSampleCount));
             }
         }
 

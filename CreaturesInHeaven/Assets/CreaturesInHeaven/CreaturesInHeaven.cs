@@ -86,8 +86,8 @@ public class CreaturesInHeaven : UdonSharpBehaviour
         // maybe kind of flake-y, but good enough for now
         bool PlayerInSpawn = Vector3.Distance(Networking.LocalPlayer.GetPosition(), this.transform.position) < 2;
 
-        SoundPlayerMuffled.volume = PlayerInSpawn ? 1 : 0;
-        SoundPlayer.volume = PlayerInSpawn ? 0 : 1;
+        SoundPlayerMuffled.volume = PlayerInSpawn ? 0.8f : 0;
+        SoundPlayer.volume = PlayerInSpawn ? 0 : 0.8f;
 
         ButtonText.text = playing ? "Join" : "Start";
 
@@ -131,7 +131,7 @@ public class CreaturesInHeaven : UdonSharpBehaviour
         debugText.text = "";
         debugText.text += "Time [sec]: " + (currentAnimationTime * SongLengthInSeconds).ToString("0.0") + " / " + SongLengthInSeconds.ToString("0") + "\n";
         debugText.text += "Time local [sec]: " + (_currentAnimationTime * SongLengthInSeconds).ToString("0.0") + " / " + SongLengthInSeconds.ToString("0") + "\n";
-        debugText.text += "Network Delta [sec]: " + Mathf.Abs((_currentAnimationTime * SongLengthInSeconds) - (currentAnimationTime * SongLengthInSeconds)) + "\n";
+        debugText.text += "Network delta [sec]: " + Mathf.Abs((_currentAnimationTime * SongLengthInSeconds) - (currentAnimationTime * SongLengthInSeconds)) + "\n";
         debugText.text += "IsOwner: " + Networking.IsOwner(Networking.LocalPlayer, gameObject) + "\n";
         debugText.text += "Time [m:b:16]: " 
             + Mathf.Floor((_currentAnimationTime * SongMeasures) + 1).ToString("0") 

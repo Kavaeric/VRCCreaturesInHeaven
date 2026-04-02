@@ -142,5 +142,9 @@ public class CreaturesInHeaven : UdonSharpBehaviour
             + "\n";
         debugText.text += "Beat index: " + Mathf.Floor(_currentAnimationTime * SongBeats).ToString("0") + " / " + SongBeats.ToString("0") + "\n";
         debugText.text += "Measure index: " + Mathf.Floor(_currentAnimationTime * SongMeasures).ToString("0") + " / " + SongMeasures.ToString("0") + "\n";
+        debugText.text += "Main music current sample: " + SoundPlayer.timeSamples + "\n";
+        debugText.text += "Muffled music current sample: " + SoundPlayerMuffled.timeSamples + "\n";
+        debugText.text += "Main/Muffled sample delta (this should be close to 0): "+ (SoundPlayer.timeSamples - SoundPlayerMuffled.timeSamples) + " \n";
+
     }
 }

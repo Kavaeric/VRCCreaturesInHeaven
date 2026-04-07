@@ -1,39 +1,43 @@
-﻿
-using UdonSharp;
+﻿using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
 using VRC.Udon;
 using UnityEngine.UI;
-using System.Diagnostics.Eventing.Reader;
 using VRC.Udon.Common.Interfaces;
 
 [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
 public class CreaturesInHeaven : UdonSharpBehaviour
 {
-    // Precalculated song and audio properties
-    public float SampleRate { get; private set; } = 0;
-    public float SongLengthInSeconds { get; private set; } = 0;
-    public float SongSampleCount { get; private set; } = 0;
-    public float SongBeats { get; private set; } = 0;
-    public float SongMeasures { get; private set; } = 0;
+    // -- Song metadata ------------------------------------------------
+    public float SampleRate { get; private set; }
+    public float SongLengthInSeconds { get; private set; }
+    public float SongSampleCount { get; private set; }
+    public float SongBeats { get; private set; }
+    public float SongMeasures { get; private set; }
 
-    // Music engine state
-    [UdonSynced]
-    private float currentAnimationTime;
-    public float networkAnimationTime => currentAnimationTime;
-    public float _currentAnimationTime { get; private set; }
+    // -- Synced state -------------------------------------------------
+    // Variables owned and written by the instance owner, then broadcast
+    // to all other players via RequestSerialization().
 
-    [UdonSynced]
-    bool playing = false;
-    bool _playing = false;
+    [UdonSynced] private float _syncedAnimationTime;
+    public float SyncedAnimationTime => _syncedAnimationTime;
+
+    [UdonSynced] private bool _syncedPlaying;
+    public bool SyncedPlaying => _syncedPlaying;
+
+    // -- Local state -------------------------------------------------
+    // Derived each frame from the local AudioSource, independent of network.
+    // Non-owners use this for display and drift detection.
+
+    public float LocalAnimationTime { get; private set; }
+    private bool _localPlaying;
+
+    // -- Inspector references -----------------------------------------
 
     public AudioSource SoundPlayer;
     public AudioSource SoundPlayerMuffled;
-
     public Animator animator;
-
     public RelativeTeleport SpawnTeleporter;
-
     public Text ButtonText;
     public Text debugText;
 
@@ -48,36 +52,40 @@ public class CreaturesInHeaven : UdonSharpBehaviour
 
     public void _StartButtonPressed()
     {
-        if (playing)
+        if (_syncedPlaying)
         {
-            SpawnTeleporter.TriggerLocal(); // For now, exact behaviour will depend on how the animation works.
+            // Song already running, teleport local player to join.
+            SpawnTeleporter.TriggerLocal();
         }
         else
         {
+            // Take ownership so this client can write synced variables.
             Networking.SetOwner(Networking.LocalPlayer, gameObject);
-            _currentAnimationTime = 0;
-            currentAnimationTime = 0;
-            PlayAtSamples(SoundPlayer, 0);
-            playing = true;
-
+            LocalAnimationTime = 0;
+            _syncedAnimationTime = 0;
+            _syncedPlaying = true;
+            PlayFromTime(0);
             SpawnTeleporter._NetworkTrigger();
         }
     }
 
-    void PlayAtSamples(AudioSource source, int sampleIndex)
+    // Seeks both audio sources to a normalised animation time [0 to 1].
+    private void PlayFromTime(float normalisedTime)
     {
+        int targetSample = (int)(normalisedTime * SongSampleCount);
+
         SoundPlayer.Stop();
-        SoundPlayer.timeSamples = (int)(currentAnimationTime * SongSampleCount);
+        SoundPlayer.timeSamples = targetSample;
         SoundPlayer.Play();
-        SoundPlayer.timeSamples = (int)(currentAnimationTime * SongSampleCount);
+        SoundPlayer.timeSamples = targetSample;
 
         SoundPlayerMuffled.Stop();
-        SoundPlayerMuffled.timeSamples = (int)(currentAnimationTime * SongSampleCount);
+        SoundPlayerMuffled.timeSamples = targetSample;
         SoundPlayerMuffled.Play();
-        SoundPlayerMuffled.timeSamples = (int)(currentAnimationTime * SongSampleCount);
+        SoundPlayerMuffled.timeSamples = targetSample;
     }
 
-    void StopPlaying()
+    private void StopPlaying()
     {
         SoundPlayer.Stop();
         SoundPlayerMuffled.Stop();
@@ -85,68 +93,70 @@ public class CreaturesInHeaven : UdonSharpBehaviour
 
     void Update()
     {
-        // maybe kind of flake-y, but good enough for now
-        bool PlayerInSpawn = Vector3.Distance(Networking.LocalPlayer.GetPosition(), this.transform.position) < 2;
+        // Swap between muffled and full-volume based on proximity to the spawn point.
+        // Will be replaced with something more robust in the future.
+        bool playerInSpawn = Vector3.Distance(Networking.LocalPlayer.GetPosition(), transform.position) < 2f;
+        SoundPlayerMuffled.volume = playerInSpawn ? 0.8f : 0f;
+        SoundPlayer.volume = playerInSpawn ? 0f : 0.8f;
 
-        SoundPlayerMuffled.volume = PlayerInSpawn ? 0.8f : 0;
-        SoundPlayer.volume = PlayerInSpawn ? 0 : 0.8f;
+        ButtonText.text = _syncedPlaying ? "Join" : "Start";
 
-        ButtonText.text = playing ? "Join" : "Start";
-
-        float currentActualReallyAccurateTimeProbably = SoundPlayer.timeSamples / SampleRate;
+        // Derive normalised local time directly from the audio sample position —
+        // more accurate than tracking elapsed time manually
+        float localTimeSeconds = SoundPlayer.timeSamples / SampleRate;
+        LocalAnimationTime = localTimeSeconds / SoundPlayer.clip.length;
 
         if (Networking.IsOwner(Networking.LocalPlayer, gameObject))
         {
-            currentAnimationTime = currentActualReallyAccurateTimeProbably / SoundPlayer.clip.length;
-            _currentAnimationTime = currentAnimationTime;
+            // Owner drives the synced time from their local audio position,
+            // then broadcasts it every frame for tight sync
+            _syncedAnimationTime = LocalAnimationTime;
+            animator.SetFloat("_Time", _syncedAnimationTime);
 
-            animator.SetFloat("_Time", (float)currentAnimationTime);
+            if (!SoundPlayer.isPlaying)
+                _syncedPlaying = false;
 
-            if (!SoundPlayer.isPlaying) // done playing!
-            {
-                playing = false;
-            }
-
-            RequestSerialization(); // Request serialization every frame for maximum sync speed
+            RequestSerialization();
         }
         else
         {
-            _currentAnimationTime = currentActualReallyAccurateTimeProbably / SoundPlayer.clip.length;
+            // Non-owners animate from their local time, but resync audio if
+            // drift against the owner exceeds one second.
+            animator.SetFloat("_Time", LocalAnimationTime);
 
-            animator.SetFloat("_Time", (float)_currentAnimationTime);
+            float localSecs = LocalAnimationTime * SongLengthInSeconds;
+            float syncedSecs = _syncedAnimationTime * SongLengthInSeconds;
+            if (Mathf.Abs(localSecs - syncedSecs) > 1.0f)
+                PlayFromTime(_syncedAnimationTime);
 
-            if (Mathf.Abs((float)((_currentAnimationTime * SongLengthInSeconds) - (currentAnimationTime * SongLengthInSeconds))) > 1.0f) // out of sync by more than one second
+            // React to owner starting or stopping playback.
+            if (_localPlaying != _syncedPlaying)
             {
-                PlayAtSamples(SoundPlayer, (int)(currentAnimationTime * SongSampleCount));
-            }
-
-            if (_playing != playing)
-            {
-                _playing = playing;
-                if (playing)
-                    PlayAtSamples(SoundPlayer, (int)(currentAnimationTime * SongSampleCount));
+                _localPlaying = _syncedPlaying;
+                if (_syncedPlaying)
+                    PlayFromTime(_syncedAnimationTime);
                 else
                     StopPlaying();
             }
         }
 
+        // Debug display nonsense
         debugText.text = "";
-        debugText.text += "Time [sec]: " + (currentAnimationTime * SongLengthInSeconds).ToString("0.0") + " / " + SongLengthInSeconds.ToString("0") + "\n";
-        debugText.text += "Time local [sec]: " + (_currentAnimationTime * SongLengthInSeconds).ToString("0.0") + " / " + SongLengthInSeconds.ToString("0") + "\n";
-        debugText.text += "Network delta [sec]: " + Mathf.Abs((_currentAnimationTime * SongLengthInSeconds) - (currentAnimationTime * SongLengthInSeconds)) + "\n";
+        debugText.text += "Time [sec]: " + (_syncedAnimationTime * SongLengthInSeconds).ToString("0.0") + " / " + SongLengthInSeconds.ToString("0") + "\n";
+        debugText.text += "Time local [sec]: " + (LocalAnimationTime * SongLengthInSeconds).ToString("0.0") + " / " + SongLengthInSeconds.ToString("0") + "\n";
+        debugText.text += "Network delta [sec]: " + Mathf.Abs((LocalAnimationTime * SongLengthInSeconds) - (_syncedAnimationTime * SongLengthInSeconds)) + "\n";
         debugText.text += "IsOwner: " + Networking.IsOwner(Networking.LocalPlayer, gameObject) + "\n";
-        debugText.text += "Time [m:b:16]: " 
-            + Mathf.Floor((_currentAnimationTime * SongMeasures) + 1).ToString("0") 
-            + ":" 
-            + (Mathf.Floor((_currentAnimationTime * SongBeats)) % 4 + 1).ToString("0")
+        debugText.text += "Time [m:b:16]: "
+            + Mathf.Floor((LocalAnimationTime * SongMeasures) + 1).ToString("0")
+            + ":"
+            + (Mathf.Floor((LocalAnimationTime * SongBeats)) % 4 + 1).ToString("0")
             + "."
-            + Mathf.Floor(((_currentAnimationTime * SongBeats) - Mathf.Floor(_currentAnimationTime * SongBeats)) * 4 + 1).ToString("0")
+            + Mathf.Floor(((LocalAnimationTime * SongBeats) - Mathf.Floor(LocalAnimationTime * SongBeats)) * 4 + 1).ToString("0")
             + "\n";
-        debugText.text += "Beat index: " + Mathf.Floor(_currentAnimationTime * SongBeats).ToString("0") + " / " + SongBeats.ToString("0") + "\n";
-        debugText.text += "Measure index: " + Mathf.Floor(_currentAnimationTime * SongMeasures).ToString("0") + " / " + SongMeasures.ToString("0") + "\n";
+        debugText.text += "Beat index: " + Mathf.Floor(LocalAnimationTime * SongBeats).ToString("0") + " / " + SongBeats.ToString("0") + "\n";
+        debugText.text += "Measure index: " + Mathf.Floor(LocalAnimationTime * SongMeasures).ToString("0") + " / " + SongMeasures.ToString("0") + "\n";
         debugText.text += "Main music current sample: " + SoundPlayer.timeSamples + "\n";
         debugText.text += "Muffled music current sample: " + SoundPlayerMuffled.timeSamples + "\n";
-        debugText.text += "Main/Muffled sample delta (this should be close to 0): "+ (SoundPlayer.timeSamples - SoundPlayerMuffled.timeSamples) + " \n";
-
+        debugText.text += "Main/Muffled sample delta (this should be close to 0): " + (SoundPlayer.timeSamples - SoundPlayerMuffled.timeSamples) + " \n";
     }
 }

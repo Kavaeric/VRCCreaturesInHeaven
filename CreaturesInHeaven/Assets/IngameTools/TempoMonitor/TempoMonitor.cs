@@ -4,7 +4,7 @@ using VRC.SDKBase;
 using VRC.Udon;
 using TMPro;
 
-[UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
+[UdonBehaviourSyncMode(BehaviourSyncMode.None)]
 public class TempoMonitor : UdonSharpBehaviour
 {
     // Reference to the core music engine

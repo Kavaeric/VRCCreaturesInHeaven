@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 6068178638278435246}
   - component: {fileID: 5095636497674905874}
-  - component: {fileID: 4935040641480361071}
   - component: {fileID: 8374900754778353317}
   - component: {fileID: 6958537026675223356}
   - component: {fileID: 7887287015538166525}
@@ -62,27 +61,6 @@ MonoBehaviour:
   _udonSharpBackingUdonBehaviour: {fileID: 8374900754778353317}
   musicEngine: {fileID: 0}
   ReadoutMetronome: {fileID: 7115467736899119481}
---- !u!65 &4935040641480361071
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 859256061594836942}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.1, y: 0.165, z: 0.02}
-  m_Center: {x: 0, y: 0, z: 0.0095}
 --- !u!114 &8374900754778353317
 MonoBehaviour:
   m_ObjectHideFlags: 0

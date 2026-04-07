@@ -10,13 +10,22 @@ using VRC.Udon.Common.Interfaces;
 [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
 public class CreaturesInHeaven : UdonSharpBehaviour
 {
-    float SampleRate = 0;
-    float SongLengthInSeconds = 0;
-    float SongSampleCount = 0;
-    float SongBeats = 0;
-    float SongMeasures = 0;
-    
-    public Text ButtonText;
+    // Precalculated song and audio properties
+    public float SampleRate { get; private set; } = 0;
+    public float SongLengthInSeconds { get; private set; } = 0;
+    public float SongSampleCount { get; private set; } = 0;
+    public float SongBeats { get; private set; } = 0;
+    public float SongMeasures { get; private set; } = 0;
+
+    // Music engine state
+    [UdonSynced]
+    private float currentAnimationTime;
+    public float networkAnimationTime => currentAnimationTime;
+    public float _currentAnimationTime { get; private set; }
+
+    [UdonSynced]
+    bool playing = false;
+    bool _playing = false;
 
     public AudioSource SoundPlayer;
     public AudioSource SoundPlayerMuffled;
@@ -25,15 +34,8 @@ public class CreaturesInHeaven : UdonSharpBehaviour
 
     public RelativeTeleport SpawnTeleporter;
 
+    public Text ButtonText;
     public Text debugText;
-
-    [UdonSynced]
-    float currentAnimationTime;
-    float _currentAnimationTime;
-
-    [UdonSynced]
-    bool playing = false;
-    bool _playing = false;
 
     public void Start()
     {

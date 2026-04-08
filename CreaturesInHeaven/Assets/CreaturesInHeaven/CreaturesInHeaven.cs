@@ -8,14 +8,14 @@ using VRC.Udon.Common.Interfaces;
 [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
 public class CreaturesInHeaven : UdonSharpBehaviour
 {
-    // -- Song metadata ------------------------------------------------
+    // --- Song metadata ------------------------------------------------
     public float SampleRate { get; private set; }
     public float SongLengthInSeconds { get; private set; }
     public float SongSampleCount { get; private set; }
     public float SongBeats { get; private set; }
     public float SongMeasures { get; private set; }
 
-    // -- Synced state -------------------------------------------------
+    // --- Synced state -------------------------------------------------
     // Variables owned and written by the instance owner, then broadcast
     // to all other players via RequestSerialization().
 
@@ -25,14 +25,18 @@ public class CreaturesInHeaven : UdonSharpBehaviour
     [UdonSynced] private bool _syncedPlaying;
     public bool SyncedPlaying => _syncedPlaying;
 
-    // -- Local state -------------------------------------------------
+    // --- Local state -------------------------------------------------
     // Derived each frame from the local AudioSource, independent of network.
     // Non-owners use this for display and drift detection.
 
     public float LocalAnimationTime { get; private set; }
     private bool _localPlaying;
 
-    // -- Inspector references -----------------------------------------
+    // --- Network state -----------------------------------------------
+    public bool IsOwner => Networking.IsOwner(Networking.LocalPlayer, gameObject);
+    public bool PlayerInSpawn { get; private set; }
+
+    // --- Inspector references -----------------------------------------
 
     public AudioSource SoundPlayer;
     public AudioSource SoundPlayerMuffled;
@@ -50,6 +54,9 @@ public class CreaturesInHeaven : UdonSharpBehaviour
         SongMeasures = SongBeats / 4.0f;
     }
 
+    // Event for when the start button is pressed -- currently that button serves
+    // double duty as a join and start button, but may be wiser to split that
+    // functionality and just hide the one that's not relevant.
     public void _StartButtonPressed()
     {
         if (_syncedPlaying)
@@ -95,9 +102,11 @@ public class CreaturesInHeaven : UdonSharpBehaviour
     {
         // Swap between muffled and full-volume based on proximity to the spawn point.
         // Will be replaced with something more robust in the future.
-        bool playerInSpawn = Vector3.Distance(Networking.LocalPlayer.GetPosition(), transform.position) < 2f;
-        SoundPlayerMuffled.volume = playerInSpawn ? 0.8f : 0f;
-        SoundPlayer.volume = playerInSpawn ? 0f : 0.8f;
+        PlayerInSpawn = Vector3.Distance(Networking.LocalPlayer.GetPosition(), transform.position) < 2f;
+
+        // Change the audio source depending on the player's location in and out of the spawn lobby.
+        SoundPlayerMuffled.volume = PlayerInSpawn ? 0.8f : 0f;
+        SoundPlayer.volume = PlayerInSpawn ? 0f : 0.8f;
 
         ButtonText.text = _syncedPlaying ? "Join" : "Start";
 

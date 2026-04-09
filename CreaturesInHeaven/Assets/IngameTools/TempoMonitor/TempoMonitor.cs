@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Media;
 using TMPro;
 using UdonSharp;
 using UnityEngine;
@@ -63,9 +64,37 @@ public class TempoMonitor : UdonSharpBehaviour
 
     [Space(12)]
 
+    [Header("Metronome")]
+    [SerializeField] private AudioSource MetronomeSpeaker;
+    [SerializeField] private AudioClip MetronomeClickMeasure;
+    [SerializeField] private AudioClip MetronomeClickBeat;
+    [SerializeField] private AudioClip MetronomeOn;
+    [SerializeField] private AudioClip MetronomeOff;
+
     [Header("Other indicators")]
-    [SerializeField] private GameObject IndicatorIsPlaying;
+    [SerializeField] private GameObject IndicatorIsMetronomeOn;
     [SerializeField] private GameObject IndicatorIsOwner;
+
+    private bool _metronomeEnabled = false;
+
+    public override void Interact()
+    {
+        _metronomeEnabled = !_metronomeEnabled;
+        MetronomeSpeaker.PlayOneShot(_metronomeEnabled ? MetronomeOn : MetronomeOff);
+    }
+
+    public void OnTick()
+    {
+        if (!_metronomeEnabled) return;
+        if (musicEngine.TickIsMeasure)
+        {
+            MetronomeSpeaker.PlayOneShot(MetronomeClickMeasure);
+        }
+        else if (musicEngine.TickIsBeat)
+        {
+            MetronomeSpeaker.PlayOneShot(MetronomeClickBeat);
+        }
+    }
 
     // Formats a string, dimming its leading zeroes.
     private string DimLeadingZeros(string formatted)
@@ -140,8 +169,8 @@ public class TempoMonitor : UdonSharpBehaviour
         ReadoutAudioSampleLobby.text = DimLeadingZeros(musicEngine.SoundPlayerMuffled.timeSamples.ToString("00 000 000"));
         ReadoutAudioSampleDelta.text = (musicEngine.SoundPlayer.timeSamples - musicEngine.SoundPlayerMuffled.timeSamples).ToString();
 
-        // Turn on ownership indicator light depending on SyncedPlaying
-        IndicatorIsPlaying.SetActive(musicEngine.SyncedPlaying);
+        // Turn on metronome indicator light depending on metronome state
+        IndicatorIsMetronomeOn.SetActive(_metronomeEnabled);
 
         // Turn on ownership indicator light depending on IsOwner
         IndicatorIsOwner.SetActive(musicEngine.IsOwner);

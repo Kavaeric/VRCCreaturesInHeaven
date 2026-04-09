@@ -34,6 +34,14 @@ public class CreaturesInHeaven : UdonSharpBehaviour
     public bool IsOwner => Networking.IsOwner(Networking.LocalPlayer, gameObject);
     public bool PlayerInSpawn { get; private set; }
 
+    // --- Tick event system -------------------------------------------
+    // Listeners receive OnTick() and read these flags to determine tick type.
+    public bool TickIsMeasure { get; private set; }
+    public bool TickIsBeat { get; private set; }
+    public int StepsPerBeat = 1;
+    public UdonBehaviour[] TickListeners;
+    private int _lastStepIndex = -1;
+
     // --- Inspector references -----------------------------------------
 
     public AudioSource SoundPlayer;
@@ -112,6 +120,31 @@ public class CreaturesInHeaven : UdonSharpBehaviour
         // more accurate than tracking elapsed time manually
         float localTimeSeconds = SoundPlayer.timeSamples / SampleRate;
         LocalAnimationTime = localTimeSeconds / SoundPlayer.clip.length;
+
+        // Fire OnTick events when the step index advances.
+        // Guards against audio resync jumps (large delta) and backward seeks (negative delta).
+        if (SoundPlayer.isPlaying)
+        {
+            int currentStepIndex = Mathf.FloorToInt(LocalAnimationTime * SongBeats * StepsPerBeat);
+            int delta = currentStepIndex - _lastStepIndex;
+
+            if (delta > 0 && delta <= StepsPerBeat * 2)
+            {
+                TickIsMeasure = currentStepIndex % (StepsPerBeat * 4) == 0;
+                TickIsBeat = currentStepIndex % StepsPerBeat == 0;
+
+                for (int i = 0; i < TickListeners.Length; i++)
+                    if (TickListeners[i] != null)
+                        TickListeners[i].SendCustomEvent("OnTick");
+            }
+
+            if (delta != 0)
+                _lastStepIndex = currentStepIndex;
+        }
+        else
+        {
+            _lastStepIndex = -1;
+        }
 
         if (Networking.IsOwner(Networking.LocalPlayer, gameObject))
         {

@@ -18,7 +18,6 @@ public class CreaturesInHeaven : UdonSharpBehaviour
     // --- Synced state -------------------------------------------------
     // Variables owned and written by the instance owner, then broadcast
     // to all other players via RequestSerialization().
-
     [UdonSynced] private float _syncedAnimationTime;
     public float SyncedAnimationTime => _syncedAnimationTime;
 
@@ -28,7 +27,6 @@ public class CreaturesInHeaven : UdonSharpBehaviour
     // --- Local state -------------------------------------------------
     // Derived each frame from the local AudioSource, independent of network.
     // Non-owners use this for display and drift detection.
-
     public float LocalAnimationTime { get; private set; }
     private bool _localPlaying;
 

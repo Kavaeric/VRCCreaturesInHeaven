@@ -13,37 +13,59 @@ public class TempoMonitor : UdonSharpBehaviour
     [SerializeField] private CreaturesInHeaven musicEngine;
 
     // --- Inspector references -----------------------------------------
+    [Header("Metronome")]
     [SerializeField] private TMP_Text ReadoutMetronome;
 
+    [Header("Measure index")]
     [SerializeField] private TMP_Text ReadoutMeasureIndex;
     [SerializeField] private TMP_Text ReadoutMeasureIndexMax;
 
+    [Header("Beat index")]
     [SerializeField] private TMP_Text ReadoutBeatIndex;
     [SerializeField] private TMP_Text ReadoutBeatIndexMax;
 
+    [Header("Step index")]
     [SerializeField] private TMP_Text ReadoutStepIndex;
     [SerializeField] private TMP_Text ReadoutStepIndexMax;
 
+    [Space(12)]
+
+    [Header("Progress bar")]
     [SerializeField] private TMP_Text ProgressBarTimeElapsed;
     [SerializeField] private TMP_Text ProgressBarTimeRemaining;
     [SerializeField] private TMP_Text ProgressBarTimeTotal;
+    [Space(8)]
     [SerializeField] private RectTransform ProgressBarTransform;
 
+    [Space(12)]
+
+    [Header("Seconds elapsed")]
     [SerializeField] private Image PanelSecondsElapsedInstance;
     [SerializeField] private Image PanelSecondsElapsedLocal;
-
+    [Space(4)]
     [SerializeField] private TMP_Text ReadoutSecondsElapsedInstance;
     [SerializeField] private TMP_Text ReadoutSecondsElapsedInstanceMax;
+    [Space(4)]
     [SerializeField] private TMP_Text ReadoutSecondsElapsedLocal;
     [SerializeField] private TMP_Text ReadoutSecondsElapsedLocalMax;
+    [Space(4)]
     [SerializeField] private TMP_Text ReadoutSecondsElapsedDelta;
 
+    [Space(12)]
+
+    [Header("Audio sample")]
     [SerializeField] private Image PanelAudioSampleMain;
     [SerializeField] private Image PanelAudioSampleLobby;
-
+    [Space(8)]
     [SerializeField] private TMP_Text ReadoutAudioSampleMain;
     [SerializeField] private TMP_Text ReadoutAudioSampleLobby;
     [SerializeField] private TMP_Text ReadoutAudioSampleDelta;
+
+    [Space(12)]
+
+    [Header("Other indicators")]
+    [SerializeField] private GameObject IndicatorIsPlaying;
+    [SerializeField] private GameObject IndicatorIsOwner;
 
     // Formats a string, dimming its leading zeroes.
     private string DimLeadingZeros(string formatted)
@@ -73,26 +95,32 @@ public class TempoMonitor : UdonSharpBehaviour
 
     private void Update()
     {
+        // Metronome readout
         ReadoutMetronome.text = DimLeadingZeros(Mathf.Floor((musicEngine.LocalAnimationTime * musicEngine.SongMeasures) + 1).ToString("000"))
             + "<color=#FFFFFF10>:</color>"
             + (Mathf.Floor((musicEngine.LocalAnimationTime * musicEngine.SongBeats)) % 4 + 1).ToString("0")
             + "<color=#FFFFFF10>.</color>"
             + DimLeadingZeros(Mathf.Floor(((musicEngine.LocalAnimationTime * musicEngine.SongBeats) - Mathf.Floor(musicEngine.LocalAnimationTime * musicEngine.SongBeats)) * 4 + 1).ToString("00"));
 
+        // Measure index
         ReadoutMeasureIndex.text = DimLeadingZeros(Mathf.Floor(musicEngine.LocalAnimationTime * musicEngine.SongMeasures).ToString("000"));
         ReadoutMeasureIndexMax.text = DimLeadingZeros((Mathf.Floor(musicEngine.SongMeasures).ToString("000")));
 
+        // Beat index
         ReadoutBeatIndex.text = DimLeadingZeros(Mathf.Floor(musicEngine.LocalAnimationTime * musicEngine.SongBeats).ToString("000"));
         ReadoutBeatIndexMax.text = DimLeadingZeros(Mathf.Floor(musicEngine.SongBeats).ToString("000"));
 
+        // Step index, currently same as beat index
         ReadoutStepIndex.text = DimLeadingZeros(Mathf.Floor(musicEngine.LocalAnimationTime * musicEngine.SongBeats).ToString("000"));
         ReadoutStepIndexMax.text = DimLeadingZeros(Mathf.Floor(musicEngine.SongBeats).ToString("000"));
 
+        // Progress bar
         ProgressBarTimeElapsed.text = TimeSpan.FromSeconds(musicEngine.LocalAnimationTime * musicEngine.SongLengthInSeconds).ToString(@"m\:ss");
         ProgressBarTimeRemaining.text = "-" + TimeSpan.FromSeconds(musicEngine.SongLengthInSeconds - musicEngine.LocalAnimationTime * musicEngine.SongLengthInSeconds).ToString(@"m\:ss");
         ProgressBarTimeTotal.text = TimeSpan.FromSeconds(musicEngine.SongLengthInSeconds).ToString(@"m\:ss");
         ProgressBarTransform.transform.localScale = new Vector3(musicEngine.LocalAnimationTime, 1f, 1f);
 
+        // Highlight seconds elapsed panels depending on ownership
         PanelSecondsElapsedInstance.enabled = musicEngine.IsOwner;
         PanelSecondsElapsedLocal.enabled = !musicEngine.IsOwner;
 
@@ -104,11 +132,18 @@ public class TempoMonitor : UdonSharpBehaviour
 
         ReadoutSecondsElapsedDelta.text = Mathf.Abs((musicEngine.LocalAnimationTime * musicEngine.SongLengthInSeconds) - (musicEngine.SyncedAnimationTime * musicEngine.SongLengthInSeconds)).ToString("0.000");
 
+        // Highlight audio sample panels depending on player location
         PanelAudioSampleMain.enabled = !musicEngine.PlayerInSpawn;
         PanelAudioSampleLobby.enabled = musicEngine.PlayerInSpawn;
 
         ReadoutAudioSampleMain.text = DimLeadingZeros(musicEngine.SoundPlayer.timeSamples.ToString("00 000 000"));
         ReadoutAudioSampleLobby.text = DimLeadingZeros(musicEngine.SoundPlayerMuffled.timeSamples.ToString("00 000 000"));
         ReadoutAudioSampleDelta.text = (musicEngine.SoundPlayer.timeSamples - musicEngine.SoundPlayerMuffled.timeSamples).ToString();
+
+        // Turn on ownership indicator light depending on SyncedPlaying
+        IndicatorIsPlaying.SetActive(musicEngine.SyncedPlaying);
+
+        // Turn on ownership indicator light depending on IsOwner
+        IndicatorIsOwner.SetActive(musicEngine.IsOwner);
     }
 }

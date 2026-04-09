@@ -125,6 +125,12 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &80507108 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5051235884827282656, guid: 7c5ac24880595c2439e87e8637f07edc,
+    type: 3}
+  m_PrefabInstance: {fileID: 1600077030}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &89416063
 GameObject:
   m_ObjectHideFlags: 0
@@ -143,7 +149,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &89416064
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -982,7 +988,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &1390871640
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1118,6 +1124,16 @@ PrefabInstance:
       propertyPath: m_Material
       value: 
       objectReference: {fileID: 2100000, guid: 35630e38b4e5ffb40b44ec5348b4333f, type: 2}
+    - target: {fileID: 2697395134246290925, guid: 7c5ac24880595c2439e87e8637f07edc,
+        type: 3}
+      propertyPath: m_Name
+      value: Indicator playing
+      objectReference: {fileID: 0}
+    - target: {fileID: 2697395134246290925, guid: 7c5ac24880595c2439e87e8637f07edc,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3637356290884735600, guid: 7c5ac24880595c2439e87e8637f07edc,
         type: 3}
       propertyPath: m_Material
@@ -1153,6 +1169,11 @@ PrefabInstance:
       propertyPath: m_Material
       value: 
       objectReference: {fileID: 2100000, guid: 35630e38b4e5ffb40b44ec5348b4333f, type: 2}
+    - target: {fileID: 5051235884827282656, guid: 7c5ac24880595c2439e87e8637f07edc,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5095636497674905874, guid: 7c5ac24880595c2439e87e8637f07edc,
         type: 3}
       propertyPath: musicEngine
@@ -1160,10 +1181,25 @@ PrefabInstance:
       objectReference: {fileID: 1171760368}
     - target: {fileID: 5095636497674905874, guid: 7c5ac24880595c2439e87e8637f07edc,
         type: 3}
+      propertyPath: IndicatorIsOwner
+      value: 
+      objectReference: {fileID: 80507108}
+    - target: {fileID: 5095636497674905874, guid: 7c5ac24880595c2439e87e8637f07edc,
+        type: 3}
+      propertyPath: IndicatorConnection
+      value: 
+      objectReference: {fileID: 1858800342}
+    - target: {fileID: 5095636497674905874, guid: 7c5ac24880595c2439e87e8637f07edc,
+        type: 3}
       propertyPath: serializationData.Prefab
       value: 
       objectReference: {fileID: 5095636497674905874, guid: 7c5ac24880595c2439e87e8637f07edc,
         type: 3}
+    - target: {fileID: 5795560956363655284, guid: 7c5ac24880595c2439e87e8637f07edc,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5812016240325088270, guid: 7c5ac24880595c2439e87e8637f07edc,
         type: 3}
       propertyPath: m_Material
@@ -1240,7 +1276,8 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2100000, guid: 35630e38b4e5ffb40b44ec5348b4333f, type: 2}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 219653584561320752, guid: 7c5ac24880595c2439e87e8637f07edc, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7c5ac24880595c2439e87e8637f07edc, type: 3}
@@ -1713,6 +1750,12 @@ Transform:
   - {fileID: 433412514}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1858800342 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2697395134246290925, guid: 7c5ac24880595c2439e87e8637f07edc,
+    type: 3}
+  m_PrefabInstance: {fileID: 1600077030}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1880095975
 GameObject:
   m_ObjectHideFlags: 0
@@ -2537,10 +2580,9 @@ MonoBehaviour:
   DynamicPrefabs: []
   DynamicMaterials:
   - {fileID: 2100000, guid: ba190cf8403cfc84b95aa544cf23ef59, type: 2}
-  - {fileID: 2100000, guid: 024a2fffe672ba94abe5e5f17f361427, type: 2}
   - {fileID: 2100000, guid: 5ff5fd014756dec469b1aa183f563b51, type: 2}
-  - {fileID: 2100000, guid: 14ca4a13fa7f8d748aa603969204d682, type: 2}
   - {fileID: 2100000, guid: ea672620fbe7e9b4b81752c5ba93008e, type: 2}
+  - {fileID: 2100000, guid: 14ca4a13fa7f8d748aa603969204d682, type: 2}
   LightMapsNear: []
   LightMapsFar: []
   LightMode: 0

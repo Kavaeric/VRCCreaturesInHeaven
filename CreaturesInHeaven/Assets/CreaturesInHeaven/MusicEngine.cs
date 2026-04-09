@@ -36,6 +36,8 @@ public class MusicEngine : UdonSharpBehaviour
     // Non-owners use this for display and drift detection.
     public float LocalAnimationTime { get; private set; }
     private bool _localPlaying;
+    private float _syncTimer = 0f;
+    private bool _lastSyncedPlaying;
 
     // --- Network state -----------------------------------------------
     public bool IsOwner => Networking.IsOwner(Networking.LocalPlayer, gameObject);
@@ -50,42 +52,36 @@ public class MusicEngine : UdonSharpBehaviour
 
     // --- Inspector references -----------------------------------------
 
-    public AudioSource SoundPlayer;
-    public AudioSource SoundPlayerMuffled;
+    public AudioSource MusicPlayer;
+    public AudioSource MusicPlayerLobby;
     public Animator[] animators;
     public RelativeTeleport SpawnTeleporter;
-    public Text ButtonText;
+    public Button ButtonStart;
+    public Button ButtonJoin;
 
     public void Start()
     {
-        SongLengthInSeconds = SoundPlayer.clip.length;
-        SampleRate = SoundPlayer.clip.samples / SoundPlayer.clip.length;
-        SongSampleCount = SoundPlayer.clip.samples;
+        SongLengthInSeconds = MusicPlayer.clip.length;
+        SampleRate = MusicPlayer.clip.samples / MusicPlayer.clip.length;
+        SongSampleCount = MusicPlayer.clip.samples;
         SongBeats = SongLengthInSeconds * BPM / 60f;
         SongMeasures = SongBeats / BeatsPerMeasure;
         SongTicks = SongBeats * TicksPerBeat;
     }
 
-    // Event for when the start button is pressed -- currently that button serves
-    // double duty as a join and start button, but may be wiser to split that
-    // functionality and just hide the one that's not relevant.
     public void StartButtonPressed()
     {
-        if (_syncedPlaying)
-        {
-            // Song already running, teleport local player to join.
-            SpawnTeleporter.TriggerLocal();
-        }
-        else
-        {
-            // Take ownership so this client can write synced variables.
-            Networking.SetOwner(Networking.LocalPlayer, gameObject);
-            LocalAnimationTime = 0;
-            _syncedAnimationTime = 0;
-            _syncedPlaying = true;
-            PlayFromTime(0);
-            SpawnTeleporter._NetworkTrigger();
-        }
+        Networking.SetOwner(Networking.LocalPlayer, gameObject);
+        LocalAnimationTime = 0;
+        _syncedAnimationTime = 0;
+        _syncedPlaying = true;
+        PlayFromTime(0);
+        SpawnTeleporter._NetworkTrigger();
+    }
+
+    public void JoinButtonPressed()
+    {
+        SpawnTeleporter.TriggerLocal();
     }
 
     // Seeks both audio sources to a normalised animation time [0 to 1].
@@ -93,21 +89,21 @@ public class MusicEngine : UdonSharpBehaviour
     {
         int targetSample = (int)(normalisedTime * SongSampleCount);
 
-        SoundPlayer.Stop();
-        SoundPlayer.timeSamples = targetSample;
-        SoundPlayer.Play();
-        SoundPlayer.timeSamples = targetSample;
+        MusicPlayer.Stop();
+        MusicPlayer.timeSamples = targetSample;
+        MusicPlayer.Play();
+        MusicPlayer.timeSamples = targetSample;
 
-        SoundPlayerMuffled.Stop();
-        SoundPlayerMuffled.timeSamples = targetSample;
-        SoundPlayerMuffled.Play();
-        SoundPlayerMuffled.timeSamples = targetSample;
+        MusicPlayerLobby.Stop();
+        MusicPlayerLobby.timeSamples = targetSample;
+        MusicPlayerLobby.Play();
+        MusicPlayerLobby.timeSamples = targetSample;
     }
 
     private void StopPlaying()
     {
-        SoundPlayer.Stop();
-        SoundPlayerMuffled.Stop();
+        MusicPlayer.Stop();
+        MusicPlayerLobby.Stop();
     }
 
     void Update()
@@ -117,19 +113,20 @@ public class MusicEngine : UdonSharpBehaviour
         PlayerInSpawn = Vector3.Distance(Networking.LocalPlayer.GetPosition(), transform.position) < 2f;
 
         // Change the audio source depending on the player's location in and out of the spawn lobby.
-        SoundPlayerMuffled.volume = PlayerInSpawn ? 0.8f : 0f;
-        SoundPlayer.volume = PlayerInSpawn ? 0f : 0.8f;
+        MusicPlayerLobby.volume = PlayerInSpawn ? 0.8f : 0f;
+        MusicPlayer.volume = PlayerInSpawn ? 0f : 0.8f;
 
-        ButtonText.text = _syncedPlaying ? "Join" : "Start";
+        ButtonStart.interactable = !_syncedPlaying;
+        ButtonJoin.interactable = _syncedPlaying;
 
-        // Derive normalised local time directly from the audio sample position —
-        // more accurate than tracking elapsed time manually
-        float localTimeSeconds = SoundPlayer.timeSamples / SampleRate;
-        LocalAnimationTime = localTimeSeconds / SoundPlayer.clip.length;
+        // Derive normalised local time directly from the audio sample position.
+        // More accurate than tracking elapsed time manually.
+        float localTimeSeconds = MusicPlayer.timeSamples / SampleRate;
+        LocalAnimationTime = localTimeSeconds / MusicPlayer.clip.length;
 
         // Fire OnTick events when the tick index advances.
         // Guards against audio resync jumps (large delta) and backward seeks (negative delta).
-        if (SoundPlayer.isPlaying)
+        if (MusicPlayer.isPlaying)
         {
             int currentTickIndex = Mathf.FloorToInt(LocalAnimationTime * SongBeats * TicksPerBeat);
             int delta = currentTickIndex - _lastTickIndex;
@@ -156,16 +153,24 @@ public class MusicEngine : UdonSharpBehaviour
 
         if (Networking.IsOwner(Networking.LocalPlayer, gameObject))
         {
-            // Owner drives the synced time from their local audio position,
-            // then broadcasts it every frame for tight sync
+            // Owner drives the synced time from their local audio position.
             _syncedAnimationTime = LocalAnimationTime;
             for (int i = 0; i < animators.Length; i++)
                 animators[i].SetFloat("_Time", _syncedAnimationTime);
 
-            if (!SoundPlayer.isPlaying)
+            if (!MusicPlayer.isPlaying)
                 _syncedPlaying = false;
 
-            RequestSerialization();
+            // Sync immediately on play/stop state change, otherwise every 2 seconds.
+            bool playingChanged = _syncedPlaying != _lastSyncedPlaying;
+            _lastSyncedPlaying = _syncedPlaying;
+            _syncTimer += Time.deltaTime;
+
+            if (playingChanged || _syncTimer >= 2f)
+            {
+                RequestSerialization();
+                _syncTimer = 0f;
+            }
         }
         else
         {

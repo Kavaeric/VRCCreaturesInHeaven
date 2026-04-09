@@ -165,9 +165,9 @@ public class TempoMonitor : UdonSharpBehaviour
         PanelAudioSampleMain.enabled = !musicEngine.PlayerInSpawn;
         PanelAudioSampleLobby.enabled = musicEngine.PlayerInSpawn;
 
-        ReadoutAudioSampleMain.text = DimLeadingZeros(musicEngine.SoundPlayer.timeSamples.ToString("00 000 000"));
-        ReadoutAudioSampleLobby.text = DimLeadingZeros(musicEngine.SoundPlayerMuffled.timeSamples.ToString("00 000 000"));
-        ReadoutAudioSampleDelta.text = (musicEngine.SoundPlayer.timeSamples - musicEngine.SoundPlayerMuffled.timeSamples).ToString();
+        ReadoutAudioSampleMain.text = DimLeadingZeros(musicEngine.MusicPlayer.timeSamples.ToString("00 000 000"));
+        ReadoutAudioSampleLobby.text = DimLeadingZeros(musicEngine.MusicPlayerLobby.timeSamples.ToString("00 000 000"));
+        ReadoutAudioSampleDelta.text = (musicEngine.MusicPlayer.timeSamples - musicEngine.MusicPlayerLobby.timeSamples).ToString();
 
         // Turn on metronome indicator light depending on metronome state
         IndicatorIsMetronomeOn.SetActive(_metronomeEnabled);

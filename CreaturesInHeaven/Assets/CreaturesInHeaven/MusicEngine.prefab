@@ -127,7 +127,7 @@ GameObject:
   - component: {fileID: 6946047854978522353}
   - component: {fileID: 3591708473756515537}
   m_Layer: 0
-  m_Name: CreatuersInHeaven
+  m_Name: MusicEngine
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -173,16 +173,13 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 3591708473756515537}
-  SampleRate: 0
-  SongLengthInSeconds: 0
-  SongSampleCount: 0
-  SongBeats: 0
-  SongMeasures: 0
-  ButtonText: {fileID: 9009089732193806256}
+  TicksPerBeat: 4
+  TickListeners: []
   SoundPlayer: {fileID: 2232809936619801884}
   SoundPlayerMuffled: {fileID: 3660054580127897896}
   animator: {fileID: 0}
   SpawnTeleporter: {fileID: 0}
+  ButtonText: {fileID: 9009089732193806256}
   debugText: {fileID: 5503574548418384709}
 --- !u!114 &3591708473756515537
 MonoBehaviour:
@@ -468,7 +465,7 @@ MonoBehaviour:
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: _StartButtonPressed
+          m_StringArgument: StartButtonPressed
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!1 &7024310542532206720

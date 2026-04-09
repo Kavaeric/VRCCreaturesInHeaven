@@ -11,7 +11,7 @@ using VRC.Udon;
 public class TempoMonitor : UdonSharpBehaviour
 {
     // Reference to the core music engine
-    [SerializeField] private CreaturesInHeaven musicEngine;
+    [SerializeField] private MusicEngine musicEngine;
 
     // --- Inspector references -----------------------------------------
     [Header("Metronome")]
@@ -25,9 +25,9 @@ public class TempoMonitor : UdonSharpBehaviour
     [SerializeField] private TMP_Text ReadoutBeatIndex;
     [SerializeField] private TMP_Text ReadoutBeatIndexMax;
 
-    [Header("Step index")]
-    [SerializeField] private TMP_Text ReadoutStepIndex;
-    [SerializeField] private TMP_Text ReadoutStepIndexMax;
+    [Header("Tick index")]
+    [SerializeField] private TMP_Text ReadoutTickIndex;
+    [SerializeField] private TMP_Text ReadoutTickIndexMax;
 
     [Space(12)]
 
@@ -127,9 +127,9 @@ public class TempoMonitor : UdonSharpBehaviour
         // Metronome readout
         ReadoutMetronome.text = DimLeadingZeros(Mathf.Floor((musicEngine.LocalAnimationTime * musicEngine.SongMeasures) + 1).ToString("000"))
             + "<color=#FFFFFF10>:</color>"
-            + (Mathf.Floor((musicEngine.LocalAnimationTime * musicEngine.SongBeats)) % 4 + 1).ToString("0")
+            + (Mathf.Floor((musicEngine.LocalAnimationTime * musicEngine.SongBeats)) % musicEngine.BeatsPerMeasure + 1).ToString("0")
             + "<color=#FFFFFF10>.</color>"
-            + DimLeadingZeros(Mathf.Floor(((musicEngine.LocalAnimationTime * musicEngine.SongBeats) - Mathf.Floor(musicEngine.LocalAnimationTime * musicEngine.SongBeats)) * 4 + 1).ToString("00"));
+            + DimLeadingZeros((Mathf.Floor(musicEngine.LocalAnimationTime * musicEngine.SongTicks) % musicEngine.TicksPerBeat + 1).ToString("00"));
 
         // Measure index
         ReadoutMeasureIndex.text = DimLeadingZeros(Mathf.Floor(musicEngine.LocalAnimationTime * musicEngine.SongMeasures).ToString("000"));
@@ -139,9 +139,9 @@ public class TempoMonitor : UdonSharpBehaviour
         ReadoutBeatIndex.text = DimLeadingZeros(Mathf.Floor(musicEngine.LocalAnimationTime * musicEngine.SongBeats).ToString("000"));
         ReadoutBeatIndexMax.text = DimLeadingZeros(Mathf.Floor(musicEngine.SongBeats).ToString("000"));
 
-        // Step index, currently same as beat index
-        ReadoutStepIndex.text = DimLeadingZeros(Mathf.Floor(musicEngine.LocalAnimationTime * musicEngine.SongBeats).ToString("000"));
-        ReadoutStepIndexMax.text = DimLeadingZeros(Mathf.Floor(musicEngine.SongBeats).ToString("000"));
+        // Tick index
+        ReadoutTickIndex.text = DimLeadingZeros(Mathf.Floor(musicEngine.LocalAnimationTime * musicEngine.SongTicks).ToString("0 000"));
+        ReadoutTickIndexMax.text = DimLeadingZeros(Mathf.Floor(musicEngine.SongTicks).ToString("0 000"));
 
         // Progress bar
         ProgressBarTimeElapsed.text = TimeSpan.FromSeconds(musicEngine.LocalAnimationTime * musicEngine.SongLengthInSeconds).ToString(@"m\:ss");

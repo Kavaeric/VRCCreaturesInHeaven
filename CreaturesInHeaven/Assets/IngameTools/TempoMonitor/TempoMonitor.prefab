@@ -553,8 +553,8 @@ MonoBehaviour:
   ReadoutMeasureIndexMax: {fileID: 5154945024604335981}
   ReadoutBeatIndex: {fileID: 97807551498224390}
   ReadoutBeatIndexMax: {fileID: 8921854918974417180}
-  ReadoutStepIndex: {fileID: 5945986894122535197}
-  ReadoutStepIndexMax: {fileID: 8834085988630529076}
+  ReadoutTickIndex: {fileID: 5945986894122535197}
+  ReadoutTickIndexMax: {fileID: 8834085988630529076}
   ProgressBarTimeElapsed: {fileID: 1119641723028008035}
   ProgressBarTimeRemaining: {fileID: 5011347844528024625}
   ProgressBarTimeTotal: {fileID: 6947085325009149902}
@@ -1411,7 +1411,7 @@ GameObject:
   - component: {fileID: 8508515439750490605}
   - component: {fileID: 1431376613194245744}
   m_Layer: 0
-  m_Name: L step index
+  m_Name: L tick index
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1464,9 +1464,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Step index
-
-'
+  m_text: Tick index
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 3c02c87f059d9544a8dfe587c35a747c, type: 2}
   m_sharedMaterial: {fileID: -9028665334496537277, guid: 3c02c87f059d9544a8dfe587c35a747c,
@@ -4747,7 +4745,7 @@ GameObject:
   - component: {fileID: 268030920051114570}
   - component: {fileID: 8834085988630529076}
   m_Layer: 0
-  m_Name: R step index total
+  m_Name: R tick index total
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5931,7 +5929,7 @@ GameObject:
   - component: {fileID: 5909420011448842089}
   - component: {fileID: 5945986894122535197}
   m_Layer: 0
-  m_Name: R step index
+  m_Name: R tick index
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6066,7 +6064,7 @@ GameObject:
   - component: {fileID: 8646519684096700886}
   - component: {fileID: 1263007886387304555}
   m_Layer: 0
-  m_Name: P step index
+  m_Name: P tick index
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

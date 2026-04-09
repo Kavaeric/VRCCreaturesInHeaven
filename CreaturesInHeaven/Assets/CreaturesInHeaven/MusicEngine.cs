@@ -6,14 +6,21 @@ using UnityEngine.UI;
 using VRC.Udon.Common.Interfaces;
 
 [UdonBehaviourSyncMode(BehaviourSyncMode.Manual)]
-public class CreaturesInHeaven : UdonSharpBehaviour
+public class MusicEngine : UdonSharpBehaviour
 {
+    // --- Song timing --------------------------------------------------
+    // Core timing parameters for the song. Set in the inspector.
+    [SerializeField] public float BPM = 80f;
+    [SerializeField] public int BeatsPerMeasure = 4;
+    [SerializeField] public int TicksPerBeat = 4;
+
     // --- Song metadata ------------------------------------------------
     public float SampleRate { get; private set; }
     public float SongLengthInSeconds { get; private set; }
     public float SongSampleCount { get; private set; }
     public float SongBeats { get; private set; }
     public float SongMeasures { get; private set; }
+    public float SongTicks { get; private set; }
 
     // --- Synced state -------------------------------------------------
     // Variables owned and written by the instance owner, then broadcast
@@ -38,9 +45,8 @@ public class CreaturesInHeaven : UdonSharpBehaviour
     // Listeners receive OnTick() and read these flags to determine tick type.
     public bool TickIsMeasure { get; private set; }
     public bool TickIsBeat { get; private set; }
-    public int StepsPerBeat = 1;
     public UdonBehaviour[] TickListeners;
-    private int _lastStepIndex = -1;
+    private int _lastTickIndex = -1;
 
     // --- Inspector references -----------------------------------------
 
@@ -56,14 +62,15 @@ public class CreaturesInHeaven : UdonSharpBehaviour
         SongLengthInSeconds = SoundPlayer.clip.length;
         SampleRate = SoundPlayer.clip.samples / SoundPlayer.clip.length;
         SongSampleCount = SoundPlayer.clip.samples;
-        SongBeats = SongLengthInSeconds * 1000.0f / 750.0f;
-        SongMeasures = SongBeats / 4.0f;
+        SongBeats = SongLengthInSeconds * BPM / 60f;
+        SongMeasures = SongBeats / BeatsPerMeasure;
+        SongTicks = SongBeats * TicksPerBeat;
     }
 
     // Event for when the start button is pressed -- currently that button serves
     // double duty as a join and start button, but may be wiser to split that
     // functionality and just hide the one that's not relevant.
-    public void _StartButtonPressed()
+    public void StartButtonPressed()
     {
         if (_syncedPlaying)
         {
@@ -121,17 +128,19 @@ public class CreaturesInHeaven : UdonSharpBehaviour
         float localTimeSeconds = SoundPlayer.timeSamples / SampleRate;
         LocalAnimationTime = localTimeSeconds / SoundPlayer.clip.length;
 
-        // Fire OnTick events when the step index advances.
+        // Fire OnTick events when the tick index advances.
         // Guards against audio resync jumps (large delta) and backward seeks (negative delta).
         if (SoundPlayer.isPlaying)
         {
-            int currentStepIndex = Mathf.FloorToInt(LocalAnimationTime * SongBeats * StepsPerBeat);
-            int delta = currentStepIndex - _lastStepIndex;
+            int currentTickIndex = Mathf.FloorToInt(LocalAnimationTime * SongBeats * TicksPerBeat);
+            int delta = currentTickIndex - _lastTickIndex;
 
-            if (delta > 0 && delta <= StepsPerBeat * 2)
+            if (delta > 0 && delta <= TicksPerBeat * 2)
             {
-                TickIsMeasure = currentStepIndex % (StepsPerBeat * 4) == 0;
-                TickIsBeat = currentStepIndex % StepsPerBeat == 0;
+                // Set the TickIsMeasure and TickIsBeat flags so listeners can determine
+                // the tick type without needing to do modulo math themselves.
+                TickIsMeasure = currentTickIndex % (TicksPerBeat * BeatsPerMeasure) == 0;
+                TickIsBeat = currentTickIndex % TicksPerBeat == 0;
 
                 for (int i = 0; i < TickListeners.Length; i++)
                     if (TickListeners[i] != null)
@@ -139,11 +148,11 @@ public class CreaturesInHeaven : UdonSharpBehaviour
             }
 
             if (delta != 0)
-                _lastStepIndex = currentStepIndex;
+                _lastTickIndex = currentTickIndex;
         }
         else
         {
-            _lastStepIndex = -1;
+            _lastTickIndex = -1;
         }
 
         if (Networking.IsOwner(Networking.LocalPlayer, gameObject))
@@ -189,9 +198,9 @@ public class CreaturesInHeaven : UdonSharpBehaviour
         debugText.text += "Time [m:b:16]: "
             + Mathf.Floor((LocalAnimationTime * SongMeasures) + 1).ToString("0")
             + ":"
-            + (Mathf.Floor((LocalAnimationTime * SongBeats)) % 4 + 1).ToString("0")
+            + (Mathf.Floor((LocalAnimationTime * SongBeats)) % BeatsPerMeasure + 1).ToString("0")
             + "."
-            + Mathf.Floor(((LocalAnimationTime * SongBeats) - Mathf.Floor(LocalAnimationTime * SongBeats)) * 4 + 1).ToString("0")
+            + Mathf.Floor(((LocalAnimationTime * SongBeats) - Mathf.Floor(LocalAnimationTime * SongBeats)) * TicksPerBeat + 1).ToString("0")
             + "\n";
         debugText.text += "Beat index: " + Mathf.Floor(LocalAnimationTime * SongBeats).ToString("0") + " / " + SongBeats.ToString("0") + "\n";
         debugText.text += "Measure index: " + Mathf.Floor(LocalAnimationTime * SongMeasures).ToString("0") + " / " + SongMeasures.ToString("0") + "\n";

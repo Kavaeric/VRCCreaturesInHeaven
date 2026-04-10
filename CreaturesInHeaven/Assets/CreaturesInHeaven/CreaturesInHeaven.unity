@@ -1670,12 +1670,12 @@ PrefabInstance:
     - target: {fileID: 2087519278561317325, guid: 259375b1d3a31c14baeaaf9a50599faf,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 3.9650002
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 2087519278561317325, guid: 259375b1d3a31c14baeaaf9a50599faf,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 10
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 2087519278561317325, guid: 259375b1d3a31c14baeaaf9a50599faf,
         type: 3}
@@ -1716,6 +1716,21 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: TestLyrics
+      objectReference: {fileID: 0}
+    - target: {fileID: 4954376914351998810, guid: 259375b1d3a31c14baeaaf9a50599faf,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4954376914351998810, guid: 259375b1d3a31c14baeaaf9a50599faf,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4954376914351998810, guid: 259375b1d3a31c14baeaaf9a50599faf,
+        type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: 4954376914351998810, guid: 259375b1d3a31c14baeaaf9a50599faf,
         type: 3}
@@ -2452,8 +2467,8 @@ MonoBehaviour:
   useAssignedLayers: 0
   DynamicPrefabs: []
   DynamicMaterials:
-  - {fileID: 2100000, guid: ba190cf8403cfc84b95aa544cf23ef59, type: 2}
   - {fileID: 2100000, guid: ea672620fbe7e9b4b81752c5ba93008e, type: 2}
+  - {fileID: 2100000, guid: ba190cf8403cfc84b95aa544cf23ef59, type: 2}
   - {fileID: 2100000, guid: 5ff5fd014756dec469b1aa183f563b51, type: 2}
   - {fileID: 2100000, guid: 14ca4a13fa7f8d748aa603969204d682, type: 2}
   LightMapsNear: []

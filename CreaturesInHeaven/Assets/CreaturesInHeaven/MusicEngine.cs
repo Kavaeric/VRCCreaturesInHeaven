@@ -146,9 +146,9 @@ public class MusicEngine : UdonSharpBehaviour
     {
         // Swap between muffled and full-volume based on proximity to the spawn point.
         // Will be replaced with something more robust in the future.
-        PlayerInSpawn = Vector3.Distance(Networking.LocalPlayer.GetPosition(), transform.position) < 2f;
+        PlayerInSpawn = Networking.LocalPlayer.GetPosition().y < 30f;
 
-        MusicPlayerLobby.volume = PlayerInSpawn ? 0.8f : 0f;
+        MusicPlayerLobby.volume = PlayerInSpawn ? 0.6f : 0f;
         MusicPlayer.volume = PlayerInSpawn ? 0f : 0.8f;
 
         // Start is only available before playback; Join is only available during.

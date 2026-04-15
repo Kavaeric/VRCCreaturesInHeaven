@@ -1,4 +1,4 @@
-﻿
+
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
@@ -50,7 +50,7 @@ public class RelativeTeleport : UdonSharpBehaviour
         //    return;
 
         // player is outside the teleport region, do nothing.
-        if (LocalPos.x < -1 || LocalPos.z < -1 || LocalPos.x > 1 ||LocalPos.z > 1)
+        if (LocalPos.x < -1 || LocalPos.y < -1 || LocalPos.z < -1 || LocalPos.x > 1 || LocalPos.y > 1 || LocalPos.z > 1)
             return;
 
         
@@ -87,7 +87,7 @@ public class RelativeTeleport : UdonSharpBehaviour
         DrawArrow(ExampleTransform.position, ExampleTransform.forward);
         DrawArrow(Entry.position, Entry.forward, Entry.localScale.z * 0.5f);
         Gizmos.matrix = Entry.transform.localToWorldMatrix;
-        Gizmos.DrawWireCube(Vector3.zero, new Vector3(1, 0, 1));
+        Gizmos.DrawWireCube(Vector3.zero, new Vector3(1, 1, 1));
         Gizmos.matrix = Matrix4x4.identity;
         //Handles.DrawWireDisc(Entry.position, Vector3.up, GrabRadius);
 

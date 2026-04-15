@@ -17,8 +17,17 @@ using UnityEditor;
 // Each zone is defined by a Transform (origin + rotation), a Size (extents in local space),
 // an Anchor (where the origin sits within the box, [-1 to 1] per axis), a Rotation offset, and
 // a Scale multiplier. The MatchExit* toggles mirror the entry settings onto the exit zone.
+
+public enum OnEnableMode
+{
+    Manual,
+    OnEnableLocal
+}
+
 public class AnchorTeleport : UdonSharpBehaviour
 {
+    [SerializeField] private OnEnableMode onEnableMode = OnEnableMode.Manual;
+
     [SerializeField] private Transform entry;
     [SerializeField] private Transform exit;
     [SerializeField] private Transform exampleTransform;
@@ -61,17 +70,19 @@ public class AnchorTeleport : UdonSharpBehaviour
         if (!afterStart)
             return;
 
-        TriggerLocal();
+        if (onEnableMode == OnEnableMode.OnEnableLocal)
+            TeleportLocal();
+        // OnEnableMode.Manual: do nothing.
     }
 
     // Sends the teleport to all clients in the instance.
-    public void NetworkTrigger()
+    public void TeleportNetwork()
     {
-        SendCustomNetworkEvent(NetworkEventTarget.All, nameof(TriggerLocal));
+        SendCustomNetworkEvent(NetworkEventTarget.All, nameof(TeleportLocal));
     }
 
     // Teleports the local player if they are currently inside the entry zone.
-    public void TriggerLocal()
+    public void TeleportLocal()
     {
         Vector3 playerPos = Networking.LocalPlayer.GetPosition();
 
@@ -168,6 +179,16 @@ public class AnchorTeleport : UdonSharpBehaviour
         Gizmos.DrawLine(arrowTip, arrowTip + leftHead * 0.12f * length);
     }
 
+    // Assigns a unique colour to the teleport zone based on its instance ID.
+    // AnchorTeleport gizmos will be coloured in pairs to make them easier to distinguish.
+    private Color GetPairColor(float alpha = 1f)
+    {
+        float hue = (GetInstanceID() * 0.618034f % 1f + 1f) % 1f;
+        Color c = Color.HSVToRGB(hue, 0.8f, 1f);
+        c.a = alpha;
+        return c;
+    }
+
     private void OnDrawGizmos()
     {
         if (!showGizmos)
@@ -184,30 +205,33 @@ public class AnchorTeleport : UdonSharpBehaviour
         Vector3 entryBoxSize = entryBoxHalf * 2f;
         Vector3 exitBoxSize = exitBoxHalf * 2f;
 
+        Color pairColor = GetPairColor();
+        Color pairColorFaint = GetPairColor(0.1f);
+
         // Entry zone
-        Gizmos.color = Color.cyan;
+        Gizmos.color = pairColor;
         if (exampleTransform != null)
             DrawArrow(exampleTransform.position, exampleTransform.forward);
         DrawArrow(entry.position, entryRot * Vector3.forward, Mathf.Abs(scaledEntrySize.z) * 0.5f);
         Gizmos.matrix = Matrix4x4.TRS(entry.position, entryRot, Vector3.one);
         Gizmos.DrawSphere(Vector3.zero, Mathf.Min(entryBoxSize.x, entryBoxSize.y, entryBoxSize.z) * 0.01f);
         Gizmos.DrawWireCube(entryBoxCenter, entryBoxSize);
-        Gizmos.color = Color.cyan * new Color(1f, 1f, 1f, 0.1f);
+        Gizmos.color = pairColorFaint;
         Gizmos.DrawCube(entryBoxCenter, entryBoxSize);
         Gizmos.matrix = Matrix4x4.identity;
 
         // Exit zone
-        Gizmos.color = new Color (1f, 0.3f, 0f);
+        Gizmos.color = pairColor;
         DrawArrow(exit.position, exitRot * Vector3.forward, Mathf.Abs(scaledExitSize.z) * 0.5f);
         Gizmos.matrix = Matrix4x4.TRS(exit.position, exitRot, Vector3.one);
         Gizmos.DrawSphere(Vector3.zero, Mathf.Min(exitBoxSize.x, exitBoxSize.y, exitBoxSize.z) * 0.01f);
         Gizmos.DrawWireCube(exitBoxCenter, exitBoxSize);
-        Gizmos.color = new Color (1f, 0.3f, 0f, 0.1f);
+        Gizmos.color = pairColorFaint;
         Gizmos.DrawCube(exitBoxCenter, exitBoxSize);
         Gizmos.matrix = Matrix4x4.identity;
 
         // Line connecting entry and exit zone centres
-        Gizmos.color = Color.cyan;
+        Gizmos.color = pairColor;
         Gizmos.DrawLine(
             entry.position + entryRot * entryBoxCenter,
             exit.position + exitRot * exitBoxCenter
@@ -218,7 +242,7 @@ public class AnchorTeleport : UdonSharpBehaviour
         {
             Vector3 worldPos = RemapPosition(exampleTransform.position);
             Vector3 worldForward = RemapForward(exampleTransform.forward);
-            Gizmos.color = new Color(1f, 0.3f, 0f);
+            Gizmos.color = pairColor;
             DrawArrow(worldPos, worldForward);
         }
     }
@@ -232,6 +256,12 @@ public class AnchorTeleportEditor : Editor
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
+
+        EditorGUILayout.LabelField("Teleport behaviour", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("onEnableMode"),
+            new GUIContent("Auto-teleport behaviour", "What to do when this object is enabled at runtime.\n\nManual: Nothing (call TeleportLocal or TeleportNetwork yourself).\n\nOnEnableLocal: On enable, teleport this player if they're in the bounds."));
+
+        EditorGUILayout.Space();
 
         EditorGUILayout.LabelField("Teleport zones", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(serializedObject.FindProperty("entry"),

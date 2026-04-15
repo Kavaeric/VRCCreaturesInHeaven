@@ -72,7 +72,7 @@ public class MusicEngine : UdonSharpBehaviour
     public AudioSource MusicPlayer;
     public AudioSource MusicPlayerLobby;
     public Animator[] animators;
-    public RelativeTeleport SpawnTeleporter;
+    public AnchorTeleport StartTeleporter;
     public Button ButtonStart;
     public Button ButtonJoin;
 
@@ -98,21 +98,21 @@ public class MusicEngine : UdonSharpBehaviour
     }
 
     // Takes ownership and starts playback from the beginning, teleporting
-    // all players to the spawn point via network trigger.
+    // all players to the start point via network trigger.
     public void StartButtonPressed()
     {
         Networking.SetOwner(Networking.LocalPlayer, gameObject);
-        LocalAnimationTime = 0;
-        _syncedAnimationTime = 0;
+        LocalAnimationTime = 0f;
+        _syncedAnimationTime = 0f;
         _syncedPlaying = true;
-        PlayFromTime(0);
-        SpawnTeleporter._NetworkTrigger();
+        PlayFromTime(0f);
+        StartTeleporter.TeleportNetwork();
     }
 
-    // Teleports the local player to the spawn point to join ongoing playback.
+    // Teleports the local player to the start point to join ongoing playback.
     public void JoinButtonPressed()
     {
-        SpawnTeleporter.TriggerLocal();
+        StartTeleporter.TeleportLocal();
     }
 
     // Seeks both audio sources to a normalised time [0, 1].
@@ -144,9 +144,9 @@ public class MusicEngine : UdonSharpBehaviour
 
     void Update()
     {
-        // Swap between muffled and full-volume based on proximity to the spawn point.
+        // Swap between muffled and full-volume based on proximity to the lobby.
         // Will be replaced with something more robust in the future.
-        PlayerInSpawn = Networking.LocalPlayer.GetPosition().y < 30f;
+        PlayerInSpawn = Networking.LocalPlayer.GetPosition().y > -100f;
 
         MusicPlayerLobby.volume = PlayerInSpawn ? 0.6f : 0f;
         MusicPlayer.volume = PlayerInSpawn ? 0f : 0.8f;

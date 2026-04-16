@@ -102,10 +102,10 @@ public class MusicEngine : UdonSharpBehaviour
     public void StartButtonPressed()
     {
         Networking.SetOwner(Networking.LocalPlayer, gameObject);
-        LocalAnimationTime = 0f;
-        _syncedAnimationTime = 0f;
+        LocalAnimationTime = 0.45f;
+        _syncedAnimationTime = 0.45f;
         _syncedPlaying = true;
-        PlayFromTime(0f);
+        PlayFromTime(0.45f);
         StartTeleporter.TeleportNetwork();
     }
 

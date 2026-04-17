@@ -102,10 +102,10 @@ public class MusicEngine : UdonSharpBehaviour
     public void StartButtonPressed()
     {
         Networking.SetOwner(Networking.LocalPlayer, gameObject);
-        LocalAnimationTime = 0.45f;
-        _syncedAnimationTime = 0.45f;
+        LocalAnimationTime = 0f;
+        _syncedAnimationTime = 0f;
         _syncedPlaying = true;
-        PlayFromTime(0.45f);
+        PlayFromTime(0f);
         StartTeleporter.TeleportNetwork();
     }
 
@@ -146,7 +146,7 @@ public class MusicEngine : UdonSharpBehaviour
     {
         // Swap between muffled and full-volume based on proximity to the lobby.
         // Will be replaced with something more robust in the future.
-        PlayerInSpawn = Networking.LocalPlayer.GetPosition().y > -100f;
+        PlayerInSpawn = Networking.LocalPlayer.GetPosition().y > -100f && Networking.LocalPlayer.GetPosition().y < 100f;
 
         MusicPlayerLobby.volume = PlayerInSpawn ? 0.6f : 0f;
         MusicPlayer.volume = PlayerInSpawn ? 0f : 0.8f;

@@ -55,13 +55,17 @@ public class AnchorTeleport : UdonSharpBehaviour
 
     [SerializeField] private bool showGizmos = true;
 
-    // Guards against OnEnable firing before Start. UdonSharp calls OnEnable before Start on
-    // scene load, so without this the teleport would fire immediately on world join.
     private bool afterStart;
     void Start()
     {
-        // This feels extremely cursed, Torvid.
+        // Guards against OnEnable firing before Start. UdonSharp calls OnEnable before Start on
+        // scene load, so without this the teleport would fire immediately on world join.
+        // Doesn't make it feel any less cursed, though, Torvid.
         afterStart = true;
+
+        // If entry or exit transform is not set, default to the object's transform.
+        if (entry == null) entry = transform;
+        if (exit == null) exit = transform;
     }
 
     void OnEnable()
@@ -165,6 +169,9 @@ public class AnchorTeleport : UdonSharpBehaviour
 
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
 
+    private Transform EntryTransform => entry != null ? entry : transform;
+    private Transform ExitTransform  => exit  != null ? exit  : transform;
+
     void DrawArrow(Vector3 position, Vector3 forward, float length = 1.0f)
     {
         Gizmos.DrawSphere(position, 0.1f);
@@ -194,8 +201,8 @@ public class AnchorTeleport : UdonSharpBehaviour
         if (!showGizmos)
             return;
 
-        Quaternion entryRot = entry.rotation * Quaternion.Euler(entryRotation);
-        Quaternion exitRot = exit.rotation * Quaternion.Euler(MatchExitRotation ? entryRotation : exitRotation);
+        Quaternion entryRot = EntryTransform.rotation * Quaternion.Euler(entryRotation);
+        Quaternion exitRot = ExitTransform.rotation * Quaternion.Euler(MatchExitRotation ? entryRotation : exitRotation);
         Vector3 resolvedExitAnchor = MatchExitAnchor ? entryAnchor : exitAnchor;
         Vector3 scaledEntrySize = Vector3.Scale(entrySize, entryScale);
         Vector3 scaledExitSize = Vector3.Scale(MatchExitSize ? entrySize : exitSize, MatchExitScale ? entryScale : exitScale);
@@ -212,8 +219,8 @@ public class AnchorTeleport : UdonSharpBehaviour
         Gizmos.color = pairColor;
         if (exampleTransform != null)
             DrawArrow(exampleTransform.position, exampleTransform.forward);
-        DrawArrow(entry.position, entryRot * Vector3.forward, Mathf.Abs(scaledEntrySize.z) * 0.5f);
-        Gizmos.matrix = Matrix4x4.TRS(entry.position, entryRot, Vector3.one);
+        DrawArrow(EntryTransform.position, entryRot * Vector3.forward, Mathf.Abs(scaledEntrySize.z) * 0.5f);
+        Gizmos.matrix = Matrix4x4.TRS(EntryTransform.position, entryRot, Vector3.one);
         Gizmos.DrawSphere(Vector3.zero, Mathf.Min(entryBoxSize.x, entryBoxSize.y, entryBoxSize.z) * 0.01f);
         Gizmos.DrawWireCube(entryBoxCenter, entryBoxSize);
         Gizmos.color = pairColorFaint;
@@ -222,8 +229,8 @@ public class AnchorTeleport : UdonSharpBehaviour
 
         // Exit zone
         Gizmos.color = pairColor;
-        DrawArrow(exit.position, exitRot * Vector3.forward, Mathf.Abs(scaledExitSize.z) * 0.5f);
-        Gizmos.matrix = Matrix4x4.TRS(exit.position, exitRot, Vector3.one);
+        DrawArrow(ExitTransform.position, exitRot * Vector3.forward, Mathf.Abs(scaledExitSize.z) * 0.5f);
+        Gizmos.matrix = Matrix4x4.TRS(ExitTransform.position, exitRot, Vector3.one);
         Gizmos.DrawSphere(Vector3.zero, Mathf.Min(exitBoxSize.x, exitBoxSize.y, exitBoxSize.z) * 0.01f);
         Gizmos.DrawWireCube(exitBoxCenter, exitBoxSize);
         Gizmos.color = pairColorFaint;
@@ -233,8 +240,8 @@ public class AnchorTeleport : UdonSharpBehaviour
         // Line connecting entry and exit zone centres
         Gizmos.color = pairColor;
         Gizmos.DrawLine(
-            entry.position + entryRot * entryBoxCenter,
-            exit.position + exitRot * exitBoxCenter
+            EntryTransform.position + entryRot * entryBoxCenter,
+            ExitTransform.position + exitRot * exitBoxCenter
         );
 
         // Preview where ExampleTransform would land
@@ -257,77 +264,82 @@ public class AnchorTeleportEditor : Editor
     {
         serializedObject.Update();
 
+        // --- Teleport behaviour -----------------------------------------------------
         EditorGUILayout.LabelField("Teleport behaviour", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(serializedObject.FindProperty("onEnableMode"),
             new GUIContent("Auto-teleport behaviour", "What to do when this object is enabled at runtime.\n\nManual: Nothing (call TeleportLocal or TeleportNetwork yourself).\n\nOnEnableLocal: On enable, teleport this player if they're in the bounds."));
 
-        EditorGUILayout.Space();
+        if (serializedObject.FindProperty("onEnableMode").enumValueIndex == (int)OnEnableMode.Manual)
+            EditorGUILayout.HelpBox("This AnchorTeleport will not do anything until TeleportLocal() or TeleportNetwork() is called.", MessageType.None);
+        if (serializedObject.FindProperty("onEnableMode").enumValueIndex == (int)OnEnableMode.OnEnableLocal)
+            EditorGUILayout.HelpBox("On enable, this AnchorTeleport will teleport the local player if they are inside the entry zone.", MessageType.None);
 
-        EditorGUILayout.LabelField("Teleport zones", EditorStyles.boldLabel);
+        EditorGUILayout.Space(8f);
+
+        // --- Entry zone -------------------------------------------------------------
+        EditorGUILayout.LabelField("Entry zone", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(serializedObject.FindProperty("entry"),
-            new GUIContent("Entry", "The transform that defines the centre/rotation of the entry zone."));
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("exit"),
-            new GUIContent("Exit", "The transform that defines the centre/rotation of the exit zone."));
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("exampleTransform"),
-            new GUIContent("Example Transform", "A preview transform shown in the editor. Drag any object here to see where it would land in the exit zone."));
-
-        EditorGUILayout.Space();
-
-        EditorGUILayout.LabelField("Bounding box anchors", EditorStyles.boldLabel);
+            new GUIContent("Entry", "The transform that defines the centre and rotation of the entry zone. If left empty, defaults to this object's transform."));
+        if (serializedObject.FindProperty("entry").objectReferenceValue == null)
+            EditorGUILayout.HelpBox("No entry transform assigned. This object's transform will be used as the entry zone origin.", MessageType.None);
         EditorGUILayout.PropertyField(serializedObject.FindProperty("entryAnchor"),
-            new GUIContent("Entry anchor", "The anchor offset of the entry zone, in [-1 to 1] normalised space per axis. (0,0,0) centres the box at the origin; (0,-1,0) aligns the bottom face with the origin."));
+            new GUIContent("Anchor", "The anchor offset of the entry zone, in [-1 to 1] normalised space per axis. (0,0,0) centres the box at the origin; (0,-1,0) aligns the bottom face with the origin."));
         if (Mathf.Approximately(serializedObject.FindProperty("entryAnchor").vector3Value.y, -1f))
-            EditorGUILayout.HelpBox("Entry anchor Y is -1, suggesting this teleport zone is aligned to the floor. In VRChat, the player origin can be slightly below the ground (-0.005), which may place them just outside the zone and block the teleport. It's recommended to add a little bit of padding to the y-height of the bounding box to account for this gap.", MessageType.Warning);
+            EditorGUILayout.HelpBox("Anchor Y is -1, suggesting this zone is aligned to the floor. In VRChat, the player origin can be slightly below the ground (-0.005), which may place them just outside the zone. It's recommended to add a little padding to the Y height to account for this.", MessageType.Warning);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("entrySize"),
+            new GUIContent("Size", "Size of the entry zone box in local units (before scale is applied)."));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("entryRotation"),
+            new GUIContent("Rotation", "Additional euler rotation applied on top of the entry transform's rotation."));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("entryScale"),
+            new GUIContent("Scale", "Per-axis scale multiplier applied on top of the entry transform's lossy scale."));
+
+        EditorGUILayout.Space(8f);
+
+        // --- Exit zone --------------------------------------------------------------
+        EditorGUILayout.LabelField("Exit zone", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("exit"),
+            new GUIContent("Exit", "The transform that defines the centre and rotation of the exit zone. If left empty, defaults to this object's transform."));
+        if (serializedObject.FindProperty("exit").objectReferenceValue == null)
+            EditorGUILayout.HelpBox("No exit transform assigned. This object's transform will be used as the exit zone origin.", MessageType.None);
+
         EditorGUILayout.PropertyField(serializedObject.FindProperty("MatchExitAnchor"),
-            new GUIContent("Match exit anchor", "Whether to match the exit anchor to the entry anchor."));
+            new GUIContent("Match entry anchor", "Whether to match the exit anchor to the entry anchor."));
         if (!((AnchorTeleport)target).MatchExitAnchor)
             EditorGUILayout.PropertyField(serializedObject.FindProperty("exitAnchor"),
-                new GUIContent("Exit anchor", "The anchor offset of the exit zone, in [-1 to 1] normalised space per axis."));
+                new GUIContent("Anchor", "The anchor offset of the exit zone, in [-1 to 1] normalised space per axis."));
 
-        EditorGUILayout.Space();
-
-        EditorGUILayout.LabelField("Zone size", EditorStyles.boldLabel);
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("entrySize"),
-            new GUIContent("Entry size", "Size of the entry zone box in local units (before scale is applied)."));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("MatchExitSize"),
-            new GUIContent("Match exit size", "Whether to match the exit size to the entry size."));
+            new GUIContent("Match entry size", "Whether to match the exit size to the entry size."));
         if (!((AnchorTeleport)target).MatchExitSize)
         {
             EditorGUILayout.PropertyField(serializedObject.FindProperty("exitSize"),
-                new GUIContent("Exit size", "Size of the exit zone box in local units (before scale is applied)."));
-                EditorGUILayout.HelpBox("If the exit zone size is smaller than the entry zone size, the player's position will be clamped to within the bounds of the exit zone.", MessageType.Info);
+                new GUIContent("Size", "Size of the exit zone box in local units (before scale is applied)."));
+            EditorGUILayout.HelpBox("If the exit zone size is smaller than the entry zone size, the player's position will be clamped to within the bounds of the exit zone.", MessageType.Info);
         }
 
-        EditorGUILayout.Space();
-
-        EditorGUILayout.LabelField("Zone rotation", EditorStyles.boldLabel);
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("entryRotation"),
-            new GUIContent("Entry rotation", "Additional euler rotation applied on top of the entry transform's rotation."));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("MatchExitRotation"),
-            new GUIContent("Match exit rotation", "Whether to match the exit rotation offset to the entry rotation offset."));
+            new GUIContent("Match entry rotation", "Whether to match the exit rotation offset to the entry rotation offset."));
         if (!((AnchorTeleport)target).MatchExitRotation)
             EditorGUILayout.PropertyField(serializedObject.FindProperty("exitRotation"),
-                new GUIContent("Exit rotation", "Additional euler rotation applied on top of the exit transform's rotation."));
+                new GUIContent("Rotation", "Additional euler rotation applied on top of the exit transform's rotation."));
 
-        EditorGUILayout.Space();
-
-        EditorGUILayout.LabelField("Zone scale", EditorStyles.boldLabel);
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("entryScale"),
-            new GUIContent("Entry scale", "Per-axis scale multiplier applied on top of the entry transform's lossy scale."));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("MatchExitScale"),
-            new GUIContent("Match exit scale", "Whether to match the exit scale multiplier to the entry scale multiplier."));
+            new GUIContent("Match entry scale", "Whether to match the exit scale multiplier to the entry scale multiplier."));
         if (!((AnchorTeleport)target).MatchExitScale)
         {
             EditorGUILayout.PropertyField(serializedObject.FindProperty("exitScale"),
-                new GUIContent("Exit scale", "Per-axis scale multiplier applied on top of the exit transform's lossy scale."));
+                new GUIContent("Scale", "Per-axis scale multiplier applied on top of the exit transform's lossy scale."));
             EditorGUILayout.HelpBox("Scaling the exit zone will scale the space between the anchor and the player's position (and players between each other).", MessageType.Info);
         }
 
-        EditorGUILayout.Space();
+        EditorGUILayout.Space(8f);
 
+        // --- Debug ------------------------------------------------------------------
         EditorGUILayout.LabelField("Debug", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(serializedObject.FindProperty("showGizmos"),
             new GUIContent("Show gizmos", "Whether to show the gizmos in the editor."));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("exampleTransform"),
+            new GUIContent("Example transform", "A preview transform shown in the editor. Drag any object here to see where it would land in the exit zone."));
 
         serializedObject.ApplyModifiedProperties();
     }

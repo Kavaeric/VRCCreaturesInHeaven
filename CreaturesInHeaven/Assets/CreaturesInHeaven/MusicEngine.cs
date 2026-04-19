@@ -109,14 +109,16 @@ public class MusicEngine : UdonSharpBehaviour
         StartTeleporter.TeleportNetwork();
     }
 
-    // Temporary debug function that starts playback from a given time.
+    // Temporary debug function that starts playback from a given time
+    // because I can't use TextField.text in Udon for some reason.
     public void StartButtonPressedForward()
     {
+        float customStartTime = 0.65f;
         Networking.SetOwner(Networking.LocalPlayer, gameObject);
-        LocalAnimationTime = 0.6f;
-        _syncedAnimationTime = 0.6f;
+        LocalAnimationTime = customStartTime;
+        _syncedAnimationTime = customStartTime;
         _syncedPlaying = true;
-        PlayFromTime(0.6f);
+        PlayFromTime(customStartTime);
         StartTeleporter.TeleportNetwork();
     }
 

@@ -86,9 +86,20 @@ public class ArrangedTeleport : UdonSharpBehaviour
         if (!afterStart)
             return;
 
-        if (onEnableMode == ArrangedTeleportOnEnableMode.OnEnableNetwork)
-            NetworkTeleport();
-        // ArrangedTeleportOnEnableMode.Manual: do nothing.
+        // Without the IsOwner check, the teleport will fire once for every single player in the instance.
+        // This results in NetworkTeleport(), and subsequently RequestTeleport(), being called once for
+        // each player; or in other words if there were 8 players, he players would get teleported 8 times each.
+        //
+        // This is bad.
+        //
+        // So we only have the owner call NetworkTeleport(). One call, one teleport for each player.
+        // This isn't a problem for a manual call (like a button press) since only one player would physically
+        // be able to press the button at a time.
+        //
+        // By the way, when you see me write a whole essay in the comments like this, it's because I've spent a
+        // disproportionate amount of time trying to debug it.
+        if (onEnableMode == ArrangedTeleportOnEnableMode.OnEnableNetwork && Networking.IsOwner(gameObject))
+            NetworkTeleport(); 
     }
 
     // Forwards to the owner to determine slot assignment.
@@ -114,17 +125,23 @@ public class ArrangedTeleport : UdonSharpBehaviour
         int[] slotIndices = new int[inZone];
         int filled = 0;
 
+        Debug.Log($"[ArrangedTeleport] RequestTeleport: Requesting teleport to assign {inZone} players to {teleportSlots.Length} slots.");
+
         // Resolved overflow slot index (supports negative indexing).
         int resolvedOverflow = ((overflowSlotIndex % teleportSlots.Length) + teleportSlots.Length) % teleportSlots.Length;
 
         foreach (VRCPlayerApi player in allPlayers)
         {
             if (!Utilities.IsValid(player) || !IsInsideEntryZone(player.GetPosition()))
+            {
+                Debug.Log($"[ArrangedTeleport] RequestTeleport: Player {player.playerId} {player.displayName} is not valid or is not inside the entry zone.");
                 continue;
+            }
 
             int slotIndex;
             if (filled < teleportSlots.Length)
             {
+                Debug.Log($"[ArrangedTeleport] RequestTeleport: Slot {filled} is available. Attempting to assign player {player.playerId} {player.displayName} to slot {filled}.");
                 slotIndex = filled;
             }
             else
@@ -137,8 +154,8 @@ public class ArrangedTeleport : UdonSharpBehaviour
                     case ArrangedTeleportOverflowMode.TeleportToSlotIndex:
                         slotIndex = resolvedOverflow;
                         break;
-                    default: // Ignore
-                        filled++;
+                    default:
+                        // "Ignore" mode: don't assign the player to a slot.
                         continue;
                 }
             }
@@ -146,6 +163,12 @@ public class ArrangedTeleport : UdonSharpBehaviour
             playerIds[filled]   = player.playerId;
             slotIndices[filled] = slotIndex;
             filled++;
+        }
+
+        Debug.Log($"[ArrangedTeleport] RequestTeleport: Teleporting {filled} players to slots:");
+        for (int i = 0; i < filled; i++)
+        {
+            Debug.Log($"    Player {playerIds[i]} to slot {slotIndices[i]}.");
         }
 
         SendCustomNetworkEvent(NetworkEventTarget.All, nameof(TeleportPlayerToSlot), playerIds, slotIndices);
@@ -156,15 +179,24 @@ public class ArrangedTeleport : UdonSharpBehaviour
     public void TeleportPlayerToSlot(int[] playerIdArray, int[] slotIndexArray)
     {
         int localId = Networking.LocalPlayer.playerId;
+
+        Debug.Log($"[ArrangedTeleport] TeleportPlayerToSlot: Finding player {localId} in array.");
+
         for (int i = 0; i < playerIdArray.Length; i++)
         {
             if (localId != playerIdArray[i])
+            {
+                Debug.Log($"    Player {localId} is not the player in array at index {i}.");
                 continue;
+            }
 
             int slot = slotIndexArray[i];
+            Debug.Log($"    Teleporting player {localId} to slot {slot}.");
             Networking.LocalPlayer.TeleportTo(teleportSlots[slot].position, SlotRotation(slot));
             return;
         }
+
+        Debug.Log($"[ArrangedTeleport] TeleportPlayerToSlot: Player {localId} not found in array.");
     }
 
     // Returns the rotation the local player should have after teleporting to slot i.

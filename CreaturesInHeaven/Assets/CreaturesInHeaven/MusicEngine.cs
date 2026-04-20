@@ -113,7 +113,7 @@ public class MusicEngine : UdonSharpBehaviour
     // because I can't use TextField.text in Udon for some reason.
     public void StartButtonPressedForward()
     {
-        float customStartTime = 0.65f;
+        float customStartTime = 0.7f;
         Networking.SetOwner(Networking.LocalPlayer, gameObject);
         LocalAnimationTime = customStartTime;
         _syncedAnimationTime = customStartTime;

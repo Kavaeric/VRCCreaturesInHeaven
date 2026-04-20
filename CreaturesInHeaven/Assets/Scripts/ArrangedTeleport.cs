@@ -68,6 +68,8 @@ public class ArrangedTeleport : UdonSharpBehaviour
 
     [SerializeField] private Transform[] exampleTransforms;
 
+    [SerializeField] private UdonSharpBehaviour[] postTeleportCallbacks;
+
     [SerializeField] private bool showGizmos = true;
 
     private bool afterStart;
@@ -193,6 +195,12 @@ public class ArrangedTeleport : UdonSharpBehaviour
             int slot = slotIndexArray[i];
             Debug.Log($"    Teleporting player {localId} to slot {slot}.");
             Networking.LocalPlayer.TeleportTo(teleportSlots[slot].position, SlotRotation(slot));
+
+            if (postTeleportCallbacks != null)
+                foreach (UdonSharpBehaviour cb in postTeleportCallbacks)
+                    if (Utilities.IsValid(cb))
+                        cb.SendCustomEvent("OnPostTeleport");
+
             return;
         }
 
@@ -433,6 +441,14 @@ public class ArrangedTeleportEditor : Editor
             EditorGUILayout.HelpBox("Excess players will not be teleported.", MessageType.None);
         if (serializedObject.FindProperty("overflowMode").enumValueIndex == (int)ArrangedTeleportOverflowMode.Wrap)
             EditorGUILayout.HelpBox("Excess players will wrap back to the first slot and continue filling from there.", MessageType.None);
+
+        EditorGUILayout.Space(8f);
+
+        // --- Callbacks --------------------------------------------------------------
+        EditorGUILayout.LabelField("Callbacks", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("postTeleportCallbacks"),
+            new GUIContent("Post-teleport callbacks",
+                "UdonSharpBehaviours to notify after the local player is teleported. Each receives a SendCustomEvent(\"OnPostTeleport\") call."));
 
         EditorGUILayout.Space(8f);
 

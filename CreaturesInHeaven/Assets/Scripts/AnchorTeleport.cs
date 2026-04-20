@@ -172,7 +172,7 @@ public class AnchorTeleport : UdonSharpBehaviour
     private Transform EntryTransform => entry != null ? entry : transform;
     private Transform ExitTransform  => exit  != null ? exit  : transform;
 
-    void DrawArrow(Vector3 position, Vector3 forward, float length = 1.0f)
+    static void DrawArrow(Vector3 position, Vector3 forward, float length = 1.0f)
     {
         Gizmos.DrawSphere(position, 0.1f);
 

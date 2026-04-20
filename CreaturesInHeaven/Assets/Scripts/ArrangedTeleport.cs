@@ -245,7 +245,7 @@ public class ArrangedTeleport : UdonSharpBehaviour
 
     private Transform EntryTransform => entry != null ? entry : transform;
 
-    void DrawArrow(Vector3 position, Vector3 forward, float length = 0.5f)
+    static void DrawArrow(Vector3 position, Vector3 forward, float length = 0.5f)
     {
         Gizmos.DrawSphere(position, 0.1f);
 
@@ -260,7 +260,7 @@ public class ArrangedTeleport : UdonSharpBehaviour
     }
 
     // Draws a flat marker at the position. Used to indicate a slot position in the editor.
-    void DrawSlotMarker(Vector3 position, Quaternion rotation, float size = 0.3f)
+    static void DrawSlotMarker(Vector3 position, Quaternion rotation, float size = 0.3f)
     {
         float nub = size * 0.6f;
         // Pentagon corners in local XZ space (Y=0): back-left, back-right, front-right, nub-tip, front-left

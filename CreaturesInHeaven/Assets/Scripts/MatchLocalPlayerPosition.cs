@@ -53,8 +53,8 @@ public class MatchLocalPlayerPosition : UdonSharpBehaviour
     {
         // This is a hack to prevent the object from snapping to the player's position when they are in the spawn.
         // TODO: Remove this once we have a better way to seperate lobby/spawn players and players in the animation.
-        if (Networking.LocalPlayer.GetPosition().y < 100f || Networking.LocalPlayer.GetPosition().y > -100f)
-            return;
+        // if (Networking.LocalPlayer.GetPosition().y < 100f || Networking.LocalPlayer.GetPosition().y > -100f)
+        //    return;
 
         transform.SetPositionAndRotation(Networking.LocalPlayer.GetPosition() + offset, transform.rotation);
     }

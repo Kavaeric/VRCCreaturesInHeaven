@@ -13,6 +13,7 @@ public class MusicEngine : UdonSharpBehaviour
     [SerializeField] public float BPM = 80f;
     [SerializeField] public int BeatsPerMeasure = 4;
     [SerializeField] public int TicksPerBeat = 4;
+    public float CustomStartTime = 0.4f;
 
     // --- Song metadata ------------------------------------------------
     // Derived from the audio clip and timing parameters at Start().
@@ -115,12 +116,11 @@ public class MusicEngine : UdonSharpBehaviour
     // because I can't use TextField.text in Udon for some reason.
     public void StartButtonPressedForward()
     {
-        float customStartTime = 0.4f;
         Networking.SetOwner(Networking.LocalPlayer, gameObject);
-        LocalAnimationTime = customStartTime;
-        _syncedAnimationTime = customStartTime;
+        LocalAnimationTime = CustomStartTime;
+        _syncedAnimationTime = CustomStartTime;
         _syncedPlaying = true;
-        PlayFromTime(customStartTime);
+        PlayFromTime(CustomStartTime);
         StartTeleporter.TeleportNetwork();
     }
 

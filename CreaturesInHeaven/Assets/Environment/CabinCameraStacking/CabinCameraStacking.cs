@@ -1,6 +1,7 @@
 
 using UdonSharp;
 using UnityEngine;
+using VRC.SDK3.Rendering;
 using VRC.SDKBase;
 using VRC.Udon;
 
@@ -27,5 +28,9 @@ public class CabinCameraStacking : UdonSharpBehaviour
 
         // fix IPD
         fakeCamera.transform.localScale = Vector3.one * Networking.LocalPlayer.GetAvatarEyeHeightAsMeters() / 1.75f;
+
+        fakeCamera.fieldOfView = VRCCameraSettings.ScreenCamera.FieldOfView;
+        fakeCamera.nearClipPlane = VRCCameraSettings.ScreenCamera.NearClipPlane;
+        fakeCamera.farClipPlane = VRCCameraSettings.ScreenCamera.FarClipPlane;
     }
 }

@@ -548,6 +548,7 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 8374900754778353317}
   musicEngine: {fileID: 0}
+  audienceManager: {fileID: 0}
   ReadoutMetronome: {fileID: 7115467736899119481}
   ReadoutMeasureIndex: {fileID: 3946618355881731153}
   ReadoutMeasureIndexMax: {fileID: 5154945024604335981}
@@ -680,11 +681,11 @@ MonoBehaviour:
   pickupDropEventBroadcastType: 0
   PickupEventName: 
   DropEventName: 
-  ThrowVelocityBoostMinSpeed: 1
-  ThrowVelocityBoostScale: 1
+  ThrowVelocityBoostMinSpeed: 0
+  ThrowVelocityBoostScale: 0
   currentlyHeldBy: {fileID: 0}
   pickupable: 1
-  proximity: 0.1
+  proximity: 0.2
   version: 1
 --- !u!1 &877692713493039094
 GameObject:

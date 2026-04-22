@@ -10,8 +10,8 @@ using VRC.Udon;
 [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
 public class TempoMonitor : UdonSharpBehaviour
 {
-    // Reference to the core music engine
     [SerializeField] private MusicEngine musicEngine;
+    [SerializeField] private AudienceManager audienceManager;
 
     // --- Inspector references -----------------------------------------
     [Header("Metronome")]
@@ -162,8 +162,8 @@ public class TempoMonitor : UdonSharpBehaviour
         ReadoutSecondsElapsedDelta.text = Mathf.Abs((musicEngine.LocalAnimationTime * musicEngine.SongLengthInSeconds) - (musicEngine.SyncedAnimationTime * musicEngine.SongLengthInSeconds)).ToString("0.000");
 
         // Highlight audio sample panels depending on player location
-        PanelAudioSampleMain.enabled = !musicEngine.PlayerInSpawn;
-        PanelAudioSampleLobby.enabled = musicEngine.PlayerInSpawn;
+        PanelAudioSampleMain.enabled = audienceManager.WatchingAnimation;
+        PanelAudioSampleLobby.enabled = !audienceManager.WatchingAnimation;
 
         ReadoutAudioSampleMain.text = DimLeadingZeros(musicEngine.MusicPlayer.timeSamples.ToString("00 000 000"));
         ReadoutAudioSampleLobby.text = DimLeadingZeros(musicEngine.MusicPlayerLobby.timeSamples.ToString("00 000 000"));

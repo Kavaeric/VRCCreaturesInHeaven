@@ -56,7 +56,9 @@ public class MusicEngine : UdonSharpBehaviour
 
     // --- Network state -----------------------------------------------
     public bool IsOwner => Networking.IsOwner(Networking.LocalPlayer, gameObject);
-    public bool PlayerInSpawn { get; private set; }
+
+    // --- Inspector references (audience) -----------------------------
+    public AudienceManager AudienceManager;
 
     // --- Tick event system -------------------------------------------
     // Each Update(), if the tick index has advanced, all TickListeners
@@ -113,7 +115,7 @@ public class MusicEngine : UdonSharpBehaviour
     // because I can't use TextField.text in Udon for some reason.
     public void StartButtonPressedForward()
     {
-        float customStartTime = 0.45f;
+        float customStartTime = 0.65f;
         Networking.SetOwner(Networking.LocalPlayer, gameObject);
         LocalAnimationTime = customStartTime;
         _syncedAnimationTime = customStartTime;
@@ -157,12 +159,8 @@ public class MusicEngine : UdonSharpBehaviour
 
     void Update()
     {
-        // Swap between muffled and full-volume based on proximity to the lobby.
-        // Will be replaced with something more robust in the future.
-        PlayerInSpawn = Networking.LocalPlayer.GetPosition().y > -100f && Networking.LocalPlayer.GetPosition().y < 100f;
-
-        MusicPlayerLobby.volume = PlayerInSpawn ? 0.6f : 0f;
-        MusicPlayer.volume = PlayerInSpawn ? 0f : 0.8f;
+        MusicPlayerLobby.volume = AudienceManager.WatchingAnimation ? 0f : 0.6f;
+        MusicPlayer.volume = AudienceManager.WatchingAnimation ? 0.8f : 0f;
 
         // Start is only available before playback; Join is only available during.
         ButtonStart.interactable = !_syncedPlaying;

@@ -2,11 +2,8 @@
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
-using VRC.Udon;
-
-#if UNITY_EDITOR
 using UnityEditor;
-#endif
+using VRC.Udon;
 
 public enum MatchLocalPlayerPositionMode
 {
@@ -19,6 +16,7 @@ public class MatchLocalPlayerPosition : UdonSharpBehaviour
 {
     [SerializeField] private MatchLocalPlayerPositionMode mode = MatchLocalPlayerPositionMode.OnEnable;
     [SerializeField] private Vector3 offset = Vector3.zero;
+    [SerializeField] private AudienceManager audienceManager;
 
     private bool afterStart;
     void Start()
@@ -51,10 +49,8 @@ public class MatchLocalPlayerPosition : UdonSharpBehaviour
 
     public void SnapToPlayer()
     {
-        // This is a hack to prevent the object from snapping to the player's position when they are in the spawn.
-        // TODO: Remove this once we have a better way to seperate lobby/spawn players and players in the animation.
-        // if (Networking.LocalPlayer.GetPosition().y < 100f || Networking.LocalPlayer.GetPosition().y > -100f)
-        //    return;
+        if (audienceManager != null && !audienceManager.WatchingAnimation)
+            return;
 
         transform.SetPositionAndRotation(Networking.LocalPlayer.GetPosition() + offset, transform.rotation);
     }
@@ -89,6 +85,12 @@ public class MatchLocalPlayerPositionEditor : Editor
                 EditorGUILayout.HelpBox("This object will follow the local player's position every frame.", MessageType.None);
                 break;
         }
+
+        EditorGUILayout.Space(8f);
+
+        EditorGUILayout.LabelField("References", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("audienceManager"),
+            new GUIContent("Audience Manager", "If assigned, SnapToPlayer() will do nothing while the player is not watching the animation."));
 
         EditorGUILayout.Space(8f);
 

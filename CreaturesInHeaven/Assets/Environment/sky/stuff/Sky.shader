@@ -33,8 +33,10 @@ Shader "atmospheric/sky"
     }
     SubShader
     {
-        Tags { "Queue"="Background" "RenderType"="Background" "PreviewType"="Skybox" }
-        Cull Off ZWrite On
+        Tags { "RenderType"="Opaque" }
+
+        Cull Off
+        ZWrite On
 
         Pass
         {

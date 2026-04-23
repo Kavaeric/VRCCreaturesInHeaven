@@ -19,7 +19,7 @@ Shader "atmospheric/shoeboxsky"
         _SunDiscBrightness ("_SunDiscBrightness", Range(0, 100)) = 10
 
         [Header(Plane 0)] [Space]
-        _Plane0Texture ("_Plane0Texture", 2D) = "white" {}
+        _Plane0Texture ("_Plane0Texture", 2D) = "transparent" {}
         _Plane0Scroll ("_Plane0Scroll", Range(0, 1)) = 0
         [HideInInspector] _Plane0Pos ("_Plane0Pos", Vector) = (0,0,0,0)
         [HideInInspector] _Plane0Tangent ("_Plane0Tangent", Vector) = (1,0,0,0)
@@ -27,7 +27,7 @@ Shader "atmospheric/shoeboxsky"
         [HideInInspector] _Plane0Size ("_Plane0Size", Float) = 1000
 
         [Header(Plane 1)] [Space]
-        _Plane1Texture ("_Plane1Texture", 2D) = "white" {}
+        _Plane1Texture ("_Plane1Texture", 2D) = "transparent" {}
         _Plane1Scroll ("_Plane1Scroll", Range(0, 1)) = 0
         [HideInInspector] _Plane1Pos ("_Plane1Pos", Vector) = (0,0,0,0)
         [HideInInspector] _Plane1Tangent ("_Plane1Tangent", Vector) = (1,0,0,0)
@@ -35,7 +35,7 @@ Shader "atmospheric/shoeboxsky"
         [HideInInspector] _Plane1Size ("_Plane1Size", Float) = 1000
 
         [Header(Plane 2)] [Space]
-        _Plane2Texture ("_Plane2Texture", 2D) = "white" {}
+        _Plane2Texture ("_Plane2Texture", 2D) = "transparent" {}
         _Plane2Scroll ("_Plane2Scroll", Range(0, 1)) = 0
         [HideInInspector] _Plane2Pos ("_Plane2Pos", Vector) = (0,0,0,0)
         [HideInInspector] _Plane2Tangent ("_Plane2Tangent", Vector) = (1,0,0,0)
@@ -43,7 +43,7 @@ Shader "atmospheric/shoeboxsky"
         [HideInInspector] _Plane2Size ("_Plane2Size", Float) = 1000
 
         [Header(Plane 3)] [Space]
-        _Plane3Texture ("_Plane3Texture", 2D) = "white" {}
+        _Plane3Texture ("_Plane3Texture", 2D) = "transparent" {}
         _Plane3Scroll ("_Plane3Scroll", Range(0, 1)) = 0
         [HideInInspector] _Plane3Pos ("_Plane3Pos", Vector) = (0,0,0,0)
         [HideInInspector] _Plane3Tangent ("_Plane3Tangent", Vector) = (1,0,0,0)
@@ -51,7 +51,7 @@ Shader "atmospheric/shoeboxsky"
         [HideInInspector] _Plane3Size ("_Plane3Size", Float) = 1000
 
         [Header(Plane 4)] [Space]
-        _Plane4Texture ("_Plane4Texture", 2D) = "white" {}
+        _Plane4Texture ("_Plane4Texture", 2D) = "transparent" {}
         _Plane4Scroll ("_Plane4Scroll", Range(0, 1)) = 0
         [HideInInspector] _Plane4Pos ("_Plane4Pos", Vector) = (0,0,0,0)
         [HideInInspector] _Plane4Tangent ("_Plane4Tangent", Vector) = (1,0,0,0)
@@ -59,7 +59,7 @@ Shader "atmospheric/shoeboxsky"
         [HideInInspector] _Plane4Size ("_Plane4Size", Float) = 1000
 
         [Header(Plane 5)] [Space]
-        _Plane5Texture ("_Plane5Texture", 2D) = "white" {}
+        _Plane5Texture ("_Plane5Texture", 2D) = "transparent" {}
         _Plane5Scroll ("_Plane5Scroll", Range(0, 1)) = 0
         [HideInInspector] _Plane5Pos ("_Plane5Pos", Vector) = (0,0,0,0)
         [HideInInspector] _Plane5Tangent ("_Plane5Tangent", Vector) = (1,0,0,0)
@@ -71,8 +71,7 @@ Shader "atmospheric/shoeboxsky"
     }
     SubShader
     {
-        // HDR output tag required for values above 1.0 to survive to the framebuffer.
-        Tags { "RenderType"="Opaque" "PreviewType"="Skybox" }
+        Tags { "RenderType"="Opaque" }
 
         Cull [_CullMode]
         ZWrite On

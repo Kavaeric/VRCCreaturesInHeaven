@@ -7,12 +7,13 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Sky
+  m_Name: Sky Gr
   m_Shader: {fileID: 4800000, guid: e5957ccaca4241145be3a7bba43614b3, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
-  m_InvalidKeywords: []
+  m_InvalidKeywords:
+  - _GROUNDENABLED_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -36,39 +37,39 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Plane0Texture:
-        m_Texture: {fileID: 2800000, guid: 9a12fc159abd1334babbb05cc75fea05, type: 3}
+        m_Texture: {fileID: 2800000, guid: a00ce40793562db46869bb30a0b596fc, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Plane1Texture:
-        m_Texture: {fileID: 2800000, guid: 9a12fc159abd1334babbb05cc75fea05, type: 3}
+        m_Texture: {fileID: 2800000, guid: a00ce40793562db46869bb30a0b596fc, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Plane2Texture:
-        m_Texture: {fileID: 2800000, guid: 9a12fc159abd1334babbb05cc75fea05, type: 3}
+        m_Texture: {fileID: 2800000, guid: a00ce40793562db46869bb30a0b596fc, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Plane3Texture:
-        m_Texture: {fileID: 2800000, guid: 9a12fc159abd1334babbb05cc75fea05, type: 3}
+        m_Texture: {fileID: 2800000, guid: a00ce40793562db46869bb30a0b596fc, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Plane4Texture:
-        m_Texture: {fileID: 2800000, guid: 9a12fc159abd1334babbb05cc75fea05, type: 3}
+        m_Texture: {fileID: 2800000, guid: a00ce40793562db46869bb30a0b596fc, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Plane5Texture:
-        m_Texture: {fileID: 2800000, guid: 9a12fc159abd1334babbb05cc75fea05, type: 3}
+        m_Texture: {fileID: 2800000, guid: a00ce40793562db46869bb30a0b596fc, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Altitude: 2000
+    - _Altitude: 8000
     - _AtmosphereRadius: 72260
     - _CullMode: 1
     - _Density: 1
     - _Exposure: 1
-    - _GroundEnabled: 0
+    - _GroundEnabled: 1
     - _GroundScollX: 0
-    - _GroundScollY: 0
+    - _GroundScollY: 0.5
     - _MieScattering: 1
     - _Plane0Scroll: 0
     - _Plane0Size: 4000

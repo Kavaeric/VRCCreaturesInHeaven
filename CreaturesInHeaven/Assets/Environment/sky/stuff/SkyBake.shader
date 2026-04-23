@@ -10,7 +10,6 @@ Shader "atmospheric/bake"
         
         _MieScaleHeight ("_MieScaleHeight", Range(0, 1)) = 1
         _RayleighScaleHeight ("_RayleighScaleHeight", Range(0, 1)) = 1
-        _Exposure ("_Exposure", Range(0, 10)) = 1
      }
 
      SubShader
@@ -33,7 +32,6 @@ Shader "atmospheric/bake"
             float _Density;
             float _MieScaleHeight;
             float _RayleighScaleHeight;
-            float _Exposure;
             #define PI 3.141592
             #define iSteps 32
             #define jSteps 16
@@ -203,7 +201,7 @@ Shader "atmospheric/bake"
                     0.758                                                      // Mie preferred scattering direction
                 );
 
-                return float4(col * _Exposure, _CrusieHeight);
+                return float4(col, _CrusieHeight);
             }
             ENDCG
         }

@@ -7,6 +7,10 @@ Shader "atmospheric/bake"
         _Density ("Atmosphere Density", Range(0, 4)) = 1
         _MieScattering ("Mie Scattering (large particles)", Range(0, 1)) = 1
         _RayleighScattering ("Rayleigh Scattering (small particles)", Range(0, 1)) = 1
+        
+        _MieScaleHeight ("_MieScaleHeight", Range(0, 1)) = 1
+        _RayleighScaleHeight ("_RayleighScaleHeight", Range(0, 1)) = 1
+        _Exposure ("_Exposure", Range(0, 10)) = 1
      }
 
      SubShader
@@ -27,6 +31,8 @@ Shader "atmospheric/bake"
             float _RayleighScattering;
             float _MieScattering;
             float _Density;
+            float _MieScaleHeight;
+            float _RayleighScaleHeight;
             
             #define PI 3.141592
             #define iSteps 32
@@ -192,12 +198,12 @@ Shader "atmospheric/bake"
                     planetRadius+atmosphereRadius,                             // radius of the atmosphere in meters
                     float3(5.5e-6, 13.0e-6, 22.4e-6) * _RayleighScattering * _Density,     // Rayleigh scattering coefficient
                     21e-6 * _MieScattering * _Density,                                     // Mie scattering coefficient
-                    8e3,                                                        // Rayleigh scale height
-                    1.2e3,                                                      // Mie scale height
+                    8e3 * _RayleighScaleHeight,                                                        // Rayleigh scale height
+                    1.2e3 * _MieScaleHeight,                                                      // Mie scale height
                     0.758                                                      // Mie preferred scattering direction
                 );
 
-                return float4(col, _CrusieHeight);
+                return float4(col * _Exposure, _CrusieHeight);
             }
             ENDCG
         }

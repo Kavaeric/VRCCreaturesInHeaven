@@ -33,7 +33,7 @@ Shader "atmospheric/bake"
             float _Density;
             float _MieScaleHeight;
             float _RayleighScaleHeight;
-            
+            float _Exposure;
             #define PI 3.141592
             #define iSteps 32
             #define jSteps 16

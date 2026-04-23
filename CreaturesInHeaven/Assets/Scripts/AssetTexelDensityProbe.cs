@@ -61,6 +61,21 @@ public class AssetTexelDensityProbe : MonoBehaviour
         Gizmos.color = gizmosColor;
         Gizmos.DrawLine(transform.position, vantagePoint.position);
         Gizmos.DrawSphere(vantagePoint.position, 0.05f);
+
+        HeadsetSpec hs = GetSpec();
+        float dist = Vector3.Distance(transform.position, vantagePoint.position);
+        if (dist <= 0f) return;
+
+        float density = DistanceToDensity(dist, hs);
+        string label = $"{density:0.##} px/m";
+
+        if (assetSize > 0f)
+        {
+            float naivePx = density * assetSize;
+            label += $"\n{naivePx:0} px to cover {assetSize:0.##} m";
+        }
+
+        Handles.Label(transform.position, label);
     }
 
 #endif

@@ -7,8 +7,15 @@ public class SkyPlanes : UdonSharpBehaviour
 {
     public Material skyMaterial;
 
+    // When enabled, plane transforms are pushed to the material every frame.
+    public bool animate = false;
+
     public Transform plane0;
     public Transform plane1;
+    public Transform plane2;
+    public Transform plane3;
+    public Transform plane4;
+    public Transform plane5;
 
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
 
@@ -20,24 +27,34 @@ public class SkyPlanes : UdonSharpBehaviour
 
     public void SetPlanes()
     {
+        SetPlane(plane0, "_Plane0");
+        SetPlane(plane1, "_Plane1");
+        SetPlane(plane2, "_Plane2");
+        SetPlane(plane3, "_Plane3");
+        SetPlane(plane4, "_Plane4");
+        SetPlane(plane5, "_Plane5");
+    }
 
-        skyMaterial.SetVector("_Plane0Pos", plane0.transform.position);
-        skyMaterial.SetVector("_Plane0Tangent", plane0.transform.forward);
-        skyMaterial.SetVector("_Plane0Bitangent", plane0.transform.right);
-        skyMaterial.SetFloat("_Plane0Size", (plane0.localScale.x +
-                                                    plane0.localScale.y +
-                                                    plane0.localScale.z) / 3.0f);
+    void SetPlane(Transform plane, string prefix)
+    {
+        // Skip unassigned slots.
+        if (plane == null) return;
 
-        skyMaterial.SetVector("_Plane1Pos", plane1.transform.position);
-        skyMaterial.SetVector("_Plane1Tangent", plane1.transform.forward);
-        skyMaterial.SetVector("_Plane1Bitangent", plane1.transform.right);
-        skyMaterial.SetFloat("_Plane1Size", (plane1.localScale.x +
-                                                    plane1.localScale.y +
-                                                    plane1.localScale.z) / 3.0f);
+        skyMaterial.SetVector(prefix + "Pos",      plane.position);
+        skyMaterial.SetVector(prefix + "Tangent",  plane.forward);
+        skyMaterial.SetVector(prefix + "Bitangent", plane.right);
+        skyMaterial.SetFloat(prefix + "Size",      (plane.localScale.x +
+                                                    plane.localScale.y +
+                                                    plane.localScale.z) / 3.0f);
     }
 
     void Start()
     {
         SetPlanes();
+    }
+
+    void Update()
+    {
+        if (animate) SetPlanes();
     }
 }

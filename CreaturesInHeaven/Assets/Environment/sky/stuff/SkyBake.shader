@@ -3,7 +3,7 @@ Shader "atmospheric/bake"
     Properties
     {
         [Header(Atmosphere)] [Space]
-        _CrusieHeight ("_CrusieHeight", Range(0, 10000)) = 10000
+        _Altitude ("_Altitude", Range(0, 10000)) = 10000
         _Density ("Atmosphere Density", Range(0, 4)) = 1
         _MieScattering ("Mie Scattering (large particles)", Range(0, 1)) = 1
         _RayleighScattering ("Rayleigh Scattering (small particles)", Range(0, 1)) = 1
@@ -26,7 +26,7 @@ Shader "atmospheric/bake"
             #pragma target 3.0
             
             sampler2D _BakedTexture;
-            float _CrusieHeight;
+            float _Altitude;
             float _RayleighScattering;
             float _MieScattering;
             float _Density;
@@ -183,7 +183,7 @@ Shader "atmospheric/bake"
                 float planetRadius = 6371000;
                 float atmosphereRadius = 1000000;
                 float3 sunDirection = _WorldSpaceLightPos0.xyz;
-                float3 rayOrigin = float3(0, planetRadius + _CrusieHeight, 0) + _WorldSpaceCameraPos;
+                float3 rayOrigin = float3(0, planetRadius + _Altitude, 0) + _WorldSpaceCameraPos;
 
                 float3 rayDir = LatLongToDir(input.localTexcoord, 3);
 
@@ -201,7 +201,7 @@ Shader "atmospheric/bake"
                     0.758                                                      // Mie preferred scattering direction
                 );
 
-                return float4(col, _CrusieHeight);
+                return float4(col, _Altitude);
             }
             ENDCG
         }

@@ -8,12 +8,11 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Sky
-  m_Shader: {fileID: 4800000, guid: 23e0ffb27f9642e45b15fa5786014f21, type: 3}
+  m_Shader: {fileID: 4800000, guid: e5957ccaca4241145be3a7bba43614b3, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
-  m_InvalidKeywords:
-  - _GROUNDENABLED_ON
+  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -25,7 +24,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BakedTexture:
-        m_Texture: {fileID: 8600000, guid: f9e707f4a3a1e474bb4c369c7f327313, type: 2}
+        m_Texture: {fileID: 2800000, guid: 3beea499357c1bc4094d203033a66889, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _GroundTexture:
@@ -37,40 +36,42 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Plane0Texture:
-        m_Texture: {fileID: 2800000, guid: d8d6e33232d33bd45962bfd4dbaa9d19, type: 3}
+        m_Texture: {fileID: 2800000, guid: 9a12fc159abd1334babbb05cc75fea05, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Plane1Texture:
-        m_Texture: {fileID: 2800000, guid: d8d6e33232d33bd45962bfd4dbaa9d19, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _Altitude: 2000
     - _AtmosphereRadius: 72260
-    - _CrusieHeight: 3000
+    - _CullMode: 1
     - _Density: 1
-    - _GroundEnabled: 1
+    - _Exposure: 1
+    - _GroundEnabled: 0
     - _GroundScollX: 0
     - _GroundScollY: 0
     - _MieScattering: 1
-    - _Plane0Scroll: 0.315
-    - _Plane0Size: 181.16342
-    - _Plane1Scroll: 0.128
-    - _Plane1Size: 32.56551
+    - _Plane0Scroll: 0
+    - _Plane0Size: 4000
+    - _Plane1Scroll: 0
+    - _Plane1Size: 30
     - _PlanetRadius: 1
     - _Property: 1
     - _RayleighScattering: 1
+    - _Rotation: 60
     - _Scattering: 0.24
     - _ScollX: 0.1
     - _ScollY: 0
     - _SunDiscBrightness: 100
-    - _SunDiscRadius: 0.0161
-    - _crusieHeight: 10000
+    - _SunDiscRadius: 0.01
     m_Colors:
-    - _Plane0Bitangent: {r: 0.6858787, g: 0.2499499, b: 0.6834438, a: 0}
-    - _Plane0Pos: {r: 131.7, g: -17.6, b: -124, a: 0}
-    - _Plane0Tangent: {r: -0.21604063, g: -0.82688415, b: 0.5192195, a: 0}
-    - _Plane1Bitangent: {r: -0.15655498, g: -0.08024588, b: 0.984404, a: 0}
-    - _Plane1Pos: {r: 84.6, g: -18.9, b: -54.3, a: 0}
-    - _Plane1Tangent: {r: -0.97716314, g: -0.13240512, b: -0.16619672, a: 0}
+    - _Plane0Bitangent: {r: -0.00000011920929, g: 0, b: -1.0000001, a: 0}
+    - _Plane0Pos: {r: 0, g: 5000, b: 0, a: 0}
+    - _Plane0Tangent: {r: 1.0000001, g: 0, b: -0.00000011920929, a: 0}
+    - _Plane1Bitangent: {r: 1, g: 0, b: 0, a: 0}
+    - _Plane1Pos: {r: 0, g: 1000, b: 0, a: 0}
+    - _Plane1Tangent: {r: 0, g: 0, b: 1, a: 0}
   m_BuildTextureStacks: []

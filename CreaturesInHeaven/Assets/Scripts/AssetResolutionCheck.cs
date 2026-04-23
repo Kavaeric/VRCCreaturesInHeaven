@@ -1,13 +1,10 @@
 
-using UdonSharp;
 using UnityEngine;
-using VRC.SDKBase;
-using VRC.Udon;
 using UnityEditor;
 
-public class AssetResolutionCheck : UdonSharpBehaviour
+public class AssetResolutionCheck : MonoBehaviour
 {
-#if !COMPILER_UDONSHARP && UNITY_EDITOR
+#if UNITY_EDITOR
 
     enum HeadsetPreset { ValveIndex, QuestPro, Beyond2E, SteamFrame, Custom }
 
@@ -30,14 +27,14 @@ public class AssetResolutionCheck : UdonSharpBehaviour
 
     struct HeadsetSpec { public int resX, resY; public float fovH, fovV; }
 
-    HeadsetSpec GetSpec() => headset switch
+    HeadsetSpec GetSpec()
     {
-        HeadsetPreset.ValveIndex  => new HeadsetSpec { resX = 1440, resY = 1600, fovH = 108f,  fovV = 104f   },
-        HeadsetPreset.QuestPro    => new HeadsetSpec { resX = 1800, resY = 1920, fovH = 106f,  fovV = 95.57f },
-        HeadsetPreset.Beyond2E    => new HeadsetSpec { resX = 2560, resY = 2560, fovH = 110f,  fovV = 97f    },
-        HeadsetPreset.SteamFrame  => new HeadsetSpec { resX = 2160, resY = 2160, fovH = 110f,  fovV = 110f   },
-        _                         => new HeadsetSpec { resX = customResX, resY = customResY, fovH = customFovH, fovV = customFovV },
-    };
+        if (headset == HeadsetPreset.ValveIndex)  return new HeadsetSpec { resX = 1440, resY = 1600, fovH = 108f,  fovV = 104f   };
+        if (headset == HeadsetPreset.QuestPro)    return new HeadsetSpec { resX = 1800, resY = 1920, fovH = 106f,  fovV = 95.57f };
+        if (headset == HeadsetPreset.Beyond2E)    return new HeadsetSpec { resX = 2560, resY = 2560, fovH = 110f,  fovV = 97f    };
+        if (headset == HeadsetPreset.SteamFrame)  return new HeadsetSpec { resX = 2160, resY = 2160, fovH = 110f,  fovV = 110f   };
+        return new HeadsetSpec { resX = customResX, resY = customResY, fovH = customFovH, fovV = customFovV };
+    }
 
     // Returns the distance (m) at which texel density equals targetDensity px/m for the given headset.
     // texelDensity = 1 / minDetail, minDetail = 2 * dist * tan(π / (ppd * 360))
@@ -112,7 +109,7 @@ public class AssetResolutionCheck : UdonSharpBehaviour
 #endif
 }
 
-#if !COMPILER_UDONSHARP && UNITY_EDITOR
+#if UNITY_EDITOR
 [CustomEditor(typeof(AssetResolutionCheck))]
 public class AssetResolutionCheckEditor : Editor
 {

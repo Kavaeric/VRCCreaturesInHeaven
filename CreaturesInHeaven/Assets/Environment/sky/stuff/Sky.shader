@@ -30,12 +30,15 @@ Shader "atmospheric/sky"
         [HideInInspector] _Plane1Tangent ("_Plane1Tangent", Vector) = (1,0,0,0)
         [HideInInspector] _Plane1Bitangent ("_Plane1Bitangent", Vector) = (0,0,1,0)
         [HideInInspector] _Plane1Size ("_Plane1Size", Float) = 1000
+
+        [Header(Rendering)] [Space]
+        [Enum(UnityEngine.Rendering.CullMode)] _CullMode ("Cull Mode", Float) = 0
     }
     SubShader
     {
         Tags { "Queue"="Background" "RenderType"="Background" "PreviewType"="Skybox" }
 
-        Cull Off
+        Cull [_CullMode]
         ZWrite On
 
         Pass
@@ -176,8 +179,8 @@ Shader "atmospheric/sky"
                 float3 rayDir = normalize(input.worldPos - _WorldSpaceCameraPos);
 
                 float4 col = tex2D(_BakedTexture, DirToLatLong(rayDir, 3));
-                float _CrusieHeight = col.a;
-                float3 rayOrigin = float3(0, planetRadius + _CrusieHeight, 0) + _WorldSpaceCameraPos;
+                float altitude = col.a;
+                float3 rayOrigin = float3(0, planetRadius + altitude, 0) + _WorldSpaceCameraPos;
 
                 float3 planetNormal = 0;
                 float2 uv = RaySphereUV(rayOrigin, rayDir, float3(0, 0, 0), planetRadius, 1000, planetNormal);

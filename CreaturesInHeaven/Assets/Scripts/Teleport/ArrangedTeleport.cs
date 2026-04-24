@@ -6,6 +6,7 @@ using VRC.Udon;
 using VRC.Udon.Common.Interfaces;
 using VRC.SDK3.UdonNetworkCalling;
 
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -194,7 +195,11 @@ public class ArrangedTeleport : UdonSharpBehaviour
 
             int slot = slotIndexArray[i];
             Debug.Log($"    Teleporting player {localId} to slot {slot}.");
-            Networking.LocalPlayer.TeleportTo(teleportSlots[slot].position, SlotRotation(slot));
+
+            VRC_SceneDescriptor.SpawnOrientation orientation = rotationMode == ArrangedTeleportRotationMode.Relative
+                ? VRC_SceneDescriptor.SpawnOrientation.AlignRoomWithSpawnPoint
+                : VRC_SceneDescriptor.SpawnOrientation.AlignPlayerWithSpawnPoint;
+            Networking.LocalPlayer.TeleportTo(teleportSlots[slot].position, SlotRotation(slot), orientation);
 
             if (postTeleportCallbacks != null)
                 foreach (UdonSharpBehaviour cb in postTeleportCallbacks)
@@ -216,9 +221,8 @@ public class ArrangedTeleport : UdonSharpBehaviour
                 return Networking.LocalPlayer.GetRotation();
 
             case ArrangedTeleportRotationMode.Relative:
-                // Rotate the player's current forward into the slot's frame relative to the entry zone.
-                Vector3 localForward = Quaternion.Inverse(entry.rotation) * (Networking.LocalPlayer.GetRotation() * Vector3.forward);
-                return Quaternion.LookRotation(teleportSlots[slotIndex].rotation * localForward);
+                Quaternion delta = teleportSlots[slotIndex].rotation * Quaternion.Inverse(entry.rotation);
+                return delta * Networking.LocalPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.Origin).rotation;
 
             default: // AlignToSlot
                 return teleportSlots[slotIndex].rotation;

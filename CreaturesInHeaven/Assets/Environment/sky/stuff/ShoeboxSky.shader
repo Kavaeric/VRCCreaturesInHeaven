@@ -200,6 +200,7 @@ Shader "atmospheric/shoeboxsky"
             float _Plane0Size;
             float _Plane0Scroll;
             sampler2D _Plane0Texture;
+            float4 _Plane0Texture_ST;
 
             float3 _Plane1Pos;
             float3 _Plane1Tangent;
@@ -207,6 +208,7 @@ Shader "atmospheric/shoeboxsky"
             float _Plane1Size;
             float _Plane1Scroll;
             sampler2D _Plane1Texture;
+            float4 _Plane1Texture_ST;
 
             float3 _Plane2Pos;
             float3 _Plane2Tangent;
@@ -214,6 +216,7 @@ Shader "atmospheric/shoeboxsky"
             float _Plane2Size;
             float _Plane2Scroll;
             sampler2D _Plane2Texture;
+            float4 _Plane2Texture_ST;
 
             float3 _Plane3Pos;
             float3 _Plane3Tangent;
@@ -221,6 +224,7 @@ Shader "atmospheric/shoeboxsky"
             float _Plane3Size;
             float _Plane3Scroll;
             sampler2D _Plane3Texture;
+            float4 _Plane3Texture_ST;
 
             float3 _Plane4Pos;
             float3 _Plane4Tangent;
@@ -228,6 +232,7 @@ Shader "atmospheric/shoeboxsky"
             float _Plane4Size;
             float _Plane4Scroll;
             sampler2D _Plane4Texture;
+            float4 _Plane4Texture_ST;
 
             float3 _Plane5Pos;
             float3 _Plane5Tangent;
@@ -235,6 +240,7 @@ Shader "atmospheric/shoeboxsky"
             float _Plane5Size;
             float _Plane5Scroll;
             sampler2D _Plane5Texture;
+            float4 _Plane5Texture_ST;
 
             // half4 instead of fixed4 to preserve HDR values above 1.0.
             half4 frag (v2f input) : SV_Target
@@ -280,7 +286,7 @@ Shader "atmospheric/shoeboxsky"
                     normalize(_Plane0Tangent.rgb)  /_Plane0Size,
                     normalize(_Plane0Bitangent.rgb)/_Plane0Size, planeUV))
                 {
-                    planeUV += float2(_Plane0Scroll*_Time.r, 0);
+                    planeUV = TRANSFORM_TEX(planeUV, _Plane0Texture) + float2(_Plane0Scroll*_Time.r, 0);
                     float4 plane = tex2D(_Plane0Texture, planeUV);
                     result = lerp(result, plane.rgb, plane.a);
                 }
@@ -290,7 +296,7 @@ Shader "atmospheric/shoeboxsky"
                     normalize(_Plane1Tangent.rgb)  /_Plane1Size,
                     normalize(_Plane1Bitangent.rgb)/_Plane1Size, planeUV))
                 {
-                    planeUV += float2(_Plane1Scroll*_Time.r, 0);
+                    planeUV = TRANSFORM_TEX(planeUV, _Plane1Texture) + float2(_Plane1Scroll*_Time.r, 0);
                     float4 plane = tex2D(_Plane1Texture, planeUV);
                     result = lerp(result, plane.rgb, plane.a);
                 }
@@ -300,7 +306,7 @@ Shader "atmospheric/shoeboxsky"
                     normalize(_Plane2Tangent.rgb)  /_Plane2Size,
                     normalize(_Plane2Bitangent.rgb)/_Plane2Size, planeUV))
                 {
-                    planeUV += float2(_Plane2Scroll*_Time.r, 0);
+                    planeUV = TRANSFORM_TEX(planeUV, _Plane2Texture) + float2(_Plane2Scroll*_Time.r, 0);
                     float4 plane = tex2D(_Plane2Texture, planeUV);
                     result = lerp(result, plane.rgb, plane.a);
                 }
@@ -310,7 +316,7 @@ Shader "atmospheric/shoeboxsky"
                     normalize(_Plane3Tangent.rgb)  /_Plane3Size,
                     normalize(_Plane3Bitangent.rgb)/_Plane3Size, planeUV))
                 {
-                    planeUV += float2(_Plane3Scroll*_Time.r, 0);
+                    planeUV = TRANSFORM_TEX(planeUV, _Plane3Texture) + float2(_Plane3Scroll*_Time.r, 0);
                     float4 plane = tex2D(_Plane3Texture, planeUV);
                     result = lerp(result, plane.rgb, plane.a);
                 }
@@ -320,7 +326,7 @@ Shader "atmospheric/shoeboxsky"
                     normalize(_Plane4Tangent.rgb)  /_Plane4Size,
                     normalize(_Plane4Bitangent.rgb)/_Plane4Size, planeUV))
                 {
-                    planeUV += float2(_Plane4Scroll*_Time.r, 0);
+                    planeUV = TRANSFORM_TEX(planeUV, _Plane4Texture) + float2(_Plane4Scroll*_Time.r, 0);
                     float4 plane = tex2D(_Plane4Texture, planeUV);
                     result = lerp(result, plane.rgb, plane.a);
                 }
@@ -330,7 +336,7 @@ Shader "atmospheric/shoeboxsky"
                     normalize(_Plane5Tangent.rgb)  /_Plane5Size,
                     normalize(_Plane5Bitangent.rgb)/_Plane5Size, planeUV))
                 {
-                    planeUV += float2(_Plane5Scroll*_Time.r, 0);
+                    planeUV = TRANSFORM_TEX(planeUV, _Plane5Texture) + float2(_Plane5Scroll*_Time.r, 0);
                     float4 plane = tex2D(_Plane5Texture, planeUV);
                     result = lerp(result, plane.rgb, plane.a);
                 }

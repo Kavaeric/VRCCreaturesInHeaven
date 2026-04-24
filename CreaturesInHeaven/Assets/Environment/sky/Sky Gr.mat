@@ -37,27 +37,27 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Plane0Texture:
-        m_Texture: {fileID: 2800000, guid: a00ce40793562db46869bb30a0b596fc, type: 3}
+        m_Texture: {fileID: 2800000, guid: aebea03c6c61b5c46ab04da2c7cbcd54, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Plane1Texture:
-        m_Texture: {fileID: 2800000, guid: a00ce40793562db46869bb30a0b596fc, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Plane2Texture:
-        m_Texture: {fileID: 2800000, guid: a00ce40793562db46869bb30a0b596fc, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Plane3Texture:
-        m_Texture: {fileID: 2800000, guid: a00ce40793562db46869bb30a0b596fc, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Plane4Texture:
-        m_Texture: {fileID: 2800000, guid: a00ce40793562db46869bb30a0b596fc, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Plane5Texture:
-        m_Texture: {fileID: 2800000, guid: a00ce40793562db46869bb30a0b596fc, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
@@ -72,17 +72,17 @@ Material:
     - _GroundScollY: 0.5
     - _MieScattering: 1
     - _Plane0Scroll: 0
-    - _Plane0Size: 4000
+    - _Plane0Size: 0
     - _Plane1Scroll: 0
-    - _Plane1Size: 4000
+    - _Plane1Size: 0
     - _Plane2Scroll: 0
-    - _Plane2Size: 4000
+    - _Plane2Size: 0
     - _Plane3Scroll: 0
-    - _Plane3Size: 4000
+    - _Plane3Size: 0
     - _Plane4Scroll: 0
-    - _Plane4Size: 4000
+    - _Plane4Size: 0
     - _Plane5Scroll: 0
-    - _Plane5Size: 4000
+    - _Plane5Size: 0
     - _PlanetRadius: 1
     - _Property: 1
     - _RayleighScattering: 1
@@ -93,22 +93,22 @@ Material:
     - _SunDiscBrightness: 100
     - _SunDiscRadius: 0.01
     m_Colors:
-    - _Plane0Bitangent: {r: -0.00000011920929, g: 0, b: -1.0000001, a: 0}
-    - _Plane0Pos: {r: 3000, g: 5000, b: 0, a: 0}
-    - _Plane0Tangent: {r: 1.0000001, g: 0, b: -0.00000011920929, a: 0}
-    - _Plane1Bitangent: {r: -0.00000011920929, g: 0, b: -1.0000001, a: 0}
-    - _Plane1Pos: {r: 0, g: 4500, b: 1000, a: 0}
-    - _Plane1Tangent: {r: 1.0000001, g: 0, b: -0.00000011920929, a: 0}
-    - _Plane2Bitangent: {r: -0.00000011920929, g: 0, b: -1.0000001, a: 0}
-    - _Plane2Pos: {r: -3000, g: 4500, b: 1000, a: 0}
-    - _Plane2Tangent: {r: 1.0000001, g: 0, b: -0.00000011920929, a: 0}
-    - _Plane3Bitangent: {r: -0.00000011920929, g: 0, b: -1.0000001, a: 0}
-    - _Plane3Pos: {r: 4000, g: 3500, b: 0, a: 0}
-    - _Plane3Tangent: {r: 1.0000001, g: 0, b: -0.00000011920929, a: 0}
-    - _Plane4Bitangent: {r: -0.00000011920929, g: 0, b: -1.0000001, a: 0}
-    - _Plane4Pos: {r: 200, g: 3500, b: 0, a: 0}
-    - _Plane4Tangent: {r: 1.0000001, g: 0, b: -0.00000011920929, a: 0}
-    - _Plane5Bitangent: {r: -0.00000011920929, g: 0, b: -1.0000001, a: 0}
-    - _Plane5Pos: {r: -4000, g: 3500, b: 0, a: 0}
-    - _Plane5Tangent: {r: 1.0000001, g: 0, b: -0.00000011920929, a: 0}
+    - _Plane0Bitangent: {r: 1, g: 0, b: 0, a: 0}
+    - _Plane0Pos: {r: 0, g: 1500, b: 0, a: 0}
+    - _Plane0Tangent: {r: 0, g: 0, b: 1, a: 0}
+    - _Plane1Bitangent: {r: 1, g: 0, b: 0, a: 0}
+    - _Plane1Pos: {r: 0, g: 1500, b: 0, a: 0}
+    - _Plane1Tangent: {r: 0, g: 0, b: 1, a: 0}
+    - _Plane2Bitangent: {r: 1, g: 0, b: 0, a: 0}
+    - _Plane2Pos: {r: 0, g: 1500, b: 0, a: 0}
+    - _Plane2Tangent: {r: 0, g: 0, b: 1, a: 0}
+    - _Plane3Bitangent: {r: 1, g: 0, b: 0, a: 0}
+    - _Plane3Pos: {r: 0, g: 1500, b: 0, a: 0}
+    - _Plane3Tangent: {r: 0, g: 0, b: 1, a: 0}
+    - _Plane4Bitangent: {r: 1, g: 0, b: 0, a: 0}
+    - _Plane4Pos: {r: 0, g: 1500, b: 0, a: 0}
+    - _Plane4Tangent: {r: 0, g: 0, b: 1, a: 0}
+    - _Plane5Bitangent: {r: 1, g: 0, b: 0, a: 0}
+    - _Plane5Pos: {r: 0, g: 1500, b: 0, a: 0}
+    - _Plane5Tangent: {r: 0, g: 0, b: 1, a: 0}
   m_BuildTextureStacks: []

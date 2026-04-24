@@ -13,7 +13,13 @@ public class MusicEngine : UdonSharpBehaviour
     [SerializeField] public float BPM = 80f;
     [SerializeField] public int BeatsPerMeasure = 4;
     [SerializeField] public int TicksPerBeat = 4;
-    public float CustomStartTime = 0.65f;
+
+    // Hack for starting playback at a specific time. Useful for debugging.
+    [Tooltip("Debugging function for starting playback ahead of time. Useful for debugging.\n\n" +
+             "[D1] 0.25" +
+             "[F1] 0.45" +
+             "[G3] 0.655")]
+    public float CustomStartTime = 0f;
 
     // --- Song metadata ------------------------------------------------
     // Derived from the audio clip and timing parameters at Start().

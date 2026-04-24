@@ -101,7 +101,7 @@ public class ArrangedTeleport : UdonSharpBehaviour
         // By the way, when you see me write a whole essay in the comments like this, it's because I've spent a
         // disproportionate amount of time trying to debug it.
         if (onEnableMode == ArrangedTeleportOnEnableMode.OnEnableNetwork && Networking.IsOwner(gameObject))
-            NetworkTeleport(); 
+            NetworkTeleport();
     }
 
     // Forwards to the owner to determine slot assignment.
@@ -214,10 +214,12 @@ public class ArrangedTeleport : UdonSharpBehaviour
         {
             case ArrangedTeleportRotationMode.Preserve:
                 return Networking.LocalPlayer.GetRotation();
+
             case ArrangedTeleportRotationMode.Relative:
                 // Rotate the player's current forward into the slot's frame relative to the entry zone.
                 Vector3 localForward = Quaternion.Inverse(entry.rotation) * (Networking.LocalPlayer.GetRotation() * Vector3.forward);
                 return Quaternion.LookRotation(teleportSlots[slotIndex].rotation * localForward);
+
             default: // AlignToSlot
                 return teleportSlots[slotIndex].rotation;
         }

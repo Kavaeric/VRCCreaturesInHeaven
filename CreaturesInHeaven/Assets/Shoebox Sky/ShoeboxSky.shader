@@ -2,23 +2,19 @@ Shader "atmospheric/shoeboxsky"
 {
     Properties
     {
-        [Header(Atmosphere)] [Space]
         _BakedTexture ("_BakedTexture", 2D) = "white" {}
         _Exposure ("Exposure", Range(0, 8)) = 1
         _Rotation ("Rotation", Range(0, 360)) = 0
-        
-        [Header(Ground)] [Space]
+
         [Toggle] _GroundEnabled ("_GroundEnabled", Float) = 1
         _GroundTexture ("_GroundTexture", 2D) = "white" {}
         _GroundScollX ("_GroundScollX", Range(-1, 1)) = 0
         _GroundScollY ("_GroundScollY", Range(-1, 1)) = 0
         _Altitude ("Altitude (m)", Float) = 3000
 
-        [Header(Sun Disc)] [Space]
         _SunDiscRadius ("_SunDiscRadius", Range(0, 0.03)) = 0.03
         _SunDiscBrightness ("_SunDiscBrightness", Range(0, 100)) = 10
 
-        [Header(Plane 0)] [Space]
         _Plane0Texture ("_Plane0Texture", 2D) = "transparent" {}
         _Plane0Scroll ("_Plane0Scroll", Range(0, 1)) = 0
         [HideInInspector] _Plane0Pos ("_Plane0Pos", Vector) = (0,0,0,0)
@@ -26,7 +22,6 @@ Shader "atmospheric/shoeboxsky"
         [HideInInspector] _Plane0Bitangent ("_Plane0Bitangent", Vector) = (0,0,1,0)
         [HideInInspector] _Plane0Size ("_Plane0Size", Float) = 1000
 
-        [Header(Plane 1)] [Space]
         _Plane1Texture ("_Plane1Texture", 2D) = "transparent" {}
         _Plane1Scroll ("_Plane1Scroll", Range(0, 1)) = 0
         [HideInInspector] _Plane1Pos ("_Plane1Pos", Vector) = (0,0,0,0)
@@ -34,7 +29,6 @@ Shader "atmospheric/shoeboxsky"
         [HideInInspector] _Plane1Bitangent ("_Plane1Bitangent", Vector) = (0,0,1,0)
         [HideInInspector] _Plane1Size ("_Plane1Size", Float) = 1000
 
-        [Header(Plane 2)] [Space]
         _Plane2Texture ("_Plane2Texture", 2D) = "transparent" {}
         _Plane2Scroll ("_Plane2Scroll", Range(0, 1)) = 0
         [HideInInspector] _Plane2Pos ("_Plane2Pos", Vector) = (0,0,0,0)
@@ -42,7 +36,6 @@ Shader "atmospheric/shoeboxsky"
         [HideInInspector] _Plane2Bitangent ("_Plane2Bitangent", Vector) = (0,0,1,0)
         [HideInInspector] _Plane2Size ("_Plane2Size", Float) = 1000
 
-        [Header(Plane 3)] [Space]
         _Plane3Texture ("_Plane3Texture", 2D) = "transparent" {}
         _Plane3Scroll ("_Plane3Scroll", Range(0, 1)) = 0
         [HideInInspector] _Plane3Pos ("_Plane3Pos", Vector) = (0,0,0,0)
@@ -50,7 +43,6 @@ Shader "atmospheric/shoeboxsky"
         [HideInInspector] _Plane3Bitangent ("_Plane3Bitangent", Vector) = (0,0,1,0)
         [HideInInspector] _Plane3Size ("_Plane3Size", Float) = 1000
 
-        [Header(Plane 4)] [Space]
         _Plane4Texture ("_Plane4Texture", 2D) = "transparent" {}
         _Plane4Scroll ("_Plane4Scroll", Range(0, 1)) = 0
         [HideInInspector] _Plane4Pos ("_Plane4Pos", Vector) = (0,0,0,0)
@@ -58,7 +50,6 @@ Shader "atmospheric/shoeboxsky"
         [HideInInspector] _Plane4Bitangent ("_Plane4Bitangent", Vector) = (0,0,1,0)
         [HideInInspector] _Plane4Size ("_Plane4Size", Float) = 1000
 
-        [Header(Plane 5)] [Space]
         _Plane5Texture ("_Plane5Texture", 2D) = "transparent" {}
         _Plane5Scroll ("_Plane5Scroll", Range(0, 1)) = 0
         [HideInInspector] _Plane5Pos ("_Plane5Pos", Vector) = (0,0,0,0)
@@ -66,7 +57,6 @@ Shader "atmospheric/shoeboxsky"
         [HideInInspector] _Plane5Bitangent ("_Plane5Bitangent", Vector) = (0,0,1,0)
         [HideInInspector] _Plane5Size ("_Plane5Size", Float) = 1000
 
-        [Header(Rendering)] [Space]
         [Enum(UnityEngine.Rendering.CullMode)] _CullMode ("Cull Mode", Float) = 0
     }
     SubShader
@@ -194,53 +184,32 @@ Shader "atmospheric/shoeboxsky"
                 return float2(u, v);
             }
 
-            float3 _Plane0Pos;
-            float3 _Plane0Tangent;
-            float3 _Plane0Bitangent;
-            float _Plane0Size;
-            float _Plane0Scroll;
-            sampler2D _Plane0Texture;
-            float4 _Plane0Texture_ST;
+            #define DECLARE_PLANE(n) \
+                float3 _Plane##n##Pos; \
+                float3 _Plane##n##Tangent; \
+                float3 _Plane##n##Bitangent; \
+                float _Plane##n##Size; \
+                float _Plane##n##Scroll; \
+                sampler2D _Plane##n##Texture; \
+                float4 _Plane##n##Texture_ST;
 
-            float3 _Plane1Pos;
-            float3 _Plane1Tangent;
-            float3 _Plane1Bitangent;
-            float _Plane1Size;
-            float _Plane1Scroll;
-            sampler2D _Plane1Texture;
-            float4 _Plane1Texture_ST;
+            DECLARE_PLANE(0)
+            DECLARE_PLANE(1)
+            DECLARE_PLANE(2)
+            DECLARE_PLANE(3)
+            DECLARE_PLANE(4)
+            DECLARE_PLANE(5)
 
-            float3 _Plane2Pos;
-            float3 _Plane2Tangent;
-            float3 _Plane2Bitangent;
-            float _Plane2Size;
-            float _Plane2Scroll;
-            sampler2D _Plane2Texture;
-            float4 _Plane2Texture_ST;
-
-            float3 _Plane3Pos;
-            float3 _Plane3Tangent;
-            float3 _Plane3Bitangent;
-            float _Plane3Size;
-            float _Plane3Scroll;
-            sampler2D _Plane3Texture;
-            float4 _Plane3Texture_ST;
-
-            float3 _Plane4Pos;
-            float3 _Plane4Tangent;
-            float3 _Plane4Bitangent;
-            float _Plane4Size;
-            float _Plane4Scroll;
-            sampler2D _Plane4Texture;
-            float4 _Plane4Texture_ST;
-
-            float3 _Plane5Pos;
-            float3 _Plane5Tangent;
-            float3 _Plane5Bitangent;
-            float _Plane5Size;
-            float _Plane5Scroll;
-            sampler2D _Plane5Texture;
-            float4 _Plane5Texture_ST;
+            #define APPLY_PLANE(n) \
+                if(RayPlaneIntersect(_WorldSpaceCameraPos, rayDir, \
+                    _Plane##n##Pos.rgb, \
+                    normalize(_Plane##n##Tangent.rgb)   / _Plane##n##Size, \
+                    normalize(_Plane##n##Bitangent.rgb) / _Plane##n##Size, planeUV)) \
+                { \
+                    planeUV = TRANSFORM_TEX(planeUV, _Plane##n##Texture) + float2(_Plane##n##Scroll * _Time.r, 0); \
+                    float4 _planeCol = tex2D(_Plane##n##Texture, planeUV); \
+                    result = lerp(result, _planeCol.rgb, _planeCol.a); \
+                }
 
             // half4 instead of fixed4 to preserve HDR values above 1.0.
             half4 frag (v2f input) : SV_Target
@@ -281,69 +250,17 @@ Shader "atmospheric/shoeboxsky"
                 float3 result = atmosphere + ground + sun;
 
                 float2 planeUV;
-                if(RayPlaneIntersect(_WorldSpaceCameraPos, rayDir,
-                              _Plane0Pos.rgb,
-                    normalize(_Plane0Tangent.rgb)  /_Plane0Size,
-                    normalize(_Plane0Bitangent.rgb)/_Plane0Size, planeUV))
-                {
-                    planeUV = TRANSFORM_TEX(planeUV, _Plane0Texture) + float2(_Plane0Scroll*_Time.r, 0);
-                    float4 plane = tex2D(_Plane0Texture, planeUV);
-                    result = lerp(result, plane.rgb, plane.a);
-                }
-
-                if(RayPlaneIntersect(_WorldSpaceCameraPos, rayDir,
-                              _Plane1Pos.rgb,
-                    normalize(_Plane1Tangent.rgb)  /_Plane1Size,
-                    normalize(_Plane1Bitangent.rgb)/_Plane1Size, planeUV))
-                {
-                    planeUV = TRANSFORM_TEX(planeUV, _Plane1Texture) + float2(_Plane1Scroll*_Time.r, 0);
-                    float4 plane = tex2D(_Plane1Texture, planeUV);
-                    result = lerp(result, plane.rgb, plane.a);
-                }
-
-                if(RayPlaneIntersect(_WorldSpaceCameraPos, rayDir,
-                              _Plane2Pos.rgb,
-                    normalize(_Plane2Tangent.rgb)  /_Plane2Size,
-                    normalize(_Plane2Bitangent.rgb)/_Plane2Size, planeUV))
-                {
-                    planeUV = TRANSFORM_TEX(planeUV, _Plane2Texture) + float2(_Plane2Scroll*_Time.r, 0);
-                    float4 plane = tex2D(_Plane2Texture, planeUV);
-                    result = lerp(result, plane.rgb, plane.a);
-                }
-
-                if(RayPlaneIntersect(_WorldSpaceCameraPos, rayDir,
-                              _Plane3Pos.rgb,
-                    normalize(_Plane3Tangent.rgb)  /_Plane3Size,
-                    normalize(_Plane3Bitangent.rgb)/_Plane3Size, planeUV))
-                {
-                    planeUV = TRANSFORM_TEX(planeUV, _Plane3Texture) + float2(_Plane3Scroll*_Time.r, 0);
-                    float4 plane = tex2D(_Plane3Texture, planeUV);
-                    result = lerp(result, plane.rgb, plane.a);
-                }
-
-                if(RayPlaneIntersect(_WorldSpaceCameraPos, rayDir,
-                              _Plane4Pos.rgb,
-                    normalize(_Plane4Tangent.rgb)  /_Plane4Size,
-                    normalize(_Plane4Bitangent.rgb)/_Plane4Size, planeUV))
-                {
-                    planeUV = TRANSFORM_TEX(planeUV, _Plane4Texture) + float2(_Plane4Scroll*_Time.r, 0);
-                    float4 plane = tex2D(_Plane4Texture, planeUV);
-                    result = lerp(result, plane.rgb, plane.a);
-                }
-
-                if(RayPlaneIntersect(_WorldSpaceCameraPos, rayDir,
-                              _Plane5Pos.rgb,
-                    normalize(_Plane5Tangent.rgb)  /_Plane5Size,
-                    normalize(_Plane5Bitangent.rgb)/_Plane5Size, planeUV))
-                {
-                    planeUV = TRANSFORM_TEX(planeUV, _Plane5Texture) + float2(_Plane5Scroll*_Time.r, 0);
-                    float4 plane = tex2D(_Plane5Texture, planeUV);
-                    result = lerp(result, plane.rgb, plane.a);
-                }
+                APPLY_PLANE(0)
+                APPLY_PLANE(1)
+                APPLY_PLANE(2)
+                APPLY_PLANE(3)
+                APPLY_PLANE(4)
+                APPLY_PLANE(5)
 
                 return half4(result * _Exposure, 1);
             }
             ENDCG
         }
     }
+    CustomEditor "ShoeboxSkyGUI"
 }

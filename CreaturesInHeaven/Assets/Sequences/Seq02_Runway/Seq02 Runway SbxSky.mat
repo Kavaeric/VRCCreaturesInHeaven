@@ -1,0 +1,113 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Seq02 Runway SbxSky
+  m_Shader: {fileID: 4800000, guid: e5957ccaca4241145be3a7bba43614b3, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BakedTexture:
+        m_Texture: {fileID: 2800000, guid: 3beea499357c1bc4094d203033a66889, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _GroundTexture:
+        m_Texture: {fileID: 2800000, guid: ecaa28b4f23ce994791542f5e99d32b9, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: 65cc3d3ec1a91cd4ba8c9f50c13593cc, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Plane0Texture:
+        m_Texture: {fileID: 2800000, guid: 9a12fc159abd1334babbb05cc75fea05, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Plane1Texture:
+        m_Texture: {fileID: 2800000, guid: 9a12fc159abd1334babbb05cc75fea05, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Plane2Texture:
+        m_Texture: {fileID: 2800000, guid: 9a12fc159abd1334babbb05cc75fea05, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Plane3Texture:
+        m_Texture: {fileID: 2800000, guid: 9a12fc159abd1334babbb05cc75fea05, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Plane4Texture:
+        m_Texture: {fileID: 2800000, guid: 9a12fc159abd1334babbb05cc75fea05, type: 3}
+        m_Scale: {x: 2, y: 2}
+        m_Offset: {x: 0, y: 0}
+    - _Plane5Texture:
+        m_Texture: {fileID: 2800000, guid: 9a12fc159abd1334babbb05cc75fea05, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _Altitude: 2000
+    - _AtmosphereRadius: 72260
+    - _CullMode: 1
+    - _Density: 1
+    - _Exposure: 1
+    - _GroundEnabled: 0
+    - _GroundScollX: 0
+    - _GroundScollY: 0
+    - _MieScattering: 1
+    - _Plane0Scroll: 0
+    - _Plane0Size: 4000
+    - _Plane1Scroll: 0
+    - _Plane1Size: 4000
+    - _Plane2Scroll: 0
+    - _Plane2Size: 4000
+    - _Plane3Scroll: 0
+    - _Plane3Size: 4000
+    - _Plane4Scroll: 0
+    - _Plane4Size: 8000
+    - _Plane5Scroll: 0
+    - _Plane5Size: 4000
+    - _PlanetRadius: 1
+    - _Property: 1
+    - _RayleighScattering: 1
+    - _Rotation: 60
+    - _Scattering: 0.24
+    - _ScollX: 0.1
+    - _ScollY: 0
+    - _SunDiscBrightness: 100
+    - _SunDiscRadius: 0.01
+    m_Colors:
+    - _Plane0Bitangent: {r: -0.00000011920929, g: 0, b: -1.0000001, a: 0}
+    - _Plane0Pos: {r: 4447.8003, g: 4500, b: 12934.999, a: 0}
+    - _Plane0Tangent: {r: 1.0000001, g: 0, b: -0.00000011920929, a: 0}
+    - _Plane1Bitangent: {r: -0.00000011920929, g: 0, b: -1.0000001, a: 0}
+    - _Plane1Pos: {r: -4000, g: 4500, b: 12732.001, a: 0}
+    - _Plane1Tangent: {r: 1.0000001, g: 0, b: -0.00000011920929, a: 0}
+    - _Plane2Bitangent: {r: -0.00000011920929, g: 0, b: -1.0000001, a: 0}
+    - _Plane2Pos: {r: 0, g: 4500, b: 11656.1, a: 0}
+    - _Plane2Tangent: {r: 1.0000001, g: 0, b: -0.00000011920929, a: 0}
+    - _Plane3Bitangent: {r: -0.00000011920929, g: 0, b: -1.0000001, a: 0}
+    - _Plane3Pos: {r: 4400, g: 3500, b: 13000, a: 0}
+    - _Plane3Tangent: {r: 1.0000001, g: 0, b: -0.00000011920929, a: 0}
+    - _Plane4Bitangent: {r: -0.00000011920929, g: 0, b: -1.0000001, a: 0}
+    - _Plane4Pos: {r: 200, g: 3500, b: 15000, a: 0}
+    - _Plane4Tangent: {r: 1.0000001, g: 0, b: -0.00000011920929, a: 0}
+    - _Plane5Bitangent: {r: -0.00000011920929, g: 0, b: -1.0000001, a: 0}
+    - _Plane5Pos: {r: -4000, g: 3500, b: 13000, a: 0}
+    - _Plane5Tangent: {r: 1.0000001, g: 0, b: -0.00000011920929, a: 0}
+  m_BuildTextureStacks: []

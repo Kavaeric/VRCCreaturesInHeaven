@@ -14,6 +14,9 @@
     },
     "com.vrchat.worlds": {
       "version": "3.10.3"
+    },
+    "net.ureishi.qvpen": {
+      "version": "3.3.14"
     }
   },
   "locked": {
@@ -37,6 +40,12 @@
       "version": "3.10.3",
       "dependencies": {
         "com.vrchat.base": "3.10.3"
+      }
+    },
+    "net.ureishi.qvpen": {
+      "version": "3.3.14",
+      "dependencies": {
+        "com.vrchat.worlds": "^3.5.0"
       }
     }
   }

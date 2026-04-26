@@ -11,7 +11,7 @@ public class SetLighting : UdonSharpBehaviour
     public Color ambientEquatorColor = Color.white;
     public Color ambientGroundColor = Color.white;
 
-    public ReflectionProbe reflecionProbe;
+    public ReflectionProbe reflectionProbe;
 
     public float AmbientIntensity = 1;
     //public float SHIntensity = 1;
@@ -47,7 +47,7 @@ public class SetLighting : UdonSharpBehaviour
         //
         //RenderSettings.ambientProbe = SH;
         
-        if (reflecionProbe)
-            reflecionProbe.RenderProbe();
+        if (reflectionProbe)
+            reflectionProbe.RenderProbe();
     }
 }

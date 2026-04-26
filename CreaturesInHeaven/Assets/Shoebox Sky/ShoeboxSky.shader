@@ -20,42 +20,70 @@ Shader "atmospheric/shoeboxsky"
         [HideInInspector] _Plane0Pos ("_Plane0Pos", Vector) = (0,0,0,0)
         [HideInInspector] _Plane0Tangent ("_Plane0Tangent", Vector) = (1,0,0,0)
         [HideInInspector] _Plane0Bitangent ("_Plane0Bitangent", Vector) = (0,0,1,0)
-        [HideInInspector] _Plane0Size ("_Plane0Size", Float) = 1000
+        [HideInInspector] _Plane0Size ("_Plane0Size", Float) = 0
 
         _Plane1Texture ("_Plane1Texture", 2D) = "transparent" {}
         _Plane1Scroll ("_Plane1Scroll", Range(0, 1)) = 0
         [HideInInspector] _Plane1Pos ("_Plane1Pos", Vector) = (0,0,0,0)
         [HideInInspector] _Plane1Tangent ("_Plane1Tangent", Vector) = (1,0,0,0)
         [HideInInspector] _Plane1Bitangent ("_Plane1Bitangent", Vector) = (0,0,1,0)
-        [HideInInspector] _Plane1Size ("_Plane1Size", Float) = 1000
+        [HideInInspector] _Plane1Size ("_Plane1Size", Float) = 0
 
         _Plane2Texture ("_Plane2Texture", 2D) = "transparent" {}
         _Plane2Scroll ("_Plane2Scroll", Range(0, 1)) = 0
         [HideInInspector] _Plane2Pos ("_Plane2Pos", Vector) = (0,0,0,0)
         [HideInInspector] _Plane2Tangent ("_Plane2Tangent", Vector) = (1,0,0,0)
         [HideInInspector] _Plane2Bitangent ("_Plane2Bitangent", Vector) = (0,0,1,0)
-        [HideInInspector] _Plane2Size ("_Plane2Size", Float) = 1000
+        [HideInInspector] _Plane2Size ("_Plane2Size", Float) = 0
 
         _Plane3Texture ("_Plane3Texture", 2D) = "transparent" {}
         _Plane3Scroll ("_Plane3Scroll", Range(0, 1)) = 0
         [HideInInspector] _Plane3Pos ("_Plane3Pos", Vector) = (0,0,0,0)
         [HideInInspector] _Plane3Tangent ("_Plane3Tangent", Vector) = (1,0,0,0)
         [HideInInspector] _Plane3Bitangent ("_Plane3Bitangent", Vector) = (0,0,1,0)
-        [HideInInspector] _Plane3Size ("_Plane3Size", Float) = 1000
+        [HideInInspector] _Plane3Size ("_Plane3Size", Float) = 0
 
         _Plane4Texture ("_Plane4Texture", 2D) = "transparent" {}
         _Plane4Scroll ("_Plane4Scroll", Range(0, 1)) = 0
         [HideInInspector] _Plane4Pos ("_Plane4Pos", Vector) = (0,0,0,0)
         [HideInInspector] _Plane4Tangent ("_Plane4Tangent", Vector) = (1,0,0,0)
         [HideInInspector] _Plane4Bitangent ("_Plane4Bitangent", Vector) = (0,0,1,0)
-        [HideInInspector] _Plane4Size ("_Plane4Size", Float) = 1000
+        [HideInInspector] _Plane4Size ("_Plane4Size", Float) = 0
 
         _Plane5Texture ("_Plane5Texture", 2D) = "transparent" {}
         _Plane5Scroll ("_Plane5Scroll", Range(0, 1)) = 0
         [HideInInspector] _Plane5Pos ("_Plane5Pos", Vector) = (0,0,0,0)
         [HideInInspector] _Plane5Tangent ("_Plane5Tangent", Vector) = (1,0,0,0)
         [HideInInspector] _Plane5Bitangent ("_Plane5Bitangent", Vector) = (0,0,1,0)
-        [HideInInspector] _Plane5Size ("_Plane5Size", Float) = 1000
+        [HideInInspector] _Plane5Size ("_Plane5Size", Float) = 0
+
+        _Plane6Texture ("_Plane6Texture", 2D) = "transparent" {}
+        _Plane6Scroll ("_Plane6Scroll", Range(0, 1)) = 0
+        [HideInInspector] _Plane6Pos ("_Plane6Pos", Vector) = (0,0,0,0)
+        [HideInInspector] _Plane6Tangent ("_Plane6Tangent", Vector) = (1,0,0,0)
+        [HideInInspector] _Plane6Bitangent ("_Plane6Bitangent", Vector) = (0,0,1,0)
+        [HideInInspector] _Plane6Size ("_Plane6Size", Float) = 0
+
+        _Plane7Texture ("_Plane7Texture", 2D) = "transparent" {}
+        _Plane7Scroll ("_Plane7Scroll", Range(0, 1)) = 0
+        [HideInInspector] _Plane7Pos ("_Plane7Pos", Vector) = (0,0,0,0)
+        [HideInInspector] _Plane7Tangent ("_Plane7Tangent", Vector) = (1,0,0,0)
+        [HideInInspector] _Plane7Bitangent ("_Plane7Bitangent", Vector) = (0,0,1,0)
+        [HideInInspector] _Plane7Size ("_Plane7Size", Float) = 0
+
+        _Plane8Texture ("_Plane8Texture", 2D) = "transparent" {}
+        _Plane8Scroll ("_Plane8Scroll", Range(0, 1)) = 0
+        [HideInInspector] _Plane8Pos ("_Plane8Pos", Vector) = (0,0,0,0)
+        [HideInInspector] _Plane8Tangent ("_Plane8Tangent", Vector) = (1,0,0,0)
+        [HideInInspector] _Plane8Bitangent ("_Plane8Bitangent", Vector) = (0,0,1,0)
+        [HideInInspector] _Plane8Size ("_Plane8Size", Float) = 0
+
+        _Plane9Texture ("_Plane9Texture", 2D) = "transparent" {}
+        _Plane9Scroll ("_Plane9Scroll", Range(0, 1)) = 0
+        [HideInInspector] _Plane9Pos ("_Plane9Pos", Vector) = (0,0,0,0)
+        [HideInInspector] _Plane9Tangent ("_Plane9Tangent", Vector) = (1,0,0,0)
+        [HideInInspector] _Plane9Bitangent ("_Plane9Bitangent", Vector) = (0,0,1,0)
+        [HideInInspector] _Plane9Size ("_Plane9Size", Float) = 0
 
         [Enum(UnityEngine.Rendering.CullMode)] _CullMode ("Cull Mode", Float) = 0
     }
@@ -75,7 +103,7 @@ Shader "atmospheric/shoeboxsky"
             #include "UnityCG.cginc"
             #include "Lighting.cginc"
 
-            #define PI 3.141592
+            #define PI 3.14159265
 
             struct appdata
             {
@@ -199,6 +227,10 @@ Shader "atmospheric/shoeboxsky"
             DECLARE_PLANE(3)
             DECLARE_PLANE(4)
             DECLARE_PLANE(5)
+            DECLARE_PLANE(6)
+            DECLARE_PLANE(7)
+            DECLARE_PLANE(8)
+            DECLARE_PLANE(9)
 
             #define APPLY_PLANE(n) \
                 if(RayPlaneIntersect(_WorldSpaceCameraPos, rayDir, \
@@ -256,6 +288,10 @@ Shader "atmospheric/shoeboxsky"
                 APPLY_PLANE(3)
                 APPLY_PLANE(4)
                 APPLY_PLANE(5)
+                APPLY_PLANE(6)
+                APPLY_PLANE(7)
+                APPLY_PLANE(8)
+                APPLY_PLANE(9)
 
                 return half4(result * _Exposure, 1);
             }

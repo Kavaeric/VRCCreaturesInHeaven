@@ -8,7 +8,7 @@ public class ShoeboxSky : UdonSharpBehaviour
 {
     public Material skyMaterial;
 
-    private const int PLANE_COUNT = 6;
+    private const int PLANE_COUNT = 10;
     private ShoeboxSkyImposter[] _planes;
 
 #if !COMPILER_UDONSHARP && UNITY_EDITOR

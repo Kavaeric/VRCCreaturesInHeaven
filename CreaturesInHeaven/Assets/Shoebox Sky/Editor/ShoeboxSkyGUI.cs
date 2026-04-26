@@ -2,9 +2,42 @@ using UnityEngine;
 using UnityEditor;
 using UnityEngine.UI;
 
+[CustomEditor(typeof(ShoeboxSky))]
+public class ShoeboxSkyEditor : Editor
+{
+    private const int PLANE_COUNT = 10;
+
+    public override void OnInspectorGUI()
+    {
+        DrawDefaultInspector();
+
+        ShoeboxSky sky = (ShoeboxSky)target;
+
+        EditorGUILayout.Space();
+        if (GUILayout.Button("Reset Imposters"))
+        {
+            if (sky.skyMaterial == null) return;
+
+            // Zero all plane slots in the shader before re-pushing live imposter data,
+            // so removed planes don't leave ghost values for pos/tangent/bitangent/size.
+            for (int i = 0; i < PLANE_COUNT; i++)
+            {
+                string prefix = "_Plane" + i;
+                sky.skyMaterial.SetVector(prefix + "Pos",       Vector4.zero);
+                sky.skyMaterial.SetVector(prefix + "Tangent",   Vector4.zero);
+                sky.skyMaterial.SetVector(prefix + "Bitangent", Vector4.zero);
+                sky.skyMaterial.SetFloat( prefix + "Size",      0f);
+                sky.skyMaterial.SetTexture(prefix + "Texture",  null);
+            }
+
+            sky.SetPlanes();
+        }
+    }
+}
+
 public class ShoeboxSkyGUI : ShaderGUI
 {
-    private const int PLANE_COUNT = 6;
+    private const int PLANE_COUNT = 9;
 
     public override void OnGUI(MaterialEditor editor, MaterialProperty[] props)
     {

@@ -113,7 +113,9 @@ public class TempoRuler : EditorWindow
     private TextField _valTimeNorm;
 
     private Label _statusEngine;
-    private Label _statusClip;
+    private Label _animClipName;
+    private TextField _animFrameIndex;
+    private Label _animFrameIndexMax;
     private Button _playBtn;
     private VisualElement _markersGrid;
 
@@ -216,7 +218,17 @@ public class TempoRuler : EditorWindow
         });
 
         _statusEngine   = root.Q<Label>("status-engine");
-        _statusClip     = root.Q<Label>("status-clip");
+        _animClipName      = root.Q<Label>("anim-clip-name");
+        _animFrameIndex    = root.Q<TextField>("anim-frame-index");
+        _animFrameIndexMax = root.Q<Label>("anim-frame-index-max");
+        { string focused = null;
+          _animFrameIndex.RegisterCallback<FocusInEvent>(_  => focused = _animFrameIndex.value);
+          _animFrameIndex.RegisterCallback<FocusOutEvent>(_ =>
+          {
+              if (_animFrameIndex.value != focused && int.TryParse(_animFrameIndex.value, out int f))
+                  SeekToNorm((float)f / ClipTotalFrames);
+              UpdateReadout();
+          }); }
         _markersGrid    = root.Q<VisualElement>("markers-grid");
         _playBtn        = root.Q<Button>("play-btn");
 
@@ -318,13 +330,25 @@ public class TempoRuler : EditorWindow
             _valTimeNorm.value = $"{norm:0.000 000 000}";
 
         // Status row
-        var clip = ActiveClip;
         _statusEngine.text = _musicEngine != null
             ? "<color=#00F490>●</color> MusicEngine found"
             : "✕ MusicEngine not found";
-        _statusClip.text = clip != null
-            ? $"<color=#00F490>●</color> {clip.name}  ·  Frame {AnimationWindowFrame} / {ClipTotalFrames}"
-            : "✕ No animation clip";
+
+        // Animation clip panel
+        var clip = ActiveClip;
+        if (clip != null)
+        {
+            _animClipName.text   = $"<color=#00F490>●</color> {clip.name}";
+            if (_animFrameIndex.focusController?.focusedElement != _animFrameIndex)
+                _animFrameIndex.value = $"{AnimationWindowFrame}";
+            _animFrameIndexMax.text = $" / {ClipTotalFrames}";
+        }
+        else
+        {
+            _animClipName.text      = "✕ No animation clip";
+            _animFrameIndex.value   = "-";
+            _animFrameIndexMax.text = "";
+        }
 
         // Play button label
         if (_playBtn != null)

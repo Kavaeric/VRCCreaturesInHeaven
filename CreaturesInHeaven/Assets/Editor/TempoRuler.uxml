@@ -9,11 +9,7 @@
 
             <!-- ── Status row ──────────────────────────────────────────────── -->
             <VisualElement class="row items-center">
-                <VisualElement class="col grow">
-                    <Label name="status-engine" class="text-base" />
-                    <VisualElement class="h-2" />
-                    <Label name="status-clip"   class="text-base" />
-                </VisualElement>
+                <Label name="status-engine" class="text-base grow" />
                 <VisualElement class="w-8" />
                 <Button name="refresh-btn" class="btn-sm" text="Refresh" />
             </VisualElement>
@@ -96,6 +92,28 @@
                     </VisualElement>
                 </VisualElement>
 
+            </VisualElement>
+
+            <VisualElement class="h-8" />
+
+            <!-- ── Animation clip ─────────────────────────────────────────── -->
+            <VisualElement class="panel-frame col">
+                <Label name="anim-clip-name" class="text-base" text="-" />
+
+                <VisualElement class="h-8" />
+                <VisualElement class="separator" />
+                <VisualElement class="h-8" />
+                
+                <VisualElement class="row">
+                    <VisualElement class="value-col">
+                        <Label class="value-col__label" text="Frame index" />
+                        <VisualElement class="h-2" />
+                        <VisualElement class="row">
+                            <TextField name="anim-frame-index" class="value-col__value min-w-40" />
+                            <Label name="anim-frame-index-max" class="my-auto" />
+                        </VisualElement>
+                    </VisualElement>
+                </VisualElement>
             </VisualElement>
 
             <VisualElement class="h-8" />

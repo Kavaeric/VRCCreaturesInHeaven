@@ -1,7 +1,9 @@
 using System;
 using System.IO;
 using System.Reflection;
+using BestHTTP.SecureProtocol.Org.BouncyCastle.Security;
 using UnityEditor;
+using UnityEditor.Overlays;
 using UnityEngine;
 
 public class TempoRuler : EditorWindow
@@ -37,6 +39,69 @@ public class TempoRuler : EditorWindow
     private StepUnit _stepUnit = StepUnit.Beats;
     private string _jumpInput = "";
     private bool _debugFoldout = false;
+
+    // --- Styles ------------------------------------------------------
+    // GUIStyle cannot be initialised at field declaration time (skin not ready),
+    // so these are created lazily on first access after OnGUI begins.
+    private GUIStyle _timestampStyle;
+    private GUIStyle _lyricStyle;
+    private GUIStyle _statusStyle;
+    private GUIStyle _separatorStyle;
+
+    private GUIStyle TimestampStyle
+    {
+        get
+        {
+            if (_timestampStyle == null && EditorStyles.boldLabel != null)
+            {
+                _timestampStyle = new GUIStyle(EditorStyles.boldLabel)
+                {
+                    fontSize = 48,
+                    alignment = TextAnchor.MiddleCenter
+                };
+                var monoFont = EditorGUIUtility.Load("Fonts/RobotoMono/RobotoMono-Regular.ttf") as Font;
+                if (monoFont != null) _timestampStyle.font = monoFont;
+            }
+            return _timestampStyle;
+        }
+    }
+    private GUIStyle LyricStyle
+    {
+        get
+        {
+            if (_lyricStyle == null && EditorStyles.label != null)
+                _lyricStyle = new GUIStyle(EditorStyles.label)
+                {
+                    alignment = TextAnchor.MiddleCenter
+                };
+            return _lyricStyle;
+        }
+    }
+    private GUIStyle StatusStyle
+    {
+        get
+        {
+            if (_statusStyle == null && EditorStyles.miniLabel != null)
+                _statusStyle = new GUIStyle(EditorStyles.miniLabel) { richText = true };
+            return _statusStyle;
+        }
+    }
+    private GUIStyle SeparatorStyle
+    {
+        get
+        {
+            _separatorStyle ??= new GUIStyle { fixedHeight = 1, margin = new RectOffset(0, 0, 4, 4),
+                normal = { background = EditorGUIUtility.whiteTexture } };
+            return _separatorStyle;
+        }
+    }
+
+    private void DrawSeparator(int weight = 1)
+    {
+        var rect = GUILayoutUtility.GetRect(GUIContent.none, SeparatorStyle, GUILayout.ExpandWidth(true), GUILayout.Height(weight));
+        var col = EditorGUIUtility.isProSkin ? new Color(1, 1, 1, 0.12f) : new Color(0, 0, 0, 0.2f);
+        EditorGUI.DrawRect(rect, col);
+    }
 
     // --- Animation window --------------------------------------------
     // Communicates via frame number, which is unambiguous regardless of
@@ -97,7 +162,7 @@ public class TempoRuler : EditorWindow
 
     private float NormToSongSeconds(float norm) => norm * _songLengthSeconds;
 
-    [MenuItem("Window/Tempo Ruler")]
+    [MenuItem("Tools/Tempo Ruler")]
     public static void Open() => GetWindow<TempoRuler>("Tempo Ruler");
 
     private void OnEnable()
@@ -106,6 +171,9 @@ public class TempoRuler : EditorWindow
         FindAnimationWindow();
         FindMusicEngine();
         EditorApplication.update += OnEditorUpdate;
+        // Null cached styles so they're rebuilt after the skin is ready.
+        _timestampStyle = null;
+        _lyricStyle = null;
     }
 
     private void OnDisable()
@@ -213,8 +281,8 @@ public class TempoRuler : EditorWindow
         SeekToNorm(songSeconds / _songLengthSeconds);
     }
 
-    // --- AudioUtility reflection (internal Unity API) ----------------
 
+    // --- AudioUtility reflection (internal Unity API) ----------------
     private static Type AudioUtil => Type.GetType("UnityEditor.AudioUtil, UnityEditor");
 
     private static void PlayClipFromTime(AudioClip clip, float startTimeSecs)
@@ -239,13 +307,12 @@ public class TempoRuler : EditorWindow
     }
 
     // --- Time conversion helpers -------------------------------------
-
     private void TimeToMBT(float songSeconds, out int measure, out int beat, out int tick)
     {
         int tickIndex = Mathf.FloorToInt(songSeconds / SecondsPerTick);
         int ticksPerMeasure = _ticksPerBeat * _beatsPerMeasure;
         measure = tickIndex / ticksPerMeasure + 1;
-        beat    = (tickIndex % ticksPerMeasure) / _ticksPerBeat + 1;
+        beat    = tickIndex % ticksPerMeasure / _ticksPerBeat + 1;
         tick    = tickIndex % _ticksPerBeat + 1;
     }
 
@@ -290,113 +357,111 @@ public class TempoRuler : EditorWindow
         if (_musicEngine == null) FindMusicEngine();
         if (_animationWindow == null) FindAnimationWindow();
 
-        var clip = ActiveClip;
-        int totalFrames = ClipTotalFrames;
-        float norm = _isPlaying ? CurrentNormTime : (float)AnimationWindowFrame / totalFrames;
+        float norm     = CurrentNormTime;
         float songSecs = NormToSongSeconds(norm);
 
-        TimeToMBT(songSecs, out int measure, out int beat, out int tick);
-        int totalTicks    = Mathf.FloorToInt(songSecs / SecondsPerTick);
-        int totalBeats    = Mathf.FloorToInt(songSecs / (60f / _bpm));
-        int totalMeasures = Mathf.FloorToInt(songSecs / (60f / _bpm * _beatsPerMeasure));
-
-        // --- Status row ----------------------------------------------
         EditorGUILayout.Space(4);
+        DrawStatusRow();
+        EditorGUILayout.Space(20);
+        DrawSeparator(2);
+        EditorGUILayout.Space(8);
+        DrawReadout(norm, songSecs);
+        EditorGUILayout.Space(8);
+        DrawSeparator(2);
+        EditorGUILayout.Space(20);
+        DrawControls();
+        EditorGUILayout.Space(8);
+        DrawSeparator(2);
+
+        DrawMarkerButtons();
+
+        EditorGUILayout.Space(20);
+        DrawDebugFoldout(norm, songSecs);
+    }
+
+    private void DrawStatusRow()
+    {
+        var clip = ActiveClip;
         EditorGUILayout.BeginHorizontal();
-        string engineLabel = _musicEngine != null ? "MusicEngine found" : "MusicEngine not found";
-        string clipLabel   = clip != null ? $"{clip.name}  {totalFrames}f  {clip.length:0.000}s" : "no clip";
-        EditorGUILayout.LabelField($"{engineLabel}   {clipLabel}", EditorStyles.miniLabel);
-        if (GUILayout.Button("Refresh", GUILayout.Width(60)))
+
+        string engineLabel = _musicEngine != null
+            ? "<color=#4caf50>●</color> MusicEngine found"
+            : "❌ MusicEngine not found";
+
+        string clipLabel = clip != null
+            ? $"<color=#4caf50>●</color> {clip.name}  ∙  Frame {AnimationWindowFrame} / {ClipTotalFrames}"
+            : "❌ No animation clip";
+
+        EditorGUILayout.LabelField($"{engineLabel}  ∙  {clipLabel}", StatusStyle, GUILayout.Height(32));
+
+        if (GUILayout.Button("Refresh", GUILayout.Width(60), GUILayout.Height(32)))
         {
             FindMusicEngine();
             FindAnimationWindow();
             LoadCues();
         }
         EditorGUILayout.EndHorizontal();
+    }
 
+    private void DrawReadout(float norm, float songSecs)
+    {
+        TimeToMBT(songSecs, out int measure, out int beat, out int tick);
 
-        EditorGUILayout.Space(4);
-        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+        // Timestamp
+        EditorGUILayout.LabelField($"{measure:00}:{beat:00}.{tick:00}", TimestampStyle, GUILayout.Height(48));
 
-        // --- Timestamp readout -----------------------------------------
-        EditorGUILayout.Space(8);
-
-        var bigStyle = new GUIStyle(EditorStyles.boldLabel)
-        {
-            fontSize = 40,
-            alignment = TextAnchor.MiddleCenter
-        };
-        EditorGUILayout.LabelField($"{measure:00}:{beat:00}.{tick:00}", bigStyle, GUILayout.Height(40));
-        EditorGUILayout.Space(4);
-
-        // --- Lyric readout ---------------------------------------------
-        var lyricStyle = new GUIStyle(EditorStyles.label)
-        {
-            fontSize = 18,
-            alignment = TextAnchor.MiddleCenter
-        };
-
+        // Marker, lyric, section
         SongCue cue = CueAt(songSecs);
-        if (cue != null)
-        {
-            if (!string.IsNullOrEmpty(cue.lyric))
-                EditorGUILayout.SelectableLabel(cue.lyric, lyricStyle, GUILayout.Height(24));
-            else
-                EditorGUILayout.LabelField("-", lyricStyle, GUILayout.Height(24));
-        }    
+        EditorGUILayout.BeginHorizontal();
+
+        EditorGUILayout.LabelField(cue != null && !string.IsNullOrEmpty(cue.marker) ? cue.marker : "-", LyricStyle, GUILayout.Width(80), GUILayout.Height(16));
+
+        if (cue != null && !string.IsNullOrEmpty(cue.lyric))
+            EditorGUILayout.SelectableLabel(cue.lyric, LyricStyle, GUILayout.Height(16));
+        else
+            EditorGUILayout.LabelField("-", LyricStyle, GUILayout.Height(16));
+
+        string section = SectionAt(songSecs);
+        EditorGUILayout.LabelField(!string.IsNullOrEmpty(section) ? section : "-", LyricStyle, GUILayout.Width(80), GUILayout.Height(16));
+
+        EditorGUILayout.EndHorizontal();
         EditorGUILayout.Space(4);
 
-        // --- Cue & section readout ----------------------------------
-        EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField(!string.IsNullOrEmpty(cue.marker) ? cue.marker : "-");
-        string section = SectionAt(songSecs);
-        EditorGUILayout.LabelField(!string.IsNullOrEmpty(section) ? section : "-");
-        EditorGUILayout.EndHorizontal();
-
+        // ---------------------------------------
         EditorGUILayout.Space(8);
+        DrawSeparator();
+        EditorGUILayout.Space(8);
+        // ---------------------------------------
 
-        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+        // Auxiliary indices
+        int totalTicks    = Mathf.FloorToInt(songSecs / SecondsPerTick);
+        int totalBeats    = Mathf.FloorToInt(songSecs / (60f / _bpm));
+        int totalMeasures = Mathf.FloorToInt(songSecs / (60f / _bpm * _beatsPerMeasure));
 
-        // --- Auxiliary index readout ---------------------------------
         EditorGUILayout.BeginHorizontal();
-        
-        EditorGUILayout.BeginVertical();
-        EditorGUILayout.LabelField("Measure index", EditorStyles.boldLabel);
-        EditorGUILayout.SelectableLabel($"{totalMeasures} / {Mathf.FloorToInt(SongMeasures)}", GUILayout.Height(15));
-        EditorGUILayout.EndVertical();
-
-        EditorGUILayout.BeginVertical();
-        EditorGUILayout.LabelField("Beat index", EditorStyles.boldLabel);
-        EditorGUILayout.SelectableLabel($"{totalBeats} / {Mathf.FloorToInt(SongBeats)}", GUILayout.Height(15));
-        EditorGUILayout.EndVertical();
-
-        EditorGUILayout.BeginVertical();
-        EditorGUILayout.LabelField("Tick index", EditorStyles.boldLabel);
-        EditorGUILayout.SelectableLabel($"{totalTicks} / {Mathf.FloorToInt(SongTicks)}", GUILayout.Height(15));
-        EditorGUILayout.EndVertical();
-
+        DrawLabelledValue("Measure index", $"{totalMeasures} / {Mathf.FloorToInt(SongMeasures)}");
+        DrawLabelledValue("Beat index",    $"{totalBeats} / {Mathf.FloorToInt(SongBeats)}");
+        DrawLabelledValue("Tick index",    $"{totalTicks} / {Mathf.FloorToInt(SongTicks)}");
         EditorGUILayout.EndHorizontal();
-        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
 
-        // --- Time readout --------------------------------------------
+        // ---------------------------------------
+        EditorGUILayout.Space(8);
+        DrawSeparator();
+        EditorGUILayout.Space(8);
+        // ---------------------------------------
+
+        // Time
         TimeSpan ts = TimeSpan.FromSeconds(songSecs);
-
         EditorGUILayout.BeginHorizontal();
-
-        EditorGUILayout.BeginVertical();
-        EditorGUILayout.LabelField("Time", EditorStyles.boldLabel);
-        EditorGUILayout.SelectableLabel($"{(int)ts.TotalMinutes}:{ts.Seconds:00}.{ts.Milliseconds:000}", GUILayout.Height(15));
-        EditorGUILayout.EndVertical();
-
-        EditorGUILayout.BeginVertical();
-        EditorGUILayout.LabelField("Time (s)", EditorStyles.boldLabel);
-        EditorGUILayout.SelectableLabel($"{songSecs:0.000} s", GUILayout.Height(15));
-        EditorGUILayout.EndVertical();
-
+        DrawLabelledValue("Time (m:s)",   $"{(int)ts.TotalMinutes}:{ts.Seconds:00}.{ts.Milliseconds:000}");
+        DrawLabelledValue("Time (s)", $"{songSecs:0.000} s");
+        DrawLabelledValue("Float time", $"{norm:0.000 000 000}");
         EditorGUILayout.EndHorizontal();
-        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+    }
 
-        // --- Playback controls ---------------------------------------
+    private void DrawControls()
+    {
+        // Playback
         EditorGUILayout.BeginHorizontal();
         GUI.enabled = _audioClip != null;
         if (GUILayout.Button(_isPlaying ? "⏸ Pause" : "▶ Play"))
@@ -408,29 +473,27 @@ public class TempoRuler : EditorWindow
         if (GUILayout.Button("⏮ Reset"))
             SeekToNorm(0f);
         EditorGUILayout.EndHorizontal();
-
         EditorGUILayout.Space(4);
 
-        // --- Step controls -------------------------------------------
+        // Step
         EditorGUILayout.BeginHorizontal();
         if (GUILayout.Button("◀", GUILayout.Width(30))) Step(-1);
         if (GUILayout.Button("▶", GUILayout.Width(30))) Step(1);
         _stepAmount = EditorGUILayout.IntField(_stepAmount, GUILayout.Width(40));
         _stepUnit   = (StepUnit)EditorGUILayout.EnumPopup(_stepUnit);
         EditorGUILayout.EndHorizontal();
-
         EditorGUILayout.Space(4);
 
-        // --- Jump to input -------------------------------------------
+        // Jump to
         EditorGUILayout.BeginHorizontal();
         _jumpInput = EditorGUILayout.TextField("Jump to", _jumpInput);
         if (GUILayout.Button("Go", GUILayout.Width(36)))
             TryJump(_jumpInput);
         EditorGUILayout.EndHorizontal();
+    }
 
-        EditorGUILayout.Space(4);
-
-        // --- Marker buttons ------------------------------------------
+    private void DrawMarkerButtons()
+    {
         EditorGUILayout.LabelField("Markers", EditorStyles.boldLabel);
         int cols = Mathf.Max(1, Mathf.FloorToInt(position.width / 72));
         int col = 0;
@@ -449,35 +512,33 @@ public class TempoRuler : EditorWindow
             col++;
         }
         EditorGUILayout.EndHorizontal();
+    }
 
-        // --- Debug foldout -------------------------------------------
-        EditorGUILayout.Space(20);
-
+    private void DrawDebugFoldout(float norm, float songSecs)
+    {
         _debugFoldout = EditorGUILayout.Foldout(_debugFoldout, "Debug");
-        if (_debugFoldout)
-        {
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUI.indentLevel++;
-            EditorGUILayout.Space(8);
-            EditorGUILayout.LabelField("Normalised time", EditorStyles.boldLabel);
-            EditorGUILayout.SelectableLabel($"{norm:0.000000}", GUILayout.Height(15));
+        if (!_debugFoldout) return;
 
-            EditorGUILayout.Space(8);
-            EditorGUILayout.LabelField("Song time (s)", EditorStyles.boldLabel);
-            EditorGUILayout.SelectableLabel($"{songSecs:0.000000}", GUILayout.Height(15));
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+        EditorGUI.indentLevel++;
+        EditorGUILayout.Space(8);
+        DrawLabelledValue("Normalised time",  $"{norm:0.000000}");
+        EditorGUILayout.Space(8);
+        DrawLabelledValue("Song time (s)",     $"{songSecs:0.000000}");
+        EditorGUILayout.Space(8);
+        DrawLabelledValue("Playing state",     $"{_isPlaying}");
+        EditorGUILayout.Space(8);
+        EditorGUI.indentLevel--;
+        EditorGUILayout.EndVertical();
+    }
 
-            EditorGUILayout.Space(8);
-            EditorGUILayout.LabelField("Animation frame", EditorStyles.boldLabel);
-            EditorGUILayout.SelectableLabel($"{AnimationWindowFrame} / {totalFrames}", GUILayout.Height(15));
-
-            EditorGUILayout.Space(8);
-            EditorGUILayout.LabelField("Playing state", EditorStyles.boldLabel);
-            EditorGUILayout.SelectableLabel($"{_isPlaying}", GUILayout.Height(15));
-
-            EditorGUILayout.Space(8);
-            EditorGUI.indentLevel--;
-            EditorGUILayout.EndVertical();
-        }
+    // Renders a bold label above a selectable value, used for multi-column readout rows.
+    private static void DrawLabelledValue(string label, string value)
+    {
+        EditorGUILayout.BeginVertical();
+        EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
+        EditorGUILayout.SelectableLabel(value, GUILayout.Height(15));
+        EditorGUILayout.EndVertical();
     }
 
     private void Step(int direction)

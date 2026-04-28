@@ -5,22 +5,27 @@
     <Style src="TempoRuler.uss" />
 
     <ScrollView class="tempo-ruler">
-        <VisualElement class="col col-gap-2">
+        <VisualElement class="col">
 
             <!-- ── Status row ──────────────────────────────────────────────── -->
-            <VisualElement class="row items-center col-gap-1">
-                <VisualElement class="col grow col-gap-0p5">
+            <VisualElement class="row items-center">
+                <VisualElement class="col grow">
                     <Label name="status-engine" class="text-base" />
+                    <VisualElement class="h-2" />
                     <Label name="status-clip"   class="text-base" />
                 </VisualElement>
+                <VisualElement class="w-8" />
                 <Button name="refresh-btn" class="btn-sm" text="Refresh" />
             </VisualElement>
 
-            <!-- ── Readout ─────────────────────────────────────────────────── -->
-            <VisualElement class="panel-frame col col-gap-2">
+            <VisualElement class="h-8" />
 
-                <VisualElement class="col col-gap-2">
+            <!-- ── Readout ─────────────────────────────────────────────────── -->
+            <VisualElement class="panel-frame col">
+
+                <VisualElement class="col">
                     <Label name="timestamp" class="readout__timestamp" text="00:00.00" />
+                    <VisualElement class="h-8" />
 
                     <!-- marker / lyric / section -->
                     <VisualElement class="row">
@@ -32,72 +37,83 @@
                     </VisualElement>
                 </VisualElement>
 
+                <VisualElement class="h-8" />
                 <VisualElement class="separator" />
+                <VisualElement class="h-8" />
 
                 <!-- measure / beat / tick indices -->
                 <VisualElement class="row">
-                    <VisualElement class="value-col col-gap-0p5">
+                    <VisualElement class="value-col">
                         <Label class="value-col__label" text="Measure index" />
+                        <VisualElement class="h-2" />
                         <VisualElement class="row">
-                            <TextField name="val-measure-index-numerator" class="value-col__value min-w-40" readonly="true" />
+                            <TextField name="val-measure-index-numerator" class="value-col__value min-w-40" />
                             <Label name="val-measure-index-denominator" class="my-auto" />
                         </VisualElement>
                     </VisualElement>
                     <VisualElement class="w-8" />
-                    <VisualElement class="value-col col-gap-0p5">
+                    <VisualElement class="value-col">
                         <Label class="value-col__label" text="Beat index" />
+                        <VisualElement class="h-2" />
                         <VisualElement class="row">
-                            <TextField name="val-beat-index-numerator" class="value-col__value min-w-40" readonly="true" />
+                            <TextField name="val-beat-index-numerator" class="value-col__value min-w-40" />
                             <Label name="val-beat-index-denominator" class="my-auto" />
                         </VisualElement>
                     </VisualElement>
                     <VisualElement class="w-8" />
-                    <VisualElement class="value-col col-gap-0p5">
+                    <VisualElement class="value-col">
                         <Label class="value-col__label" text="Tick index" />
+                        <VisualElement class="h-2" />
                         <VisualElement class="row">
-                            <TextField name="val-tick-index-numerator" class="value-col__value min-w-40" readonly="true" />
+                            <TextField name="val-tick-index-numerator" class="value-col__value min-w-40" />
                             <Label name="val-tick-index-denominator" class="my-auto" />
                         </VisualElement>
                     </VisualElement>
                 </VisualElement>
 
+                <VisualElement class="h-8" />
                 <VisualElement class="separator" />
+                <VisualElement class="h-8" />
 
                 <!-- wall-clock time -->
                 <VisualElement class="row">
-                    <VisualElement class="value-col col-gap-0p5">
+                    <VisualElement class="value-col">
                         <Label class="value-col__label" text="Time (m:s)" />
-                        <TextField name="val-time-ms" class="value-col__value" readonly="true" />
+                        <VisualElement class="h-2" />
+                        <TextField name="val-time-ms" class="value-col__value" />
                     </VisualElement>
                     <VisualElement class="w-8" />
-                    <VisualElement class="value-col col-gap-0p5">
+                    <VisualElement class="value-col">
                         <Label class="value-col__label" text="Time (s)" />
-                        <TextField name="val-time-s" class="value-col__value" readonly="true" />
+                        <VisualElement class="h-2" />
+                        <TextField name="val-time-s" class="value-col__value" />
                     </VisualElement>
                     <VisualElement class="w-8" />
-                    <VisualElement class="value-col col-gap-0p5">
+                    <VisualElement class="value-col">
                         <Label class="value-col__label" text="Float time" />
-                        <TextField name="val-time-norm" class="value-col__value" readonly="true" />
+                        <VisualElement class="h-2" />
+                        <TextField name="val-time-norm" class="value-col__value" />
                     </VisualElement>
                 </VisualElement>
 
             </VisualElement>
 
-            <!-- ── Transport controls ──────────────────────────────────────── -->
-            <VisualElement class="panel-frame col col-gap-2">
+            <VisualElement class="h-8" />
 
-                <VisualElement class="col col-gap-1">
+            <!-- ── Transport controls ──────────────────────────────────────── -->
+            <VisualElement class="panel-frame col">
+
+                <VisualElement class="col">
                     <Label class="text-bold" text="Transport" />
-                     <VisualElement class="row items-stretch">
+                    <VisualElement class="h-4" />
+                    <VisualElement class="row items-stretch">
                         <Button name="play-btn"  class="grow" text="Play" />
                         <VisualElement class="w-2" />
                         <Button name="reset-btn" class="grow" text="Reset" />
-
                         <VisualElement class="w-8" />
-
                         <Button name="step-back-btn" class="btn-icon-md" text="◀" />
                         <VisualElement class="w-2" />
-                        <Button name="step-fwd-btn" class="btn-icon-md" text="▶" />
+                        <Button name="step-fwd-btn"  class="btn-icon-md" text="▶" />
                         <VisualElement class="w-2" />
                         <editor:IntegerField name="step-amount" class="w-40" value="1" />
                         <VisualElement class="w-2" />
@@ -105,22 +121,15 @@
                     </VisualElement>
                 </VisualElement>
 
-                <VisualElement class="separator" />
-
-                <VisualElement class="col col-gap-1">
-                    <Label class="text-bold" text="Jump to" />
-                    <VisualElement class="row items-stretch">
-                        <TextField name="jump-input" class="grow" />
-                        <VisualElement class="w-2" />
-                        <Button    name="jump-btn"   class="btn-md" text="Go" />
-                    </VisualElement>
-                </VisualElement>
 
             </VisualElement>
 
+            <VisualElement class="h-8" />
+
             <!-- ── Marker buttons ─────────────────────────────────────────── -->
-            <VisualElement class="panel-frame col col-gap-1">
+            <VisualElement class="panel-frame col">
                 <Label class="text-bold" text="Markers" />
+                <VisualElement class="h-4" />
                 <VisualElement name="markers-grid" class="markers__grid row wrap" />
             </VisualElement>
 

@@ -111,9 +111,7 @@ public class TempoRuler : EditorWindow
     private TextField _valTimeMs;
     private TextField _valTimeS;
     private TextField _valTimeNorm;
-    private TextField _dbgNorm;
-    private TextField _dbgSongSecs;
-    private TextField _dbgPlaying;
+
     private Label _statusEngine;
     private Label _statusClip;
     private Button _playBtn;
@@ -166,16 +164,57 @@ public class TempoRuler : EditorWindow
         _cueSection     = root.Q<Label>("cue-section");
         _valMeasureIndex = root.Q<TextField>("val-measure-index-numerator");
         _valMeasureIndexMax = root.Q<Label>("val-measure-index-denominator");
+        { string focused = null;
+          _valMeasureIndex.RegisterCallback<FocusInEvent>(_  => focused = _valMeasureIndex.value);
+          _valMeasureIndex.RegisterCallback<FocusOutEvent>(_ =>
+          {
+              if (_valMeasureIndex.value != focused && int.TryParse(_valMeasureIndex.value, out int m))
+                  SeekToSongSeconds(MBTToSongSeconds(m + 1, 1, 1));
+              UpdateReadout();
+          }); }
         _valBeatIndex    = root.Q<TextField>("val-beat-index-numerator");
         _valBeatIndexMax = root.Q<Label>("val-beat-index-denominator");
+        { string focused = null;
+          _valBeatIndex.RegisterCallback<FocusInEvent>(_  => focused = _valBeatIndex.value);
+          _valBeatIndex.RegisterCallback<FocusOutEvent>(_ =>
+          {
+              if (_valBeatIndex.value != focused && int.TryParse(_valBeatIndex.value, out int b))
+                  SeekToSongSeconds(b * (60f / _bpm));
+              UpdateReadout();
+          }); }
         _valTickIndex    = root.Q<TextField>("val-tick-index-numerator");
         _valTickIndexMax = root.Q<Label>("val-tick-index-denominator");
+        { string focused = null;
+          _valTickIndex.RegisterCallback<FocusInEvent>(_  => focused = _valTickIndex.value);
+          _valTickIndex.RegisterCallback<FocusOutEvent>(_ =>
+          {
+              if (_valTickIndex.value != focused && int.TryParse(_valTickIndex.value, out int t))
+                  SeekToSongSeconds(TickIndexToSongSeconds(t));
+              UpdateReadout();
+          }); }
         _valTimeMs      = root.Q<TextField>("val-time-ms");
+        _valTimeMs.RegisterCallback<FocusOutEvent>(_ =>
+        {
+            // Accepts m:ss, m:ss.ms, or plain seconds
+            if (TryParseTimeMs(_valTimeMs.value, out float secs))
+                SeekToSongSeconds(secs);
+            UpdateReadout();
+        });
         _valTimeS       = root.Q<TextField>("val-time-s");
+        _valTimeS.RegisterCallback<FocusOutEvent>(_ =>
+        {
+            if (float.TryParse(_valTimeS.value, out float secs))
+                SeekToSongSeconds(secs);
+            UpdateReadout();
+        });
         _valTimeNorm    = root.Q<TextField>("val-time-norm");
-        _dbgNorm        = root.Q<TextField>("dbg-norm");
-        _dbgSongSecs    = root.Q<TextField>("dbg-song-secs");
-        _dbgPlaying     = root.Q<TextField>("dbg-playing");
+        _valTimeNorm.RegisterCallback<FocusOutEvent>(_ =>
+        {
+            if (float.TryParse(_valTimeNorm.value, out float norm))
+                SeekToNorm(norm);
+            UpdateReadout();
+        });
+
         _statusEngine   = root.Q<Label>("status-engine");
         _statusClip     = root.Q<Label>("status-clip");
         _markersGrid    = root.Q<VisualElement>("markers-grid");
@@ -212,14 +251,6 @@ public class TempoRuler : EditorWindow
         stepUnitField.Init(_stepUnit);
         stepUnitField.RegisterValueChangedCallback(e => _stepUnit = (StepUnit)e.newValue);
 
-        var jumpInput = root.Q<TextField>("jump-input");
-        root.Q<Button>("jump-btn").clicked += () => TryJump(jumpInput.value);
-        // Also fire on Enter inside the text field
-        jumpInput.RegisterCallback<KeyDownEvent>(e =>
-        {
-            if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter)
-                TryJump(jumpInput.value);
-        });
 
         RebuildMarkerButtons();
         UpdateReadout();
@@ -267,18 +298,24 @@ public class TempoRuler : EditorWindow
         int totalTicks    = Mathf.FloorToInt(songSecs / SecondsPerTick);
         int totalBeats    = Mathf.FloorToInt(songSecs / (60f / _bpm));
         int totalMeasures = Mathf.FloorToInt(songSecs / (60f / _bpm * _beatsPerMeasure));
-        _valMeasureIndex.value = $"{totalMeasures}";
+        if (_valMeasureIndex.focusController?.focusedElement != _valMeasureIndex)
+            _valMeasureIndex.value = $"{totalMeasures}";
         _valMeasureIndexMax.text = $" / {Mathf.FloorToInt(SongMeasures)}";
-        _valBeatIndex.value    = $"{totalBeats}";
+        if (_valBeatIndex.focusController?.focusedElement != _valBeatIndex)
+            _valBeatIndex.value = $"{totalBeats}";
         _valBeatIndexMax.text  = $" / {Mathf.FloorToInt(SongBeats)}";
-        _valTickIndex.value    = $"{totalTicks}";
+        if (_valTickIndex.focusController?.focusedElement != _valTickIndex)
+            _valTickIndex.value = $"{totalTicks}";
         _valTickIndexMax.text  = $" / {Mathf.FloorToInt(SongTicks)}";
 
         // Wall-clock time
         TimeSpan ts = TimeSpan.FromSeconds(songSecs);
-        _valTimeMs.value   = $"{(int)ts.TotalMinutes}:{ts.Seconds:00}.{ts.Milliseconds:000}";
-        _valTimeS.value    = $"{songSecs:0.000} s";
-        _valTimeNorm.value = $"{norm:0.000 000 000}";
+        if (_valTimeMs.focusController?.focusedElement != _valTimeMs)
+            _valTimeMs.value   = $"{(int)ts.TotalMinutes}:{ts.Seconds:00}.{ts.Milliseconds:000}";
+        if (_valTimeS.focusController?.focusedElement != _valTimeS)
+            _valTimeS.value    = $"{songSecs:0.000}";
+        if (_valTimeNorm.focusController?.focusedElement != _valTimeNorm)
+            _valTimeNorm.value = $"{norm:0.000 000 000}";
 
         // Status row
         var clip = ActiveClip;
@@ -369,7 +406,7 @@ public class TempoRuler : EditorWindow
             SeekToNorm(1f);
             return;
         }
-        AnimationWindowFrame = Mathf.FloorToInt(norm * ClipTotalFrames);
+        AnimationWindowFrame = Mathf.RoundToInt(norm * ClipTotalFrames);
         UpdateReadout();
     }
 
@@ -384,7 +421,7 @@ public class TempoRuler : EditorWindow
             _playStartEditorTime = EditorApplication.timeSinceStartup;
             PlayClipFromTime(_audioClip, NormToSongSeconds(norm));
         }
-        AnimationWindowFrame = Mathf.FloorToInt(norm * ClipTotalFrames);
+        AnimationWindowFrame = Mathf.RoundToInt(norm * ClipTotalFrames);
         UpdateReadout();
     }
 
@@ -416,6 +453,34 @@ public class TempoRuler : EditorWindow
         AudioUtil?.GetMethod("StopAllPreviewClips",
             BindingFlags.Static | BindingFlags.Public)
             ?.Invoke(null, null);
+    }
+
+    // --- Time parsing ------------------------------------------------
+    private static bool TryParseTimeMs(string input, out float seconds)
+    {
+        input = input.Trim();
+        // plain float or integer
+        if (float.TryParse(input, out seconds)) return true;
+        // m:ss or m:ss.ms
+        string[] colonParts = input.Split(':');
+        if (colonParts.Length == 2 && int.TryParse(colonParts[0], out int m))
+        {
+            string[] dotParts = colonParts[1].Split('.');
+            if (dotParts.Length == 2
+                && int.TryParse(dotParts[0], out int ss)
+                && int.TryParse(dotParts[1], out int ms))
+            {
+                seconds = m * 60 + ss + ms / 1000f;
+                return true;
+            }
+            if (int.TryParse(colonParts[1], out int secs))
+            {
+                seconds = m * 60 + secs;
+                return true;
+            }
+        }
+        seconds = 0f;
+        return false;
     }
 
     // --- Time conversion helpers -------------------------------------
@@ -473,50 +538,5 @@ public class TempoRuler : EditorWindow
             case StepUnit.Seconds:  deltaSecs = _stepAmount; break;
         }
         SeekToSongSeconds(NormToSongSeconds(CurrentNormTime) + direction * deltaSecs);
-    }
-
-    private void TryJump(string input)
-    {
-        input = input.Trim();
-        if (string.IsNullOrEmpty(input)) return;
-
-        // Plain integer: tick index
-        if (int.TryParse(input, out int tickIdx))
-        {
-            SeekToSongSeconds(TickIndexToSongSeconds(tickIdx));
-            return;
-        }
-
-        string[] mbtParts = input.Split(':');
-
-        // m:ss or m:ss.ms
-        if (mbtParts.Length == 2 && int.TryParse(mbtParts[0], out int m))
-        {
-            string[] subParts = mbtParts[1].Split('.');
-            if (subParts.Length == 2
-                && int.TryParse(subParts[0], out int ss)
-                && int.TryParse(subParts[1], out int ms))
-            {
-                SeekToSongSeconds(m * 60 + ss + ms / 1000f);
-                return;
-            }
-            if (int.TryParse(mbtParts[1], out int secs))
-            {
-                SeekToSongSeconds(m * 60 + secs);
-                return;
-            }
-        }
-
-        // m:b:t (1-indexed)
-        if (mbtParts.Length == 3
-            && int.TryParse(mbtParts[0], out int mb)
-            && int.TryParse(mbtParts[1], out int b)
-            && int.TryParse(mbtParts[2].Split('.')[0], out int tk))
-        {
-            SeekToSongSeconds(MBTToSongSeconds(mb, b, tk));
-            return;
-        }
-
-        Debug.LogWarning($"[TempoRuler] Could not parse jump input: '{input}'");
     }
 }

@@ -292,14 +292,6 @@ public class TempoRuler : EditorWindow
         // Play button label
         if (_playBtn != null)
             _playBtn.text = _isPlaying ? "Pause" : "Play";
-
-        // Debug fields (only do work if the foldout is open)
-        if (_dbgNorm != null)
-        {
-            _dbgNorm.value     = $"{norm:0.000000}";
-            _dbgSongSecs.value = $"{songSecs:0.000000}";
-            _dbgPlaying.value  = $"{_isPlaying}";
-        }
     }
 
     // --- Find helpers ------------------------------------------------

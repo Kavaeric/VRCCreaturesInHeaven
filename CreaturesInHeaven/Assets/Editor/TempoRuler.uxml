@@ -25,7 +25,9 @@
                     <!-- marker / lyric / section -->
                     <VisualElement class="row">
                         <Label name="cue-marker"  class="w-80 text-left"   text="-" />
-                        <Label name="cue-lyric"   class="grow text-center" text="-" />
+                        <VisualElement class="w-8" />
+                        <Label name="cue-lyric"   class="shrink grow text-center text-wrap min-h-32" text="-" />
+                        <VisualElement class="w-8" />
                         <Label name="cue-section" class="w-80 text-right"  text="-" />
                     </VisualElement>
                 </VisualElement>
@@ -41,6 +43,7 @@
                             <Label name="val-measure-index-denominator" class="my-auto" />
                         </VisualElement>
                     </VisualElement>
+                    <VisualElement class="w-8" />
                     <VisualElement class="value-col col-gap-0p5">
                         <Label class="value-col__label" text="Beat index" />
                         <VisualElement class="row">
@@ -48,6 +51,7 @@
                             <Label name="val-beat-index-denominator" class="my-auto" />
                         </VisualElement>
                     </VisualElement>
+                    <VisualElement class="w-8" />
                     <VisualElement class="value-col col-gap-0p5">
                         <Label class="value-col__label" text="Tick index" />
                         <VisualElement class="row">
@@ -65,10 +69,12 @@
                         <Label class="value-col__label" text="Time (m:s)" />
                         <TextField name="val-time-ms" class="value-col__value" readonly="true" />
                     </VisualElement>
+                    <VisualElement class="w-8" />
                     <VisualElement class="value-col col-gap-0p5">
                         <Label class="value-col__label" text="Time (s)" />
                         <TextField name="val-time-s" class="value-col__value" readonly="true" />
                     </VisualElement>
+                    <VisualElement class="w-8" />
                     <VisualElement class="value-col col-gap-0p5">
                         <Label class="value-col__label" text="Float time" />
                         <TextField name="val-time-norm" class="value-col__value" readonly="true" />
@@ -84,14 +90,18 @@
                     <Label class="text-bold" text="Transport" />
                      <VisualElement class="row items-stretch">
                         <Button name="play-btn"  class="grow" text="Play" />
+                        <VisualElement class="w-2" />
                         <Button name="reset-btn" class="grow" text="Reset" />
 
                         <VisualElement class="w-8" />
 
                         <Button name="step-back-btn" class="btn-icon-md" text="◀" />
+                        <VisualElement class="w-2" />
                         <Button name="step-fwd-btn" class="btn-icon-md" text="▶" />
+                        <VisualElement class="w-2" />
                         <editor:IntegerField name="step-amount" class="w-40" value="1" />
-                        <editor:EnumField    name="step-unit"   class="grow" />
+                        <VisualElement class="w-2" />
+                        <editor:EnumField    name="step-unit"   class="w-100" />
                     </VisualElement>
                 </VisualElement>
 
@@ -101,6 +111,7 @@
                     <Label class="text-bold" text="Jump to" />
                     <VisualElement class="row items-stretch">
                         <TextField name="jump-input" class="grow" />
+                        <VisualElement class="w-2" />
                         <Button    name="jump-btn"   class="btn-md" text="Go" />
                     </VisualElement>
                 </VisualElement>
@@ -112,26 +123,6 @@
                 <Label class="text-bold" text="Markers" />
                 <VisualElement name="markers-grid" class="markers__grid row wrap" />
             </VisualElement>
-
-            <!-- ── Debug foldout ───────────────────────────────────────────── -->
-            <Foldout name="debug-foldout" text="Debug" value="false">
-                <VisualElement class="border-subtle p-2">
-                    <VisualElement class="row">
-                        <VisualElement class="value-col">
-                            <Label class="value-col__label" text="Normalised time" />
-                            <TextField name="dbg-norm" class="value-col__value text-sm" readonly="true" />
-                        </VisualElement>
-                        <VisualElement class="value-col">
-                            <Label class="value-col__label" text="Song time (s)" />
-                            <TextField name="dbg-song-secs" class="value-col__value text-sm" readonly="true" />
-                        </VisualElement>
-                        <VisualElement class="value-col">
-                            <Label class="value-col__label" text="Playing state" />
-                            <TextField name="dbg-playing" class="value-col__value text-sm" readonly="true" />
-                        </VisualElement>
-                    </VisualElement>
-                </VisualElement>
-            </Foldout>
 
         </VisualElement>
     </ScrollView>

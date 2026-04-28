@@ -1,0 +1,148 @@
+/* TempoRuler.uss — styles for the Tempo Ruler editor window */
+
+/* ── Variables ──────────────────────────────────────────────────────── */
+
+:root {
+    --interactive-sm: 28px;
+    --interactive-md: 32px;
+}
+
+/* ── Utilities ──────────────────────────────────────────────────────── */
+
+.row           { flex-direction: row; }
+.col           { flex-direction: column; }
+.wrap          { flex-wrap: wrap; }
+.grow          { flex-grow: 1; }
+.shrink-0      { flex-shrink: 0; }
+.items-center  { align-items: center; }
+.items-stretch { align-items: stretch; }
+.my-auto       { margin-top: auto; margin-bottom: auto; }
+.flex-basis-0  { flex-basis: 0; }
+
+/* USS has no gap support so it's simulated with this horrible mess */
+.col-gap-1px  > * { margin-top: .5px; margin-bottom: .5px; }
+.col-gap-0p5  > * { margin-top: 1px; margin-bottom: 1px; }
+.col-gap-1  > * { margin-top: 2px; margin-bottom: 2px; }
+.col-gap-2 > * { margin-top: 4px; margin-bottom: 4px; }
+
+.w-8  { width: 8px; }
+.w-32  { width: 32px; }
+.w-36  { width: 36px; }
+.w-40  { width: 40px; }
+.w-60  { width: 60px; }
+.w-80  { width: 80px; }
+.min-w-40 { min-width: 40px; }
+.max-w-80 { max-width: 80px; }
+
+.p-2   { padding: 8px; }
+
+.text-sm     { font-size: 10px; }
+.text-base   { font-size: 12px; }
+.text-bold   { -unity-font-style: bold; }
+.text-left   { -unity-text-align: middle-left; }
+.text-center { -unity-text-align: middle-center; }
+.text-right  { -unity-text-align: middle-right; }
+
+.panel-frame {
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+/* ── Root ───────────────────────────────────────────────────────────── */
+
+.tempo-ruler {
+    padding: 8px;
+    flex-grow: 1;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────── */
+
+Button {
+    height: var(--interactive-md);
+    padding: 12px;
+    margin: 0;
+}
+
+Button.btn-sm {
+    height: var(--interactive-sm);
+    padding: 8px;
+    margin: 0;
+}
+
+Button.btn-icon-md {
+    height: var(--interactive-md);
+    width: var(--interactive-md);
+    padding: 12px;
+    margin: 0;
+}
+
+Button.btn-icon-sm {
+    height: var(--interactive-sm);
+    width: var(--interactive-sm);
+    padding: 8px;
+    margin: 0;
+}
+
+.unity-base-field {
+    min-height: var(--interactive-sm);
+    margin: 0;
+}
+
+.unity-base-field__input {
+    margin: 0;
+    padding: 4px;
+}
+
+/* ── Separator ──────────────────────────────────────────────────────── */
+
+.separator {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+.separator--thick {
+    height: 2px;
+}
+
+/* ── Readout ────────────────────────────────────────────────────────── */
+
+.readout__timestamp {
+    font-size: 48px;
+    height: 48px;
+    -unity-text-align: middle-center;
+    -unity-font: url("Fonts/Iosevka/Iosevka-Regular.ttf");
+    -unity-font-definition: none;
+}
+
+/* ── Labelled value columns ─────────────────────────────────────────── */
+
+.value-col {
+    flex-grow: 1;
+    flex-basis: 0;
+}
+
+.value-col__label {
+    -unity-font-style: bold;
+    font-size: 12px;
+}
+
+.value-col__value {
+    font-size: 12px;
+    /* SelectableLabel equivalent — TextField styled to look like a label */
+    border-width: 0;
+    background-color: rgba(0, 0, 0, 0);
+    padding: 0;
+    margin: 0;
+    -unity-text-align: upper-left;
+}
+
+/* ── Markers ────────────────────────────────────────────────────────── */
+
+.markers__grid > Button {
+    width: 40px;
+}

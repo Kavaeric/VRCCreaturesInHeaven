@@ -5,6 +5,7 @@ using VRC.SDKBase;
 using VRC.Udon;
 using VRC.Udon.Common.Interfaces;
 using VRC.SDK3.UdonNetworkCalling;
+using System.Diagnostics.Tracing;
 
 
 #if UNITY_EDITOR
@@ -195,11 +196,7 @@ public class ArrangedTeleport : UdonSharpBehaviour
 
             int slot = slotIndexArray[i];
             Debug.Log($"    Teleporting player {localId} to slot {slot}.");
-
-            VRC_SceneDescriptor.SpawnOrientation orientation = rotationMode == ArrangedTeleportRotationMode.Relative
-                ? VRC_SceneDescriptor.SpawnOrientation.AlignRoomWithSpawnPoint
-                : VRC_SceneDescriptor.SpawnOrientation.AlignPlayerWithSpawnPoint;
-            Networking.LocalPlayer.TeleportTo(teleportSlots[slot].position, SlotRotation(slot), orientation);
+            Networking.LocalPlayer.TeleportTo(teleportSlots[slot].position, SlotRotation(slot));
 
             if (postTeleportCallbacks != null)
                 foreach (UdonSharpBehaviour cb in postTeleportCallbacks)
@@ -221,8 +218,14 @@ public class ArrangedTeleport : UdonSharpBehaviour
                 return Networking.LocalPlayer.GetRotation();
 
             case ArrangedTeleportRotationMode.Relative:
+                // Apply the rotation delta from the entry zone to the slot, onto the player's current rotation.
+                // Use the playspace origin rotation rather than GetRotation(), which in VR can return the HMD
+                // yaw rather than the playspace/locomotion rotation — causing misalignment for FBT users.
+                Quaternion sourceRotation = Networking.LocalPlayer.IsUserInVR()
+                    ? Networking.LocalPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.Origin).rotation
+                    : Networking.LocalPlayer.GetRotation();
                 Quaternion delta = teleportSlots[slotIndex].rotation * Quaternion.Inverse(entry.rotation);
-                return delta * Networking.LocalPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.Origin).rotation;
+                return delta * sourceRotation;
 
             default: // AlignToSlot
                 return teleportSlots[slotIndex].rotation;

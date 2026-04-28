@@ -81,6 +81,7 @@ public class MusicEngine : UdonSharpBehaviour
     public AudioSource MusicPlayer;
     public AudioSource MusicPlayerLobby;
     public Animator[] animators;
+    public UdonBehaviour[] SequenceListeners;
     public AnchorTeleport StartTeleporter;
     public Button ButtonStart;
     public Button ButtonJoin;
@@ -154,13 +155,16 @@ public class MusicEngine : UdonSharpBehaviour
         MusicPlayerLobby.timeSamples = targetSample;
     }
 
-    // Stops all audio sources and resets animators to time zero.
+    // Stops all audio sources and resets animators and sequences to time zero.
     private void StopPlaying()
     {
         MusicPlayer.Stop();
         MusicPlayerLobby.Stop();
         for (int i = 0; i < animators.Length; i++)
-            animators[i].SetFloat("_Time", 0f);
+            if (animators[i] != null) animators[i].SetFloat("_Time", 0f);
+        for (int i = 0; i < SequenceListeners.Length; i++)
+            if (SequenceListeners[i] != null)
+                SequenceListeners[i].SendCustomEvent("OnSequenceStop");
     }
 
     void Update()
@@ -210,10 +214,13 @@ public class MusicEngine : UdonSharpBehaviour
 
         if (Networking.IsOwner(Networking.LocalPlayer, gameObject))
         {
-            // Owner drives synced time and animators from their local audio position.
+            // Owner drives synced time, animators, and sequences from their local audio position.
             _syncedAnimationTime = LocalAnimationTime;
             for (int i = 0; i < animators.Length; i++)
-                animators[i].SetFloat("_Time", _syncedAnimationTime);
+                if (animators[i] != null) animators[i].SetFloat("_Time", _syncedAnimationTime);
+            for (int i = 0; i < SequenceListeners.Length; i++)
+                if (SequenceListeners[i] != null)
+                    SequenceListeners[i].SendCustomEvent("OnSequenceUpdate");
 
             if (!MusicPlayer.isPlaying && _syncedPlaying)
             {
@@ -239,7 +246,10 @@ public class MusicEngine : UdonSharpBehaviour
         {
             // Non-owners run their own audio independently and animate from local time.
             for (int i = 0; i < animators.Length; i++)
-                animators[i].SetFloat("_Time", LocalAnimationTime);
+                if (animators[i] != null) animators[i].SetFloat("_Time", LocalAnimationTime);
+            for (int i = 0; i < SequenceListeners.Length; i++)
+                if (SequenceListeners[i] != null)
+                    SequenceListeners[i].SendCustomEvent("OnSequenceUpdate");
 
             // Drift correction: compare local position against where the owner is
             // predicted to be now (synced position + time elapsed since last sync).

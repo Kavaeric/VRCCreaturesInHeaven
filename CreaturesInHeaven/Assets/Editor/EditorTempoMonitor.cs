@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public class TempoMonitor : EditorWindow
+public class EditorTempoMonitor : EditorWindow
 {
     // --- Config references -------------------------------------------
     private MusicEngine _musicEngine;
@@ -136,7 +136,7 @@ public class TempoMonitor : EditorWindow
     private Dictionary<string, Texture2D> _noteIcons;
 
     [MenuItem("Tools/Tempo Monitor")]
-    public static void Open() => GetWindow<TempoMonitor>("Tempo Monitor");
+    public static void Open() => GetWindow<EditorTempoMonitor>("Tempo Monitor");
 
     // --- Lifecycle ---------------------------------------------------
 
@@ -162,17 +162,17 @@ public class TempoMonitor : EditorWindow
 
         // Load UXML and USS from the same folder as this script
         string dir = "Assets/Editor";
-        var uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>($"{dir}/TempoMonitor.uxml");
+        var uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>($"{dir}/EditorTempoMonitor.uxml");
         if (uxml == null)
         {
-            root.Add(new Label("TempoMonitor.uxml not found. Try reimporting the Assets/Editor folder."));
+            root.Add(new Label("EditorTempoMonitor.uxml not found. Try reimporting the Assets/Editor folder."));
             return;
         }
         uxml.CloneTree(root);
 
         // Apply the USS stylesheet explicitly (UXML <Style> tag also loads it,
         // this is a belt-and-suspenders guard for first-import timing issues)
-        var uss = AssetDatabase.LoadAssetAtPath<StyleSheet>($"{dir}/TempoMonitor.uss");
+        var uss = AssetDatabase.LoadAssetAtPath<StyleSheet>($"{dir}/EditorTempoMonitor.uss");
         if (uss != null) root.styleSheets.Add(uss);
 
         // Cache element refs by name

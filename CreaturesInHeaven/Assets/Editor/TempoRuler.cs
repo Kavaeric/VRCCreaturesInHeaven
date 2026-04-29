@@ -99,7 +99,9 @@ public class TempoRuler : EditorWindow
 
     // --- UI element references ---------------------------------------
     // Cached on CreateGUI so OnEditorUpdate can write to them directly.
-    private Label _timestamp;
+    private Label _timestampMeasure;
+    private Label _timestampBeat;
+    private Label _timestampTick;
     private Label _cueMarker;
     private Label _cueLyric;
     private Label _cueSection;
@@ -115,6 +117,8 @@ public class TempoRuler : EditorWindow
 
     private Label _statusEngine;
     private Label _animClipName;
+    private Label _animClipBeatFrame;
+    private Label _animClipBeatFrameMax;
     private TextField _animFrameIndex;
     private Label _animFrameIndexMax;
     private Label _animResolution;
@@ -161,7 +165,7 @@ public class TempoRuler : EditorWindow
         var uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>($"{dir}/TempoRuler.uxml");
         if (uxml == null)
         {
-            root.Add(new Label("TempoRuler.uxml not found — reimport the Editor folder."));
+            root.Add(new Label("TempoRuler.uxml not found. Try reimporting the Assets/Editor folder."));
             return;
         }
         uxml.CloneTree(root);
@@ -171,13 +175,16 @@ public class TempoRuler : EditorWindow
         var uss = AssetDatabase.LoadAssetAtPath<StyleSheet>($"{dir}/TempoRuler.uss");
         if (uss != null) root.styleSheets.Add(uss);
 
-        // Cache element refs by name (equivalent to document.getElementById)
-        _timestamp      = root.Q<Label>("timestamp");
+        // Cache element refs by name
+        _timestampMeasure = root.Q<Label>("timestamp-measure");
+        _timestampBeat    = root.Q<Label>("timestamp-beat");
+        _timestampTick    = root.Q<Label>("timestamp-tick");
         _cueMarker      = root.Q<Label>("cue-marker");
         _cueLyric       = root.Q<Label>("cue-lyric");
         _cueSection     = root.Q<Label>("cue-section");
-        _valMeasureIndex = root.Q<TextField>("val-measure-index-numerator");
+        _valMeasureIndex    = root.Q<TextField>("val-measure-index-numerator");
         _valMeasureIndexMax = root.Q<Label>("val-measure-index-denominator");
+
         { string focused = null;
           _valMeasureIndex.RegisterCallback<FocusInEvent>(_  => focused = _valMeasureIndex.value);
           _valMeasureIndex.RegisterCallback<FocusOutEvent>(_ =>
@@ -231,6 +238,8 @@ public class TempoRuler : EditorWindow
 
         _statusEngine   = root.Q<Label>("status-engine");
         _animClipName      = root.Q<Label>("anim-clip-name");
+        _animClipBeatFrame   = root.Q<Label>("anim-clip-beat-frame-numerator");
+        _animClipBeatFrameMax = root.Q<Label>("anim-clip-beat-frame-denominator");
         _animFrameIndex    = root.Q<TextField>("anim-frame-index");
         _animFrameIndexMax = root.Q<Label>("anim-frame-index-max");
         _animResolution     = root.Q<Label>("anim-resolution");
@@ -323,14 +332,16 @@ public class TempoRuler : EditorWindow
 
     private void UpdateReadout()
     {
-        if (_timestamp == null) return; // CreateGUI hasn't run yet
+        if (_timestampMeasure == null) return; // CreateGUI hasn't run yet
 
         float norm     = CurrentNormTime;
         float songSecs = NormToSongSeconds(norm);
 
         // Timestamp
         TimeToMBT(songSecs, out int measure, out int beat, out int tick);
-        _timestamp.text = $"{measure:00}:{beat:00}.{tick:00}";
+        _timestampMeasure.text = $"{measure:00}";
+        _timestampBeat.text    = $"{beat:00}";
+        _timestampTick.text    = $"{tick:00}";
 
         // Cue info
         SongCue cue = CueAt(songSecs);
@@ -371,9 +382,13 @@ public class TempoRuler : EditorWindow
         if (clip != null)
         {
             _animClipName.text   = $"<color=#00F490>●</color> {clip.name}";
+            int framesPerBeat = Mathf.RoundToInt(ClipTotalFrames / SongBeats);
+            int frameWithinBeat = AnimationWindowFrame % Mathf.Max(framesPerBeat, 1) + 1;
+            _animClipBeatFrame.text   = framesPerBeat > 0 ? $"{frameWithinBeat:00}" : "--";
+            _animClipBeatFrameMax.text = framesPerBeat > 0 ? $"{framesPerBeat:00}"   : "--";
             if (_animFrameIndex.focusController?.focusedElement != _animFrameIndex)
                 _animFrameIndex.value = $"{AnimationWindowFrame}";
-            _animFrameIndexMax.text = $" / {ClipTotalFrames}";
+            _animFrameIndexMax.text = $"{ClipTotalFrames}";
             int totalFrames = ClipTotalFrames;
             if (totalFrames != _cachedResolutionFrames)
             {
@@ -388,6 +403,8 @@ public class TempoRuler : EditorWindow
         else
         {
             _animClipName.text        = "✕ No animation clip";
+            _animClipBeatFrame.text   = "--";
+            _animClipBeatFrameMax.text = "--";
             _animFrameIndex.value     = "-";
             _animFrameIndexMax.text   = "";
             _animResolution.text      = "-";

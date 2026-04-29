@@ -8,9 +8,7 @@
         <VisualElement class="col">
 
             <!-- ── Status row ──────────────────────────────────────────────── -->
-            <VisualElement class="row items-center">
-                <Label name="status-engine" class="text-base grow" />
-                <VisualElement class="w-8" />
+            <VisualElement class="row items-flex-end">
                 <Button name="refresh-btn" class="btn-sm" text="Refresh" />
             </VisualElement>
 
@@ -19,8 +17,31 @@
             <!-- ── Readout ─────────────────────────────────────────────────── -->
             <VisualElement class="panel-frame col">
 
+                <Label name="status-engine" class="text-base grow" />
+                <VisualElement class="h-16" />
+
                 <VisualElement class="col">
-                    <Label name="timestamp" class="readout__timestamp" text="00:00.00" />
+                    <VisualElement class="row items-flex-end justify-center">
+                        <VisualElement class="col">
+                            <Label class="text-bold text-sm" text="Measure" />
+                            <Label name="timestamp-measure" class="readout__lg" text="--" />
+                        </VisualElement>
+
+                        <Label class="text-color-subtle readout__lg" text=":" />
+
+                        <VisualElement class="col">
+                            <Label class="text-bold text-sm" text="Beat" />
+                            <Label name="timestamp-beat" class="readout__lg" text="--" />
+                        </VisualElement>
+
+                        <Label class="text-color-subtle readout__lg" text="." />
+
+                        <VisualElement class="col">
+                            <Label class="text-bold text-sm" text="Tick" />
+                            <Label name="timestamp-tick" class="readout__lg" text="--" />
+                        </VisualElement>
+                    </VisualElement>
+                    
                     <VisualElement class="h-8" />
 
                     <!-- marker / lyric / section -->
@@ -101,11 +122,22 @@
                 <Label name="anim-clip-name" class="text-base" text="-" />
 
                 <VisualElement class="h-8" />
+                    <VisualElement class="row items-flex-end justify-center">
+                        <VisualElement class="col">
+                            <Label class="text-bold text-sm" text="Frame" />
+                            <Label name="anim-clip-beat-frame-numerator" class="readout__lg" text="--" />
+                        </VisualElement>
+                        <Label class="text-color-subtle readout__lg" text="/" />
+                        <Label name="anim-clip-beat-frame-denominator" class="text-color-subtle readout__lg" text="/" />
+                    </VisualElement>
+                <VisualElement class="h-8" />
+
+                <VisualElement class="h-8" />
                 <VisualElement class="separator" />
                 <VisualElement class="h-8" />
                 
                 <VisualElement class="row">
-                    <VisualElement class="value-col max-w-120">
+                    <VisualElement class="value-col">
                         <Label class="value-col__label" text="Frame index" />
                         <VisualElement class="h-2" />
                         <VisualElement class="row">

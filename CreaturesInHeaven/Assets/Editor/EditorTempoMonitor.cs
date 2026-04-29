@@ -6,6 +6,9 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
+// Editor window: displays the current animation cursor position in musical time
+// (measure, beat, tick) and provides transport controls for navigating by musical units.
+// Reads timing config from a MusicEngine component in the scene; reads cues from SongCues.json.
 public class EditorTempoMonitor : EditorWindow
 {
     // --- Menu --------------------------------------------------------
@@ -28,17 +31,21 @@ public class EditorTempoMonitor : EditorWindow
     private int _ticksPerBeat = 4;
     private float _songLengthSeconds = 0f;
 
-    private float SecondsPerTick  => 60f / (_bpm * _ticksPerBeat);
-    private float SongBeats       => _songLengthSeconds * _bpm / 60f;
-    private float SongMeasures    => SongBeats / _beatsPerMeasure;
-    private float SongTicks       => SongBeats * _ticksPerBeat;
+    // Tick is the smallest time unit. All other durations derive from it.
+    private float SecondsPerTick    => 60f / (_bpm * _ticksPerBeat);
+    private int   SongTotalTicks    => Mathf.FloorToInt(_songLengthSeconds / SecondsPerTick);
+    private int   SongTotalBeats    => SongTotalTicks / _ticksPerBeat;
+    private int   SongTotalMeasures => SongTotalTicks / (_ticksPerBeat * _beatsPerMeasure);
     private float NormToSongSeconds(float norm) => norm * _songLengthSeconds;
+
+    // Convert wall-clock seconds to an integer tick index (floor, not round).
+    private int TicksFromSeconds(float songSeconds) => Mathf.FloorToInt(songSeconds / SecondsPerTick);
 
     // --- Playback state ----------------------------------------------
 
     private bool _isPlaying = false;
-    private double _playStartEditorTime;
-    private float _playStartNormTime;
+    private double _playStartEditorTime;  // EditorApplication.timeSinceStartup at play start
+    private float _playStartNormTime;     // cursor position [0,1] at play start
 
     // --- Transport controls ------------------------------------------
 
@@ -47,8 +54,9 @@ public class EditorTempoMonitor : EditorWindow
     private StepUnit _stepUnit = StepUnit.Beats;
 
     // --- Animation window --------------------------------------------
-    // Communicates via frame number, which is unambiguous regardless of
-    // clip sample rate or length. animationClip.frameRate converts to seconds.
+    // The animation window is accessed via reflection because its relevant properties
+    // (frame, animationClip) have no public API. Communicating via frame number is
+    // unambiguous regardless of clip sample rate or length.
 
     private EditorWindow _animationWindow;
     private PropertyInfo _animWindowFrameProp;  // int frame (read/write)
@@ -88,8 +96,8 @@ public class EditorTempoMonitor : EditorWindow
         }
     }
 
-    // Song position as [0, 1]. During playback advances via editor clock;
-    // at rest derived from the animation window frame.
+    // Song position as a normalised value [0, 1].
+    // During playback advances via the editor clock; at rest derived from the animation window frame.
     private float CurrentNormTime
     {
         get
@@ -104,8 +112,7 @@ public class EditorTempoMonitor : EditorWindow
     }
 
     // --- UI element refs ---------------------------------------------
-    // Cached on CreateGUI so OnEditorUpdate can write to them directly.
-
+    // Cached on CreateGUI so OnEditorUpdate can write to them directly each frame.
     private Label _timestampMeasure;
     private Label _timestampBeat;
     private Label _timestampTick;
@@ -157,8 +164,9 @@ public class EditorTempoMonitor : EditorWindow
         StopPlayback();
     }
 
-    // CreateGUI replaces OnGUI — called once to build the element tree.
-    // After this, OnEditorUpdate writes directly to the cached element refs.
+    // CreateGUI replaces OnGUI. Called once to build the element tree.
+    // After this, OnEditorUpdate writes directly to the cached element refs
+    // so we don't have to draw the whole thing over and over again.
     public void CreateGUI()
     {
         var root = rootVisualElement;
@@ -172,56 +180,56 @@ public class EditorTempoMonitor : EditorWindow
         uxml.CloneTree(root);
 
         // Cache element refs
-        _timestampMeasure    = root.Q<Label>("timestamp-measure");
-        _timestampBeat       = root.Q<Label>("timestamp-beat");
-        _timestampTick       = root.Q<Label>("timestamp-tick");
-        _cueMarker           = root.Q<Label>("cue-marker");
-        _cueLyric            = root.Q<Label>("cue-lyric");
-        _cueSection          = root.Q<Label>("cue-section");
-        _valMeasureIndex     = root.Q<TextField>("val-measure-index-numerator");
-        _valMeasureIndexMax  = root.Q<Label>("val-measure-index-denominator");
-        _valBeatIndex        = root.Q<TextField>("val-beat-index-numerator");
-        _valBeatIndexMax     = root.Q<Label>("val-beat-index-denominator");
-        _valTickIndex        = root.Q<TextField>("val-tick-index-numerator");
-        _valTickIndexMax     = root.Q<Label>("val-tick-index-denominator");
-        _valTimeMs           = root.Q<TextField>("val-time-ms");
-        _valTimeS            = root.Q<TextField>("val-time-s");
-        _valTimeNorm         = root.Q<TextField>("val-time-norm");
-        _statusEngine        = root.Q<Label>("status-engine");
-        _animClipName        = root.Q<Label>("anim-clip-name");
-        _animClipBeatFrame   = root.Q<Label>("anim-clip-beat-frame-numerator");
+        _timestampMeasure = root.Q<Label>("timestamp-measure");
+        _timestampBeat = root.Q<Label>("timestamp-beat");
+        _timestampTick = root.Q<Label>("timestamp-tick");
+        _cueMarker = root.Q<Label>("cue-marker");
+        _cueLyric = root.Q<Label>("cue-lyric");
+        _cueSection = root.Q<Label>("cue-section");
+        _valMeasureIndex = root.Q<TextField>("val-measure-index-numerator");
+        _valMeasureIndexMax = root.Q<Label>("val-measure-index-denominator");
+        _valBeatIndex = root.Q<TextField>("val-beat-index-numerator");
+        _valBeatIndexMax = root.Q<Label>("val-beat-index-denominator");
+        _valTickIndex = root.Q<TextField>("val-tick-index-numerator");
+        _valTickIndexMax = root.Q<Label>("val-tick-index-denominator");
+        _valTimeMs = root.Q<TextField>("val-time-ms");
+        _valTimeS = root.Q<TextField>("val-time-s");
+        _valTimeNorm = root.Q<TextField>("val-time-norm");
+        _statusEngine = root.Q<Label>("status-engine");
+        _animClipName = root.Q<Label>("anim-clip-name");
+        _animClipBeatFrame = root.Q<Label>("anim-clip-beat-frame-numerator");
         _animClipBeatFrameMax = root.Q<Label>("anim-clip-beat-frame-denominator");
-        _animFrameIndex      = root.Q<TextField>("anim-frame-index");
-        _animFrameIndexMax   = root.Q<Label>("anim-frame-index-max");
-        _animResolution      = root.Q<Label>("anim-resolution");
-        _animResolutionIcon  = root.Q<Image>("anim-resolution-icon");
-        _playBtn             = root.Q<Button>("play-btn");
-        _markersGrid         = root.Q<VisualElement>("markers-grid");
+        _animFrameIndex = root.Q<TextField>("anim-frame-index");
+        _animFrameIndexMax = root.Q<Label>("anim-frame-index-max");
+        _animResolution = root.Q<Label>("anim-resolution");
+        _animResolutionIcon = root.Q<Image>("anim-resolution-icon");
+        _playBtn = root.Q<Button>("play-btn");
+        _markersGrid = root.Q<VisualElement>("markers-grid");
 
         string iconDir = "Assets/Editor/Icons/Music";
         _noteIcons = new Dictionary<string, VectorImage>
         {
-            ["NoteLonga"]       = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteLonga.svg"),
+            ["NoteLonga"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteLonga.svg"),
             ["NoteDoubleWhole"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteDoubleWhole.svg"),
-            ["NoteWhole"]       = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteWhole.svg"),
-            ["NoteHalf"]        = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteHalf.svg"),
-            ["NoteQuarter"]     = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteQuarter.svg"),
-            ["NoteEighth"]      = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteEighth.svg"),
-            ["Note16"]          = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/Note16.svg"),
-            ["Note32"]          = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/Note32.svg"),
-            ["Note64"]          = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/Note64.svg"),
-            ["Note128"]         = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/Note128.svg"),
-            ["Note256"]         = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/Note256.svg"),
+            ["NoteWhole"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteWhole.svg"),
+            ["NoteHalf"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteHalf.svg"),
+            ["NoteQuarter"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteQuarter.svg"),
+            ["NoteEighth"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteEighth.svg"),
+            ["Note16"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/Note16.svg"),
+            ["Note32"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/Note32.svg"),
+            ["Note64"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/Note64.svg"),
+            ["Note128"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/Note128.svg"),
+            ["Note256"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/Note256.svg"),
         };
 
-        // Wire up seek fields
+        // Seek fields: each is editable and seeks on blur if the value changed.
         RegisterSeekField(_valMeasureIndex, v =>
         {
-            if (int.TryParse(v, out int m)) SeekToSongSeconds(MBTToSongSeconds(m + 1, 1, 1));
+            if (int.TryParse(v, out int m)) SeekToSongSeconds(TickIndexToSongSeconds(m * _beatsPerMeasure * _ticksPerBeat));
         });
         RegisterSeekField(_valBeatIndex, v =>
         {
-            if (int.TryParse(v, out int b)) SeekToSongSeconds(b * (60f / _bpm));
+            if (int.TryParse(v, out int b)) SeekToSongSeconds(TickIndexToSongSeconds(b * _ticksPerBeat));
         });
         RegisterSeekField(_valTickIndex, v =>
         {
@@ -245,7 +253,7 @@ public class EditorTempoMonitor : EditorWindow
             if (int.TryParse(v, out int f)) SeekToNorm((float)f / ClipTotalFrames);
         });
 
-        // Wire up buttons
+        // Buttons
         root.Q<Button>("refresh-btn").clicked += () =>
         {
             FindMusicEngine();
@@ -263,9 +271,10 @@ public class EditorTempoMonitor : EditorWindow
             UpdateReadout();
         };
 
-        root.Q<Button>("reset-btn").clicked += () => SeekToNorm(0f);
+        root.Q<Button>("stop-btn").clicked += () => StopPlayback();
+        root.Q<Button>("stop-btn").clicked += () => SeekToNorm(0f);
         root.Q<Button>("step-back-btn").clicked += () => Step(-1);
-        root.Q<Button>("step-fwd-btn").clicked  += () => Step(1);
+        root.Q<Button>("step-fwd-btn").clicked += () => Step(1);
 
         var stepAmountField = root.Q<IntegerField>("step-amount");
         stepAmountField.value = _stepAmount;
@@ -279,7 +288,8 @@ public class EditorTempoMonitor : EditorWindow
         UpdateReadout();
     }
 
-    // Called once on CreateGUI and again after Refresh, since _cues may change.
+    // Populates the marker button strip from _cues. Called once on CreateGUI
+    // and again after Refresh (since _cues may change if SongCues.json is edited).
     private void RebuildMarkerButtons()
     {
         if (_markersGrid == null) return;
@@ -295,8 +305,8 @@ public class EditorTempoMonitor : EditorWindow
         }
     }
 
-    // Registers focus-in/out callbacks on a seek TextField: seeks on blur
-    // only when the value actually changed.
+    // Attaches focus-in/out callbacks to a seek TextField.
+    // Snaps the value on focus-in so we can detect whether it actually changed on blur.
     private void RegisterSeekField(TextField field, Action<string> onCommit)
     {
         string focusedValue = null;
@@ -310,7 +320,6 @@ public class EditorTempoMonitor : EditorWindow
 
     // --- Readout -----------------------------------------------------
     // Called by OnEditorUpdate every frame while playing, and manually after seeks.
-
     private void UpdateReadout()
     {
         if (_timestampMeasure == null) return; // CreateGUI hasn't run yet
@@ -318,33 +327,33 @@ public class EditorTempoMonitor : EditorWindow
         float norm     = CurrentNormTime;
         float songSecs = NormToSongSeconds(norm);
 
-        // Timestamp
+        // Large MBT timestamp display. Musical time, so starts counting at 1.
         TimeToMBT(songSecs, out int measure, out int beat, out int tick);
         _timestampMeasure.text = $"{measure:00}";
         _timestampBeat.text    = $"{beat:00}";
         _timestampTick.text    = $"{tick:00}";
 
-        // Cue info
+        // Cue labels: active marker, lyric, and current section name.
         SongCue cue = CueAt(songSecs);
         _cueMarker.text  = cue != null && !string.IsNullOrEmpty(cue.marker)  ? cue.marker  : "-";
         _cueLyric.text   = cue != null && !string.IsNullOrEmpty(cue.lyric)   ? cue.lyric   : "-";
         _cueSection.text = SectionAt(songSecs) is string s && !string.IsNullOrEmpty(s) ? s : "-";
 
-        // Indices
-        int totalTicks    = Mathf.FloorToInt(songSecs / SecondsPerTick);
-        int totalBeats    = Mathf.FloorToInt(songSecs / (60f / _bpm));
-        int totalMeasures = Mathf.FloorToInt(songSecs / (60f / _bpm * _beatsPerMeasure));
+        // Index readouts. All 0-indexed, derived from the tick count.
+        int currentTick    = TicksFromSeconds(songSecs);
+        int currentBeat    = currentTick / _ticksPerBeat;
+        int currentMeasure = currentTick / (_ticksPerBeat * _beatsPerMeasure);
         if (_valMeasureIndex.focusController?.focusedElement != _valMeasureIndex)
-            _valMeasureIndex.value = $"{totalMeasures}";
-        _valMeasureIndexMax.text = $" / {Mathf.FloorToInt(SongMeasures)}";
+            _valMeasureIndex.value = $"{currentMeasure}";
+        _valMeasureIndexMax.text = $" / {SongTotalMeasures}";
         if (_valBeatIndex.focusController?.focusedElement != _valBeatIndex)
-            _valBeatIndex.value = $"{totalBeats}";
-        _valBeatIndexMax.text  = $" / {Mathf.FloorToInt(SongBeats)}";
+            _valBeatIndex.value = $"{currentBeat}";
+        _valBeatIndexMax.text  = $" / {SongTotalBeats}";
         if (_valTickIndex.focusController?.focusedElement != _valTickIndex)
-            _valTickIndex.value = $"{totalTicks}";
-        _valTickIndexMax.text  = $" / {Mathf.FloorToInt(SongTicks)}";
+            _valTickIndex.value = $"{currentTick}";
+        _valTickIndexMax.text  = $" / {SongTotalTicks}";
 
-        // Wall-clock time
+        // Wall-clock time readouts.
         TimeSpan ts = TimeSpan.FromSeconds(songSecs);
         if (_valTimeMs.focusController?.focusedElement != _valTimeMs)
             _valTimeMs.value   = $"{(int)ts.TotalMinutes}:{ts.Seconds:00}.{ts.Milliseconds:000}";
@@ -353,7 +362,7 @@ public class EditorTempoMonitor : EditorWindow
         if (_valTimeNorm.focusController?.focusedElement != _valTimeNorm)
             _valTimeNorm.value = $"{norm:0.000 000 000}";
 
-        // Status
+        // Status banner.
         _statusEngine.text = _musicEngine != null
             ? "<color=#00F490>●</color> MusicEngine found"
             : "✕ MusicEngine not found";
@@ -363,13 +372,19 @@ public class EditorTempoMonitor : EditorWindow
         if (clip != null)
         {
             _animClipName.text = $"<color=#00F490>●</color> {clip.name}";
-            int framesPerBeat   = Mathf.RoundToInt(ClipTotalFrames / SongBeats);
+
+            // Beat-frame counter: shows which frame within the current beat we're on.
+            int framesPerBeat   = SongTotalBeats > 0 ? ClipTotalFrames / SongTotalBeats : 0;
             int frameWithinBeat = AnimationWindowFrame % Mathf.Max(framesPerBeat, 1) + 1;
             _animClipBeatFrame.text    = framesPerBeat > 0 ? $"{frameWithinBeat:00}" : "--";
             _animClipBeatFrameMax.text = framesPerBeat > 0 ? $"{framesPerBeat:00}"   : "--";
+
             if (_animFrameIndex.focusController?.focusedElement != _animFrameIndex)
                 _animFrameIndex.value = $"{AnimationWindowFrame}";
             _animFrameIndexMax.text = $"{ClipTotalFrames}";
+
+            // Resolution check: tells you what musical note value each frame represents.
+            // Result is cached and only recomputed when the clip's frame count changes.
             int totalFrames = ClipTotalFrames;
             if (totalFrames != _cachedResolutionFrames)
             {
@@ -397,6 +412,7 @@ public class EditorTempoMonitor : EditorWindow
 
     // --- Transport ---------------------------------------------------
 
+    // Fires every editor frame. Advances the animation window cursor during playback.
     private void OnEditorUpdate()
     {
         if (!_isPlaying) return;
@@ -427,12 +443,13 @@ public class EditorTempoMonitor : EditorWindow
         _isPlaying = false;
     }
 
-    // Single entry point for all cursor movement.
+    // Single entry point for all cursor movement. Keeps audio and animation frame in sync.
     private void SeekToNorm(float norm)
     {
         norm = Mathf.Clamp01(norm);
         if (_isPlaying)
         {
+            // Restart audio from the new position without stopping playback state
             StopAllClips();
             _playStartNormTime = norm;
             _playStartEditorTime = EditorApplication.timeSinceStartup;
@@ -442,17 +459,19 @@ public class EditorTempoMonitor : EditorWindow
         UpdateReadout();
     }
 
+    // Converts seconds to normalised float time and calls SeekToNorm.
     private void SeekToSongSeconds(float songSeconds)
     {
         if (_songLengthSeconds <= 0f) return;
         SeekToNorm(songSeconds / _songLengthSeconds);
     }
 
+    // Steps the cursor forward or backward by the current step amount and unit.
     private void Step(int direction)
     {
         if (_stepUnit == StepUnit.Frames)
         {
-            // Operate on integer frames directly to avoid float drift
+            // Operate on integer frames directly to avoid weird float drift.
             SeekToNorm((float)(AnimationWindowFrame + direction * _stepAmount) / ClipTotalFrames);
             return;
         }
@@ -467,8 +486,9 @@ public class EditorTempoMonitor : EditorWindow
         SeekToSongSeconds(NormToSongSeconds(CurrentNormTime) + direction * deltaSecs);
     }
 
-    // --- Time math ---------------------------------------------------
+    // --- Time maths ---------------------------------------------------
 
+    // Converts seconds to measure/beat/tick display values (1-indexed, for display only).
     private void TimeToMBT(float songSeconds, out int measure, out int beat, out int tick)
     {
         int tickIndex = Mathf.FloorToInt(songSeconds / SecondsPerTick);
@@ -478,22 +498,13 @@ public class EditorTempoMonitor : EditorWindow
         tick    = tickIndex % _ticksPerBeat + 1;
     }
 
-    private float MBTToSongSeconds(int measure, int beat, int tick)
-    {
-        int totalTicks = (measure - 1) * _beatsPerMeasure * _ticksPerBeat
-                       + (beat   - 1) * _ticksPerBeat
-                       + (tick   - 1);
-        return totalTicks * SecondsPerTick;
-    }
-
     private float TickIndexToSongSeconds(int tickIndex) => tickIndex * SecondsPerTick;
 
+    // Parses user time input. Accepts plain seconds ("75.5"), m:ss ("1:15"), or m:ss.ms ("1:15.500").
     private static bool TryParseTimeMs(string input, out float seconds)
     {
         input = input.Trim();
-        // plain float or integer
         if (float.TryParse(input, out seconds)) return true;
-        // m:ss or m:ss.ms
         string[] colonParts = input.Split(':');
         if (colonParts.Length == 2 && int.TryParse(colonParts[0], out int m))
         {
@@ -516,7 +527,10 @@ public class EditorTempoMonitor : EditorWindow
     }
 
     // --- Cue lookup --------------------------------------------------
+    // _cues is sorted by tick ascending. Both methods do a linear scan
+    // and keep the last entry whose tick <= current position.
 
+    // Returns the active cue at the given time (the most recent cue whose tick has passed).
     private SongCue CueAt(float songSeconds)
     {
         int tickIndex = Mathf.FloorToInt(songSeconds / SecondsPerTick);
@@ -529,6 +543,7 @@ public class EditorTempoMonitor : EditorWindow
         return current;
     }
 
+    // Returns the active section name at the given time (most recent cue with a non-null section).
     private string SectionAt(float songSeconds)
     {
         int tickIndex = Mathf.FloorToInt(songSeconds / SecondsPerTick);
@@ -543,9 +558,11 @@ public class EditorTempoMonitor : EditorWindow
 
     // --- Clip analysis -----------------------------------------------
 
+    // Checks whether the clip's frame count maps cleanly to a musical note value
+    // (e.g. 1 frame = 1/16th note). Reports the nearest candidate if not clean.
     private (string label, VectorImage icon, bool isClean) ClipResolution(int frames)
     {
-        int measures = Mathf.RoundToInt(SongMeasures);
+        int measures = SongTotalMeasures;
 
         var candidates = new (int frames, string label, string icon)[]
         {
@@ -562,7 +579,7 @@ public class EditorTempoMonitor : EditorWindow
             (measures * 256, "1/256th note", "Note256"),
         };
 
-        // Single pass: find nearest, exact match when delta == 0
+        // Single pass: find nearest candidate; delta == 0 means exact match
         int bestFrames = -1;
         string bestLabel = "";
         string bestIcon = null;
@@ -596,6 +613,7 @@ public class EditorTempoMonitor : EditorWindow
         }
     }
 
+    // Locates the Animation window via reflection and grabs its frame and clip properties.
     private void FindAnimationWindow()
     {
         var animWindowType = Type.GetType("UnityEditor.AnimationWindow, UnityEditor");
@@ -618,6 +636,7 @@ public class EditorTempoMonitor : EditorWindow
         _cues = list?.cues ?? new SongCue[0];
     }
 
+    // Copies timing config and audio clip reference out of the MusicEngine component.
     private void ReadMusicEngine()
     {
         if (_musicEngine == null) return;
@@ -634,7 +653,6 @@ public class EditorTempoMonitor : EditorWindow
     // --- Audio -------------------------------------------------------
     // PlayPreviewClip and StopAllPreviewClips are internal Unity editor API,
     // accessed via reflection since they have no public wrapper.
-
     private static Type AudioUtil => Type.GetType("UnityEditor.AudioUtil, UnityEditor");
 
     private static void PlayClipFromTime(AudioClip clip, float startTimeSecs)

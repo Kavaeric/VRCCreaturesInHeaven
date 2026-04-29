@@ -3,10 +3,36 @@
     <Style src="project://database/Assets/Editor/EditorTempoMonitor.uss?fileID=7433441132597879392&amp;guid=bf70e9a70841b0f46bd0ba1c097a4309&amp;type=3#EditorTempoMonitor" />
     <ui:ScrollView class="col p-2">
         <ui:VisualElement class="col">
+
+            <!-- Top utility bar -->
             <ui:VisualElement class="row items-end">
                 <ui:Button name="refresh-btn" text="Refresh" class="btn-sm" />
             </ui:VisualElement>
             <ui:VisualElement class="h-2" />
+
+            <!-- Transport panel -->
+            <ui:VisualElement class="panel-frame col">
+                <ui:VisualElement class="col">
+                    <ui:Label text="Transport" class="font-bold" />
+                    <ui:VisualElement class="h-1" />
+                    <ui:VisualElement name="VisualElement" class="row items-stretch">
+                        <ui:Button name="play-btn" class="grow shrink-0" />
+                        <ui:VisualElement class="w-0p5" />
+                        <ui:Button name="stop-btn" text="Stop" class="grow shrink-0" />
+                        <ui:VisualElement class="w-2" />
+                        <ui:Button name="step-back-btn" text="◀" class="btn-icon-md" />
+                        <ui:VisualElement class="w-0p5" />
+                        <ui:Button name="step-fwd-btn" text="▶" class="btn-icon-md" />
+                        <ui:VisualElement class="w-0p5" />
+                        <uie:IntegerField name="step-amount" value="1" class="w-10" />
+                        <ui:VisualElement class="w-0p5" />
+                        <uie:EnumField name="step-unit" class="w-25" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement class="h-2" />
+
+            <!-- Music panel -->
             <ui:VisualElement class="panel-frame col">
                 <ui:Label name="status-engine" class="text-sm grow" />
                 <ui:VisualElement class="h-4" />
@@ -70,20 +96,20 @@
                 <ui:VisualElement class="h-2" />
                 <ui:VisualElement class="separator" />
                 <ui:VisualElement class="h-2" />
-                <ui:VisualElement class="row">
-                    <ui:VisualElement class="grow">
+                <ui:VisualElement class="row items-stretch">
+                    <ui:VisualElement class="grow shrink-0">
                         <ui:Label text="Time (m:s)" class="font-bold text-sm" />
                         <ui:VisualElement class="h-0p5" />
                         <ui:TextField name="val-time-ms" class="value-col__value" />
                     </ui:VisualElement>
                     <ui:VisualElement class="w-2" />
-                    <ui:VisualElement class="grow">
+                    <ui:VisualElement class="grow shrink-0">
                         <ui:Label text="Time (s)" class="font-bold text-sm" />
                         <ui:VisualElement class="h-0p5" />
                         <ui:TextField name="val-time-s" class="value-col__value" />
                     </ui:VisualElement>
                     <ui:VisualElement class="w-2" />
-                    <ui:VisualElement class="grow">
+                    <ui:VisualElement class="grow shrink-0 min-w-30">
                         <ui:Label text="Float time" class="font-bold text-sm" />
                         <ui:VisualElement class="h-0p5" />
                         <ui:TextField name="val-time-norm" class="value-col__value" />
@@ -91,6 +117,8 @@
                 </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement class="h-2" />
+
+            <!-- Animation panel -->
             <ui:VisualElement class="panel-frame col">
                 <ui:Label name="anim-clip-name" text="-" class="text-sm" />
                 <ui:VisualElement class="h-2" />
@@ -106,7 +134,7 @@
                 <ui:VisualElement class="separator" />
                 <ui:VisualElement class="h-2" />
                 <ui:VisualElement class="row">
-                    <ui:VisualElement class="grow">
+                    <ui:VisualElement class="grow shrink-0">
                         <ui:Label text="Frame index" class="font-bold text-sm" />
                         <ui:VisualElement class="h-0p5" />
                         <ui:VisualElement class="row">
@@ -116,33 +144,13 @@
                         </ui:VisualElement>
                     </ui:VisualElement>
                     <ui:VisualElement class="w-2" />
-                    <ui:VisualElement class="grow">
+                    <ui:VisualElement class="grow shrink-0">
                         <ui:Label text="Resolution" class="font-bold text-sm" />
                         <ui:VisualElement class="h-0p5" />
                         <ui:VisualElement class="row items-center">
                             <ui:Image name="anim-resolution-icon" class="note-icon" />
                             <ui:Label name="anim-resolution" text="-" class="value-col__value text-sm text-wrap" />
                         </ui:VisualElement>
-                    </ui:VisualElement>
-                </ui:VisualElement>
-            </ui:VisualElement>
-            <ui:VisualElement class="h-2" />
-            <ui:VisualElement class="panel-frame col">
-                <ui:VisualElement class="col">
-                    <ui:Label text="Transport" class="font-bold" />
-                    <ui:VisualElement class="h-1" />
-                    <ui:VisualElement name="VisualElement" class="row items-stretch">
-                        <ui:Button name="play-btn" text="Play" class="grow" />
-                        <ui:VisualElement class="w-0p5" />
-                        <ui:Button name="reset-btn" text="Reset" class="grow" />
-                        <ui:VisualElement class="w-2" />
-                        <ui:Button name="step-back-btn" text="◀" class="btn-icon-md" />
-                        <ui:VisualElement class="w-0p5" />
-                        <ui:Button name="step-fwd-btn" text="▶" class="btn-icon-md" />
-                        <ui:VisualElement class="w-0p5" />
-                        <uie:IntegerField name="step-amount" value="1" class="w-10" />
-                        <ui:VisualElement class="w-0p5" />
-                        <uie:EnumField name="step-unit" class="w-25" />
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>

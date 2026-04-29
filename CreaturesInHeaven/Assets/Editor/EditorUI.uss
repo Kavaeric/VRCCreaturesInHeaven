@@ -54,8 +54,12 @@
 .w-25   { width: 100px; }
 
 .min-w-10 { min-width:  40px; }
+.min-w-20 { min-width:  80px; }
+.min-w-30 { min-width:  120px; }
+
 .max-w-20 { max-width:  80px; }
 .max-w-30 { max-width: 120px; }
+
 .min-h-8  { min-height: 32px; }
 
 .p-0 { padding: 0; }
@@ -107,6 +111,7 @@ Button {
     height: var(--interactive-md);
     padding: 12px;
     margin: 0;
+    cursor: link;
 }
 
 Button.btn-sm {
@@ -127,6 +132,14 @@ Button.btn-icon-sm {
     width: var(--interactive-sm);
     padding: 8px;
     margin: 0;
+}
+
+EnumField {
+    cursor: link;
+}
+
+TextElement {
+    cursor: text;
 }
 
 .unity-base-field {

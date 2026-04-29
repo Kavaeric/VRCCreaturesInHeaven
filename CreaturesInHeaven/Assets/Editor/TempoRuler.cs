@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using UnityEditor;
@@ -34,7 +35,7 @@ public class TempoRuler : EditorWindow
 
     // --- Jump controls -----------------------------------------------
     private int _stepAmount = 1;
-    private enum StepUnit { Measures, Beats, Ticks, Seconds }
+    private enum StepUnit { Measures, Beats, Ticks, Frames, Seconds }
     private StepUnit _stepUnit = StepUnit.Beats;
 
     // --- Animation window --------------------------------------------
@@ -116,8 +117,19 @@ public class TempoRuler : EditorWindow
     private Label _animClipName;
     private TextField _animFrameIndex;
     private Label _animFrameIndexMax;
+    private Label _animResolution;
+    private Image _animResolutionIcon;
     private Button _playBtn;
     private VisualElement _markersGrid;
+
+    // Cached per-clip resolution result — recomputed only when ClipTotalFrames changes
+    private int _cachedResolutionFrames = -1;
+    private string _cachedResolutionLabel;
+    private Texture2D _cachedResolutionIcon;
+    private bool _cachedResolutionIsClean;
+
+    // Icon textures loaded once at CreateGUI
+    private Dictionary<string, Texture2D> _noteIcons;
 
     [MenuItem("Tools/Tempo Ruler")]
     public static void Open() => GetWindow<TempoRuler>("Tempo Ruler");
@@ -221,6 +233,25 @@ public class TempoRuler : EditorWindow
         _animClipName      = root.Q<Label>("anim-clip-name");
         _animFrameIndex    = root.Q<TextField>("anim-frame-index");
         _animFrameIndexMax = root.Q<Label>("anim-frame-index-max");
+        _animResolution     = root.Q<Label>("anim-resolution");
+        _animResolutionIcon = root.Q<Image>("anim-resolution-icon");
+
+        // Pre-load all note icons so UpdateReadout never hits AssetDatabase per frame
+        string iconDir = "Assets/Editor/Icons/Music";
+        _noteIcons = new Dictionary<string, Texture2D>
+        {
+            ["NoteLonga"]      = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/NoteLonga.png"),
+            ["NoteDoubleWhole"]= AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/NoteDoubleWhole.png"),
+            ["NoteWhole"]      = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/NoteWhole.png"),
+            ["NoteHalf"]       = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/NoteHalf.png"),
+            ["NoteQuarter"]    = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/NoteQuarter.png"),
+            ["NoteEighth"]     = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/NoteEighth.png"),
+            ["Note16"]         = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/Note16.png"),
+            ["Note32"]         = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/Note32.png"),
+            ["Note64"]         = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/Note64.png"),
+            ["Note128"]        = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/Note128.png"),
+            ["Note256"]        = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/Note256.png"),
+        };
         { string focused = null;
           _animFrameIndex.RegisterCallback<FocusInEvent>(_  => focused = _animFrameIndex.value);
           _animFrameIndex.RegisterCallback<FocusOutEvent>(_ =>
@@ -240,6 +271,7 @@ public class TempoRuler : EditorWindow
             FindAnimationWindow();
             LoadCues();
             RebuildMarkerButtons();
+            _cachedResolutionFrames = -1; // invalidate so ClipResolution reruns after clip change
             UpdateReadout();
         };
 
@@ -342,12 +374,24 @@ public class TempoRuler : EditorWindow
             if (_animFrameIndex.focusController?.focusedElement != _animFrameIndex)
                 _animFrameIndex.value = $"{AnimationWindowFrame}";
             _animFrameIndexMax.text = $" / {ClipTotalFrames}";
+            int totalFrames = ClipTotalFrames;
+            if (totalFrames != _cachedResolutionFrames)
+            {
+                (_cachedResolutionLabel, _cachedResolutionIcon, _cachedResolutionIsClean) = ClipResolution(totalFrames);
+                _cachedResolutionFrames = totalFrames;
+            }
+            _animResolution.text = _cachedResolutionIsClean
+                ? _cachedResolutionLabel
+                : $"<color=#FF6B6B>{_cachedResolutionLabel}</color>";
+            _animResolutionIcon.image = _cachedResolutionIcon;
         }
         else
         {
-            _animClipName.text      = "✕ No animation clip";
-            _animFrameIndex.value   = "-";
-            _animFrameIndexMax.text = "";
+            _animClipName.text        = "✕ No animation clip";
+            _animFrameIndex.value     = "-";
+            _animFrameIndexMax.text   = "";
+            _animResolution.text      = "-";
+            _animResolutionIcon.image = null;
         }
 
         // Play button label
@@ -507,6 +551,48 @@ public class TempoRuler : EditorWindow
         return false;
     }
 
+    // --- Clip resolution ---------------------------------------------
+    private (string label, Texture2D icon, bool isClean) ClipResolution(int frames)
+    {
+        int measures = Mathf.RoundToInt(SongMeasures);
+
+        var candidates = new (int frames, string label, string icon)[]
+        {
+            (measures / 4,   "4 measures", "NoteLonga"),
+            (measures / 2,   "2 measures", "NoteDoubleWhole"),
+            (measures,       "1 measure",  "NoteWhole"),
+            (measures * 2,   "1/2 note",   "NoteHalf"),
+            (measures * 4,   "1/4 note",   "NoteQuarter"),
+            (measures * 8,   "1/8 note",   "NoteEighth"),
+            (measures * 16,  "1/16 note",  "Note16"),
+            (measures * 32,  "1/32 note",  "Note32"),
+            (measures * 64,  "1/64 note",  "Note64"),
+            (measures * 128, "1/128 note", "Note128"),
+            (measures * 256, "1/256 note", "Note256"),
+        };
+
+        // Single pass: find nearest, exact match when delta == 0
+        int bestFrames = -1;
+        string bestLabel = "";
+        string bestIcon = null;
+        int bestDelta = int.MaxValue;
+        foreach (var (f, label, icon) in candidates)
+        {
+            if (f <= 0) continue;
+            int delta = Mathf.Abs(frames - f);
+            if (delta < bestDelta) { bestDelta = delta; bestFrames = f; bestLabel = label; bestIcon = icon; }
+        }
+
+        if (bestDelta == 0)
+        {
+            _noteIcons.TryGetValue(bestIcon, out var tex);
+            return (bestLabel, tex, true);
+        }
+
+        string direction = bestFrames > frames ? "Lengthen" : "Shorten";
+        return ($"No clean resolution. Nearest is {bestLabel} ({bestFrames} frames). {direction} by {bestDelta}", null, false);
+    }
+
     // --- Time conversion helpers -------------------------------------
     private void TimeToMBT(float songSeconds, out int measure, out int beat, out int tick)
     {
@@ -553,6 +639,12 @@ public class TempoRuler : EditorWindow
 
     private void Step(int direction)
     {
+        if (_stepUnit == StepUnit.Frames)
+        {
+            // Operate on integer frames directly to avoid float drift
+            SeekToNorm((float)(AnimationWindowFrame + direction * _stepAmount) / ClipTotalFrames);
+            return;
+        }
         float deltaSecs = 0f;
         switch (_stepUnit)
         {

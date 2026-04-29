@@ -105,12 +105,21 @@
                 <VisualElement class="h-8" />
                 
                 <VisualElement class="row">
-                    <VisualElement class="value-col">
+                    <VisualElement class="value-col max-w-120">
                         <Label class="value-col__label" text="Frame index" />
                         <VisualElement class="h-2" />
                         <VisualElement class="row">
                             <TextField name="anim-frame-index" class="value-col__value min-w-40" />
                             <Label name="anim-frame-index-max" class="my-auto" />
+                        </VisualElement>
+                    </VisualElement>
+                    <VisualElement class="w-8" />
+                    <VisualElement class="value-col">
+                        <Label class="value-col__label" text="Resolution" />
+                        <VisualElement class="h-2" />
+                        <VisualElement class="row items-center">
+                            <Image name="anim-resolution-icon" class="note-icon" />
+                            <Label name="anim-resolution" class="value-col__value text-base text-wrap" text="-" />
                         </VisualElement>
                     </VisualElement>
                 </VisualElement>

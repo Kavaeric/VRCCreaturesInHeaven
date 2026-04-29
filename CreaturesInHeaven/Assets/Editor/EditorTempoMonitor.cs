@@ -129,11 +129,11 @@ public class EditorTempoMonitor : EditorWindow
     // Cached per-clip resolution result — recomputed only when ClipTotalFrames changes
     private int _cachedResolutionFrames = -1;
     private string _cachedResolutionLabel;
-    private Texture2D _cachedResolutionIcon;
+    private VectorImage _cachedResolutionIcon;
     private bool _cachedResolutionIsClean;
 
     // Icon textures loaded once at CreateGUI
-    private Dictionary<string, Texture2D> _noteIcons;
+    private Dictionary<string, VectorImage> _noteIcons;
 
     [MenuItem("Tools/Tempo Monitor")]
     public static void Open() => GetWindow<EditorTempoMonitor>("Tempo Monitor");
@@ -247,19 +247,19 @@ public class EditorTempoMonitor : EditorWindow
 
         // Pre-load all note icons so UpdateReadout never hits AssetDatabase per frame
         string iconDir = "Assets/Editor/Icons/Music";
-        _noteIcons = new Dictionary<string, Texture2D>
+        _noteIcons = new Dictionary<string, VectorImage>
         {
-            ["NoteLonga"]      = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/NoteLonga.png"),
-            ["NoteDoubleWhole"]= AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/NoteDoubleWhole.png"),
-            ["NoteWhole"]      = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/NoteWhole.png"),
-            ["NoteHalf"]       = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/NoteHalf.png"),
-            ["NoteQuarter"]    = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/NoteQuarter.png"),
-            ["NoteEighth"]     = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/NoteEighth.png"),
-            ["Note16"]         = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/Note16.png"),
-            ["Note32"]         = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/Note32.png"),
-            ["Note64"]         = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/Note64.png"),
-            ["Note128"]        = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/Note128.png"),
-            ["Note256"]        = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/Note256.png"),
+            ["NoteLonga"]      = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteLonga.svg"),
+            ["NoteDoubleWhole"]= AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteDoubleWhole.svg"),
+            ["NoteWhole"]      = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteWhole.svg"),
+            ["NoteHalf"]       = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteHalf.svg"),
+            ["NoteQuarter"]    = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteQuarter.svg"),
+            ["NoteEighth"]     = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteEighth.svg"),
+            ["Note16"]         = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/Note16.svg"),
+            ["Note32"]         = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/Note32.svg"),
+            ["Note64"]         = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/Note64.svg"),
+            ["Note128"]        = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/Note128.svg"),
+            ["Note256"]        = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/Note256.svg"),
         };
         { string focused = null;
           _animFrameIndex.RegisterCallback<FocusInEvent>(_  => focused = _animFrameIndex.value);
@@ -398,7 +398,7 @@ public class EditorTempoMonitor : EditorWindow
             _animResolution.text = _cachedResolutionIsClean
                 ? _cachedResolutionLabel
                 : $"<color=#FF6B6B>{_cachedResolutionLabel}</color>";
-            _animResolutionIcon.image = _cachedResolutionIcon;
+            _animResolutionIcon.style.backgroundImage = new StyleBackground(_cachedResolutionIcon);
         }
         else
         {
@@ -569,7 +569,7 @@ public class EditorTempoMonitor : EditorWindow
     }
 
     // --- Clip resolution ---------------------------------------------
-    private (string label, Texture2D icon, bool isClean) ClipResolution(int frames)
+    private (string label, VectorImage icon, bool isClean) ClipResolution(int frames)
     {
         int measures = Mathf.RoundToInt(SongMeasures);
 

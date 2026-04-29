@@ -1,154 +1,155 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xmlns="UnityEngine.UIElements" editor="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Editor/EditorUI.uss" />
     <Style src="project://database/Assets/Editor/EditorTempoMonitor.uss?fileID=7433441132597879392&amp;guid=bf70e9a70841b0f46bd0ba1c097a4309&amp;type=3#EditorTempoMonitor" />
-    <ui:ScrollView class="editor-tempo-monitor">
+    <ui:ScrollView class="col p-2">
         <ui:VisualElement class="col">
-            <ui:VisualElement class="row items-flex-end">
+            <ui:VisualElement class="row items-end">
                 <ui:Button name="refresh-btn" text="Refresh" class="btn-sm" />
             </ui:VisualElement>
-            <ui:VisualElement class="h-8" />
+            <ui:VisualElement class="h-2" />
             <ui:VisualElement class="panel-frame col">
-                <ui:Label name="status-engine" class="text-base grow" />
-                <ui:VisualElement class="h-16" />
+                <ui:Label name="status-engine" class="text-sm grow" />
+                <ui:VisualElement class="h-4" />
                 <ui:VisualElement class="col">
-                    <ui:VisualElement class="row items-flex-end justify-center">
+                    <ui:VisualElement class="row items-end justify-center">
                         <ui:VisualElement class="col">
-                            <ui:Label text="Measure" class="text-bold text-sm" />
-                            <ui:Label name="timestamp-measure" text="--" class="readout__lg" />
+                            <ui:Label text="Measure" class="font-bold text-xs" />
+                            <ui:Label name="timestamp-measure" text="--" class="font-family-mono text-5xl h-12 p-0 text-center text-white" />
                         </ui:VisualElement>
-                        <ui:Label text=":" class="text-color-subtle readout__lg" />
+                        <ui:Label text=":" class="text-muted font-family-mono text-5xl h-12 p-0 text-center text-white" />
                         <ui:VisualElement class="col">
-                            <ui:Label text="Beat" class="text-bold text-sm" />
-                            <ui:Label name="timestamp-beat" text="--" class="readout__lg" />
+                            <ui:Label text="Beat" class="font-bold text-xs" />
+                            <ui:Label name="timestamp-beat" text="--" class="font-family-mono text-5xl h-12 p-0 text-center text-white" />
                         </ui:VisualElement>
-                        <ui:Label text="." class="text-color-subtle readout__lg" />
+                        <ui:Label text="." class="text-muted font-family-mono text-5xl h-12 p-0 text-center text-white" />
                         <ui:VisualElement class="col">
-                            <ui:Label text="Tick" class="text-bold text-sm" />
-                            <ui:Label name="timestamp-tick" text="--" class="readout__lg" />
+                            <ui:Label text="Tick" class="font-bold text-xs" />
+                            <ui:Label name="timestamp-tick" text="--" class="font-family-mono text-5xl h-12 p-0 text-center text-white" />
                         </ui:VisualElement>
                     </ui:VisualElement>
-                    <ui:VisualElement class="h-8" />
+                    <ui:VisualElement class="h-2" />
                     <ui:VisualElement class="row">
-                        <ui:Label name="cue-marker" text="-" class="w-80 text-left" />
-                        <ui:VisualElement class="w-8" />
-                        <ui:Label name="cue-lyric" text="-" class="shrink grow text-center text-wrap min-h-32" />
-                        <ui:VisualElement class="w-8" />
-                        <ui:Label name="cue-section" text="-" class="w-80 text-right" />
+                        <ui:Label name="cue-marker" text="-" class="w-20 text-left" />
+                        <ui:VisualElement class="w-2" />
+                        <ui:Label name="cue-lyric" text="-" class="shrink grow text-center text-wrap min-h-8" />
+                        <ui:VisualElement class="w-2" />
+                        <ui:Label name="cue-section" text="-" class="w-20 text-right" />
                     </ui:VisualElement>
                 </ui:VisualElement>
-                <ui:VisualElement class="h-8" />
+                <ui:VisualElement class="h-2" />
                 <ui:VisualElement class="separator" />
-                <ui:VisualElement class="h-8" />
+                <ui:VisualElement class="h-2" />
                 <ui:VisualElement class="row">
-                    <ui:VisualElement class="value-col">
-                        <ui:Label text="Measure index" class="value-col__label" />
-                        <ui:VisualElement class="h-2" />
+                    <ui:VisualElement class="grow">
+                        <ui:Label text="Measure index" class="font-bold text-sm" />
+                        <ui:VisualElement class="h-0p5" />
                         <ui:VisualElement class="row">
-                            <ui:TextField name="val-measure-index-numerator" class="value-col__value min-w-40" />
+                            <ui:TextField name="val-measure-index-numerator" class="value-col__value min-w-10" />
                             <ui:Label name="val-measure-index-denominator" class="my-auto" />
                         </ui:VisualElement>
                     </ui:VisualElement>
-                    <ui:VisualElement class="w-8" />
-                    <ui:VisualElement class="value-col">
-                        <ui:Label text="Beat index" class="value-col__label" />
-                        <ui:VisualElement class="h-2" />
+                    <ui:VisualElement class="w-2" />
+                    <ui:VisualElement class="grow">
+                        <ui:Label text="Beat index" class="font-bold text-sm" />
+                        <ui:VisualElement class="h-0p5" />
                         <ui:VisualElement class="row">
-                            <ui:TextField name="val-beat-index-numerator" class="value-col__value min-w-40" />
+                            <ui:TextField name="val-beat-index-numerator" class="value-col__value min-w-10" />
                             <ui:Label name="val-beat-index-denominator" class="my-auto" />
                         </ui:VisualElement>
                     </ui:VisualElement>
-                    <ui:VisualElement class="w-8" />
-                    <ui:VisualElement class="value-col">
-                        <ui:Label text="Tick index" class="value-col__label" />
-                        <ui:VisualElement class="h-2" />
+                    <ui:VisualElement class="w-2" />
+                    <ui:VisualElement class="grow">
+                        <ui:Label text="Tick index" class="font-bold text-sm" />
+                        <ui:VisualElement class="h-0p5" />
                         <ui:VisualElement class="row">
-                            <ui:TextField name="val-tick-index-numerator" class="value-col__value min-w-40" />
+                            <ui:TextField name="val-tick-index-numerator" class="value-col__value min-w-10" />
                             <ui:Label name="val-tick-index-denominator" class="my-auto" />
                         </ui:VisualElement>
                     </ui:VisualElement>
                 </ui:VisualElement>
-                <ui:VisualElement class="h-8" />
+                <ui:VisualElement class="h-2" />
                 <ui:VisualElement class="separator" />
-                <ui:VisualElement class="h-8" />
+                <ui:VisualElement class="h-2" />
                 <ui:VisualElement class="row">
-                    <ui:VisualElement class="value-col">
-                        <ui:Label text="Time (m:s)" class="value-col__label" />
-                        <ui:VisualElement class="h-2" />
+                    <ui:VisualElement class="grow">
+                        <ui:Label text="Time (m:s)" class="font-bold text-sm" />
+                        <ui:VisualElement class="h-0p5" />
                         <ui:TextField name="val-time-ms" class="value-col__value" />
                     </ui:VisualElement>
-                    <ui:VisualElement class="w-8" />
-                    <ui:VisualElement class="value-col">
-                        <ui:Label text="Time (s)" class="value-col__label" />
-                        <ui:VisualElement class="h-2" />
+                    <ui:VisualElement class="w-2" />
+                    <ui:VisualElement class="grow">
+                        <ui:Label text="Time (s)" class="font-bold text-sm" />
+                        <ui:VisualElement class="h-0p5" />
                         <ui:TextField name="val-time-s" class="value-col__value" />
                     </ui:VisualElement>
-                    <ui:VisualElement class="w-8" />
-                    <ui:VisualElement class="value-col">
-                        <ui:Label text="Float time" class="value-col__label" />
-                        <ui:VisualElement class="h-2" />
+                    <ui:VisualElement class="w-2" />
+                    <ui:VisualElement class="grow">
+                        <ui:Label text="Float time" class="font-bold text-sm" />
+                        <ui:VisualElement class="h-0p5" />
                         <ui:TextField name="val-time-norm" class="value-col__value" />
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement class="h-8" />
+            <ui:VisualElement class="h-2" />
             <ui:VisualElement class="panel-frame col">
-                <ui:Label name="anim-clip-name" text="-" class="text-base" />
-                <ui:VisualElement class="h-8" />
-                <ui:VisualElement class="row items-flex-end justify-center">
+                <ui:Label name="anim-clip-name" text="-" class="text-sm" />
+                <ui:VisualElement class="h-2" />
+                <ui:VisualElement class="row items-end justify-center">
                     <ui:VisualElement class="col">
-                        <ui:Label text="Frame" class="text-bold text-sm" />
-                        <ui:Label name="anim-clip-beat-frame-numerator" text="--" class="readout__lg" />
+                        <ui:Label text="Frame" class="font-bold text-xs" />
+                        <ui:Label name="anim-clip-beat-frame-numerator" text="--" class="font-family-mono text-5xl h-12 p-0 text-center text-white" />
                     </ui:VisualElement>
-                    <ui:Label text="/" class="text-color-subtle readout__lg" />
-                    <ui:Label name="anim-clip-beat-frame-denominator" text="--" class="text-color-subtle readout__lg" />
+                    <ui:Label text="/" class="text-muted font-family-mono text-5xl h-12 p-0 text-center text-white" />
+                    <ui:Label name="anim-clip-beat-frame-denominator" text="--" class="text-muted font-family-mono text-5xl h-12 p-0 text-center text-white" />
                 </ui:VisualElement>
-                <ui:VisualElement class="h-8" />
-                <ui:VisualElement class="h-8" />
+                <ui:VisualElement class="h-2" />
                 <ui:VisualElement class="separator" />
-                <ui:VisualElement class="h-8" />
+                <ui:VisualElement class="h-2" />
                 <ui:VisualElement class="row">
-                    <ui:VisualElement class="value-col">
-                        <ui:Label text="Frame index" class="value-col__label" />
-                        <ui:VisualElement class="h-2" />
+                    <ui:VisualElement class="grow">
+                        <ui:Label text="Frame index" class="font-bold text-sm" />
+                        <ui:VisualElement class="h-0p5" />
                         <ui:VisualElement class="row">
-                            <ui:TextField name="anim-frame-index" class="value-col__value min-w-40" />
+                            <ui:TextField name="anim-frame-index" class="value-col__value min-w-10" />
+                            <ui:Label class="my-auto" text=" /" />
                             <ui:Label name="anim-frame-index-max" class="my-auto" />
                         </ui:VisualElement>
                     </ui:VisualElement>
-                    <ui:VisualElement class="w-8" />
-                    <ui:VisualElement class="value-col">
-                        <ui:Label text="Resolution" class="value-col__label" />
-                        <ui:VisualElement class="h-2" />
+                    <ui:VisualElement class="w-2" />
+                    <ui:VisualElement class="grow">
+                        <ui:Label text="Resolution" class="font-bold text-sm" />
+                        <ui:VisualElement class="h-0p5" />
                         <ui:VisualElement class="row items-center">
                             <ui:Image name="anim-resolution-icon" class="note-icon" />
-                            <ui:Label name="anim-resolution" text="-" class="value-col__value text-base text-wrap" />
+                            <ui:Label name="anim-resolution" text="-" class="value-col__value text-sm text-wrap" />
                         </ui:VisualElement>
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement class="h-8" />
+            <ui:VisualElement class="h-2" />
             <ui:VisualElement class="panel-frame col">
                 <ui:VisualElement class="col">
-                    <ui:Label text="Transport" class="text-bold" />
-                    <ui:VisualElement class="h-4" />
+                    <ui:Label text="Transport" class="font-bold" />
+                    <ui:VisualElement class="h-1" />
                     <ui:VisualElement name="VisualElement" class="row items-stretch">
                         <ui:Button name="play-btn" text="Play" class="grow" />
-                        <ui:VisualElement class="w-2" />
+                        <ui:VisualElement class="w-0p5" />
                         <ui:Button name="reset-btn" text="Reset" class="grow" />
-                        <ui:VisualElement class="w-8" />
+                        <ui:VisualElement class="w-2" />
                         <ui:Button name="step-back-btn" text="◀" class="btn-icon-md" />
-                        <ui:VisualElement class="w-2" />
+                        <ui:VisualElement class="w-0p5" />
                         <ui:Button name="step-fwd-btn" text="▶" class="btn-icon-md" />
-                        <ui:VisualElement class="w-2" />
-                        <uie:IntegerField name="step-amount" value="1" class="w-40" />
-                        <ui:VisualElement class="w-2" />
-                        <uie:EnumField name="step-unit" class="w-100" />
+                        <ui:VisualElement class="w-0p5" />
+                        <uie:IntegerField name="step-amount" value="1" class="w-10" />
+                        <ui:VisualElement class="w-0p5" />
+                        <uie:EnumField name="step-unit" class="w-25" />
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:VisualElement class="h-8" />
+            <ui:VisualElement class="h-2" />
             <ui:VisualElement class="panel-frame col">
-                <ui:Label text="Markers" class="text-bold" />
-                <ui:VisualElement class="h-4" />
+                <ui:Label text="Markers" class="font-bold" />
+                <ui:VisualElement class="h-1" />
                 <ui:VisualElement name="markers-grid" class="markers__grid row wrap" />
             </ui:VisualElement>
         </ui:VisualElement>

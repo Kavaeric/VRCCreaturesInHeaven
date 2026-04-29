@@ -170,11 +170,6 @@ public class EditorTempoMonitor : EditorWindow
         }
         uxml.CloneTree(root);
 
-        // Apply the USS stylesheet explicitly (UXML <Style> tag also loads it,
-        // this is a belt-and-suspenders guard for first-import timing issues)
-        var uss = AssetDatabase.LoadAssetAtPath<StyleSheet>($"{dir}/EditorTempoMonitor.uss");
-        if (uss != null) root.styleSheets.Add(uss);
-
         // Cache element refs by name
         _timestampMeasure = root.Q<Label>("timestamp-measure");
         _timestampBeat    = root.Q<Label>("timestamp-beat");
@@ -406,7 +401,7 @@ public class EditorTempoMonitor : EditorWindow
             _animClipBeatFrame.text   = "--";
             _animClipBeatFrameMax.text = "--";
             _animFrameIndex.value     = "-";
-            _animFrameIndexMax.text   = "";
+            _animFrameIndexMax.text   = "-";
             _animResolution.text      = "-";
             _animResolutionIcon.image = null;
         }
@@ -578,14 +573,14 @@ public class EditorTempoMonitor : EditorWindow
             (measures / 4,   "4 measures", "NoteLonga"),
             (measures / 2,   "2 measures", "NoteDoubleWhole"),
             (measures,       "1 measure",  "NoteWhole"),
-            (measures * 2,   "1/2 note",   "NoteHalf"),
-            (measures * 4,   "1/4 note",   "NoteQuarter"),
-            (measures * 8,   "1/8 note",   "NoteEighth"),
-            (measures * 16,  "1/16 note",  "Note16"),
-            (measures * 32,  "1/32 note",  "Note32"),
-            (measures * 64,  "1/64 note",  "Note64"),
-            (measures * 128, "1/128 note", "Note128"),
-            (measures * 256, "1/256 note", "Note256"),
+            (measures * 2,   "Half note",   "NoteHalf"),
+            (measures * 4,   "Quarter note",   "NoteQuarter"),
+            (measures * 8,   "Eighth note",   "NoteEighth"),
+            (measures * 16,  "1/16th note",  "Note16"),
+            (measures * 32,  "1/32nd note",  "Note32"),
+            (measures * 64,  "1/64th note",  "Note64"),
+            (measures * 128, "1/128th note", "Note128"),
+            (measures * 256, "1/256th note", "Note256"),
         };
 
         // Single pass: find nearest, exact match when delta == 0

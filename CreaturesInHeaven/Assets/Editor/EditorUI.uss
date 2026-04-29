@@ -1,0 +1,140 @@
+:root {
+    --interactive-sm: 28px;
+    --interactive-md: 32px;
+    -unity-font-definition: url("project://database/Assets/Resources/Fonts%20%26%20Materials/Inter/Inter_18pt-Regular%20SDF.asset?fileID=11400000&guid=6109aee244950ef498f9cf1c8c346e09&type=2#Inter_18pt-Regular SDF");
+}
+
+/* --- Font families --- */
+
+.font-family-mono {
+    -unity-font-definition: url("project://database/Assets/Resources/Fonts%20%26%20Materials/Iosevka/Iosevka-Regular%20SDF.asset?fileID=11400000&guid=6478dcb143291f74dbe283fc2634b071&type=2#Iosevka-Regular SDF");
+    -unity-font-style: normal;
+}
+
+/* --- Layout --- */
+
+.row { flex-direction: row; }
+.col { flex-direction: column; }
+
+.wrap     { flex-wrap: wrap; }
+.grow     { flex-grow: 1; }
+.grow-0   { flex-grow: 0; }
+.shrink   { flex-shrink: 1; }
+.shrink-0 { flex-shrink: 0; }
+.basis-0  { flex-basis: 0; }
+
+.items-start   { align-items: flex-start; }
+.items-center  { align-items: center; }
+.items-end     { align-items: flex-end; }
+.items-stretch { align-items: stretch; }
+
+.justify-start  { justify-content: flex-start; }
+.justify-center { justify-content: center; }
+.justify-end    { justify-content: flex-end; }
+
+.my-auto { margin-top: auto; margin-bottom: auto; }
+
+/* --- Sizing (1 unit = 4px, matching Tailwind scale) --- */
+
+.h-0p5 { height:  2px; }
+.h-1    { height:  4px; }
+.h-2    { height:  8px; }
+.h-4    { height: 16px; }
+.h-9    { height: 36px; }
+.h-12   { height: 48px; }
+
+.w-0p5 { width:   2px; }
+.w-1    { width:   4px; }
+.w-2    { width:   8px; }
+.w-8    { width:  32px; }
+.w-9    { width:  36px; }
+.w-10   { width:  40px; }
+.w-15   { width:  60px; }
+.w-20   { width:  80px; }
+.w-25   { width: 100px; }
+
+.min-w-10 { min-width:  40px; }
+.max-w-20 { max-width:  80px; }
+.max-w-30 { max-width: 120px; }
+.min-h-8  { min-height: 32px; }
+
+.p-0 { padding: 0; }
+.p-2 { padding: 8px; }
+
+/* --- Typography --- */
+
+.text-xs   { font-size: 10px; }
+.text-sm   { font-size: 12px; }
+.text-4xl  { font-size: 36px; }
+.text-5xl  { font-size: 48px; }
+
+.font-bold   { -unity-font-style: bold; }
+.text-white  { color: white; }
+.text-muted  { opacity: 0.6; }
+
+.text-left   { -unity-text-align: middle-left;   }
+.text-center { -unity-text-align: middle-center; }
+.text-right  { -unity-text-align: middle-right;  }
+
+.text-wrap { white-space: normal; }
+
+/* --- Components --- */
+
+.panel-frame {
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 16px;
+}
+
+.separator {
+    height: 1.5px;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.note-icon {
+    width: 24px;
+    height: 24px;
+    margin: 2px;
+    flex-shrink: 0;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* --- Global element resets --- */
+
+Button {
+    height: var(--interactive-md);
+    padding: 12px;
+    margin: 0;
+}
+
+Button.btn-sm {
+    height: var(--interactive-sm);
+    padding: 8px;
+    margin: 0;
+}
+
+Button.btn-icon-md {
+    height: var(--interactive-md);
+    width: var(--interactive-md);
+    padding: 12px;
+    margin: 0;
+}
+
+Button.btn-icon-sm {
+    height: var(--interactive-sm);
+    width: var(--interactive-sm);
+    padding: 8px;
+    margin: 0;
+}
+
+.unity-base-field {
+    min-height: var(--interactive-sm);
+    margin: 0;
+}
+
+.unity-base-field__input {
+    margin: 0;
+    padding: 4px;
+}

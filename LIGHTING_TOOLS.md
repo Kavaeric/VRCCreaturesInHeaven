@@ -77,11 +77,15 @@ Fixtures are defined in a config file alongside the tool. Each entry specifies:
 
 The config file is the source of truth for the diagram. Scene hierarchy structure is irrelevant, and fixtures can be anywhere in the hierarchy.
 
+Optionally a script may be written to allow for an initial generation of the config file as a starting off point.
+
 ### Interaction
 
 - **Clicking a node** selects the GameObject in the hierarchy, equivalent to clicking it in the scene, scene hierarchy, or animation graph.
 - **Ctrl+click a node** adds to selection for multi-fixture keyframing.
-- Control panel section in this window or in a seperate window for common shortcuts when node(s) selected:
+- Clicking outside of a node in a blank space of the diagram should deselect all nodes.
+- Deselecting the relevant GameObject in the scene editor view should also deselect the node in the fixture diagram.
+- Optionally, a control panel section in this window or in a seperate window for common shortcuts when node(s) selected:
   - Add or delete keyframe at current time (rotation, intensity, colour, etc.)
   - Set selected keyframe handle type (auto, linear, flat, broken; left, right, both; etc.)
 

@@ -324,41 +324,41 @@ public class EditorTempoMonitor : EditorWindow
     {
         if (_timestampMeasure == null) return; // CreateGUI hasn't run yet
 
-        float norm     = CurrentNormTime;
+        float norm = CurrentNormTime;
         float songSecs = NormToSongSeconds(norm);
 
         // Large MBT timestamp display. Musical time, so starts counting at 1.
         TimeToMBT(songSecs, out int measure, out int beat, out int tick);
         _timestampMeasure.text = $"{measure:00}";
-        _timestampBeat.text    = $"{beat:00}";
-        _timestampTick.text    = $"{tick:00}";
+        _timestampBeat.text = $"{beat:00}";
+        _timestampTick.text = $"{tick:00}";
 
         // Cue labels: active marker, lyric, and current section name.
         SongCue cue = CueAt(songSecs);
-        _cueMarker.text  = cue != null && !string.IsNullOrEmpty(cue.marker)  ? cue.marker  : "-";
-        _cueLyric.text   = cue != null && !string.IsNullOrEmpty(cue.lyric)   ? cue.lyric   : "-";
+        _cueMarker.text = cue != null && !string.IsNullOrEmpty(cue.marker) ? cue.marker : "-";
+        _cueLyric.text = cue != null && !string.IsNullOrEmpty(cue.lyric) ? FormatLyric(cue.lyric) : "-";
         _cueSection.text = SectionAt(songSecs) is string s && !string.IsNullOrEmpty(s) ? s : "-";
 
         // Index readouts. All 0-indexed, derived from the tick count.
-        int currentTick    = TicksFromSeconds(songSecs);
-        int currentBeat    = currentTick / _ticksPerBeat;
+        int currentTick = TicksFromSeconds(songSecs);
+        int currentBeat = currentTick / _ticksPerBeat;
         int currentMeasure = currentTick / (_ticksPerBeat * _beatsPerMeasure);
         if (_valMeasureIndex.focusController?.focusedElement != _valMeasureIndex)
             _valMeasureIndex.value = $"{currentMeasure}";
         _valMeasureIndexMax.text = $" / {SongTotalMeasures}";
         if (_valBeatIndex.focusController?.focusedElement != _valBeatIndex)
             _valBeatIndex.value = $"{currentBeat}";
-        _valBeatIndexMax.text  = $" / {SongTotalBeats}";
+        _valBeatIndexMax.text = $" / {SongTotalBeats}";
         if (_valTickIndex.focusController?.focusedElement != _valTickIndex)
             _valTickIndex.value = $"{currentTick}";
-        _valTickIndexMax.text  = $" / {SongTotalTicks}";
+        _valTickIndexMax.text = $" / {SongTotalTicks}";
 
         // Wall-clock time readouts.
         TimeSpan ts = TimeSpan.FromSeconds(songSecs);
         if (_valTimeMs.focusController?.focusedElement != _valTimeMs)
-            _valTimeMs.value   = $"{(int)ts.TotalMinutes}:{ts.Seconds:00}.{ts.Milliseconds:000}";
+            _valTimeMs.value = $"{(int)ts.TotalMinutes}:{ts.Seconds:00}.{ts.Milliseconds:000}";
         if (_valTimeS.focusController?.focusedElement != _valTimeS)
-            _valTimeS.value    = $"{songSecs:0.000}";
+            _valTimeS.value = $"{songSecs:0.000}";
         if (_valTimeNorm.focusController?.focusedElement != _valTimeNorm)
             _valTimeNorm.value = $"{norm:0.000 000 000}";
 
@@ -374,10 +374,10 @@ public class EditorTempoMonitor : EditorWindow
             _animClipName.text = $"<color=#00F490>●</color> {clip.name}";
 
             // Beat-frame counter: shows which frame within the current beat we're on.
-            int framesPerBeat   = SongTotalBeats > 0 ? ClipTotalFrames / SongTotalBeats : 0;
+            int framesPerBeat = SongTotalBeats > 0 ? ClipTotalFrames / SongTotalBeats : 0;
             int frameWithinBeat = AnimationWindowFrame % Mathf.Max(framesPerBeat, 1) + 1;
-            _animClipBeatFrame.text    = framesPerBeat > 0 ? $"{frameWithinBeat:00}" : "--";
-            _animClipBeatFrameMax.text = framesPerBeat > 0 ? $"{framesPerBeat:00}"   : "--";
+            _animClipBeatFrame.text = framesPerBeat > 0 ? $"{frameWithinBeat:00}" : "--";
+            _animClipBeatFrameMax.text = framesPerBeat > 0 ? $"{framesPerBeat:00}" : "--";
 
             if (_animFrameIndex.focusController?.focusedElement != _animFrameIndex)
                 _animFrameIndex.value = $"{AnimationWindowFrame}";
@@ -398,13 +398,13 @@ public class EditorTempoMonitor : EditorWindow
         }
         else
         {
-            _animClipName.text         = "✕ No animation clip";
-            _animClipBeatFrame.text    = "--";
+            _animClipName.text = "✕ No animation clip";
+            _animClipBeatFrame.text = "--";
             _animClipBeatFrameMax.text = "--";
-            _animFrameIndex.value      = "-";
-            _animFrameIndexMax.text    = "-";
-            _animResolution.text       = "-";
-            _animResolutionIcon.image  = null;
+            _animFrameIndex.value = "-";
+            _animFrameIndexMax.text = "-";
+            _animResolution.text = "-";
+            _animResolutionIcon.image = null;
         }
 
         _playBtn.text = _isPlaying ? "Pause" : "Play";
@@ -524,6 +524,28 @@ public class EditorTempoMonitor : EditorWindow
         }
         seconds = 0f;
         return false;
+    }
+
+    // --- Lyric formatting --------------------------------------------
+
+    // If the lyric contains [brackets], the bracketed portion is full-brightness
+    // and everything outside is dimmed, marking the currently sung syllable/phrase.
+    // Without brackets, the whole string is returned as-is.
+    private static string FormatLyric(string lyric)
+    {
+        int open  = lyric.IndexOf('[');
+        int close = lyric.IndexOf(']');
+        if (open < 0 || close < 0 || close < open) return lyric;
+
+        string before  = lyric[..open];
+        string active  = lyric[(open + 1)..close];
+        string after   = lyric[(close + 1)..];
+
+        string result = "";
+        if (before.Length > 0) result += $"<alpha=#77>{before}<alpha=#ff>";
+        result += active;
+        if (after.Length > 0)  result += $"<alpha=#77>{after}<alpha=#ff>";
+        return result;
     }
 
     // --- Cue lookup --------------------------------------------------

@@ -20,7 +20,7 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.031268496, g: 0.05036685, b: 0.19496846, a: 1}
+  m_AmbientSkyColor: {r: 0, g: 0.14117622, b: 1, a: 1}
   m_AmbientEquatorColor: {r: 1, g: 0, b: 0, a: 1}
   m_AmbientGroundColor: {r: 0.1333332, g: 1, b: 0, a: 1}
   m_AmbientIntensity: 1
@@ -7796,7 +7796,7 @@ ReflectionProbe:
     serializedVersion: 2
     m_Bits: 1
   m_IntensityMultiplier: 1
-  m_BlendDistance: 80
+  m_BlendDistance: 5
   m_HDR: 1
   m_BoxProjection: 1
   m_RenderDynamicObjects: 0
@@ -13315,7 +13315,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1626014054
 Transform:
   m_ObjectHideFlags: 0
@@ -18823,6 +18823,14 @@ MonoBehaviour:
     - VRC.Udon.UdonBehaviour
   - gameObject: {fileID: 732788503}
     ID: 150
+    SerializedTypeNames:
+    - VRC.Udon.UdonBehaviour
+  - gameObject: {fileID: 0}
+    ID: 151
+    SerializedTypeNames:
+    - VRC.Udon.UdonBehaviour
+  - gameObject: {fileID: 0}
+    ID: 152
     SerializedTypeNames:
     - VRC.Udon.UdonBehaviour
   portraitCameraPositionOffset: {x: 0, y: 0, z: 0}

@@ -32,10 +32,10 @@ public class EditorTempoMonitor : EditorWindow
     private float _songLengthSeconds = 0f;
 
     // Tick is the smallest time unit. All other durations derive from it.
-    private float SecondsPerTick    => 60f / (_bpm * _ticksPerBeat);
-    private int   SongTotalTicks    => Mathf.FloorToInt(_songLengthSeconds / SecondsPerTick);
-    private int   SongTotalBeats    => SongTotalTicks / _ticksPerBeat;
-    private int   SongTotalMeasures => SongTotalTicks / (_ticksPerBeat * _beatsPerMeasure);
+    private float SecondsPerTick => 60f / (_bpm * _ticksPerBeat);
+    private int SongTotalTicks => Mathf.FloorToInt(_songLengthSeconds / SecondsPerTick);
+    private int SongTotalBeats => SongTotalTicks / _ticksPerBeat;
+    private int SongTotalMeasures => SongTotalTicks / (_ticksPerBeat * _beatsPerMeasure);
     private float NormToSongSeconds(float norm) => norm * _songLengthSeconds;
 
     // Convert wall-clock seconds to an integer tick index (floor, not round).
@@ -141,6 +141,7 @@ public class EditorTempoMonitor : EditorWindow
 
     // Cached per-clip resolution result — recomputed only when ClipTotalFrames changes
     private int _cachedResolutionFrames = -1;
+    private int _lastAnimFrame = -1;
     private string _cachedResolutionLabel;
     private VectorImage _cachedResolutionIcon;
     private bool _cachedResolutionIsClean;
@@ -310,7 +311,7 @@ public class EditorTempoMonitor : EditorWindow
     private void RegisterSeekField(TextField field, Action<string> onCommit)
     {
         string focusedValue = null;
-        field.RegisterCallback<FocusInEvent>(_  => focusedValue = field.value);
+        field.RegisterCallback<FocusInEvent>(_ => focusedValue = field.value);
         field.RegisterCallback<FocusOutEvent>(_ =>
         {
             if (field.value != focusedValue) onCommit(field.value);
@@ -412,19 +413,31 @@ public class EditorTempoMonitor : EditorWindow
 
     // --- Transport ---------------------------------------------------
 
-    // Fires every editor frame. Advances the animation window cursor during playback.
+    // Fires every editor frame. Advances the animation window cursor during playback,
+    // and refreshes the readout whenever the animation window is scrubbed manually.
     private void OnEditorUpdate()
     {
-        if (!_isPlaying) return;
-        float norm = CurrentNormTime;
-        if (norm >= 1f)
+        if (_isPlaying)
         {
-            StopPlayback();
-            SeekToNorm(1f);
-            return;
+            float norm = CurrentNormTime;
+            if (norm >= 1f)
+            {
+                StopPlayback();
+                SeekToNorm(1f);
+                return;
+            }
+            AnimationWindowFrame = Mathf.FloorToInt(norm * ClipTotalFrames);
+            UpdateReadout();
         }
-        AnimationWindowFrame = Mathf.RoundToInt(norm * ClipTotalFrames);
-        UpdateReadout();
+        else
+        {
+            int frame = AnimationWindowFrame;
+            if (frame != _lastAnimFrame)
+            {
+                _lastAnimFrame = frame;
+                UpdateReadout();
+            }
+        }
     }
 
     private void StartPlayback()
@@ -455,7 +468,7 @@ public class EditorTempoMonitor : EditorWindow
             _playStartEditorTime = EditorApplication.timeSinceStartup;
             PlayClipFromTime(_audioClip, NormToSongSeconds(norm));
         }
-        AnimationWindowFrame = Mathf.RoundToInt(norm * ClipTotalFrames);
+        AnimationWindowFrame = Mathf.FloorToInt(norm * ClipTotalFrames);
         UpdateReadout();
     }
 
@@ -479,9 +492,9 @@ public class EditorTempoMonitor : EditorWindow
         switch (_stepUnit)
         {
             case StepUnit.Measures: deltaSecs = _stepAmount * _beatsPerMeasure * _ticksPerBeat * SecondsPerTick; break;
-            case StepUnit.Beats:    deltaSecs = _stepAmount * _ticksPerBeat * SecondsPerTick; break;
-            case StepUnit.Ticks:    deltaSecs = _stepAmount * SecondsPerTick; break;
-            case StepUnit.Seconds:  deltaSecs = _stepAmount; break;
+            case StepUnit.Beats: deltaSecs = _stepAmount * _ticksPerBeat * SecondsPerTick; break;
+            case StepUnit.Ticks: deltaSecs = _stepAmount * SecondsPerTick; break;
+            case StepUnit.Seconds: deltaSecs = _stepAmount; break;
         }
         SeekToSongSeconds(NormToSongSeconds(CurrentNormTime) + direction * deltaSecs);
     }
@@ -494,8 +507,8 @@ public class EditorTempoMonitor : EditorWindow
         int tickIndex = Mathf.FloorToInt(songSeconds / SecondsPerTick);
         int ticksPerMeasure = _ticksPerBeat * _beatsPerMeasure;
         measure = tickIndex / ticksPerMeasure + 1;
-        beat    = tickIndex % ticksPerMeasure / _ticksPerBeat + 1;
-        tick    = tickIndex % _ticksPerBeat + 1;
+        beat = tickIndex % ticksPerMeasure / _ticksPerBeat + 1;
+        tick = tickIndex % _ticksPerBeat + 1;
     }
 
     private float TickIndexToSongSeconds(int tickIndex) => tickIndex * SecondsPerTick;
@@ -533,18 +546,18 @@ public class EditorTempoMonitor : EditorWindow
     // Without brackets, the whole string is returned as-is.
     private static string FormatLyric(string lyric)
     {
-        int open  = lyric.IndexOf('[');
+        int open = lyric.IndexOf('[');
         int close = lyric.IndexOf(']');
         if (open < 0 || close < 0 || close < open) return lyric;
 
-        string before  = lyric[..open];
-        string active  = lyric[(open + 1)..close];
-        string after   = lyric[(close + 1)..];
+        string before = lyric[..open];
+        string active = lyric[(open + 1)..close];
+        string after = lyric[(close + 1)..];
 
         string result = "";
         if (before.Length > 0) result += $"<alpha=#77>{before}<alpha=#ff>";
         result += active;
-        if (after.Length > 0)  result += $"<alpha=#77>{after}<alpha=#ff>";
+        if (after.Length > 0) result += $"<alpha=#77>{after}<alpha=#ff>";
         return result;
     }
 
@@ -662,12 +675,12 @@ public class EditorTempoMonitor : EditorWindow
     private void ReadMusicEngine()
     {
         if (_musicEngine == null) return;
-        _bpm             = _musicEngine.BPM;
+        _bpm = _musicEngine.BPM;
         _beatsPerMeasure = _musicEngine.BeatsPerMeasure;
-        _ticksPerBeat    = _musicEngine.TicksPerBeat;
+        _ticksPerBeat = _musicEngine.TicksPerBeat;
         if (_musicEngine.MusicPlayer != null && _musicEngine.MusicPlayer.clip != null)
         {
-            _audioClip         = _musicEngine.MusicPlayer.clip;
+            _audioClip = _musicEngine.MusicPlayer.clip;
             _songLengthSeconds = _audioClip.length;
         }
     }

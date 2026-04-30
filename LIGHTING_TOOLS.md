@@ -59,6 +59,8 @@ Section markers and lyric lines are defined in a single JSON file (e.g. `Assets/
 
 A graphical editor window displaying a 2D diagram of the lighting rig. Fixtures are represented as interactive nodes positioned to match their rough spatial layout in the scene. Clicking a node selects the corresponding GameObject in the scene hierarchy, ready for keyframing.
 
+This is meant to solve the problem of having to hunt and peck specific gameobjects in the scene editor, the hiearchy, or worst of all the animation panel, where the order and positioning of these fixtures is completely opaque.
+
 ### Display
 
 - 2D canvas that scales with window size.
@@ -93,3 +95,39 @@ Optionally a script may be written to allow for an initial generation of the con
 
 - The canvas position of each node is purely cosmetic and for navigation purposes. It does not affect scene transforms, although as stated previously, some automation may be doable by reading the location of the transforms of the scene objects and then converting that into a canvas layout.
 - The tool does not create or modify fixtures: it is a selection and shortcut surface only.
+
+---
+
+## Fixture architecture
+
+### Code structure
+
+Four components:
+
+1. **`FixtureDefinition.cs`** — editor-only, pure data container. Lives on every fixture prefab in an editor-only assembly so it is stripped entirely from runtime builds. Holds the animatable float fields (`brightness`, `rotation`, `collimation`) that the animation clips key directly, plus fixture metadata (type, display name) used by the map tool.
+2. **`FixtureDriver.cs`** — thin runtime script. The only fixture script that ships in the build. Reads the animated float values and applies them each frame to the transform (rotation) and emissive material (brightness, collimation) via `MaterialPropertyBlock`. There is no Unity pixel light component: illumination is handled via vertex lighting or a custom projector (TBD).
+3. **`EditorFixtureMap.cs`** — the editor window (editor-only assembly, stripped from builds).
+4. **`GenerateFixtureMap`** — one-shot editor utility that walks the scene, reads each `FixtureDefinition`'s transform and metadata, and writes out `FixtureMap.json` as a starting point. The JSON is the source of truth after that and can be hand-edited to tighten up the layout.
+
+The fixture map tool finds all fixtures via `FindObjectsByType<FixtureDefinition>()`. Auto-generation of the canvas layout is possible by projecting each fixture's world-space transform into 2D canvas coordinates.
+
+### Prefab geometry
+
+Each fixture prefab is split into two separate GameObjects: a static base and a moving head as a child. The child's origin is placed at the physical pivot point, so animating its local rotation matches the real motorised movement.
+
+### Batching and per-instance brightness
+
+Animating emissive intensity via `Renderer.material` would create a per-instance material copy and break GPU instancing. Instead, the runtime driver writes per-instance values using `MaterialPropertyBlock`:
+
+```csharp
+_propBlock.SetColor(_emissiveID, baseColor * Mathf.GammaToLinearSpace(brightness));
+_renderer.SetPropertyBlock(_propBlock);
+```
+
+All fixtures of the same type share one material; the GPU instancer sees them as a single draw call. Standard Unity shaders read from property blocks automatically; it is worth investigating if Silent's Filamented Shader supports this as well.
+
+### Performance notes
+
+- Fixture geometry: low-poly, one material per fixture type to keep draw calls low. Aggressive atlassing can be employed to keep texture memory to an absolute minimum.
+- Beams: volumetric effect via shader (cone/god-ray). Torvid to provide Stage Flight/Furality tech for this.
+- GPU instancing collapses same-type fixtures to one draw call as long as `sharedMaterial` is used and property blocks handle per-instance values.

@@ -133,7 +133,11 @@ public class FixtureDefinitionEditor : Editor
         {
             EditorGUILayout.Space(4);
             EditorGUILayout.LabelField("Manufacturer", profile.FixtureMake != "" ? profile.FixtureMake : "Found lying by the road");
-            EditorGUILayout.LabelField("Model",        profile.FixtureModel  != "" ? profile.FixtureModel  : "—");
+            EditorGUILayout.LabelField("Model", profile.FixtureModel != "" ? profile.FixtureModel : "—");
+
+            if (profile.FixtureHeight > 0 && profile.FixtureWidth > 0)
+                EditorGUILayout.LabelField("Light surface", $"{profile.FixtureHeight:0.0##} × {profile.FixtureWidth:0.0##} m");
+
         }
 
         EditorGUILayout.Space(8);

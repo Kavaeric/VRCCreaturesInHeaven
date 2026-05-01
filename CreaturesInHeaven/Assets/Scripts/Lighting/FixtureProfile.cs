@@ -11,6 +11,9 @@ public class FixtureProfile : ScriptableObject
     public string FixtureMake;
     public string FixtureModel;
     public string FixtureDescription;
+    public string FixtureType;
+    public float FixtureWidth;
+    public float FixtureHeight;
 
     [System.Serializable]
 

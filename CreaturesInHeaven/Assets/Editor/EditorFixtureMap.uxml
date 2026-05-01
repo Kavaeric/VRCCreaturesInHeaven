@@ -1,0 +1,35 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="True">
+    <Style src="project://database/Assets/Editor/EditorUI.uss" />
+    <Style src="project://database/Assets/Editor/EditorFixtureMap.uss" />
+    <ui:VisualElement class="col grow p-2" style="height: 100%;">
+
+        <!-- Header toolbar -->
+        <ui:VisualElement class="row items-center">
+            <ui:Button name="load-btn" text="Load map…" class="btn-sm shrink-0" />
+            <ui:VisualElement class="w-2" />
+            <ui:Label name="map-path-label" text="No map loaded" class="text-sm text-muted grow" />
+            <ui:Button name="reload-btn" text="↺" class="btn-icon-sm shrink-0" />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="h-2" />
+
+        <!-- Canvas area -->
+        <ui:IMGUIContainer name="canvas" class="grow canvas" />
+
+        <ui:VisualElement class="h-2" />
+
+        <!-- Footer toolbar -->
+        <ui:VisualElement class="row items-center">
+            <ui:VisualElement class="col">
+                <ui:Label class="font-bold" text="Node ratio aspect adjustment" />
+                <ui:VisualElement class="h-1" />
+                <ui:VisualElement class="row items-center">
+                    <ui:Label name="node-aspect-adjustment-readout" text="0.05" />
+                    <ui:VisualElement class="w-0p5" />
+                    <ui:Slider name="node-aspect-adjustment" class="grow shrink" value="0.05" low-value="0" high-value="0.5" page-size="5"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

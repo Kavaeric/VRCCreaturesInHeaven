@@ -75,6 +75,22 @@ public class EditorFixtureMap : EditorWindow
 
     private const string ThemePath = "Assets/Editor/EditorFixtureMapTheme.json";
 
+    // --- Viewmodel ---------------------------------------------------
+
+    // Precomputed canvas-space layout for a single fixture node.
+    private struct FixtureLayout
+    {
+        public Vector2 centre;   // canvas-space centre pixel
+        public Vector2 halfExt;  // half-width and half-height in pixels, aspect-adjusted
+    }
+
+    // Precomputed canvas-space layout for a group bounding box.
+    private struct GroupLayout
+    {
+        public Rect rect;        // canvas-space bounding rect including padding
+        public bool valid;       // false if the group has no valid member fixtures
+    }
+
     // --- State -------------------------------------------------------
 
     private List<FixtureEntry>         _fixtures       = new();
@@ -84,10 +100,12 @@ public class EditorFixtureMap : EditorWindow
     private string                     _mapPath        = "";
     private Theme                      _theme          = Theme.Default();
 
-    // Canvas layout — recomputed when fixtures load or canvas resizes.
-    private Vector2 _canvasSize;
-    private float   _scale;
-    private Vector2 _offset;  // canvas-space origin (maps fixture 0,0 to this pixel)
+    // Canvas layout — recomputed when fixtures load, canvas resizes, or aspect slider changes.
+    private Vector2               _canvasSize;
+    private float                 _scale;
+    private Vector2               _offset;           // canvas-space origin (maps fixture 0,0 to this pixel)
+    private List<FixtureLayout>   _fixtureLayouts = new();
+    private List<GroupLayout>     _groupLayouts   = new();
 
     // Visual element refs
     private IMGUIContainer _canvas;
@@ -95,8 +113,9 @@ public class EditorFixtureMap : EditorWindow
     private Label          _aspectReadout;
 
     // Node appearance
-    private const float NodeMinSize = 8f;   // minimum node dimension in pixels when size data is absent or tiny
-    private const float NodePadding = 48f;  // minimum margin from canvas edge to outermost node centre
+    private const float NodeMinSize    = 8f;   // minimum node dimension in pixels when size data is absent or tiny
+    private const float NodePadding    = 48f;  // minimum margin from canvas edge to outermost node centre
+    private const float GroupPadding   = 12f;  // pixels of padding around outermost node edges when drawing a group box
     private float _nodeAspectAdjustment = 0.05f;
 
     // --- Lifecycle ---------------------------------------------------
@@ -142,6 +161,7 @@ public class EditorFixtureMap : EditorWindow
         {
             _nodeAspectAdjustment = e.newValue;
             _aspectReadout.text = _nodeAspectAdjustment.ToString("F2");
+            RecalculateLayout();
             _canvas.MarkDirtyRepaint();
         });
 
@@ -273,6 +293,66 @@ public class EditorFixtureMap : EditorWindow
             _canvasSize.x * 0.5f - fixtCentreX * _scale,
             _canvasSize.y * 0.5f - fixtCentreY * _scale
         );
+
+        // --- Fixture viewmodel ---
+        _fixtureLayouts = new List<FixtureLayout>(_fixtures.Count);
+        foreach (var f in _fixtures)
+        {
+            Vector2 centre = FixtureToCanvas(f.position.x, f.position.y);
+            float pw = Mathf.Max(f.size.x * _scale, NodeMinSize) * 0.5f;
+            float pd = Mathf.Max(f.size.y * _scale, NodeMinSize) * 0.5f;
+            _fixtureLayouts.Add(new FixtureLayout
+            {
+                centre  = centre,
+                halfExt = new Vector2(
+                    pw + (pd - pw) * _nodeAspectAdjustment,
+                    pd + (pw - pd) * _nodeAspectAdjustment
+                ),
+            });
+        }
+
+        // --- Group viewmodel ---
+        _groupLayouts = new List<GroupLayout>(_groups.Count);
+        foreach (var g in _groups)
+        {
+            if (g.fixtures == null || g.fixtures.Count == 0)
+            {
+                _groupLayouts.Add(new GroupLayout { valid = false });
+                continue;
+            }
+
+            float gMinX = float.MaxValue, gMaxX = float.MinValue;
+            float gMinY = float.MaxValue, gMaxY = float.MinValue;
+            bool any = false;
+
+            foreach (int fi in g.fixtures)
+            {
+                if (fi < 0 || fi >= _fixtureLayouts.Count) continue;
+                var fl = _fixtureLayouts[fi];
+                if (fl.centre.x - fl.halfExt.x < gMinX) gMinX = fl.centre.x - fl.halfExt.x;
+                if (fl.centre.x + fl.halfExt.x > gMaxX) gMaxX = fl.centre.x + fl.halfExt.x;
+                if (fl.centre.y - fl.halfExt.y < gMinY) gMinY = fl.centre.y - fl.halfExt.y;
+                if (fl.centre.y + fl.halfExt.y > gMaxY) gMaxY = fl.centre.y + fl.halfExt.y;
+                any = true;
+            }
+
+            if (!any)
+            {
+                _groupLayouts.Add(new GroupLayout { valid = false });
+                continue;
+            }
+
+            _groupLayouts.Add(new GroupLayout
+            {
+                valid = true,
+                rect  = new Rect(
+                    gMinX - GroupPadding,
+                    gMinY - GroupPadding,
+                    (gMaxX - gMinX) + GroupPadding * 2f,
+                    (gMaxY - gMinY) + GroupPadding * 2f
+                ),
+            });
+        }
     }
 
     // --- Drawing -----------------------------------------------------
@@ -307,15 +387,11 @@ public class EditorFixtureMap : EditorWindow
 
         // Fixtures have priority: hit-test in reverse draw order so topmost wins.
         int fixtureHit = -1;
-        for (int i = _fixtures.Count - 1; i >= 0; i--)
+        for (int i = _fixtureLayouts.Count - 1; i >= 0; i--)
         {
-            var f = _fixtures[i];
-            Vector2 p = FixtureToCanvas(f.position.x, f.position.y);
-            float pw  = Mathf.Max(f.size.x * _scale, NodeMinSize) * 0.5f;
-            float pd  = Mathf.Max(f.size.y * _scale, NodeMinSize) * 0.5f;
-            float dpw = pw + (pd - pw) * _nodeAspectAdjustment;
-            float dpd = pd + (pw - pd) * _nodeAspectAdjustment;
-            if (new Rect(p.x - dpw, p.y - dpd, dpw * 2f, dpd * 2f).Contains(e.mousePosition))
+            var fl = _fixtureLayouts[i];
+            if (new Rect(fl.centre.x - fl.halfExt.x, fl.centre.y - fl.halfExt.y,
+                         fl.halfExt.x * 2f, fl.halfExt.y * 2f).Contains(e.mousePosition))
                 { fixtureHit = i; break; }
         }
 
@@ -329,9 +405,10 @@ public class EditorFixtureMap : EditorWindow
         {
             // No fixture hit — check group bounding boxes.
             int groupHit = -1;
-            for (int gi = _groups.Count - 1; gi >= 0; gi--)
+            for (int gi = _groupLayouts.Count - 1; gi >= 0; gi--)
             {
-                if (GroupCanvasRect(gi, out Rect groupRect) && groupRect.Contains(e.mousePosition))
+                var gl = _groupLayouts[gi];
+                if (gl.valid && gl.rect.Contains(e.mousePosition))
                     { groupHit = gi; break; }
             }
 
@@ -387,41 +464,6 @@ public class EditorFixtureMap : EditorWindow
         }
     }
 
-    // Computes the canvas-space bounding rect for a group from its member fixture positions.
-    // Returns false if the group has no valid members.
-    private bool GroupCanvasRect(int groupIndex, out Rect canvasRect)
-    {
-        const float GroupPadding = 12f;  // pixels of padding around the outermost node edges
-        canvasRect = default;
-        var g = _groups[groupIndex];
-        if (g.fixtures == null || g.fixtures.Count == 0) return false;
-
-        float minX = float.MaxValue, maxX = float.MinValue;
-        float minY = float.MaxValue, maxY = float.MinValue;
-        bool any = false;
-
-        foreach (int fi in g.fixtures)
-        {
-            if (fi < 0 || fi >= _fixtures.Count) continue;
-            var f = _fixtures[fi];
-            Vector2 p = FixtureToCanvas(f.position.x, f.position.y);
-            float pw  = Mathf.Max(f.size.x * _scale, NodeMinSize) * 0.5f;
-            float pd  = Mathf.Max(f.size.y * _scale, NodeMinSize) * 0.5f;
-            float dpw = pw + (pd - pw) * _nodeAspectAdjustment;
-            float dpd = pd + (pw - pd) * _nodeAspectAdjustment;
-            if (p.x - dpw < minX) minX = p.x - dpw;
-            if (p.x + dpw > maxX) maxX = p.x + dpw;
-            if (p.y - dpd < minY) minY = p.y - dpd;
-            if (p.y + dpd > maxY) maxY = p.y + dpd;
-            any = true;
-        }
-
-        if (!any) return false;
-        canvasRect = new Rect(minX - GroupPadding, minY - GroupPadding,
-                              (maxX - minX) + GroupPadding * 2f, (maxY - minY) + GroupPadding * 2f);
-        return true;
-    }
-
     private void DrawEmptyState(Rect rect)
     {
         var style = new GUIStyle(GUI.skin.label)
@@ -446,7 +488,9 @@ public class EditorFixtureMap : EditorWindow
 
         for (int gi = 0; gi < _groups.Count; gi++)
         {
-            if (!GroupCanvasRect(gi, out Rect r)) continue;
+            var gl = _groupLayouts[gi];
+            if (!gl.valid) continue;
+            Rect r = gl.rect;
 
             // A group is "selected" when all its member fixtures are in the selection.
             // In reality the actual FixtureGroup object in the scene isn't ever selected.
@@ -491,19 +535,14 @@ public class EditorFixtureMap : EditorWindow
 
         for (int i = 0; i < _fixtures.Count; i++)
         {
-            var f        = _fixtures[i];
-            var obj      = _fixtureObjects[i];
+            var f   = _fixtures[i];
+            var fl  = _fixtureLayouts[i];
+            var obj = _fixtureObjects[i];
             bool selected = obj != null && selectionSet.Contains(obj);
 
-            Vector2 p = FixtureToCanvas(f.position.x, f.position.y);
-
-            // Scale physical dimensions to canvas pixels.
-            float pw = Mathf.Max(f.size.x * _scale, NodeMinSize) * 0.5f;
-            float pd = Mathf.Max(f.size.y * _scale, NodeMinSize) * 0.5f;
-
-            // Handle extremely tall or wide fixtures by fudging the scale closer to a square.
-            float dpw = pw + (pd - pw) * _nodeAspectAdjustment;
-            float dpd = pd + (pw - pd) * _nodeAspectAdjustment;
+            Vector2 p   = fl.centre;
+            float   dpw = fl.halfExt.x;
+            float   dpd = fl.halfExt.y;
 
             // Corners: top-left, top-right, bottom-right, bottom-left (clockwise).
             // Canvas Y is flipped relative to fixture space, so depth runs top-to-bottom.
@@ -519,11 +558,9 @@ public class EditorFixtureMap : EditorWindow
             Color outline = selected ? _theme.nodeOutline_Active.ToColor() : _theme.nodeOutline.ToColor();
             Handles.DrawSolidRectangleWithOutline(corners, fill, outline);
 
-            // Label below node
-
             if (selected)
             {
-                float labelW = Mathf.Max(pw, 120f);
+                float labelW = Mathf.Max(dpw, 120f);
                 var labelRect = new Rect(p.x - labelW * 0.5f, p.y + dpd + 2f, labelW, 32f);
                 GUI.Label(labelRect, f.name, labelStyle);
             }

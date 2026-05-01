@@ -81,7 +81,7 @@ public class EditorFixtureMap : EditorWindow
     private struct FixtureLayout
     {
         public Vector2 centre;   // canvas-space centre pixel
-        public Vector2 halfExt;  // half-width and half-height in pixels, aspect-adjusted
+        public Vector2 halfExt;  // half-width and half-height in pixels
     }
 
     // Precomputed canvas-space layout for a group bounding box.
@@ -96,30 +96,59 @@ public class EditorFixtureMap : EditorWindow
     private List<FixtureEntry>         _fixtures       = new();
     private List<UnityEngine.Object>   _fixtureObjects = new();  // resolved scene objects, parallel to _fixtures (null if unresolved)
     private List<GroupEntry>           _groups         = new();
-    private List<UnityEngine.Object>   _groupObjects   = new();  // resolved scene objects, parallel to _groups (null if unresolved)
     private string                     _mapPath        = "";
     private Theme                      _theme          = Theme.Default();
 
     // Canvas layout — recomputed when fixtures load, canvas resizes, or aspect slider changes.
     private Vector2               _canvasSize;
-    private float                 _scale;
-    private Vector2               _offset;           // canvas-space origin (maps fixture 0,0 to this pixel)
     private List<FixtureLayout>   _fixtureLayouts = new();
     private List<GroupLayout>     _groupLayouts   = new();
 
     // Visual element refs
     private IMGUIContainer _canvas;
     private Label          _pathLabel;
-    private Label          _aspectReadout;
 
-    // Node appearance
-    private const float NodeMinSize    = 8f;   // minimum node dimension in pixels when size data is absent or tiny
-    private const float NodePadding    = 48f;  // minimum margin from canvas edge to outermost node centre
-    private const float GroupPadding   = 12f;  // pixels of padding around outermost node edges when drawing a group box
-    private float _nodeAspectAdjustment = 0.05f;
+    // Cached IMGUI styles. Initialised once on first draw.
+    // GUI.skin not available at CreateGUI time.
+    private GUIStyle _nodeLabelStyle;
+    private GUIStyle _groupLabelStyle;
+    private GUIStyle _emptyStateStyle;
+
+    private void EnsureStyles()
+    {
+        if (_nodeLabelStyle != null) return;
+        _nodeLabelStyle = new GUIStyle(GUI.skin.label)
+        {
+            alignment = TextAnchor.UpperCenter,
+            fontSize  = 10,
+            normal    = { textColor = _theme.nodeLabel.ToColor() },
+        };
+        _groupLabelStyle = new GUIStyle(GUI.skin.label)
+        {
+            alignment = TextAnchor.UpperCenter,
+            fontSize  = 10,
+            normal    = { textColor = _theme.groupLabel.ToColor() },
+        };
+        _emptyStateStyle = new GUIStyle(GUI.skin.label)
+        {
+            alignment = TextAnchor.MiddleCenter,
+            fontSize  = 12,
+            normal    = { textColor = new Color(1f, 1f, 1f, 0.25f) },
+        };
+    }
+
+    // Node appearance and layout
+    
+    // Minimum node dimension in pixels when size data is absent or tiny.
+    private const float NodeMinSize = 8f;
+    
+    // Minimum margin from canvas edge to outermost node centre.
+    private const float NodePadding = 20f;
+    
+    // Pixels of padding around outermost node edges when drawing a group box.
+    private const float GroupPadding = 12f;
 
     // --- Lifecycle ---------------------------------------------------
-
     [MenuItem("Tools/Fixture Map")]
     private static void Open() => GetWindow<EditorFixtureMap>("Fixture Map");
 
@@ -151,19 +180,6 @@ public class EditorFixtureMap : EditorWindow
 
         rootVisualElement.Q<Button>("load-btn").clicked   += PromptLoad;
         rootVisualElement.Q<Button>("reload-btn").clicked += Reload;
-
-        _aspectReadout = rootVisualElement.Q<Label>("node-aspect-adjustment-readout");
-        _aspectReadout.text = _nodeAspectAdjustment.ToString("F2");
-
-        var aspectField = rootVisualElement.Q<Slider>("node-aspect-adjustment");
-        aspectField.value = _nodeAspectAdjustment;
-        aspectField.RegisterValueChangedCallback(e =>
-        {
-            _nodeAspectAdjustment = e.newValue;
-            _aspectReadout.text = _nodeAspectAdjustment.ToString("F2");
-            RecalculateLayout();
-            _canvas.MarkDirtyRepaint();
-        });
 
         LoadTheme();
 
@@ -239,15 +255,6 @@ public class EditorFixtureMap : EditorWindow
             _fixtureObjects.Add(obj);
         }
 
-        _groupObjects = new List<UnityEngine.Object>(_groups.Count);
-        foreach (var g in _groups)
-        {
-            UnityEngine.Object obj = null;
-            if (!string.IsNullOrEmpty(g.sceneObject) &&
-                GlobalObjectId.TryParse(g.sceneObject, out GlobalObjectId gid))
-                obj = GlobalObjectId.GlobalObjectIdentifierToObjectSlow(gid);
-            _groupObjects.Add(obj);
-        }
     }
 
     // --- Layout ------------------------------------------------------
@@ -261,53 +268,46 @@ public class EditorFixtureMap : EditorWindow
 
         _canvasSize = new Vector2(rect.width, rect.height);
 
-        // Compute fixture bounding box in fixture space, including half-extents of each node
-        // so nodes at the edges aren't clipped by the padding margin.
-        float minX = float.MaxValue, maxX = float.MinValue;
-        float minY = float.MaxValue, maxY = float.MinValue;
+        // Compute world bounding box including node extents so edge nodes don't clip.
+        float worldMinX = float.MaxValue, worldMaxX = float.MinValue;
+        float worldMinY = float.MaxValue, worldMaxY = float.MinValue;
         foreach (var f in _fixtures)
         {
             float hw = f.size.x * 0.5f;
             float hd = f.size.y * 0.5f;
-            if (f.position.x - hw < minX) minX = f.position.x - hw;
-            if (f.position.x + hw > maxX) maxX = f.position.x + hw;
-            if (f.position.y - hd < minY) minY = f.position.y - hd;
-            if (f.position.y + hd > maxY) maxY = f.position.y + hd;
+            if (f.position.x - hw < worldMinX) worldMinX = f.position.x - hw;
+            if (f.position.x + hw > worldMaxX) worldMaxX = f.position.x + hw;
+            if (f.position.y - hd < worldMinY) worldMinY = f.position.y - hd;
+            if (f.position.y + hd > worldMaxY) worldMaxY = f.position.y + hd;
         }
 
-        float extentX = maxX - minX;
-        float extentY = maxY - minY;
+        float worldSpanX = (worldMaxX > worldMinX) ? worldMaxX - worldMinX : 1f;
+        float worldSpanY = (worldMaxY > worldMinY) ? worldMaxY - worldMinY : 1f;
 
         float usableW = _canvasSize.x - NodePadding * 2f;
         float usableH = _canvasSize.y - NodePadding * 2f;
-
-        // Protect against degenerate (all fixtures at same position) or zero extents.
-        _scale = (extentX > 0.001f && extentY > 0.001f)
-            ? Mathf.Min(usableW / extentX, usableH / extentY)
+        float scale   = (worldSpanX > 0.001f && worldSpanY > 0.001f)
+            ? Mathf.Min(usableW / worldSpanX, usableH / worldSpanY)
             : 50f;
 
-        // Centre of the fixture bounding box maps to centre of canvas.
-        float fixtCentreX = (minX + maxX) * 0.5f;
-        float fixtCentreY = (minY + maxY) * 0.5f;
-        _offset = new Vector2(
-            _canvasSize.x * 0.5f - fixtCentreX * _scale,
-            _canvasSize.y * 0.5f - fixtCentreY * _scale
-        );
+        float worldCentreX = (worldMinX + worldMaxX) * 0.5f;
+        float worldCentreY = (worldMinY + worldMaxY) * 0.5f;
+        float offsetX = _canvasSize.x * 0.5f - worldCentreX * scale;
+        float offsetY = _canvasSize.y * 0.5f + worldCentreY * scale;
 
-        // --- Fixture viewmodel ---
         _fixtureLayouts = new List<FixtureLayout>(_fixtures.Count);
         foreach (var f in _fixtures)
         {
-            Vector2 centre = FixtureToCanvas(f.position.x, f.position.y);
-            float pw = Mathf.Max(f.size.x * _scale, NodeMinSize) * 0.5f;
-            float pd = Mathf.Max(f.size.y * _scale, NodeMinSize) * 0.5f;
+            float px = offsetX + f.position.x * scale;
+            float py = offsetY - f.position.y * scale;
+
+            float pw = Mathf.Max(f.size.x * scale, NodeMinSize) * 0.5f;
+            float pd = Mathf.Max(f.size.y * scale, NodeMinSize) * 0.5f;
+
             _fixtureLayouts.Add(new FixtureLayout
             {
-                centre  = centre,
-                halfExt = new Vector2(
-                    pw + (pd - pw) * _nodeAspectAdjustment,
-                    pd + (pw - pd) * _nodeAspectAdjustment
-                ),
+                centre  = new Vector2(px, py),
+                halfExt = new Vector2(pw, pd),
             });
         }
 
@@ -362,6 +362,8 @@ public class EditorFixtureMap : EditorWindow
         Rect rect = _canvas.contentRect;
         if (rect.width <= 0 || rect.height <= 0) return;
 
+        EnsureStyles();
+
         if (!Mathf.Approximately(rect.width, _canvasSize.x) ||
             !Mathf.Approximately(rect.height, _canvasSize.y))
             RecalculateLayout();
@@ -403,7 +405,7 @@ public class EditorFixtureMap : EditorWindow
         }
         else
         {
-            // No fixture hit — check group bounding boxes.
+            // No fixture hit: check group bounding boxes.
             int groupHit = -1;
             for (int gi = _groupLayouts.Count - 1; gi >= 0; gi--)
             {
@@ -466,25 +468,12 @@ public class EditorFixtureMap : EditorWindow
 
     private void DrawEmptyState(Rect rect)
     {
-        var style = new GUIStyle(GUI.skin.label)
-        {
-            alignment  = TextAnchor.MiddleCenter,
-            normal     = { textColor = new Color(1f, 1f, 1f, 0.25f) },
-            fontSize   = 12,
-        };
-        GUI.Label(rect, "No fixture map loaded.\nUse Load map… to open a FixtureMap.json.", style);
+        GUI.Label(rect, "No fixture map loaded.\nUse Load map… to open a FixtureMap.json.", _emptyStateStyle);
     }
 
     private void DrawGroups()
     {
         var selectionSet = new HashSet<UnityEngine.Object>(Selection.objects);
-
-        var labelStyle = new GUIStyle(GUI.skin.label)
-        {
-            alignment = TextAnchor.UpperCenter,
-            fontSize  = 10,
-            normal    = { textColor = _theme.groupLabel.ToColor() },
-        };
 
         for (int gi = 0; gi < _groups.Count; gi++)
         {
@@ -517,7 +506,7 @@ public class EditorFixtureMap : EditorWindow
             {
                 float labelW = Mathf.Max(r.width, 120f);
                 var labelRect = new Rect(r.center.x - labelW * 0.5f, r.yMax + 2f, labelW, 32f);
-                GUI.Label(labelRect, g.name, labelStyle);
+                GUI.Label(labelRect, g.name, _groupLabelStyle);
             }
         }
     }
@@ -525,13 +514,6 @@ public class EditorFixtureMap : EditorWindow
     private void DrawFixtures()
     {
         var selectionSet = new HashSet<UnityEngine.Object>(Selection.objects);
-
-        var labelStyle = new GUIStyle(GUI.skin.label)
-        {
-            alignment = TextAnchor.UpperCenter,
-            fontSize  = 10,
-            normal    = { textColor = _theme.nodeLabel.ToColor() },
-        };
 
         for (int i = 0; i < _fixtures.Count; i++)
         {
@@ -562,14 +544,10 @@ public class EditorFixtureMap : EditorWindow
             {
                 float labelW = Mathf.Max(dpw, 120f);
                 var labelRect = new Rect(p.x - labelW * 0.5f, p.y + dpd + 2f, labelW, 32f);
-                GUI.Label(labelRect, f.name, labelStyle);
+                GUI.Label(labelRect, f.name, _nodeLabelStyle);
             }
         }
     }
-
-    // Converts fixture-space XY to canvas pixel coordinates.
-    // Fixture +Y maps to canvas -Y so the stage reads naturally top-to-back.
-    private Vector2 FixtureToCanvas(float fx, float fy) => new Vector2(_offset.x + fx * _scale, _offset.y - fy * _scale);
 
     // --- JSON parsing ------------------------------------------------
 

@@ -104,10 +104,15 @@ PrefabInstance:
       propertyPath: m_ReceiveShadows
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -1143285183937443612, guid: 182e98e728d7d8d49bcda83b383758b7,
+        type: 3}
+      propertyPath: m_Name
+      value: Head
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 182e98e728d7d8d49bcda83b383758b7,
         type: 3}
       propertyPath: m_Name
-      value: CeilingLight
+      value: NUL GFL B12
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -136,12 +141,6 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1555664797673762965}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1478128839554865050 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -9145250922962540785, guid: 182e98e728d7d8d49bcda83b383758b7,
-    type: 3}
-  m_PrefabInstance: {fileID: 1555664797673762965}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1826136212522503620 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 182e98e728d7d8d49bcda83b383758b7,
@@ -160,7 +159,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e754c2c6fc68f947a76f5d541998ae6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DisplayName: Placeholder batten
+  DisplayName: 
   Profile: {fileID: 11400000, guid: bc0aea0f0ce6acb43aafbe38821a4adf, type: 2}
   EmissionColor: {r: 1, g: 1, b: 1, a: 1}
   Colour: 0
@@ -187,9 +186,9 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 1330132999158733947}
-  Head: {fileID: 1478128839554865050}
+  Head: {fileID: 8708718316436788733}
   PropsTransform: {fileID: 3683907717810278853}
-  HeadRenderer: {fileID: 3286469746280921727}
+  HeadRenderer: {fileID: 6042516975229323470}
   EmissionColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!114 &1330132999158733947
 MonoBehaviour:
@@ -217,9 +216,15 @@ MonoBehaviour:
   serializedPublicVariablesBytesString: Ai8AAAAAATIAAABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlAFQAYQBiAGwAZQAsACAAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4AAAAAAAYBAAAAAAAAACcBBAAAAHQAeQBwAGUAAWgAAABTAHkAcwB0AGUAbQAuAEMAbwBsAGwAZQBjAHQAaQBvAG4AcwAuAEcAZQBuAGUAcgBpAGMALgBMAGkAcwB0AGAAMQBbAFsAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4ALgBJAG4AdABlAHIAZgBhAGMAZQBzAC4ASQBVAGQAbwBuAFYAYQByAGkAYQBiAGwAZQAsACAAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4AXQBdACwAIABtAHMAYwBvAHIAbABpAGIAAQEJAAAAVgBhAHIAaQBhAGIAbABlAHMALwEAAAABaAAAAFMAeQBzAHQAZQBtAC4AQwBvAGwAbABlAGMAdABpAG8AbgBzAC4ARwBlAG4AZQByAGkAYwAuAEwAaQBzAHQAYAAxAFsAWwBWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAEkAbgB0AGUAcgBmAGEAYwBlAHMALgBJAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlACwAIABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgBdAF0ALAAgAG0AcwBjAG8AcgBsAGkAYgABAAAABgEAAAAAAAAAAi8CAAAAAUkAAABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlAGAAMQBbAFsAUwB5AHMAdABlAG0ALgBJAG4AdAAzADIALAAgAG0AcwBjAG8AcgBsAGkAYgBdAF0ALAAgAFYAUgBDAC4AVQBkAG8AbgAuAEMAbwBtAG0AbwBuAAIAAAAGAgAAAAAAAAAnAQQAAAB0AHkAcABlAAEXAAAAUwB5AHMAdABlAG0ALgBTAHQAcgBpAG4AZwAsACAAbQBzAGMAbwByAGwAaQBiACcBCgAAAFMAeQBtAGIAbwBsAE4AYQBtAGUAAR8AAABfAF8AXwBVAGQAbwBuAFMAaABhAHIAcABCAGUAaABhAHYAaQBvAHUAcgBWAGUAcgBzAGkAbwBuAF8AXwBfACcBBAAAAHQAeQBwAGUAARYAAABTAHkAcwB0AGUAbQAuAEkAbgB0ADMAMgAsACAAbQBzAGMAbwByAGwAaQBiABcBBQAAAFYAYQBsAHUAZQACAAAABwUHBQcF
   publicVariablesUnityEngineObjects: []
   publicVariablesSerializationDataFormat: 0
---- !u!23 &3286469746280921727 stripped
+--- !u!23 &6042516975229323470 stripped
 MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: -5184427989289874710, guid: 182e98e728d7d8d49bcda83b383758b7,
+  m_CorrespondingSourceObject: {fileID: -4157524182732408741, guid: 182e98e728d7d8d49bcda83b383758b7,
+    type: 3}
+  m_PrefabInstance: {fileID: 1555664797673762965}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &8708718316436788733 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7876023681238672744, guid: 182e98e728d7d8d49bcda83b383758b7,
     type: 3}
   m_PrefabInstance: {fileID: 1555664797673762965}
   m_PrefabAsset: {fileID: 0}

@@ -112,76 +112,84 @@ public class FixtureDefinition : MonoBehaviour
 
 #if UNITY_EDITOR
 // Custom inspector driven by FixtureProfile — only shows controls the fixture type supports.
+[CanEditMultipleObjects]
 [CustomEditor(typeof(FixtureDefinition))]
 public class FixtureDefinitionEditor : Editor
 {
-    private FixtureDriver _driver;
-
-    private void OnEnable()
-    {
-        _driver = ((FixtureDefinition)target).GetComponent<FixtureDriver>();
-    }
+    // serializedObject covers all selected FixtureDefinition components.
+    // For child-transform controls (PropsTransform, Head) we iterate targets manually.
 
     public override void OnInspectorGUI()
     {
+        serializedObject.Update();
+
         var def = (FixtureDefinition)target;
-        var profile = (FixtureProfile)EditorGUILayout.ObjectField("Profile", def.Profile, typeof(FixtureProfile), false);
 
-        EditorGUILayout.Space(8);
+        // --- Profile / metadata --------------------------------------
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("Profile"));
 
-        EditorGUILayout.LabelField("Manufacturer", profile.FixtureMake != "" ? profile.FixtureMake : "Found lying by the road");
-        EditorGUILayout.LabelField("Model", profile.FixtureModel != "" ? profile.FixtureModel : "—");
-
-        EditorGUILayout.Space(8);
-
-        // --- Metadata ------------------------------------------------
-        EditorGUILayout.LabelField("Fixture", EditorStyles.boldLabel);
-
-        EditorGUI.BeginChangeCheck();
-        string displayName = EditorGUILayout.TextField("Display name", def.DisplayName);
-        if (EditorGUI.EndChangeCheck())
+        var profile = def.Profile;
+        if (profile != null)
         {
-            Undo.RecordObject(def, "Fixture definition");
-            def.DisplayName = displayName;
-            def.Profile = profile;
+            EditorGUILayout.Space(4);
+            EditorGUILayout.LabelField("Manufacturer", profile.FixtureMake != "" ? profile.FixtureMake : "Found lying by the road");
+            EditorGUILayout.LabelField("Model",        profile.FixtureModel  != "" ? profile.FixtureModel  : "—");
         }
 
-        if (_driver == null)
+        EditorGUILayout.Space(8);
+        EditorGUILayout.LabelField("Fixture", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("DisplayName"), new GUIContent("Display name"));
+
+        // Bail early if any selected fixture is missing a driver or profile.
+        bool anyMissingDriver  = false;
+        bool anyMissingProfile = false;
+        foreach (var t in targets)
         {
-            EditorGUILayout.HelpBox("No FixtureDriver found on this GameObject.", MessageType.Warning);
+            var d = (FixtureDefinition)t;
+            if (d.GetComponent<FixtureDriver>() == null) anyMissingDriver  = true;
+            if (d.Profile == null)                       anyMissingProfile = true;
+        }
+
+        if (anyMissingDriver)
+        {
+            EditorGUILayout.HelpBox("One or more selected fixtures have no FixtureDriver.", MessageType.Warning);
+            serializedObject.ApplyModifiedProperties();
             return;
         }
 
-        if (def.Profile == null)
+        if (anyMissingProfile)
         {
             EditorGUILayout.HelpBox("Assign a Fixture Profile to enable controls.", MessageType.Info);
+            serializedObject.ApplyModifiedProperties();
             return;
         }
 
-        var p = def.Profile;
+        // Bail if selected fixtures use different profiles — controls would be ambiguous.
+        FixtureProfile commonProfile = ((FixtureDefinition)targets[0]).Profile;
+        foreach (var t in targets)
+        {
+            if (((FixtureDefinition)t).Profile != commonProfile)
+            {
+                EditorGUILayout.HelpBox("Selected fixtures use different profiles — edit them individually.", MessageType.Info);
+                serializedObject.ApplyModifiedProperties();
+                return;
+            }
+        }
+
+        var p = commonProfile;
 
         // --- Colour --------------------------------------------------
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Colour", EditorStyles.boldLabel);
 
-        EditorGUI.BeginChangeCheck();
-        var colourMode = (FixtureDefinition.ColourMode)EditorGUILayout.EnumPopup("Mode", def.Colour);
-        if (EditorGUI.EndChangeCheck())
-        {
-            Undo.RecordObject(def, "Fixture controls");
-            def.Colour = colourMode;
-        }
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("Colour"), new GUIContent("Mode"));
 
-        EditorGUI.BeginChangeCheck();
+        // Colour-mode-specific controls: read from the primary target for display,
+        // serializedObject.ApplyModifiedProperties() propagates to all targets.
         if (def.Colour == FixtureDefinition.ColourMode.Blackbody)
         {
-            float temp = EditorGUILayout.Slider("Temperature (K)", def.ColourTemperature, 1000f, 12000f);
-            if (EditorGUI.EndChangeCheck())
-            {
-                Undo.RecordObject(def, "Fixture controls");
-                def.ColourTemperature = temp;
-            }
-            // Preview swatch (read-only)
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("ColourTemperature"), new GUIContent("Temperature (K)"));
+            // Preview swatch (read-only, driven by primary target)
             Color preview = FixtureDefinition.BlackbodyToRGB(def.ColourTemperature);
             EditorGUI.BeginDisabledGroup(true);
             EditorGUILayout.ColorField(new GUIContent("Preview"), preview, false, false, false);
@@ -189,96 +197,145 @@ public class FixtureDefinitionEditor : Editor
         }
         else
         {
-            Color newColor = EditorGUILayout.ColorField(new GUIContent("Colour"), def.EmissionColor, true, false, true);
-            if (EditorGUI.EndChangeCheck())
-            {
-                Undo.RecordObject(def, "Fixture cpntrols");
-                def.EmissionColor = newColor;
-            }
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("EmissionColor"), new GUIContent("Colour"));
         }
 
-        // --- Material channels ---------------------------------------
+        serializedObject.ApplyModifiedProperties();
+
+        // --- Material channels (child-transform, iterate targets) ----
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Material", EditorStyles.boldLabel);
 
-        if (_driver.PropsTransform != null)
+        // On/Off toggle — show mixed-value indicator if not unanimous.
+        bool firstOn = ((FixtureDefinition)targets[0]).GetComponent<FixtureDriver>().PropsTransform.gameObject.activeSelf;
+        bool mixedOn = false;
+        foreach (var t in targets)
         {
-            Vector3 scale = _driver.PropsTransform.localScale;
-            bool changed = false;
+            var pt = ((FixtureDefinition)t).GetComponent<FixtureDriver>().PropsTransform;
+            if (pt == null) { mixedOn = true; break; }
+            if (pt.gameObject.activeSelf != firstOn) { mixedOn = true; break; }
+        }
 
+        EditorGUI.showMixedValue = mixedOn;
+        EditorGUI.BeginChangeCheck();
+        bool on = EditorGUILayout.Toggle("On", firstOn);
+        EditorGUI.showMixedValue = false;
+        if (EditorGUI.EndChangeCheck())
+        {
+            foreach (var t in targets)
+            {
+                var pt = ((FixtureDefinition)t).GetComponent<FixtureDriver>().PropsTransform;
+                if (pt == null) continue;
+                Undo.RecordObject(pt.gameObject, "Fixture On/Off");
+                pt.gameObject.SetActive(on);
+            }
+        }
+
+        // Brightness — display in gamma space; store linear in PropsTransform.localScale.x.
+        var firstDriver = ((FixtureDefinition)targets[0]).GetComponent<FixtureDriver>();
+        float firstBrightnessGamma = firstDriver.PropsTransform != null
+            ? Mathf.LinearToGammaSpace(firstDriver.PropsTransform.localScale.x) : 0f;
+
+        bool mixedBrightness = false;
+        foreach (var t in targets)
+        {
+            var pt = ((FixtureDefinition)t).GetComponent<FixtureDriver>().PropsTransform;
+            if (pt == null) { mixedBrightness = true; break; }
+            if (!Mathf.Approximately(Mathf.LinearToGammaSpace(pt.localScale.x), firstBrightnessGamma))
+                mixedBrightness = true;
+        }
+
+        EditorGUI.showMixedValue = mixedBrightness;
+        EditorGUI.BeginChangeCheck();
+        float newGamma = EditorGUILayout.Slider("Brightness", firstBrightnessGamma, p.BrightnessMin, p.BrightnessMax);
+        EditorGUI.showMixedValue = false;
+        if (EditorGUI.EndChangeCheck())
+        {
+            float newLinear = Mathf.GammaToLinearSpace(newGamma);
+            foreach (var t in targets)
+            {
+                var pt = ((FixtureDefinition)t).GetComponent<FixtureDriver>().PropsTransform;
+                if (pt == null) continue;
+                Undo.RecordObject(pt, "Fixture Brightness");
+                var s = pt.localScale; s.x = newLinear; pt.localScale = s;
+            }
+        }
+
+        if (p.HasSpread)
+        {
+            float firstSpread = firstDriver.PropsTransform != null ? firstDriver.PropsTransform.localScale.y : 0f;
+            bool mixedSpread = false;
+            foreach (var t in targets)
+            {
+                var pt = ((FixtureDefinition)t).GetComponent<FixtureDriver>().PropsTransform;
+                if (pt == null) { mixedSpread = true; break; }
+                if (!Mathf.Approximately(pt.localScale.y, firstSpread)) mixedSpread = true;
+            }
+
+            EditorGUI.showMixedValue = mixedSpread;
             EditorGUI.BeginChangeCheck();
-            bool on = EditorGUILayout.Toggle("On", _driver.PropsTransform.gameObject.activeSelf);
+            float newSpread = EditorGUILayout.Slider("Spread", firstSpread, 0f, 1f);
+            EditorGUI.showMixedValue = false;
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RecordObject(_driver.PropsTransform.gameObject, "Fixture On/Off");
-                _driver.PropsTransform.gameObject.SetActive(on);
-            }
-
-            EditorGUI.BeginChangeCheck();
-            float brightnessGamma = Mathf.LinearToGammaSpace(scale.x);
-            float newGamma = EditorGUILayout.Slider("Brightness", brightnessGamma, p.BrightnessMin, p.BrightnessMax);
-            if (EditorGUI.EndChangeCheck()) { scale.x = Mathf.GammaToLinearSpace(newGamma); changed = true; }
-
-            if (p.HasSpread)
-            {
-                EditorGUI.BeginChangeCheck();
-                float newSpread = EditorGUILayout.Slider("Spread", scale.y, 0f, 1f);
-                if (EditorGUI.EndChangeCheck()) { scale.y = newSpread; changed = true; }
-            }
-
-            if (changed)
-            {
-                Undo.RecordObject(_driver.PropsTransform, "Fixture controls");
-                _driver.PropsTransform.localScale = scale;
+                foreach (var t in targets)
+                {
+                    var pt = ((FixtureDefinition)t).GetComponent<FixtureDriver>().PropsTransform;
+                    if (pt == null) continue;
+                    Undo.RecordObject(pt, "Fixture Spread");
+                    var s = pt.localScale; s.y = newSpread; pt.localScale = s;
+                }
             }
         }
-        else
-        {
-            EditorGUILayout.HelpBox("PropsTransform not assigned on FixtureDriver.", MessageType.Warning);
-        }
 
-        // --- Rotation ------------------------------------------------
+        // --- Rotation (child-transform, iterate targets) -------------
         if (p.AxisX.Enabled || p.AxisY.Enabled || p.AxisZ.Enabled)
         {
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Rotation", EditorStyles.boldLabel);
+
+            DrawAxisSlider("X (tilt)", p.AxisX, 0, targets);
+            DrawAxisSlider("Y (pan)",  p.AxisY, 1, targets);
+            DrawAxisSlider("Z (roll)", p.AxisZ, 2, targets);
         }
+    }
 
-        if (_driver.Head != null)
-        {
-            Vector3 euler = _driver.Head.localEulerAngles;
-            bool changed = false;
+    // Draws a single rotation-axis slider across all targets, with mixed-value support.
+    private static void DrawAxisSlider(string label, FixtureProfile.RotationAxis axis, int component, Object[] targets)
+    {
+        if (!axis.Enabled) return;
 
-            if (p.AxisX.Enabled)
-            {
-                EditorGUI.BeginChangeCheck();
-                float val = EditorGUILayout.Slider("X (tilt)", NormaliseAngle(euler.x), p.AxisX.Min, p.AxisX.Max);
-                if (EditorGUI.EndChangeCheck()) { euler.x = val; changed = true; }
-            }
-
-            if (p.AxisY.Enabled)
-            {
-                EditorGUI.BeginChangeCheck();
-                float val = EditorGUILayout.Slider("Y (pPan)", NormaliseAngle(euler.y), p.AxisY.Min, p.AxisY.Max);
-                if (EditorGUI.EndChangeCheck()) { euler.y = val; changed = true; }
-            }
-
-            if (p.AxisZ.Enabled)
-            {
-                EditorGUI.BeginChangeCheck();
-                float val = EditorGUILayout.Slider("Z (roll)", NormaliseAngle(euler.z), p.AxisZ.Min, p.AxisZ.Max);
-                if (EditorGUI.EndChangeCheck()) { euler.z = val; changed = true; }
-            }
-
-            if (changed)
-            {
-                Undo.RecordObject(_driver.Head, "Fixture controls");
-                _driver.Head.localEulerAngles = euler;
-            }
-        }
-        else
+        var firstHead = ((FixtureDefinition)targets[0]).GetComponent<FixtureDriver>().Head;
+        if (firstHead == null)
         {
             EditorGUILayout.HelpBox("Head not assigned on FixtureDriver.", MessageType.Warning);
+            return;
+        }
+
+        float firstVal = NormaliseAngle(firstHead.localEulerAngles[component]);
+        bool mixed = false;
+        foreach (var t in targets)
+        {
+            var h = ((FixtureDefinition)t).GetComponent<FixtureDriver>().Head;
+            if (h == null) { mixed = true; break; }
+            if (!Mathf.Approximately(NormaliseAngle(h.localEulerAngles[component]), firstVal)) mixed = true;
+        }
+
+        EditorGUI.showMixedValue = mixed;
+        EditorGUI.BeginChangeCheck();
+        float newVal = EditorGUILayout.Slider(label, firstVal, axis.Min, axis.Max);
+        EditorGUI.showMixedValue = false;
+        if (EditorGUI.EndChangeCheck())
+        {
+            foreach (var t in targets)
+            {
+                var h = ((FixtureDefinition)t).GetComponent<FixtureDriver>().Head;
+                if (h == null) continue;
+                Undo.RecordObject(h, "Fixture Rotation");
+                var euler = h.localEulerAngles;
+                euler[component] = newVal;
+                h.localEulerAngles = euler;
+            }
         }
     }
 

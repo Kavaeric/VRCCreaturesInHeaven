@@ -46,6 +46,7 @@ public class GenerateFixtureMap : EditorWindow
     private void TryGenerate()
     {
         var fixtures = _root.GetComponentsInChildren<FixtureDefinition>();
+        var groups   = _root.GetComponentsInChildren<FixtureGroupDefinition>();
 
         if (fixtures.Length == 0)
         {
@@ -56,17 +57,17 @@ public class GenerateFixtureMap : EditorWindow
             return;
         }
 
-        string summary = $"Found {fixtures.Length} fixture{(fixtures.Length == 1 ? "" : "s")} under '{_root.name}'.\n\n" +
-                         $"Output: {_outputPath}\n\n" +
-                         "Proceed?";
+        string summary = $"Found {fixtures.Length} fixture{(fixtures.Length == 1 ? "" : "s")} " +
+                         $"and {groups.Length} group{(groups.Length == 1 ? "" : "s")} under '{_root.name}'.\n\n" +
+                         $"Output: {_outputPath}\n\nProceed?";
 
         bool confirmed = EditorUtility.DisplayDialog("Generate Fixture Map", summary, "Generate", "Cancel");
         if (!confirmed) return;
 
-        Write(fixtures);
+        Write(fixtures, groups);
     }
 
-    private void Write(FixtureDefinition[] fixtures)
+    private void Write(FixtureDefinition[] fixtures, FixtureGroupDefinition[] groups)
     {
         // Compute the XZ bounding box so we can centre the canvas layout at 0,0.
         float minX = float.MaxValue, maxX = float.MinValue;
@@ -84,35 +85,71 @@ public class GenerateFixtureMap : EditorWindow
         float centreX = (minX + maxX) * 0.5f;
         float centreZ = (minZ + maxZ) * 0.5f;
 
-        var sb = new StringBuilder();
-        sb.AppendLine("[");
+        // Build a lookup from fixture GameObject to its index in the fixtures array.
+        var fixtureIndex = new Dictionary<GameObject, int>(fixtures.Length);
+        for (int i = 0; i < fixtures.Length; i++)
+            fixtureIndex[fixtures[i].gameObject] = i;
 
+        var sb = new StringBuilder();
+        sb.AppendLine("{");
+
+        // --- fixtures ---
+        sb.AppendLine("  \"items\": [");
         for (int i = 0; i < fixtures.Length; i++)
         {
-            var f = fixtures[i];
+            var f   = fixtures[i];
             var pos = f.transform.position;
 
             // XZ world-space mapped to canvas XY, centred on the rig bounding box.
             float cx = pos.x - centreX;
             float cy = pos.z - centreZ;
 
-            string name = EscapeJson(string.IsNullOrEmpty(f.DisplayName) ? f.gameObject.name : f.DisplayName);
-            string guid = GetSceneObjectGuid(f.gameObject);
+            string name  = EscapeJson(string.IsNullOrEmpty(f.DisplayName) ? f.gameObject.name : f.DisplayName);
+            string guid  = GetSceneObjectGuid(f.gameObject);
             string comma = i < fixtures.Length - 1 ? "," : "";
 
             // Physical dimensions from profile: width = long axis (X), depth = short axis (Z).
-            float nodeW = f.Profile != null ? f.Profile.FixtureWidth : 0f;
+            float nodeW = f.Profile != null ? f.Profile.FixtureWidth  : 0f;
             float nodeD = f.Profile != null ? f.Profile.FixtureHeight : 0f;
 
-            sb.AppendLine("  {");
-            sb.AppendLine($"    \"name\": \"{name}\",");
-            sb.AppendLine($"    \"sceneObject\": \"{guid}\",");
-            sb.AppendLine($"    \"position\": {{ \"x\": {cx:F3}, \"y\": {cy:F3} }},");
-            sb.AppendLine($"    \"size\": {{ \"x\": {nodeW:F3}, \"y\": {nodeD:F3} }}");
-            sb.AppendLine($"  }}{comma}");
+            sb.AppendLine("    {");
+            sb.AppendLine($"      \"name\": \"{name}\",");
+            sb.AppendLine($"      \"sceneObject\": \"{guid}\",");
+            sb.AppendLine($"      \"position\": {{ \"x\": {cx:F3}, \"y\": {cy:F3} }},");
+            sb.AppendLine($"      \"size\": {{ \"x\": {nodeW:F3}, \"y\": {nodeD:F3} }}");
+            sb.AppendLine($"    }}{comma}");
         }
+        sb.AppendLine("  ],");
 
-        sb.AppendLine("]");
+        // --- groups ---
+        // For each FixtureGroupDefinition, collect the indices of all FixtureDefinition
+        // descendants (at any depth within the group) that appear in our fixtures array.
+        sb.AppendLine("  \"groups\": [");
+        for (int gi = 0; gi < groups.Length; gi++)
+        {
+            var g = groups[gi];
+            string groupName = EscapeJson(string.IsNullOrEmpty(g.DisplayName) ? g.gameObject.name : g.DisplayName);
+            string groupGuid = GetSceneObjectGuid(g.gameObject);
+
+            var memberIndices = new List<int>();
+            foreach (var fd in g.GetComponentsInChildren<FixtureDefinition>())
+            {
+                if (fixtureIndex.TryGetValue(fd.gameObject, out int idx))
+                    memberIndices.Add(idx);
+            }
+
+            string indicesJson = string.Join(", ", memberIndices);
+            string comma = gi < groups.Length - 1 ? "," : "";
+
+            sb.AppendLine("    {");
+            sb.AppendLine($"      \"name\": \"{groupName}\",");
+            sb.AppendLine($"      \"sceneObject\": \"{groupGuid}\",");
+            sb.AppendLine($"      \"fixtures\": [{indicesJson}]");
+            sb.AppendLine($"    }}{comma}");
+        }
+        sb.AppendLine("  ]");
+
+        sb.AppendLine("}");
 
         string fullPath = Path.Combine(Application.dataPath, "../", _outputPath);
         fullPath = Path.GetFullPath(fullPath);
@@ -124,8 +161,8 @@ public class GenerateFixtureMap : EditorWindow
         File.WriteAllText(fullPath, sb.ToString(), Encoding.UTF8);
         AssetDatabase.Refresh();
 
-        Debug.Log($"[GenerateFixtureMap] Wrote {fixtures.Length} fixture(s) to {_outputPath}");
-        EditorUtility.DisplayDialog("Done", $"Wrote {fixtures.Length} fixture(s) to:\n{_outputPath}", "OK");
+        Debug.Log($"[GenerateFixtureMap] Wrote {fixtures.Length} fixture(s) and {groups.Length} group(s) to {_outputPath}");
+        EditorUtility.DisplayDialog("Done", $"Wrote {fixtures.Length} fixture(s) and {groups.Length} group(s) to:\n{_outputPath}", "OK");
     }
 
     // Returns a stable per-scene-object identifier by combining the scene GUID

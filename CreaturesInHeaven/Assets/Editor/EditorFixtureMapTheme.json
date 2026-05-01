@@ -1,7 +1,13 @@
 {
-  "node":           { "r": 0.5, "g": 0.5, "b": 0.5, "a": 0.2 },
-  "nodeOutline":    { "r": 1.0, "g": 1.0, "b": 1.0, "a": 0.4 },
-  "nodeSelected":   { "r": 1.0, "g": 0.4, "b": 0.3, "a": 0.3 },
-  "nodeOutlineSel": { "r": 1.0, "g": 0.5, "b": 0.0, "a": 1.0 },
-  "label":          { "r": 1.0, "g": 1.0, "b": 1.0, "a": 0.7 }
+  "nodeFill":            { "r": 0.5, "g": 0.5, "b": 0.5, "a": 0.2 },
+  "nodeFill_Active":    { "r": 1.0, "g": 0.4, "b": 0.3, "a": 0.3 },
+  "nodeOutline":     { "r": 1.0, "g": 1.0, "b": 1.0, "a": 0.4 },
+  "nodeOutline_Active":  { "r": 1.0, "g": 0.5, "b": 0.0, "a": 1.0 },
+  "nodeLabel":       { "r": 1.0, "g": 1.0, "b": 1.0, "a": 0.7 },
+
+  "groupFill":           { "r": 0.5, "g": 0.5, "b": 0.5, "a": 0.1 },
+  "groupFill_Active":   { "r": 1.0, "g": 1.0, "b": 1.0, "a": 0.1 },
+  "groupOutline":    { "r": 1.0, "g": 1.0, "b": 1.0, "a": 0.3 },
+  "groupOutline_Active": { "r": 1.0, "g": 1.0, "b": 1.0, "a": 0.6 },
+  "groupLabel":       { "r": 1.0, "g": 1.0, "b": 1.0, "a": 0.7 }
 }

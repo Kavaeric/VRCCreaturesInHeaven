@@ -391,7 +391,7 @@ public class EditorFixtureMap : EditorWindow
     // Returns false if the group has no valid members.
     private bool GroupCanvasRect(int groupIndex, out Rect canvasRect)
     {
-        const float GroupPadding = 8f;  // pixels of padding around the outermost node edges
+        const float GroupPadding = 12f;  // pixels of padding around the outermost node edges
         canvasRect = default;
         var g = _groups[groupIndex];
         if (g.fixtures == null || g.fixtures.Count == 0) return false;
@@ -449,6 +449,7 @@ public class EditorFixtureMap : EditorWindow
             if (!GroupCanvasRect(gi, out Rect r)) continue;
 
             // A group is "selected" when all its member fixtures are in the selection.
+            // In reality the actual FixtureGroup object in the scene isn't ever selected.
             var g = _groups[gi];
             bool selected = g.fixtures != null && g.fixtures.Count > 0 &&
                             g.fixtures.TrueForAll(fi =>

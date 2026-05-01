@@ -161,7 +161,7 @@ public class GenerateFixtureMap : EditorWindow
         File.WriteAllText(fullPath, sb.ToString(), Encoding.UTF8);
         AssetDatabase.Refresh();
 
-        Debug.Log($"[GenerateFixtureMap] Wrote {fixtures.Length} fixture(s) and {groups.Length} group(s) to {_outputPath}");
+        Debug.Log($"  [GenerateFixtureMap] Wrote {fixtures.Length} fixture(s) and {groups.Length} group(s) to {_outputPath}");
         EditorUtility.DisplayDialog("Done", $"Wrote {fixtures.Length} fixture(s) and {groups.Length} group(s) to:\n{_outputPath}", "OK");
     }
 

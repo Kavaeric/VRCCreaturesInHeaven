@@ -139,9 +139,9 @@ public class EditorFixtureMap : EditorWindow
 
     // Node appearance and layout
     
-    // Minimum node dimension in pixels when size data is absent or tiny.
+    // Minimum node dimension in pixels.
     private const float NodeMinSize = 8f;
-    
+
     // Minimum margin from canvas edge to outermost node centre.
     private const float NodePadding = 20f;
     
@@ -268,46 +268,65 @@ public class EditorFixtureMap : EditorWindow
 
         _canvasSize = new Vector2(rect.width, rect.height);
 
-        // Compute world bounding box including node extents so edge nodes don't clip.
-        float worldMinX = float.MaxValue, worldMaxX = float.MinValue;
-        float worldMinY = float.MaxValue, worldMaxY = float.MinValue;
+        // Build sorted lists of unique X and Y world positions.
+        // Fixtures that share a position land on the same grid slot.
+        var uniqueX = new List<float>();
+        var uniqueY = new List<float>();
         foreach (var f in _fixtures)
         {
-            float hw = f.size.x * 0.5f;
-            float hd = f.size.y * 0.5f;
-            if (f.position.x - hw < worldMinX) worldMinX = f.position.x - hw;
-            if (f.position.x + hw > worldMaxX) worldMaxX = f.position.x + hw;
-            if (f.position.y - hd < worldMinY) worldMinY = f.position.y - hd;
-            if (f.position.y + hd > worldMaxY) worldMaxY = f.position.y + hd;
+            if (!uniqueX.Contains(f.position.x)) uniqueX.Add(f.position.x);
+            if (!uniqueY.Contains(f.position.y)) uniqueY.Add(f.position.y);
         }
+        uniqueX.Sort();
+        uniqueY.Sort();
 
-        float worldSpanX = (worldMaxX > worldMinX) ? worldMaxX - worldMinX : 1f;
-        float worldSpanY = (worldMaxY > worldMinY) ? worldMaxY - worldMinY : 1f;
+        int cols = uniqueX.Count;
+        int rows = uniqueY.Count;
 
+        // Node unit size and gap unit size in abstract layout space.
+        const float nodeUnit = 1f;
+        const float gapUnit  = 1f;
+
+        // Sweep each axis independently in abstract units.
+        var centresX = SweepAxis(UniformArray(cols, nodeUnit), UniformArray(cols - 1, gapUnit));
+        var centresY = SweepAxis(UniformArray(rows, nodeUnit), UniformArray(rows - 1, gapUnit));
+
+        // Bounding box of the layout in abstract units, derived from the sweep results.
+        float nodeHalf = nodeUnit * 0.5f;
+        float layoutMinX = centresX[0]        - nodeHalf;
+        float layoutMaxX = centresX[cols - 1] + nodeHalf;
+        float layoutMinY = centresY[0]        - nodeHalf;
+        float layoutMaxY = centresY[rows - 1] + nodeHalf;
+        float spanX = layoutMaxX - layoutMinX;
+        float spanY = layoutMaxY - layoutMinY;
+
+        // Fit the layout uniformly into the canvas, respecting NodePadding.
         float usableW = _canvasSize.x - NodePadding * 2f;
         float usableH = _canvasSize.y - NodePadding * 2f;
-        float scale   = (worldSpanX > 0.001f && worldSpanY > 0.001f)
-            ? Mathf.Min(usableW / worldSpanX, usableH / worldSpanY)
-            : 50f;
+        float scale   = Mathf.Min(usableW / spanX, usableH / spanY);
 
-        float worldCentreX = (worldMinX + worldMaxX) * 0.5f;
-        float worldCentreY = (worldMinY + worldMaxY) * 0.5f;
-        float offsetX = _canvasSize.x * 0.5f - worldCentreX * scale;
-        float offsetY = _canvasSize.y * 0.5f + worldCentreY * scale;
+        float halfExt = Mathf.Max(nodeHalf * scale, NodeMinSize);
+
+        // Centre the layout on the canvas.
+        float offsetX = _canvasSize.x * 0.5f - (layoutMinX + spanX * 0.5f) * scale;
+        float offsetY = _canvasSize.y * 0.5f - (layoutMinY + spanY * 0.5f) * scale;
 
         _fixtureLayouts = new List<FixtureLayout>(_fixtures.Count);
         foreach (var f in _fixtures)
         {
-            float px = offsetX + f.position.x * scale;
-            float py = offsetY - f.position.y * scale;
+            int xi = uniqueX.IndexOf(f.position.x);
+            int yi = uniqueY.IndexOf(f.position.y);
 
-            float pw = Mathf.Max(f.size.x * scale, NodeMinSize) * 0.5f;
-            float pd = Mathf.Max(f.size.y * scale, NodeMinSize) * 0.5f;
+            // Canvas Y is flipped: world +Y is up, canvas +Y is down.
+            int yiFlipped = rows - 1 - yi;
+
+            float px = offsetX + centresX[xi] * scale;
+            float py = offsetY + centresY[yiFlipped] * scale;
 
             _fixtureLayouts.Add(new FixtureLayout
             {
                 centre  = new Vector2(px, py),
-                halfExt = new Vector2(pw, pd),
+                halfExt = new Vector2(halfExt, halfExt),
             });
         }
 
@@ -566,6 +585,29 @@ public class EditorFixtureMap : EditorWindow
     }
 
     // --- Helpers -----------------------------------------------------
+
+    private static float[] UniformArray(int n, float value)
+    {
+        var arr = new float[n];
+        for (int i = 0; i < n; i++) arr[i] = value;
+        return arr;
+    }
+
+    // Returns centre positions for n nodes swept along one axis in abstract units.
+    // nodeSizes[i] is the size of node i; gapSizes[i] is the gap after node i (length n-1).
+    private static float[] SweepAxis(float[] nodeSizes, float[] gapSizes)
+    {
+        int n = nodeSizes.Length;
+        var centres = new float[n];
+        float cursor = 0f;
+        for (int i = 0; i < n; i++)
+        {
+            centres[i] = cursor + nodeSizes[i] * 0.5f;
+            cursor += nodeSizes[i];
+            if (i < n - 1) cursor += gapSizes[i];
+        }
+        return centres;
+    }
 
     private static string ToProjectRelative(string absolutePath)
     {

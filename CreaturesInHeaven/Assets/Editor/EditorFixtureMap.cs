@@ -99,7 +99,7 @@ public class EditorFixtureMap : EditorWindow
     private string                     _mapPath        = "";
     private Theme                      _theme          = Theme.Default();
 
-    // Canvas layout — recomputed when fixtures load, canvas resizes, or aspect slider changes.
+    // Canvas layout — recomputed when fixtures load or the canvas resizes.
     private Vector2               _canvasSize;
     private List<FixtureLayout>   _fixtureLayouts = new();
     private List<GroupLayout>     _groupLayouts   = new();
@@ -141,17 +141,16 @@ public class EditorFixtureMap : EditorWindow
     // Minimum margin from canvas edge to outermost node centre.
     private const float CanvasPadding = 20f;
 
-    // Minimum margin around nodes, i.e. the minimum size of gaps between nodes.
-    private const float NodeMargin = 0.5f;
-    
     // Pixels of margin around outermost node edges when drawing a group box.
     private const float GroupMargin = 12f;
 
-    // Space compression: long distances and lengths are crushed by this factor.
-    private const float SpaceCompressionK = 10f;
+    // Tunable layout parameters — bound to footer fields.
+    private float _minGap                   = 0.1f;
+    private float _gapCompressionK          = 2f;
+    private float _nodeCompressionK         = 5f;
+    private float _nodeCompressionThreshold = 4f;
+    private bool  _flipY                    = true;
 
-    // When a fixture's dimensions exceed this ratio, length compression is applied.
-    private const float NodeCompressionThreshold = 4f;
 
     // --- Lifecycle ---------------------------------------------------
     [MenuItem("Tools/Fixture Map")]
@@ -185,6 +184,20 @@ public class EditorFixtureMap : EditorWindow
 
         rootVisualElement.Q<Button>("load-btn").clicked   += PromptLoad;
         rootVisualElement.Q<Button>("reload-btn").clicked += Reload;
+
+        BindFloatField("min-gap-field",                    _minGap,                   v => _minGap                   = v);
+        BindFloatField("gap-compression-k-field",          _gapCompressionK,          v => _gapCompressionK          = v);
+        BindFloatField("node-compression-k-field",         _nodeCompressionK,         v => _nodeCompressionK         = v);
+        BindFloatField("node-compression-threshold-field", _nodeCompressionThreshold, v => _nodeCompressionThreshold = v);
+
+        var flipYToggle = rootVisualElement.Q<Toggle>("flip-y-toggle");
+        flipYToggle.value = _flipY;
+        flipYToggle.RegisterValueChangedCallback(e =>
+        {
+            _flipY = e.newValue;
+            RecalculateLayout();
+            _canvas.MarkDirtyRepaint();
+        });
 
         LoadTheme();
 
@@ -259,7 +272,6 @@ public class EditorFixtureMap : EditorWindow
                 obj = GlobalObjectId.GlobalObjectIdentifierToObjectSlow(gid);
             _fixtureObjects.Add(obj);
         }
-
     }
 
     // --- Layout ------------------------------------------------------
@@ -274,7 +286,6 @@ public class EditorFixtureMap : EditorWindow
         _canvasSize = new Vector2(rect.width, rect.height);
 
         // Build sorted lists of unique X and Y world positions.
-        // Fixtures that share a position land on the same grid slot.
         var uniqueX = new List<float>();
         var uniqueY = new List<float>();
         foreach (var f in _fixtures)
@@ -288,27 +299,31 @@ public class EditorFixtureMap : EditorWindow
         int cols = uniqueX.Count;
         int rows = uniqueY.Count;
 
-        // Generate node sizes from fixture data.
-        var nodeSizesX = new float[cols];
-        var nodeSizesY = new float[rows];
+        // Generate node sizes from fixture data, keeping raw world sizes for gap calculation.
+        var worldSizesX = new float[cols];
+        var worldSizesY = new float[rows];
+        var nodeSizesX  = new float[cols];
+        var nodeSizesY  = new float[rows];
         foreach (var f in _fixtures)
         {
             int xi = uniqueX.IndexOf(f.position.x);
             int yi = uniqueY.IndexOf(f.position.y);
-            var nodeSize = compressNodeSize(f.size.x, f.size.y, NodeCompressionThreshold, SpaceCompressionK);
+            worldSizesX[xi] = f.size.x;
+            worldSizesY[yi] = f.size.y;
+            var nodeSize = CompressNodeSize(f.size.x, f.size.y, _nodeCompressionThreshold, _nodeCompressionK);
             nodeSizesX[xi] = nodeSize.x;
             nodeSizesY[yi] = nodeSize.y;
         }
 
-        // Sweep each axis independently using real fixture dimensions.
-        var centresX = SweepAxis(nodeSizesX, UniformArray(cols - 1, NodeMargin));
-        var centresY = SweepAxis(nodeSizesY, UniformArray(rows - 1, NodeMargin));
+        // Sweep each axis independently using real world positions and fixture dimensions.
+        var centresX = SweepAxis(uniqueX.ToArray(), worldSizesX, nodeSizesX, _minGap, _gapCompressionK);
+        var centresY = SweepAxis(uniqueY.ToArray(), worldSizesY, nodeSizesY, _minGap, _gapCompressionK);
 
         // Bounding box derived from sweep results.
-        float layoutMinX = centresX[0]        - nodeSizesX[0]          * NodeMargin;
-        float layoutMaxX = centresX[cols - 1] + nodeSizesX[cols - 1]   * NodeMargin;
-        float layoutMinY = centresY[0]        - nodeSizesY[0]          * NodeMargin;
-        float layoutMaxY = centresY[rows - 1] + nodeSizesY[rows - 1]   * NodeMargin;
+        float layoutMinX = centresX[0]        - nodeSizesX[0]        * 0.5f;
+        float layoutMaxX = centresX[cols - 1] + nodeSizesX[cols - 1] * 0.5f;
+        float layoutMinY = centresY[0]        - nodeSizesY[0]        * 0.5f;
+        float layoutMaxY = centresY[rows - 1] + nodeSizesY[rows - 1] * 0.5f;
         float spanX = layoutMaxX - layoutMinX;
         float spanY = layoutMaxY - layoutMinY;
 
@@ -327,8 +342,7 @@ public class EditorFixtureMap : EditorWindow
             int xi = uniqueX.IndexOf(f.position.x);
             int yi = uniqueY.IndexOf(f.position.y);
 
-            // Canvas Y is flipped: world +Y is up, canvas +Y is down.
-            int yiFlipped = rows - 1 - yi;
+            int yiFlipped = _flipY ? rows - 1 - yi : yi;
 
             float px = offsetX + centresX[xi] * scale;
             float py = offsetY + centresY[yiFlipped] * scale;
@@ -559,7 +573,6 @@ public class EditorFixtureMap : EditorWindow
             float   dpd = fl.halfExt.y;
 
             // Corners: top-left, top-right, bottom-right, bottom-left (clockwise).
-            // Canvas Y is flipped relative to fixture space, so depth runs top-to-bottom.
             var corners = new Vector3[]
             {
                 new Vector3(p.x - dpw, p.y - dpd),
@@ -599,26 +612,22 @@ public class EditorFixtureMap : EditorWindow
 
     // --- Mapping functions -----------------------------------------------
 
-    private static float[] UniformArray(int n, float value)
-    {
-        var arr = new float[n];
-        for (int i = 0; i < n; i++) arr[i] = value;
-        return arr;
-    }
 
-    // Compresses a distance based on a compression factor k and a minimum distance.
-    private static float compressSpace(float distance, float minDistance, float k)
+    // Compresses a distance, preserving values up to minDistance and soft-capping beyond it.
+    // k controls compression strength: 0 = passthrough, higher = more aggressive.
+    // The compressed value asymptotically approaches minDistance + 1/k for large distances.
+    private static float CompressDistance(float distance, float minDistance, float k)
     {
-        if (distance <= minDistance) return distance;
-
-        return minDistance + Mathf.Log(distance - minDistance, k);
+        if (distance <= minDistance) return minDistance;
+        float excess = distance - minDistance;
+        return minDistance + excess / (1f + excess * k);
     }
 
     // Maps a fixture's raw world-space dimensions to layout-space node dimensions.
     // When a fixture is extremely narrow it can become difficult to click in the diagram.
     // This processor handles particularly long and narrow fixtures by crushing their long
     // axis past a certain point.
-    private static Vector2 compressNodeSize(float sizeX, float sizeY, float minAspect, float k)
+    private static Vector2 CompressNodeSize(float sizeX, float sizeY, float minAspect, float k)
     {
         float longAxis  = Mathf.Max(sizeX, sizeY);
         float shortAxis = Mathf.Min(sizeX, sizeY);
@@ -627,15 +636,18 @@ public class EditorFixtureMap : EditorWindow
         if (longAxis / shortAxis <= minAspect) return new(sizeX, sizeY);
 
         // For extreme aspect ratios, compress the long axis past the threshold.
-        float compressed = compressSpace(longAxis, shortAxis * minAspect, k);
+        float compressed = CompressDistance(longAxis, shortAxis * minAspect, k);
 
         // Reconstruct with the same orientation as the input.
         return sizeX >= sizeY ? new(compressed, shortAxis) : new(shortAxis, compressed);
     }
 
-    // Returns centre positions for n nodes swept along one axis in abstract units.
-    // nodeSizes[i] is the size of node i; gapSizes[i] is the gap after node i (length n-1).
-    private static float[] SweepAxis(float[] nodeSizes, float[] gapSizes)
+    // Returns layout-space centre positions for n nodes swept along one axis.
+    // worldPositions[i] is the world coordinate of node i (sorted ascending).
+    // worldSizes[i] is the raw world-space size, used to compute edge-to-edge gaps.
+    // nodeSizes[i] is the layout-space size (may differ from worldSizes after compression).
+    // The gap between adjacent nodes is derived from world geometry, then compressed.
+    private static float[] SweepAxis(float[] worldPositions, float[] worldSizes, float[] nodeSizes, float minGap, float k)
     {
         int n = nodeSizes.Length;
         var centres = new float[n];
@@ -644,9 +656,28 @@ public class EditorFixtureMap : EditorWindow
         {
             centres[i] = cursor + nodeSizes[i] * 0.5f;
             cursor += nodeSizes[i];
-            if (i < n - 1) cursor += gapSizes[i];
+            if (i < n - 1)
+            {
+                // Edge-to-edge gap in world space, using raw sizes to avoid compression artifacts.
+                float worldGap = worldPositions[i + 1] - worldPositions[i]
+                                 - worldSizes[i] * 0.5f - worldSizes[i + 1] * 0.5f;
+                cursor += CompressDistance(worldGap, minGap, k);
+            }
         }
         return centres;
+    }
+
+    private void BindFloatField(string name, float initialValue, Action<float> setter)
+    {
+        var field = rootVisualElement.Q<FloatField>(name);
+        if (field == null) return;
+        field.value = initialValue;
+        field.RegisterValueChangedCallback(e =>
+        {
+            setter(e.newValue);
+            RecalculateLayout();
+            _canvas.MarkDirtyRepaint();
+        });
     }
 
     private static string ToProjectRelative(string absolutePath)

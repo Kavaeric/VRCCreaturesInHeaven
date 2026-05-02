@@ -16,6 +16,49 @@
         <!-- Canvas area -->
         <ui:IMGUIContainer name="canvas" class="grow canvas" />
 
+        <!-- Footer toolbar -->
+        <ui:VisualElement class="h-2" />
+
+        <ui:VisualElement class="row items-center">
+
+            <ui:VisualElement class="col">
+                <ui:Label class="font-bold" text="Flip y-axis" />
+                <ui:VisualElement class="h-0p5" />
+                <ui:Toggle name="flip-y-toggle" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="w-1" />
+            
+            <ui:VisualElement class="col">
+                <ui:Label class="font-bold" text="Minimum gap" />
+                <ui:VisualElement class="h-0p5" />
+                <ui:FloatField name="min-gap-field"/>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="w-1" />
+
+            <ui:VisualElement class="col">
+                <ui:Label class="font-bold" text="Gap compression" />
+                <ui:VisualElement class="h-0p5" />
+                <ui:FloatField name="gap-compression-k-field"/>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="w-1" />
+
+            <ui:VisualElement class="col">
+                <ui:Label class="font-bold" text="Node compression threshold" />
+                <ui:VisualElement class="h-0p5" />
+                <ui:FloatField name="node-compression-threshold-field"/>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="w-1" />
+
+            <ui:VisualElement class="col">
+                <ui:Label class="font-bold" text="Node compression" />
+                <ui:VisualElement class="h-0p5" />
+                <ui:FloatField name="node-compression-k-field"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
 
     </ui:VisualElement>
 </ui:UXML>

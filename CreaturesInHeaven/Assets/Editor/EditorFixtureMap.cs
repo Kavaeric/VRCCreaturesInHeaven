@@ -283,15 +283,25 @@ public class EditorFixtureMap : EditorWindow
         int cols = uniqueX.Count;
         int rows = uniqueY.Count;
 
-        // Node unit size and gap unit size in abstract layout space.
+        // Node and gap sizes in abstract layout space.
+        // Real fixture dimensions (nodeSizesX/Y) are gathered here but not yet used by the sweep.
         const float nodeUnit = 1f;
         const float gapUnit  = 1f;
+        var nodeSizesX = new float[cols];
+        var nodeSizesY = new float[rows];
+        foreach (var f in _fixtures)
+        {
+            int xi = uniqueX.IndexOf(f.position.x);
+            int yi = uniqueY.IndexOf(f.position.y);
+            nodeSizesX[xi] = f.size.x;
+            nodeSizesY[yi] = f.size.y;
+        }
 
-        // Sweep each axis independently in abstract units.
+        // Sweep each axis independently using uniform units until real sizes are wired in.
         var centresX = SweepAxis(UniformArray(cols, nodeUnit), UniformArray(cols - 1, gapUnit));
         var centresY = SweepAxis(UniformArray(rows, nodeUnit), UniformArray(rows - 1, gapUnit));
 
-        // Bounding box of the layout in abstract units, derived from the sweep results.
+        // Bounding box derived from sweep results.
         float nodeHalf = nodeUnit * 0.5f;
         float layoutMinX = centresX[0]        - nodeHalf;
         float layoutMaxX = centresX[cols - 1] + nodeHalf;
@@ -584,7 +594,7 @@ public class EditorFixtureMap : EditorWindow
         groups   = wrapper.groups ?? new List<GroupEntry>();
     }
 
-    // --- Helpers -----------------------------------------------------
+    // --- Mapping functions -----------------------------------------------
 
     private static float[] UniformArray(int n, float value)
     {

@@ -138,15 +138,20 @@ public class EditorFixtureMap : EditorWindow
     }
 
     // Node appearance and layout
-    
-    // Minimum node dimension in pixels.
-    private const float NodeMinSize = 8f;
-
     // Minimum margin from canvas edge to outermost node centre.
-    private const float NodePadding = 20f;
+    private const float CanvasPadding = 20f;
+
+    // Minimum margin around nodes, i.e. the minimum size of gaps between nodes.
+    private const float NodeMargin = 0.5f;
     
-    // Pixels of padding around outermost node edges when drawing a group box.
-    private const float GroupPadding = 12f;
+    // Pixels of margin around outermost node edges when drawing a group box.
+    private const float GroupMargin = 12f;
+
+    // Space compression: long distances and lengths are crushed by this factor.
+    private const float SpaceCompressionK = 10f;
+
+    // When a fixture's dimensions exceed this ratio, length compression is applied.
+    private const float NodeCompressionThreshold = 4f;
 
     // --- Lifecycle ---------------------------------------------------
     [MenuItem("Tools/Fixture Map")]
@@ -283,39 +288,34 @@ public class EditorFixtureMap : EditorWindow
         int cols = uniqueX.Count;
         int rows = uniqueY.Count;
 
-        // Node and gap sizes in abstract layout space.
-        // Real fixture dimensions (nodeSizesX/Y) are gathered here but not yet used by the sweep.
-        const float nodeUnit = 1f;
-        const float gapUnit  = 1f;
+        // Generate node sizes from fixture data.
         var nodeSizesX = new float[cols];
         var nodeSizesY = new float[rows];
         foreach (var f in _fixtures)
         {
             int xi = uniqueX.IndexOf(f.position.x);
             int yi = uniqueY.IndexOf(f.position.y);
-            nodeSizesX[xi] = f.size.x;
-            nodeSizesY[yi] = f.size.y;
+            var nodeSize = compressNodeSize(f.size.x, f.size.y, NodeCompressionThreshold, SpaceCompressionK);
+            nodeSizesX[xi] = nodeSize.x;
+            nodeSizesY[yi] = nodeSize.y;
         }
 
-        // Sweep each axis independently using uniform units until real sizes are wired in.
-        var centresX = SweepAxis(UniformArray(cols, nodeUnit), UniformArray(cols - 1, gapUnit));
-        var centresY = SweepAxis(UniformArray(rows, nodeUnit), UniformArray(rows - 1, gapUnit));
+        // Sweep each axis independently using real fixture dimensions.
+        var centresX = SweepAxis(nodeSizesX, UniformArray(cols - 1, NodeMargin));
+        var centresY = SweepAxis(nodeSizesY, UniformArray(rows - 1, NodeMargin));
 
         // Bounding box derived from sweep results.
-        float nodeHalf = nodeUnit * 0.5f;
-        float layoutMinX = centresX[0]        - nodeHalf;
-        float layoutMaxX = centresX[cols - 1] + nodeHalf;
-        float layoutMinY = centresY[0]        - nodeHalf;
-        float layoutMaxY = centresY[rows - 1] + nodeHalf;
+        float layoutMinX = centresX[0]        - nodeSizesX[0]          * NodeMargin;
+        float layoutMaxX = centresX[cols - 1] + nodeSizesX[cols - 1]   * NodeMargin;
+        float layoutMinY = centresY[0]        - nodeSizesY[0]          * NodeMargin;
+        float layoutMaxY = centresY[rows - 1] + nodeSizesY[rows - 1]   * NodeMargin;
         float spanX = layoutMaxX - layoutMinX;
         float spanY = layoutMaxY - layoutMinY;
 
-        // Fit the layout uniformly into the canvas, respecting NodePadding.
-        float usableW = _canvasSize.x - NodePadding * 2f;
-        float usableH = _canvasSize.y - NodePadding * 2f;
+        // Fit the layout uniformly into the canvas, respecting CanvasPadding.
+        float usableW = _canvasSize.x - CanvasPadding * 2f;
+        float usableH = _canvasSize.y - CanvasPadding * 2f;
         float scale   = Mathf.Min(usableW / spanX, usableH / spanY);
-
-        float halfExt = Mathf.Max(nodeHalf * scale, NodeMinSize);
 
         // Centre the layout on the canvas.
         float offsetX = _canvasSize.x * 0.5f - (layoutMinX + spanX * 0.5f) * scale;
@@ -336,7 +336,10 @@ public class EditorFixtureMap : EditorWindow
             _fixtureLayouts.Add(new FixtureLayout
             {
                 centre  = new Vector2(px, py),
-                halfExt = new Vector2(halfExt, halfExt),
+                halfExt = new Vector2(
+                    nodeSizesX[xi] * 0.5f * scale,
+                    nodeSizesY[yi] * 0.5f * scale
+                ),
             });
         }
 
@@ -375,10 +378,10 @@ public class EditorFixtureMap : EditorWindow
             {
                 valid = true,
                 rect  = new Rect(
-                    gMinX - GroupPadding,
-                    gMinY - GroupPadding,
-                    (gMaxX - gMinX) + GroupPadding * 2f,
-                    (gMaxY - gMinY) + GroupPadding * 2f
+                    gMinX - GroupMargin,
+                    gMinY - GroupMargin,
+                    (gMaxX - gMinX) + GroupMargin * 2f,
+                    (gMaxY - gMinY) + GroupMargin * 2f
                 ),
             });
         }
@@ -601,6 +604,33 @@ public class EditorFixtureMap : EditorWindow
         var arr = new float[n];
         for (int i = 0; i < n; i++) arr[i] = value;
         return arr;
+    }
+
+    // Compresses a distance based on a compression factor k and a minimum distance.
+    private static float compressSpace(float distance, float minDistance, float k)
+    {
+        if (distance <= minDistance) return distance;
+
+        return minDistance + Mathf.Log(distance - minDistance, k);
+    }
+
+    // Maps a fixture's raw world-space dimensions to layout-space node dimensions.
+    // When a fixture is extremely narrow it can become difficult to click in the diagram.
+    // This processor handles particularly long and narrow fixtures by crushing their long
+    // axis past a certain point.
+    private static Vector2 compressNodeSize(float sizeX, float sizeY, float minAspect, float k)
+    {
+        float longAxis  = Mathf.Max(sizeX, sizeY);
+        float shortAxis = Mathf.Min(sizeX, sizeY);
+
+        // Don't handle cases where the ratio isn't too extreme.
+        if (longAxis / shortAxis <= minAspect) return new(sizeX, sizeY);
+
+        // For extreme aspect ratios, compress the long axis past the threshold.
+        float compressed = compressSpace(longAxis, shortAxis * minAspect, k);
+
+        // Reconstruct with the same orientation as the input.
+        return sizeX >= sizeY ? new(compressed, shortAxis) : new(shortAxis, compressed);
     }
 
     // Returns centre positions for n nodes swept along one axis in abstract units.

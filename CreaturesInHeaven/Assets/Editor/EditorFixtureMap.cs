@@ -18,6 +18,8 @@ public class EditorFixtureMap : EditorWindow
     {
         public string          name;
         public string          sceneObject;
+        public string          definitionObject;
+        public string          driverObject;
         public FixturePosition position;
         public FixturePosition size;  // width (X, long axis) and depth (Y, short axis) in metres
     }
@@ -93,11 +95,13 @@ public class EditorFixtureMap : EditorWindow
 
     // --- State -------------------------------------------------------
 
-    private List<FixtureEntry>         _fixtures       = new();
-    private List<UnityEngine.Object>   _fixtureObjects = new();  // resolved scene objects, parallel to _fixtures (null if unresolved)
-    private List<GroupEntry>           _groups         = new();
-    private string                     _mapPath        = "";
-    private Theme                      _theme          = Theme.Default();
+    private List<FixtureEntry>         _fixtures            = new();
+    private List<UnityEngine.Object>   _fixtureObjects      = new();  // resolved scene objects, parallel to _fixtures (null if unresolved)
+    private List<UnityEngine.Object>   _fixtureDefinitions  = new();  // resolved FixtureDefinition components
+    private List<UnityEngine.Object>   _fixtureDrivers      = new();  // resolved FixtureDriver components
+    private List<GroupEntry>           _groups              = new();
+    private string                     _mapPath             = "";
+    private Theme                      _theme               = Theme.Default();
 
     // Canvas layout — recomputed when fixtures load or the canvas resizes.
     private Vector2               _canvasSize;
@@ -264,13 +268,44 @@ public class EditorFixtureMap : EditorWindow
     private void ResolveSceneObjects()
     {
         _fixtureObjects = new List<UnityEngine.Object>(_fixtures.Count);
-        foreach (var f in _fixtures)
+        _fixtureDefinitions = new List<UnityEngine.Object>(_fixtures.Count);
+        _fixtureDrivers = new List<UnityEngine.Object>(_fixtures.Count);
+
+        try
         {
-            UnityEngine.Object obj = null;
-            if (!string.IsNullOrEmpty(f.sceneObject) &&
-                GlobalObjectId.TryParse(f.sceneObject, out GlobalObjectId gid))
-                obj = GlobalObjectId.GlobalObjectIdentifierToObjectSlow(gid);
-            _fixtureObjects.Add(obj);
+            for (int i = 0; i < _fixtures.Count; i++)
+            {
+                var f = _fixtures[i];
+
+                float progress = (float)i / _fixtures.Count;
+                EditorUtility.DisplayProgressBar(
+                    "Resolving Scene Objects",
+                    $"Fixture {i + 1} of {_fixtures.Count}...",
+                    progress
+                );
+
+                UnityEngine.Object sceneObj = null;
+                if (!string.IsNullOrEmpty(f.sceneObject) &&
+                    GlobalObjectId.TryParse(f.sceneObject, out GlobalObjectId gid))
+                    sceneObj = GlobalObjectId.GlobalObjectIdentifierToObjectSlow(gid);
+                _fixtureObjects.Add(sceneObj);
+
+                UnityEngine.Object defObj = null;
+                if (!string.IsNullOrEmpty(f.definitionObject) &&
+                    GlobalObjectId.TryParse(f.definitionObject, out GlobalObjectId defGid))
+                    defObj = GlobalObjectId.GlobalObjectIdentifierToObjectSlow(defGid);
+                _fixtureDefinitions.Add(defObj);
+
+                UnityEngine.Object drvObj = null;
+                if (!string.IsNullOrEmpty(f.driverObject) &&
+                    GlobalObjectId.TryParse(f.driverObject, out GlobalObjectId drvGid))
+                    drvObj = GlobalObjectId.GlobalObjectIdentifierToObjectSlow(drvGid);
+                _fixtureDrivers.Add(drvObj);
+            }
+        }
+        finally
+        {
+            EditorUtility.ClearProgressBar();
         }
     }
 
@@ -563,34 +598,55 @@ public class EditorFixtureMap : EditorWindow
 
         for (int i = 0; i < _fixtures.Count; i++)
         {
-            var f   = _fixtures[i];
-            var fl  = _fixtureLayouts[i];
+            var f = _fixtures[i];
+            var fl = _fixtureLayouts[i];
             var obj = _fixtureObjects[i];
+            var definition = _fixtureDefinitions[i];
+            var driver = _fixtureDrivers[i];
             bool selected = obj != null && selectionSet.Contains(obj);
 
-            Vector2 p   = fl.centre;
-            float   dpw = fl.halfExt.x;
-            float   dpd = fl.halfExt.y;
+            DrawFixtureNode(f, fl, definition, driver, selected);
+        }
+    }
 
-            // Corners: top-left, top-right, bottom-right, bottom-left (clockwise).
-            var corners = new Vector3[]
-            {
-                new Vector3(p.x - dpw, p.y - dpd),
-                new Vector3(p.x + dpw, p.y - dpd),
-                new Vector3(p.x + dpw, p.y + dpd),
-                new Vector3(p.x - dpw, p.y + dpd),
-            };
+    private void DrawFixtureNode(FixtureEntry fixture, FixtureLayout layout, UnityEngine.Object definition, UnityEngine.Object driver, bool selected)
+    {
+        Vector2 p   = layout.centre;
+        float   dpw = layout.halfExt.x;
+        float   dpd = layout.halfExt.y;
 
-            Color fill    = selected ? _theme.nodeFill_Active.ToColor()   : _theme.nodeFill.ToColor();
-            Color outline = selected ? _theme.nodeOutline_Active.ToColor() : _theme.nodeOutline.ToColor();
-            Handles.DrawSolidRectangleWithOutline(corners, fill, outline);
+        // Corners: top-left, top-right, bottom-right, bottom-left (clockwise).
+        var corners = new Vector3[]
+        {
+            new(p.x - dpw, p.y - dpd),
+            new(p.x + dpw, p.y - dpd),
+            new(p.x + dpw, p.y + dpd),
+            new(p.x - dpw, p.y + dpd),
+        };
 
-            if (selected)
-            {
-                float labelW = Mathf.Max(dpw, 120f);
-                var labelRect = new Rect(p.x - labelW * 0.5f, p.y + dpd + 2f, labelW, 32f);
-                GUI.Label(labelRect, f.name, _nodeLabelStyle);
-            }
+        Color fill    = selected ? _theme.nodeFill_Active.ToColor()   : _theme.nodeFill.ToColor();
+        Color outline = selected ? _theme.nodeOutline_Active.ToColor() : _theme.nodeOutline.ToColor();
+        Handles.DrawSolidRectangleWithOutline(corners, fill, outline);
+
+        // Inner rectangle visualising luminaire state
+        float padding = 8f;
+        var innerCorners = new Vector3[]
+        {
+            new(corners[0].x + padding, corners[0].y + padding),
+            new(corners[1].x - padding, corners[1].y + padding),
+            new(corners[2].x - padding, corners[2].y - padding),
+            new(corners[3].x + padding, corners[3].y - padding)
+        };
+
+        fill    = Color.white;
+        outline = Color.white;
+        Handles.DrawSolidRectangleWithOutline(innerCorners, fill, outline);
+
+        if (selected)
+        {
+            float labelW = Mathf.Max(dpw, 120f);
+            var labelRect = new Rect(p.x - labelW * 0.5f, p.y + dpd + 2f, labelW, 32f);
+            GUI.Label(labelRect, fixture.name, _nodeLabelStyle);
         }
     }
 

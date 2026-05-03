@@ -105,7 +105,9 @@ public class GenerateFixtureMap : EditorWindow
             float cy = pos.z - centreZ;
 
             string name  = EscapeJson(string.IsNullOrEmpty(f.DisplayName) ? f.gameObject.name : f.DisplayName);
-            string guid  = GetSceneObjectGuid(f.gameObject);
+            string fixtureGuid = GetSceneObjectGuid(f.gameObject);
+            string definitionGuid = GetComponentObjectGuid(f.gameObject, typeof(FixtureDefinition));
+            string driverGuid = GetComponentObjectGuid(f.gameObject, typeof(FixtureDriver));
             string comma = i < fixtures.Length - 1 ? "," : "";
 
             // Physical dimensions from profile: width = long axis (X), depth = short axis (Z).
@@ -114,7 +116,9 @@ public class GenerateFixtureMap : EditorWindow
 
             sb.AppendLine("    {");
             sb.AppendLine($"      \"name\": \"{name}\",");
-            sb.AppendLine($"      \"sceneObject\": \"{guid}\",");
+            sb.AppendLine($"      \"sceneObject\": \"{fixtureGuid}\",");
+            sb.AppendLine($"      \"definitionObject\": \"{definitionGuid}\",");
+            sb.AppendLine($"      \"driverObject\": \"{driverGuid}\",");
             sb.AppendLine($"      \"position\": {{ \"x\": {cx:F3}, \"y\": {cy:F3} }},");
             sb.AppendLine($"      \"size\": {{ \"x\": {nodeW:F3}, \"y\": {nodeD:F3} }}");
             sb.AppendLine($"    }}{comma}");
@@ -171,6 +175,17 @@ public class GenerateFixtureMap : EditorWindow
     private static string GetSceneObjectGuid(GameObject go)
     {
         var id = GlobalObjectId.GetGlobalObjectIdSlow(go);
+        return id.ToString();
+    }
+
+    // Returns the GlobalObjectId for a component of the specified type on a GameObject.
+    // Returns an empty string if the component is not found.
+    private static string GetComponentObjectGuid(GameObject go, System.Type componentType)
+    {
+        var component = go.GetComponent(componentType);
+        if (component == null)
+            return "";
+        var id = GlobalObjectId.GetGlobalObjectIdSlow(component);
         return id.ToString();
     }
 

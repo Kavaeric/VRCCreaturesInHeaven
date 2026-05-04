@@ -110,6 +110,11 @@ public class EditorFixtureMap : EditorWindow
     private List<FixtureLayout>   _fixtureLayouts = new();
     private List<GroupLayout>     _groupLayouts   = new();
 
+    // Pan and zoom
+    private float                 _zoom           = 1f;
+    private Vector2               _panOffset      = Vector2.zero;
+    private bool                  _isPanning      = false;
+
     // Visual element refs
     private IMGUIContainer _canvas;
     private Label          _pathLabel;
@@ -260,36 +265,52 @@ public class EditorFixtureMap : EditorWindow
     {
         try
         {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+
             string json = File.ReadAllText(absolutePath);
             ParseMap(json, out _fixtures, out _groups);
-            _mapPath  = absolutePath;
+            Debug.Log($"  [EditorFixtureMap] Parse: {sw.ElapsedMilliseconds}ms");
 
+            _mapPath  = absolutePath;
             EditorPrefs.SetString("EditorFixtureMap.lastPath", absolutePath);
 
             string projectRelative = ToProjectRelative(absolutePath);
             _pathLabel.text = projectRelative ?? absolutePath;
 
+            sw.Restart();
             ResolveSceneObjects();
+            Debug.Log($"  [EditorFixtureMap] ResolveSceneObjects: {sw.ElapsedMilliseconds}ms");
+
+            sw.Restart();
+            _zoom = 1f;
+            _panOffset = Vector2.zero;
             RecalculateLayout();
+            Debug.Log($"  [EditorFixtureMap] RecalculateLayout: {sw.ElapsedMilliseconds}ms");
+
             _canvas.MarkDirtyRepaint();
         }
         catch (Exception ex)
         {
-            Debug.LogError($"[EditorFixtureMap] Failed to load {absolutePath}: {ex.Message}");
+            Debug.LogError($"  [EditorFixtureMap] Failed to load {absolutePath}: {ex.Message}");
         }
     }
 
     private void ResolveSceneObjects()
     {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+
         _fixtureObjects = new List<UnityEngine.Object>(_fixtures.Count);
         _fixtureDefinitions = new List<UnityEngine.Object>(_fixtures.Count);
         _fixtureDrivers = new List<UnityEngine.Object>(_fixtures.Count);
 
         // Fast path: find all FixtureDefinition and FixtureDriver components in the scene.
+        sw.Restart();
         var allDefinitions = FindObjectsByType<FixtureDefinition>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         var allDrivers = FindObjectsByType<FixtureDriver>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        Debug.Log($"  [EditorFixtureMap]   FindObjectsByType: {sw.ElapsedMilliseconds}ms ({allDefinitions.Length} defs, {allDrivers.Length} drivers)");
 
         // Build lookup by GameObject for fast matching.
+        sw.Restart();
         var definitionsByGameObject = new Dictionary<GameObject, FixtureDefinition>(allDefinitions.Length);
         var driversByGameObject = new Dictionary<GameObject, FixtureDriver>(allDrivers.Length);
 
@@ -297,16 +318,40 @@ public class EditorFixtureMap : EditorWindow
             definitionsByGameObject[def.gameObject] = def;
         foreach (var drv in allDrivers)
             driversByGameObject[drv.gameObject] = drv;
+        Debug.Log($"  [EditorFixtureMap]   Build lookup: {sw.ElapsedMilliseconds}ms");
 
-        // Match fixtures by resolving their scene object reference.
+        // Build a map of GlobalObjectId -> sceneObject via reverse lookup from known objects.
+        // This avoids slow GlobalObjectIdentifierToObjectSlow calls entirely.
+        sw.Restart();
+        var globalIdCache = new Dictionary<string, UnityEngine.Object>();
+
+        // Cache all FixtureDefinition scene objects by their GlobalObjectId string.
+        foreach (var def in allDefinitions)
+        {
+            string gidStr = GlobalObjectId.GetGlobalObjectIdSlow(def.gameObject).ToString();
+            if (!globalIdCache.ContainsKey(gidStr))
+                globalIdCache[gidStr] = def.gameObject;
+        }
+
+        // Also cache FixtureDriver scene objects.
+        foreach (var drv in allDrivers)
+        {
+            string gidStr = GlobalObjectId.GetGlobalObjectIdSlow(drv.gameObject).ToString();
+            if (!globalIdCache.ContainsKey(gidStr))
+                globalIdCache[gidStr] = drv.gameObject;
+        }
+
+        Debug.Log($"  [EditorFixtureMap]   Build GlobalObjectId cache: {sw.ElapsedMilliseconds}ms");
+
+        // Match fixtures by looking up their GlobalObjectId string in the cache.
+        sw.Restart();
         for (int i = 0; i < _fixtures.Count; i++)
         {
             var f = _fixtures[i];
             UnityEngine.Object sceneObj = null;
 
-            if (!string.IsNullOrEmpty(f.sceneObject) &&
-                GlobalObjectId.TryParse(f.sceneObject, out GlobalObjectId gid))
-                sceneObj = GlobalObjectId.GlobalObjectIdentifierToObjectSlow(gid);
+            if (!string.IsNullOrEmpty(f.sceneObject) && globalIdCache.TryGetValue(f.sceneObject, out var cached))
+                sceneObj = cached;
 
             _fixtureObjects.Add(sceneObj);
 
@@ -323,6 +368,7 @@ public class EditorFixtureMap : EditorWindow
             _fixtureDefinitions.Add(def);
             _fixtureDrivers.Add(drv);
         }
+        Debug.Log($"  [EditorFixtureMap]   Resolve from cache: {sw.ElapsedMilliseconds}ms ({_fixtures.Count} fixtures)");
     }
 
     // --- Layout ------------------------------------------------------
@@ -479,10 +525,54 @@ public class EditorFixtureMap : EditorWindow
     private void HandleMouseEvents(Rect rect)
     {
         Event e = Event.current;
-        if (e.type != EventType.MouseDown || !rect.Contains(e.mousePosition)) return;
-        if (e.button != 0) return;
+        if (!rect.Contains(e.mousePosition)) return;
+
+        // Zoom via scroll wheel
+        if (e.type == EventType.ScrollWheel)
+        {
+            float delta = e.delta.y * -0.05f;
+            float newZoom = Mathf.Clamp(_zoom + delta * _zoom, 0.1f, 10f);
+            // Zoom toward mouse: keep the layout point under the cursor fixed.
+            _panOffset = e.mousePosition - (e.mousePosition - _panOffset) * (newZoom / _zoom);
+            _zoom = newZoom;
+            _canvas.MarkDirtyRepaint();
+            e.Use();
+            return;
+        }
+
+        // Pan via middle-mouse drag
+        if (e.type == EventType.MouseDown && e.button == 2)
+        {
+            _isPanning = true;
+            e.Use();
+            return;
+        }
+
+        if (_isPanning)
+        {
+            if (e.type == EventType.MouseDrag)
+            {
+                _panOffset += e.delta;
+                _canvas.MarkDirtyRepaint();
+                e.Use();
+                return;
+            }
+            else if (e.type == EventType.MouseUp && e.button == 2)
+            {
+                _isPanning = false;
+                e.Use();
+                return;
+            }
+        }
+
+        // Left-click interactions
+        if (e.type != EventType.MouseDown || e.button != 0) return;
 
         bool additive = e.control || e.command || e.shift;
+        bool doubleClick = e.clickCount == 2;
+
+        // Convert screen position to layout space for hit-testing
+        Vector2 layoutPos = ToLayout(e.mousePosition);
 
         // Fixtures have priority: hit-test in reverse draw order so topmost wins.
         int fixtureHit = -1;
@@ -490,7 +580,7 @@ public class EditorFixtureMap : EditorWindow
         {
             var fl = _fixtureLayouts[i];
             if (new Rect(fl.centre.x - fl.halfExt.x, fl.centre.y - fl.halfExt.y,
-                         fl.halfExt.x * 2f, fl.halfExt.y * 2f).Contains(e.mousePosition))
+                         fl.halfExt.x * 2f, fl.halfExt.y * 2f).Contains(layoutPos))
                 { fixtureHit = i; break; }
         }
 
@@ -507,7 +597,7 @@ public class EditorFixtureMap : EditorWindow
             for (int gi = _groupLayouts.Count - 1; gi >= 0; gi--)
             {
                 var gl = _groupLayouts[gi];
-                if (gl.valid && gl.rect.Contains(e.mousePosition))
+                if (gl.valid && gl.rect.Contains(layoutPos))
                     { groupHit = gi; break; }
             }
 
@@ -540,8 +630,19 @@ public class EditorFixtureMap : EditorWindow
             }
             else
             {
-                // Click on blank canvas: deselect all.
-                Selection.objects = Array.Empty<UnityEngine.Object>();
+                // Click on blank canvas
+                if (doubleClick)
+                {
+                    // Double-click resets zoom and pan
+                    _zoom = 1f;
+                    _panOffset = Vector2.zero;
+                    _canvas.MarkDirtyRepaint();
+                }
+                else
+                {
+                    // Single-click deselects all
+                    Selection.objects = Array.Empty<UnityEngine.Object>();
+                }
             }
         }
 
@@ -590,19 +691,22 @@ public class EditorFixtureMap : EditorWindow
             Color fill    = selected ? _theme.groupFill_Active.ToColor()   : _theme.groupFill.ToColor();
             Color outline = selected ? _theme.groupOutline_Active.ToColor() : _theme.groupOutline.ToColor();
 
+            // Apply zoom and pan transform
+            Vector2 minScreen = ToScreen(new Vector2(r.xMin, r.yMin));
+            Vector2 maxScreen = ToScreen(new Vector2(r.xMax, r.yMax));
             var corners = new Vector3[]
             {
-                new Vector3(r.xMin, r.yMin),
-                new Vector3(r.xMax, r.yMin),
-                new Vector3(r.xMax, r.yMax),
-                new Vector3(r.xMin, r.yMax),
+                new Vector3(minScreen.x, minScreen.y),
+                new Vector3(maxScreen.x, minScreen.y),
+                new Vector3(maxScreen.x, maxScreen.y),
+                new Vector3(minScreen.x, maxScreen.y),
             };
             Handles.DrawSolidRectangleWithOutline(corners, fill, outline);
 
             if (selected)
             {
-                float labelW = Mathf.Max(r.width, 120f);
-                var labelRect = new Rect(r.center.x - labelW * 0.5f, r.yMax + 2f, labelW, 32f);
+                float labelW = Mathf.Max((maxScreen.x - minScreen.x), 120f);
+                var labelRect = new Rect((minScreen.x + maxScreen.x) * 0.5f - labelW * 0.5f, maxScreen.y + 2f, labelW, 32f);
                 GUI.Label(labelRect, g.name, _groupLabelStyle);
             }
         }
@@ -631,13 +735,18 @@ public class EditorFixtureMap : EditorWindow
         float dpw = layout.halfExt.x;
         float dpd = layout.halfExt.y;
 
+        // Apply zoom and pan transform
+        Vector2 ps = ToScreen(p);
+        float dpws = dpw * _zoom;
+        float dpds = dpd * _zoom;
+
         // Corners: top-left, top-right, bottom-right, bottom-left (clockwise).
         var corners = new Vector3[]
         {
-            new(p.x - dpw, p.y - dpd),
-            new(p.x + dpw, p.y - dpd),
-            new(p.x + dpw, p.y + dpd),
-            new(p.x - dpw, p.y + dpd),
+            new(ps.x - dpws, ps.y - dpds),
+            new(ps.x + dpws, ps.y - dpds),
+            new(ps.x + dpws, ps.y + dpds),
+            new(ps.x - dpws, ps.y + dpds),
         };
 
         Color fill = selected ? _theme.nodeFill_Active.ToColor() : _theme.nodeFill.ToColor();
@@ -646,8 +755,8 @@ public class EditorFixtureMap : EditorWindow
 
         if (selected)
         {
-            float labelW = Mathf.Max(dpw, 120f);
-            var labelRect = new Rect(p.x - labelW * 0.5f, p.y + dpd + 2f, labelW, 32f);
+            float labelW = Mathf.Max(dpws, 120f);
+            var labelRect = new Rect(ps.x - labelW * 0.5f, ps.y + dpds + 2f, labelW, 32f);
             GUI.Label(labelRect, fixture.name, _nodeLabelStyle);
         }
 
@@ -670,7 +779,7 @@ public class EditorFixtureMap : EditorWindow
         if (definitionTyped.Colour == FixtureDefinition.ColourMode.Blackbody)
             emissionColor = FixtureDefinition.BlackbodyToRGB(definitionTyped.ColourTemperature);
 
-        // Get brightness normalized to max brightness (PropsTransform.localScale.x in linear space).
+        // Get brightness normalised to max brightness (PropsTransform.localScale.x in linear space).
         float brightness = 0f;
         if (driverTyped.PropsTransform != null)
             brightness = Mathf.InverseLerp(0f, definitionTyped.Profile.BrightnessMax, driverTyped.PropsTransform.localScale.x);
@@ -681,7 +790,7 @@ public class EditorFixtureMap : EditorWindow
         Color outlineColor = emissionColor;
         outlineColor.a = 1f;
 
-        float padding = 12f;
+        float padding = 12f * _zoom;
         var innerCorners = new Vector3[]
         {
             new(corners[0].x + padding * rotationZ, corners[0].y + padding * rotationX),
@@ -725,6 +834,13 @@ public class EditorFixtureMap : EditorWindow
 
     // --- Mapping functions -----------------------------------------------
 
+    // Transform from layout space to screen space (applying zoom and pan)
+    private Vector2 ToScreen(Vector2 layoutPt)
+        => layoutPt * _zoom + _panOffset;
+
+    // Transform from screen space to layout space (inverse of ToScreen)
+    private Vector2 ToLayout(Vector2 screenPt)
+        => (screenPt - _panOffset) / _zoom;
 
     // Compresses a distance, preserving values up to minDistance and soft-capping beyond it.
     // k controls compression strength: 0 = passthrough, higher = more aggressive.

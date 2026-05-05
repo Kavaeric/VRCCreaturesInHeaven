@@ -655,16 +655,31 @@ public class EditorFixtureMap : EditorWindow
 
     private void ToggleOrSet(UnityEngine.Object obj, bool additive)
     {
+        var toSelect = new List<UnityEngine.Object>();
+
+        // Include the fixture itself plus all its children for animation filtering
+        if (obj is GameObject go)
+        {
+            toSelect.Add(go);
+            foreach (Transform child in go.transform)
+                toSelect.Add(child.gameObject);
+        }
+        else
+        {
+            toSelect.Add(obj);
+        }
+
         if (additive)
         {
             var current = new List<UnityEngine.Object>(Selection.objects);
-            if (current.Contains(obj)) current.Remove(obj);
-            else current.Add(obj);
+            foreach (var item in toSelect)
+                if (current.Contains(item)) current.Remove(item);
+                else current.Add(item);
             Selection.objects = current.ToArray();
         }
         else
         {
-            Selection.activeObject = obj;
+            Selection.objects = toSelect.ToArray();
         }
     }
 

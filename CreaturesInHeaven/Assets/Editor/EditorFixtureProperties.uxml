@@ -1,0 +1,141 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <Style src="project://database/Assets/Editor/EditorUI.uss" />
+    <Style src="project://database/Assets/Editor/EditorFixtureProperties.uss" />
+    <ui:ScrollView class="col p-2">
+
+        <!-- No selection help -->
+        <ui:VisualElement name="no-selection-help" class="help-box">
+            <ui:Label class="help-box-label" text="Select a fixture to edit its animation properties." />
+        </ui:VisualElement>
+
+        <!-- Error help -->
+        <ui:VisualElement name="error-help" class="help-box" style="display: none;">
+            <ui:Label name="error-label" class="help-box-label" />
+        </ui:VisualElement>
+
+        <!-- Fixture info -->
+        <ui:VisualElement name="panel-info" class="row items-center" style="display: none;">
+            <!-- On/Off -->
+            <ui:Toggle name="on-toggle" class="font-bold" />
+
+            <!-- Header -->
+            <ui:Label name="fixture-name" class="font-bold" text="" />
+
+        </ui:VisualElement>
+
+        <ui:VisualElement class="h-2" />
+
+        <ui:VisualElement name="panel-colour" class="panel-frame col">
+
+            <ui:Label name="colour-placeholder" text="Fixture does not have programmable colours." class="text-muted"/>
+
+            <!-- Colour -->
+            <ui:VisualElement class="col" name="colour-control">
+                <ui:VisualElement class="col">
+                    <ui:Label class="font-bold" text="Colour mode" />
+                    <ui:EnumField name="colour-mode-field"/>
+                </ui:VisualElement>
+
+                <ui:VisualElement class="h-2" />
+                <ui:VisualElement class="separator" />
+                <ui:VisualElement class="h-2" />
+
+                <ui:VisualElement name="colour-temperature-control" class="col">
+                    <ui:Label class="font-bold" text="Temperature (K)" />
+                    <ui:VisualElement class="h-0p5" />
+                    <ui:IntegerField name="colour-temperature-field" low-value="1000" high-value="40000" />
+                    <ui:VisualElement class="h-0p5" />
+                    <uie:ColorField name="colour-preview-field" />
+                </ui:VisualElement>
+
+                <ui:VisualElement name="colour-rgb-control" class="col">
+                    <ui:Label class="font-bold" text="Colour" />
+                    <ui:VisualElement class="h-0p5" />
+                    <uie:ColorField name="emission-colour-field" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+
+        </ui:VisualElement>
+
+        <ui:VisualElement class="h-2" />
+
+        <!-- Illumination -->
+        <ui:VisualElement name="panel-illumination" class="panel-frame col">
+
+
+            <!-- Brightness -->
+            <ui:VisualElement name="brightness-control">
+                <ui:Label class="font-bold" text="Brightness" />
+                <ui:VisualElement class="h-0p5" />
+                <ui:VisualElement class="row">
+                    <ui:FloatField name="brightness-float-field" class="min-w-10" low-value="0" high-value="1" />
+                    <ui:Slider name="brightness-slider" class="grow" low-value="0" high-value="1" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            
+            <ui:VisualElement class="h-2" />
+            <ui:VisualElement class="separator" />
+            <ui:VisualElement class="h-2" />
+
+            <!-- Spread -->
+            <ui:VisualElement name="spread-control">
+                <ui:Label class="font-bold" text="Spread" />
+                <ui:VisualElement class="h-0p5" />
+                <ui:VisualElement class="row">
+                    <ui:Label name="spread-placeholder" text="Fixture does not have programmable spread." class="text-muted"/>
+                    <ui:FloatField name="spread-float-field" class="min-w-10" low-value="0" high-value="1" />
+                    <ui:Slider name="spread-slider" class="grow" low-value="0" high-value="1" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement class="h-2" />
+
+        <!-- Rotation/transform -->
+        <ui:VisualElement name="panel-transform" class="panel-frame col">
+
+            <!-- Rotation -->
+            <ui:VisualElement name="rotation-section" class="col">
+                <ui:Label class="font-bold text-sm" text="Rotation" />
+
+                <ui:VisualElement class="h-1" />
+
+                <ui:Label name="rotation-placeholder" text="Fixture does not have programmable rotation." class="text-muted"/>
+
+                <ui:VisualElement name="axis-x-control">
+                    <ui:Label name="axis-x-placeholder" text="X (tilt)" />
+                    <ui:VisualElement class="h-0p5" />
+                    <ui:VisualElement class="row">
+                        <ui:FloatField name="axis-x-float-field" class="min-w-10" low-value="-180" high-value="180" />
+                        <ui:Slider name="axis-x-slider" class="grow" low-value="-180" high-value="1" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                
+                <ui:VisualElement class="h-1" />
+
+                <ui:VisualElement name="axis-y-control">
+                    <ui:Label name="axis-y-placeholder" text="Y (pan)" />
+                    <ui:VisualElement class="h-0p5" />
+                    <ui:VisualElement class="row">
+                        <ui:FloatField name="axis-y-float-field" class="min-w-10" low-value="-180" high-value="180" />
+                        <ui:Slider name="axis-y-slider" class="grow" low-value="-180" high-value="180" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                
+                <ui:VisualElement class="h-1" />
+
+                <ui:VisualElement name="axis-z-control">
+                    <ui:Label name="axis-z-placeholder" text="Z (roll)" />
+                    <ui:VisualElement class="h-0p5" />
+                    <ui:VisualElement class="row">
+                        <ui:FloatField name="axis-z-float-field" class="min-w-10" low-value="-180" high-value="180" />
+                        <ui:Slider name="axis-z-slider" class="grow" low-value="-180" high-value="180" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+        </ui:VisualElement>
+
+    </ui:ScrollView>
+</ui:UXML>

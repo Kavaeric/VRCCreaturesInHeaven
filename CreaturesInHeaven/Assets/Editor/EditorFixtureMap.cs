@@ -518,8 +518,12 @@ public class EditorFixtureMap : EditorWindow
         }
 
         HandleMouseEvents(rect);
+
+        // Clip drawing to canvas bounds to prevent zoomed content from overflowing.
+        GUI.BeginClip(rect);
         DrawGroups();
         DrawFixtures();
+        GUI.EndClip();
     }
 
     private void HandleMouseEvents(Rect rect)
@@ -784,13 +788,13 @@ public class EditorFixtureMap : EditorWindow
         if (driverTyped.PropsTransform != null)
             brightness = Mathf.InverseLerp(0f, definitionTyped.Profile.BrightnessMax, driverTyped.PropsTransform.localScale.x);
 
-        // Fill colour has alpha modulated by brightness; outline is always opaque.
+        // Fill and outline colours have alpha modulated by brightness.
         Color fillColor = emissionColor;
         fillColor.a = brightness;
         Color outlineColor = emissionColor;
-        outlineColor.a = 1f;
+        outlineColor.a = brightness * 0.5f + 0.5f;
 
-        float padding = 12f * _zoom;
+        float padding = 8f * _zoom;
         var innerCorners = new Vector3[]
         {
             new(corners[0].x + padding * rotationZ, corners[0].y + padding * rotationX),

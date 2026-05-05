@@ -482,21 +482,29 @@ public class EditorTempoMonitor : EditorWindow
     // Steps the cursor forward or backward by the current step amount and unit.
     private void Step(int direction)
     {
-        if (_stepUnit == StepUnit.Frames)
-        {
-            // Operate on integer frames directly to avoid weird float drift.
-            SeekToNorm((float)(AnimationWindowFrame + direction * _stepAmount) / ClipTotalFrames);
-            return;
-        }
-        float deltaSecs = 0f;
+        int totalFrames = ClipTotalFrames;
+        if (SongTotalBeats <= 0 || totalFrames <= 0) return;
+
+        // Operate in frame space for all units except Seconds to avoid accumulating float error.
+        // Frame-to-beat ratio is derived from SongTotalBeats (which is based on musical time).
+        int framesPerBeat = totalFrames / SongTotalBeats;
+        int deltaFrames = 0;
+
         switch (_stepUnit)
         {
-            case StepUnit.Measures: deltaSecs = _stepAmount * _beatsPerMeasure * _ticksPerBeat * SecondsPerTick; break;
-            case StepUnit.Beats: deltaSecs = _stepAmount * _ticksPerBeat * SecondsPerTick; break;
-            case StepUnit.Ticks: deltaSecs = _stepAmount * SecondsPerTick; break;
-            case StepUnit.Seconds: deltaSecs = _stepAmount; break;
+            case StepUnit.Frames: deltaFrames = direction * _stepAmount; break;
+            case StepUnit.Beats: deltaFrames = direction * _stepAmount * framesPerBeat; break;
+            case StepUnit.Measures: deltaFrames = direction * _stepAmount * _beatsPerMeasure * framesPerBeat; break;
+            case StepUnit.Ticks: deltaFrames = direction * _stepAmount * (framesPerBeat / _ticksPerBeat); break;
+            case StepUnit.Seconds:
+                // Seconds still uses float time since stepping by fractional frames is awkward.
+                float deltaSecs = _stepAmount * direction;
+                SeekToSongSeconds(NormToSongSeconds(CurrentNormTime) + deltaSecs);
+                return;
         }
-        SeekToSongSeconds(NormToSongSeconds(CurrentNormTime) + direction * deltaSecs);
+
+        int newFrame = Mathf.Clamp(AnimationWindowFrame + deltaFrames, 0, totalFrames - 1);
+        SeekToNorm((float)newFrame / totalFrames);
     }
 
     // --- Time maths ---------------------------------------------------

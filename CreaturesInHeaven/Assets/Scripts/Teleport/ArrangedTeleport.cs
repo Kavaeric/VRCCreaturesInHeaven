@@ -222,7 +222,7 @@ public class ArrangedTeleport : UdonSharpBehaviour
                 // Use the playspace origin rotation rather than GetRotation(), which in VR can return the HMD
                 // yaw rather than the playspace/locomotion rotation — causing misalignment for FBT users.
                 Quaternion sourceRotation = Networking.LocalPlayer.IsUserInVR()
-                    ? Networking.LocalPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.Origin).rotation
+                    ? Networking.LocalPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.Head).rotation
                     : Networking.LocalPlayer.GetRotation();
                 Quaternion delta = teleportSlots[slotIndex].rotation * Quaternion.Inverse(entry.rotation);
                 return delta * sourceRotation;

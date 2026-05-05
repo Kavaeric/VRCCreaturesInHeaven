@@ -607,28 +607,51 @@ public class EditorFixtureMap : EditorWindow
 
             if (groupHit >= 0)
             {
-                // Collect the resolved scene objects for all member fixtures.
-                var members = new List<UnityEngine.Object>();
+                // Collect all objects to select for the group's member fixtures (root + head + props).
+                var toSelect = new List<UnityEngine.Object>();
                 foreach (int fi in _groups[groupHit].fixtures)
-                    if (fi >= 0 && fi < _fixtureObjects.Count && _fixtureObjects[fi] != null)
-                        members.Add(_fixtureObjects[fi]);
+                {
+                    if (fi < 0 || fi >= _fixtureObjects.Count) continue;
+                    var fixtureRoot = _fixtureObjects[fi];
+                    if (fixtureRoot == null) continue;
 
-                if (members.Count > 0)
+                    toSelect.Add(fixtureRoot);
+
+                    // Include head and props transform from cached driver
+                    if (fi < _fixtureDrivers.Count)
+                    {
+                        var driver = _fixtureDrivers[fi] as FixtureDriver;
+                        if (driver != null)
+                        {
+                            if (driver.Head != null)
+                                toSelect.Add(driver.Head.gameObject);
+                            if (driver.PropsTransform != null)
+                                toSelect.Add(driver.PropsTransform.gameObject);
+                        }
+                    }
+                }
+
+                if (toSelect.Count > 0)
                 {
                     if (additive)
                     {
-                        // Determine whether the group is currently fully selected; if so, remove all members.
+                        // Determine whether all fixture roots are currently selected; if so, remove all members.
                         var current = new HashSet<UnityEngine.Object>(Selection.objects);
-                        bool allSelected = members.TrueForAll(m => current.Contains(m));
+                        var rootsOnly = new List<UnityEngine.Object>();
+                        foreach (int fi in _groups[groupHit].fixtures)
+                            if (fi >= 0 && fi < _fixtureObjects.Count && _fixtureObjects[fi] != null)
+                                rootsOnly.Add(_fixtureObjects[fi]);
+
+                        bool allSelected = rootsOnly.TrueForAll(m => current.Contains(m));
                         if (allSelected)
-                            foreach (var m in members) current.Remove(m);
+                            foreach (var obj in toSelect) current.Remove(obj);
                         else
-                            foreach (var m in members) current.Add(m);
+                            foreach (var obj in toSelect) current.Add(obj);
                         Selection.objects = new List<UnityEngine.Object>(current).ToArray();
                     }
                     else
                     {
-                        Selection.objects = members.ToArray();
+                        Selection.objects = toSelect.ToArray();
                     }
                 }
             }
@@ -657,12 +680,23 @@ public class EditorFixtureMap : EditorWindow
     {
         var toSelect = new List<UnityEngine.Object>();
 
-        // Include the fixture itself plus all its children for animation filtering
         if (obj is GameObject go)
         {
             toSelect.Add(go);
-            foreach (Transform child in go.transform)
-                toSelect.Add(child.gameObject);
+
+            // Find the fixture index to access cached driver
+            int fixtureIndex = _fixtureObjects.IndexOf(go);
+            if (fixtureIndex >= 0 && fixtureIndex < _fixtureDrivers.Count)
+            {
+                var driver = _fixtureDrivers[fixtureIndex] as FixtureDriver;
+                if (driver != null)
+                {
+                    if (driver.Head != null)
+                        toSelect.Add(driver.Head.gameObject);
+                    if (driver.PropsTransform != null)
+                        toSelect.Add(driver.PropsTransform.gameObject);
+                }
+            }
         }
         else
         {

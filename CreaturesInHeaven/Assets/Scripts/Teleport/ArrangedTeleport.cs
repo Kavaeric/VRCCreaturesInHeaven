@@ -219,8 +219,7 @@ public class ArrangedTeleport : UdonSharpBehaviour
 
             case ArrangedTeleportRotationMode.Relative:
                 // Apply the rotation delta from the entry zone to the slot, onto the player's current rotation.
-                // Use the playspace origin rotation rather than GetRotation(), which in VR can return the HMD
-                // yaw rather than the playspace/locomotion rotation — causing misalignment for FBT users.
+                // If the user is in VR, use their head/look direction as the rotation to preserve sightlines.
                 Quaternion sourceRotation = Networking.LocalPlayer.IsUserInVR()
                     ? Networking.LocalPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.Head).rotation
                     : Networking.LocalPlayer.GetRotation();

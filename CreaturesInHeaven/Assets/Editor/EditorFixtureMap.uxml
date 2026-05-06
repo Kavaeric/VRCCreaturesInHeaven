@@ -1,64 +1,74 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="True">
-    <Style src="project://database/Assets/Editor/EditorUI.uss" />
-    <Style src="project://database/Assets/Editor/EditorFixtureMap.uss" />
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <Style src="project://database/Assets/Editor/EditorUI.uss?fileID=7433441132597879392&amp;guid=b9f43742e4ba8304d822ab8016934b7e&amp;type=3#EditorUI" />
+    <Style src="project://database/Assets/Editor/EditorFixtureMap.uss?fileID=7433441132597879392&amp;guid=30383f93acab33e42aba5ac646f53ad8&amp;type=3#EditorFixtureMap" />
     <ui:VisualElement class="col grow p-2" style="height: 100%;">
-
-        <!-- Header toolbar -->
         <ui:VisualElement class="row items-center">
             <ui:Button name="load-btn" text="Load map…" class="btn-sm shrink-0" />
             <ui:VisualElement class="w-2" />
             <ui:Label name="map-path-label" text="No map loaded" class="text-sm text-muted grow" />
             <ui:Button name="reload-btn" text="↺" class="btn-icon-sm shrink-0" />
         </ui:VisualElement>
-
         <ui:VisualElement class="h-2" />
-
-        <!-- Canvas area -->
         <ui:IMGUIContainer name="canvas" class="grow canvas" />
-
-        <!-- Footer toolbar -->
         <ui:VisualElement class="h-2" />
-
         <ui:VisualElement class="row items-center">
+            <ui:VisualElement class="col grow">
+                <ui:Label text="Selection groups" class="font-bold" />
+                <ui:VisualElement class="col" style="flex-grow: 1;">
+                    <ui:VisualElement class="row" style="flex-grow: 1;">
+                        <ui:Button text="Create new..." class="btn-sm" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                        <ui:Button text="Rename..." class="btn-sm" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                        <ui:VisualElement class="grow" />
+                        <ui:Button text="Delete" class="btn-sm btn-danger" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                    </ui:VisualElement>
 
+                    <ui:VisualElement class="h-1" />
+                    <ui:ListView />
+                    <ui:VisualElement class="h-1" />
+                    
+                    <ui:Button text="Select this group" class="btn-sm" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                    <ui:VisualElement class="h-0p5" />
+                    <ui:Button text="Deselect this group" class="btn-sm" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                    <ui:VisualElement class="h-0p5" />
+                    <ui:Button text="Add 0 fixture(s) to this group" class="btn-sm" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                    <ui:VisualElement class="h-0p5" />
+                    <ui:Button text="Remove 0 fixture(s) from this group" class="btn-sm" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="h-2" />
+        <ui:VisualElement class="separator" />
+        <ui:VisualElement class="h-2" />
+        <ui:VisualElement class="row items-center">
             <ui:VisualElement class="col">
-                <ui:Label class="font-bold" text="Flip y-axis" />
+                <ui:Label text="Flip y-axis" class="font-bold" />
                 <ui:VisualElement class="h-0p5" />
                 <ui:Toggle name="flip-y-toggle" />
             </ui:VisualElement>
-
             <ui:VisualElement class="w-1" />
-            
             <ui:VisualElement class="col">
-                <ui:Label class="font-bold" text="Minimum gap" />
+                <ui:Label text="Minimum gap" class="font-bold" />
                 <ui:VisualElement class="h-0p5" />
-                <ui:FloatField name="min-gap-field"/>
+                <ui:FloatField name="min-gap-field" />
             </ui:VisualElement>
-
             <ui:VisualElement class="w-1" />
-
             <ui:VisualElement class="col">
-                <ui:Label class="font-bold" text="Gap compression" />
+                <ui:Label text="Gap compression" class="font-bold" />
                 <ui:VisualElement class="h-0p5" />
-                <ui:FloatField name="gap-compression-k-field"/>
+                <ui:FloatField name="gap-compression-k-field" />
             </ui:VisualElement>
-
             <ui:VisualElement class="w-1" />
-
             <ui:VisualElement class="col">
-                <ui:Label class="font-bold" text="Node compression threshold" />
+                <ui:Label text="Node compression threshold" class="font-bold" />
                 <ui:VisualElement class="h-0p5" />
-                <ui:FloatField name="node-compression-threshold-field"/>
+                <ui:FloatField name="node-compression-threshold-field" />
             </ui:VisualElement>
-
             <ui:VisualElement class="w-1" />
-
             <ui:VisualElement class="col">
-                <ui:Label class="font-bold" text="Node compression" />
+                <ui:Label text="Node compression" class="font-bold" />
                 <ui:VisualElement class="h-0p5" />
-                <ui:FloatField name="node-compression-k-field"/>
+                <ui:FloatField name="node-compression-k-field" />
             </ui:VisualElement>
         </ui:VisualElement>
-
     </ui:VisualElement>
 </ui:UXML>

@@ -134,6 +134,22 @@ Button.btn-icon-sm {
     margin: 0;
 }
 
+Button.btn-danger {
+    background-color: #522;
+}
+
+Button.btn-danger:hover {
+    background-color: #633;
+}
+
+Button.btn-danger:active {
+    background-color: #722;
+}
+
+Button.btn-danger:focus {
+    border-color: #f66;
+}
+
 EnumField {
     cursor: link;
 }

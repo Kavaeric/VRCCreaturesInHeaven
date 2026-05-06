@@ -160,7 +160,7 @@ public class EditorFixtureMap : EditorWindow
     private float _gapCompressionK          = 2f;
     private float _nodeCompressionK         = 5f;
     private float _nodeCompressionThreshold = 4f;
-    private bool  _flipY                    = true;
+    private bool  _flipY                    = false;
 
 
     // --- Lifecycle ---------------------------------------------------

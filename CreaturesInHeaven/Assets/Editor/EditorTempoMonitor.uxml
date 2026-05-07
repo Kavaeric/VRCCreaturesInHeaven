@@ -20,9 +20,9 @@
                         <ui:VisualElement class="w-0p5" />
                         <ui:Button name="stop-btn" text="Stop" class="grow shrink-0" />
                         <ui:VisualElement class="w-2" />
-                        <ui:Button name="step-back-btn" text="◀" class="btn-icon-md" />
+                        <ui:Button name="step-back-btn" text="◀" class="btn-icon-md" tooltip="Step backward this amount in the animation window" />
                         <ui:VisualElement class="w-0p5" />
-                        <ui:Button name="step-fwd-btn" text="▶" class="btn-icon-md" />
+                        <ui:Button name="step-fwd-btn" text="▶" class="btn-icon-md" tooltip="Step forward this amount in the animation window" />
                         <ui:VisualElement class="w-0p5" />
                         <uie:IntegerField name="step-amount" value="1" class="w-10" />
                         <ui:VisualElement class="w-0p5" />

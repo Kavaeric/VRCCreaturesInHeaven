@@ -118,10 +118,15 @@ public class EditorFixtureMap : EditorWindow
     private double                     _lastRepaintTime      = 0;
     private const double               RepaintIntervalMs     = 30;
 
-    // Canvas layout — recomputed when fixtures load or the canvas resizes.
-    private Vector2               _canvasSize;
+    // Logical layout — recomputed when fixtures load or layout parameters change.
     private List<FixtureLayout>   _fixtureLayouts = new();
     private List<GroupLayout>     _groupLayouts   = new();
+    private Rect                  _logicalBounds  = new();  // bounding rect in logical space
+
+    // Viewport — recomputed when canvas resizes. Transforms logical space to screen space.
+    private Vector2               _canvasSize;
+    private float                 _logicalScale   = 1f;  // scale factor from logical to screen space
+    private Vector2               _logicalOffset  = Vector2.zero;  // screen offset of logical origin
 
     // Pan and zoom
     private float                 _zoom           = 1f;
@@ -175,8 +180,8 @@ public class EditorFixtureMap : EditorWindow
     // Minimum margin from canvas edge to outermost node centre.
     private const float CanvasPadding = 20f;
 
-    // Pixels of margin around outermost node edges when drawing a group box.
-    private const float GroupMargin = 12f;
+    // Margin around outermost node edges when drawing a group box.
+    private const float GroupMargin = 0.1f;
 
     // Selection groups file extension
     private string SelectionsPath => string.IsNullOrEmpty(_mapPath) ? null : _mapPath + ".selections.json";
@@ -230,7 +235,7 @@ public class EditorFixtureMap : EditorWindow
 
         _canvas = rootVisualElement.Q<IMGUIContainer>("canvas");
         _canvas.onGUIHandler = DrawCanvas;
-        _canvas.RegisterCallback<GeometryChangedEvent>(_ => RecalculateLayout());
+        _canvas.RegisterCallback<GeometryChangedEvent>(_ => UpdateViewport());
 
         rootVisualElement.Q<Button>("load-btn").clicked   += PromptLoad;
         rootVisualElement.Q<Button>("reload-btn").clicked += Reload;
@@ -251,7 +256,8 @@ public class EditorFixtureMap : EditorWindow
         flipYToggle.RegisterValueChangedCallback(e =>
         {
             _flipY = e.newValue;
-            RecalculateLayout();
+            ComputeLogicalLayout();
+            UpdateViewport();
             _canvas.MarkDirtyRepaint();
         });
 
@@ -335,8 +341,9 @@ public class EditorFixtureMap : EditorWindow
             sw.Restart();
             _zoom = 1f;
             _panOffset = Vector2.zero;
-            RecalculateLayout();
-            Debug.Log($"  [EditorFixtureMap] RecalculateLayout: {sw.ElapsedMilliseconds}ms");
+            ComputeLogicalLayout();
+            UpdateViewport();
+            Debug.Log($"  [EditorFixtureMap] ComputeLogicalLayout: {sw.ElapsedMilliseconds}ms");
 
             LoadSelectionGroups();
             RefreshSgList();
@@ -452,14 +459,10 @@ public class EditorFixtureMap : EditorWindow
 
     // --- Layout ------------------------------------------------------
 
-    private void RecalculateLayout()
+    // Recompute logical layout from fixture data. Called when fixtures or parameters change.
+    private void ComputeLogicalLayout()
     {
         if (_fixtures == null || _fixtures.Count == 0) return;
-
-        Rect rect = _canvas.contentRect;
-        if (rect.width <= 0 || rect.height <= 0) return;
-
-        _canvasSize = new Vector2(rect.width, rect.height);
 
         // Build sorted lists of unique X and Y world positions.
         var uniqueX = new List<float>();
@@ -495,45 +498,29 @@ public class EditorFixtureMap : EditorWindow
         var centresX = SweepAxis(uniqueX.ToArray(), worldSizesX, nodeSizesX, _minGap, _gapCompressionK);
         var centresY = SweepAxis(uniqueY.ToArray(), worldSizesY, nodeSizesY, _minGap, _gapCompressionK);
 
-        // Bounding box derived from sweep results.
+        // Compute logical-space bounding box.
         float layoutMinX = centresX[0]        - nodeSizesX[0]        * 0.5f;
         float layoutMaxX = centresX[cols - 1] + nodeSizesX[cols - 1] * 0.5f;
         float layoutMinY = centresY[0]        - nodeSizesY[0]        * 0.5f;
         float layoutMaxY = centresY[rows - 1] + nodeSizesY[rows - 1] * 0.5f;
-        float spanX = layoutMaxX - layoutMinX;
-        float spanY = layoutMaxY - layoutMinY;
+        _logicalBounds = new Rect(layoutMinX, layoutMinY, layoutMaxX - layoutMinX, layoutMaxY - layoutMinY);
 
-        // Fit the layout uniformly into the canvas, respecting CanvasPadding.
-        float usableW = _canvasSize.x - CanvasPadding * 2f;
-        float usableH = _canvasSize.y - CanvasPadding * 2f;
-        float scale   = Mathf.Min(usableW / spanX, usableH / spanY);
-
-        // Centre the layout on the canvas.
-        float offsetX = _canvasSize.x * 0.5f - (layoutMinX + spanX * 0.5f) * scale;
-        float offsetY = _canvasSize.y * 0.5f - (layoutMinY + spanY * 0.5f) * scale;
-
+        // Create fixture layouts in logical space (no viewport scaling).
         _fixtureLayouts = new List<FixtureLayout>(_fixtures.Count);
         foreach (var f in _fixtures)
         {
             int xi = uniqueX.IndexOf(f.position.x);
             int yi = uniqueY.IndexOf(f.position.y);
-
             int yiFlipped = _flipY ? rows - 1 - yi : yi;
-
-            float px = offsetX + centresX[xi] * scale;
-            float py = offsetY + centresY[yiFlipped] * scale;
 
             _fixtureLayouts.Add(new FixtureLayout
             {
-                centre  = new Vector2(px, py),
-                halfExt = new Vector2(
-                    nodeSizesX[xi] * 0.5f * scale,
-                    nodeSizesY[yi] * 0.5f * scale
-                ),
+                centre  = new Vector2(centresX[xi], centresY[yiFlipped]),
+                halfExt = new Vector2(nodeSizesX[xi] * 0.5f, nodeSizesY[yi] * 0.5f),
             });
         }
 
-        // --- Group viewmodel ---
+        // Create group layouts in logical space.
         _groupLayouts = new List<GroupLayout>(_groups.Count);
         foreach (var g in _groups)
         {
@@ -547,7 +534,7 @@ public class EditorFixtureMap : EditorWindow
             float gMinY = float.MaxValue, gMaxY = float.MinValue;
             bool any = false;
 
-            // Compute bounding box in viewmodel space from fixture layouts
+            // Compute bounding box in logical space from fixture layouts
             foreach (int fi in g.fixtures)
             {
                 if (fi < 0 || fi >= _fixtureLayouts.Count) continue;
@@ -583,6 +570,27 @@ public class EditorFixtureMap : EditorWindow
         }
     }
 
+    // Update viewport transformation to fit logical layout into current canvas. Called on canvas resize.
+    private void UpdateViewport()
+    {
+        Rect rect = _canvas.contentRect;
+        if (rect.width <= 0 || rect.height <= 0) return;
+        if (_logicalBounds.width <= 0 || _logicalBounds.height <= 0) return;
+
+        _canvasSize = new Vector2(rect.width, rect.height);
+
+        // Fit the layout uniformly into the canvas, respecting CanvasPadding.
+        float usableW = _canvasSize.x - CanvasPadding * 2f;
+        float usableH = _canvasSize.y - CanvasPadding * 2f;
+        _logicalScale = Mathf.Min(usableW / _logicalBounds.width, usableH / _logicalBounds.height);
+
+        // Centre the layout on the canvas.
+        _logicalOffset = new Vector2(
+            _canvasSize.x * 0.5f - (_logicalBounds.xMin + _logicalBounds.width * 0.5f) * _logicalScale,
+            _canvasSize.y * 0.5f - (_logicalBounds.yMin + _logicalBounds.height * 0.5f) * _logicalScale
+        );
+    }
+
     // --- Drawing -----------------------------------------------------
 
     private void DrawCanvas()
@@ -594,7 +602,7 @@ public class EditorFixtureMap : EditorWindow
 
         if (!Mathf.Approximately(rect.width, _canvasSize.x) ||
             !Mathf.Approximately(rect.height, _canvasSize.y))
-            RecalculateLayout();
+            UpdateViewport();
 
         if (_fixtures == null || _fixtures.Count == 0)
         {
@@ -829,7 +837,7 @@ public class EditorFixtureMap : EditorWindow
             Color fill    = selected ? _theme.groupFill_Active.ToColor()   : _theme.groupFill.ToColor();
             Color outline = selected ? _theme.groupOutline_Active.ToColor() : _theme.groupOutline.ToColor();
 
-            // Transform from viewmodel space to screen space (applying zoom and pan)
+            // Transform from logical space to screen space (applying viewport fit, zoom, and pan)
             Vector2 minScreen = ToScreen(new Vector2(r.xMin, r.yMin));
             Vector2 maxScreen = ToScreen(new Vector2(r.xMax, r.yMax));
             var corners = new Vector3[]
@@ -873,10 +881,11 @@ public class EditorFixtureMap : EditorWindow
         float dpw = layout.halfExt.x;
         float dpd = layout.halfExt.y;
 
-        // Apply zoom and pan transform
+        // Transform centre from logical to screen space
         Vector2 ps = ToScreen(p);
-        float dpws = dpw * _zoom;
-        float dpds = dpd * _zoom;
+        // Half-extents scale with viewport fit and zoom
+        float dpws = dpw * _logicalScale * _zoom;
+        float dpds = dpd * _logicalScale * _zoom;
 
         // Corners: top-left, top-right, bottom-right, bottom-left (clockwise).
         var corners = new Vector3[]
@@ -928,7 +937,7 @@ public class EditorFixtureMap : EditorWindow
         Color outlineColor = emissionColor;
         outlineColor.a = brightness * 0.5f + 0.5f;
 
-        float padding = 8f * _zoom;
+        float padding = .06f * _logicalScale * _zoom;
         var innerCorners = new Vector3[]
         {
             new(corners[0].x + padding * rotationZ, corners[0].y + padding * rotationX),
@@ -1189,13 +1198,13 @@ public class EditorFixtureMap : EditorWindow
 
     // --- Mapping functions -----------------------------------------------
 
-    // Transform from layout space to screen space (applying zoom and pan)
-    private Vector2 ToScreen(Vector2 layoutPt)
-        => layoutPt * _zoom + _panOffset;
+    // Transform from logical space to screen space (applying viewport fit, then zoom and pan)
+    private Vector2 ToScreen(Vector2 logicalPt)
+        => (logicalPt * _logicalScale + _logicalOffset) * _zoom + _panOffset;
 
-    // Transform from screen space to layout space (inverse of ToScreen)
+    // Transform from screen space to logical space (inverse of ToScreen)
     private Vector2 ToLayout(Vector2 screenPt)
-        => (screenPt - _panOffset) / _zoom;
+        => ((screenPt - _panOffset) / _zoom - _logicalOffset) / _logicalScale;
 
     // Compresses a distance, preserving values up to minDistance and soft-capping beyond it.
     // k controls compression strength: 0 = passthrough, higher = more aggressive.
@@ -1259,7 +1268,8 @@ public class EditorFixtureMap : EditorWindow
         field.RegisterValueChangedCallback(e =>
         {
             setter(e.newValue);
-            RecalculateLayout();
+            ComputeLogicalLayout();
+            UpdateViewport();
             _canvas.MarkDirtyRepaint();
         });
     }

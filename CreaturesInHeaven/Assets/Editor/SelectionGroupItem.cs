@@ -162,15 +162,24 @@ public class SelectionGroupItem : VisualElement
     // Update the background icon based on how many fixtures in the group are selected.
     public void SetSelectionState(int selectedCount, int totalCount)
     {
-        string iconPath;
+        // string iconPath;
         if (selectedCount == 0)
-            iconPath = "Assets/Editor/Icons/Selected unselected.png";
+        {
+            _itemButton.RemoveFromClassList("sg-item-btn--selected");
+            _itemButton.RemoveFromClassList("sg-item-btn--partial");
+            _itemButton.AddToClassList("sg-item-btn--none");
+        }
         else if (selectedCount == totalCount)
-            iconPath = "Assets/Editor/Icons/Selected full.png";
+        {
+            _itemButton.RemoveFromClassList("sg-item-btn--selected");
+            _itemButton.RemoveFromClassList("sg-item-btn--none");
+            _itemButton.AddToClassList("sg-item-btn--selected");
+        }
         else
-            iconPath = "Assets/Editor/Icons/Selected partial.png";
-
-        var icon = AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
-        _itemButton.style.backgroundImage = new StyleBackground(icon);
+        {
+            _itemButton.RemoveFromClassList("sg-item-btn--selected");
+            _itemButton.RemoveFromClassList("sg-item-btn--none");
+            _itemButton.AddToClassList("sg-item-btn--partial");
+        }
     }
 }

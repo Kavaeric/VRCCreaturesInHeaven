@@ -36,6 +36,18 @@
     border-color: rgba(141, 104, 255, 0.8);
 }
 
+.sg-item-btn--none {
+    background-image: url('Icons/SelectedNone.png');
+}
+
+.sg-item-btn--partial {
+    background-image: url('Icons/SelectedPartial.png');
+}
+
+.sg-item-btn--selected {
+    background-image: url('Icons/SelectedFull.png');
+}
+
 .sg-item .btn-icon-sm {
     background-size: 18px;
 }

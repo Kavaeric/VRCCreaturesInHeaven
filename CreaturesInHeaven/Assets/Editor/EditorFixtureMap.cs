@@ -73,17 +73,20 @@ public class EditorFixtureMap : EditorWindow
 
         public static Theme Default() => new Theme
         {
-            nodeFill = new ThemeColour { r = 0.90f, g = 0.85f, b = 1.00f, a = 0.50f },
-            nodeOutline = new ThemeColour { r = 1.00f, g = 1.00f, b = 1.00f, a = 1.00f },
-            nodeFill_Active = new ThemeColour { r = 0.90f, g = 0.75f, b = 1.00f, a = 0.85f },
-            nodeOutline_Active = new ThemeColour { r = 0.80f, g = 0.60f, b = 1.00f, a = 1.00f },
-            nodeLabel = new ThemeColour { r = 1.00f, g = 1.00f, b = 1.00f, a = 0.75f },
-            groupFill = new ThemeColour { r = 0.90f, g = 0.85f, b = 1.00f, a = 0.50f },
-            groupOutline = new ThemeColour { r = 1.00f, g = 1.00f, b = 1.00f, a = 1.00f },
-            groupFill_Active = new ThemeColour { r = 0.90f, g = 0.75f, b = 1.00f, a = 0.85f },
-            groupOutline_Active = new ThemeColour { r = 0.80f, g = 0.60f, b = 1.00f, a = 1.00f },
-            groupLabel = new ThemeColour { r = 1.00f, g = 1.00f, b = 1.00f, a = 0.75f },
+            nodeFill = CreateThemeColour(0.90f, 0.85f, 1.00f, 0.50f),
+            nodeOutline = CreateThemeColour(1.00f, 1.00f, 1.00f, 1.00f),
+            nodeFill_Active = CreateThemeColour(0.90f, 0.75f, 1.00f, 0.85f),
+            nodeOutline_Active = CreateThemeColour(0.80f, 0.60f, 1.00f, 1.00f),
+            nodeLabel = CreateThemeColour(1.00f, 1.00f, 1.00f, 0.75f),
+            groupFill = CreateThemeColour(0.90f, 0.85f, 1.00f, 0.50f),
+            groupOutline = CreateThemeColour(1.00f, 1.00f, 1.00f, 1.00f),
+            groupFill_Active = CreateThemeColour(0.90f, 0.75f, 1.00f, 0.85f),
+            groupOutline_Active = CreateThemeColour(0.80f, 0.60f, 1.00f, 1.00f),
+            groupLabel = CreateThemeColour(1.00f, 1.00f, 1.00f, 0.75f),
         };
+
+        private static ThemeColour CreateThemeColour(float r, float g, float b, float a)
+            => new ThemeColour { r = r, g = g, b = b, a = a };
     }
 
     private const string ThemePath = "Assets/Editor/EditorFixtureMapTheme.json";
@@ -156,23 +159,18 @@ public class EditorFixtureMap : EditorWindow
     private void EnsureStyles()
     {
         if (_nodeLabelStyle != null) return;
-        _nodeLabelStyle = new GUIStyle(GUI.skin.label)
+        _nodeLabelStyle = CreateLabelStyle(TextAnchor.UpperCenter, 10, _theme.nodeLabel.ToColor());
+        _groupLabelStyle = CreateLabelStyle(TextAnchor.UpperCenter, 10, _theme.groupLabel.ToColor());
+        _emptyStateStyle = CreateLabelStyle(TextAnchor.MiddleCenter, 12, new Color(1f, 1f, 1f, 0.25f));
+    }
+
+    private static GUIStyle CreateLabelStyle(TextAnchor alignment, int fontSize, Color textColor)
+    {
+        return new GUIStyle(GUI.skin.label)
         {
-            alignment = TextAnchor.UpperCenter,
-            fontSize  = 10,
-            normal    = { textColor = _theme.nodeLabel.ToColor() },
-        };
-        _groupLabelStyle = new GUIStyle(GUI.skin.label)
-        {
-            alignment = TextAnchor.UpperCenter,
-            fontSize  = 10,
-            normal    = { textColor = _theme.groupLabel.ToColor() },
-        };
-        _emptyStateStyle = new GUIStyle(GUI.skin.label)
-        {
-            alignment = TextAnchor.MiddleCenter,
-            fontSize  = 12,
-            normal    = { textColor = new Color(1f, 1f, 1f, 0.25f) },
+            alignment = alignment,
+            fontSize = fontSize,
+            normal = { textColor = textColor },
         };
     }
 
@@ -700,50 +698,16 @@ public class EditorFixtureMap : EditorWindow
 
             if (groupHit >= 0)
             {
-                // Collect all objects to select for the group's member fixtures (root + head + props).
                 var toSelect = new List<UnityEngine.Object>();
                 foreach (int fi in _groups[groupHit].fixtures)
                     CollectFixtureObjects(fi, toSelect);
 
-                if (toSelect.Count > 0)
-                {
-                    if (additive)
-                    {
-                        // Determine whether all fixture roots are currently selected; if so, remove all members.
-                        var current = new HashSet<UnityEngine.Object>(Selection.objects);
-                        var rootsOnly = new List<UnityEngine.Object>();
-                        foreach (int fi in _groups[groupHit].fixtures)
-                            if (fi >= 0 && fi < _fixtureObjects.Count && _fixtureObjects[fi] != null)
-                                rootsOnly.Add(_fixtureObjects[fi]);
-
-                        bool allSelected = rootsOnly.TrueForAll(m => current.Contains(m));
-                        if (allSelected)
-                            foreach (var obj in toSelect) current.Remove(obj);
-                        else
-                            foreach (var obj in toSelect) current.Add(obj);
-                        Selection.objects = new List<UnityEngine.Object>(current).ToArray();
-                    }
-                    else
-                    {
-                        Selection.objects = toSelect.ToArray();
-                    }
-                }
+                SetFixtureSelection(toSelect, additive ? SelectionMode.SmartToggle : SelectionMode.Replace);
             }
             else
             {
-                // Click on blank canvas
-                if (doubleClick)
-                {
-                    // Double-click resets zoom and pan
-                    _zoom = 1f;
-                    _panOffset = Vector2.zero;
-                    _canvas.MarkDirtyRepaint();
-                }
-                else
-                {
-                    // Single-click deselects all
-                    Selection.objects = Array.Empty<UnityEngine.Object>();
-                }
+                // Single-click deselects all
+                Selection.objects = Array.Empty<UnityEngine.Object>();
             }
         }
 
@@ -764,23 +728,78 @@ public class EditorFixtureMap : EditorWindow
             toSelect.Add(obj);
         }
 
-        if (additive)
+        SetFixtureSelection(toSelect, additive ? SelectionMode.Toggle : SelectionMode.Replace);
+    }
+
+    private enum SelectionMode
+    {
+        Replace,      // Clear selection and select only these objects
+        Toggle,       // For each object: if selected, deselect; otherwise select (per-item toggle)
+        Add,          // Add these objects to current selection
+        Remove,       // Remove these objects from current selection
+        SmartToggle,  // If all objects already selected, deselect all; otherwise select all (group toggle)
+    }
+
+    // Unified selection handler for all selection operations (diagram clicks, UI buttons, etc).
+    // Collects the desired objects and delegates to this method with the appropriate mode.
+    private void SetFixtureSelection(List<UnityEngine.Object> fixtures, SelectionMode mode)
+    {
+        if (fixtures.Count == 0) return;
+
+        var current = new HashSet<UnityEngine.Object>(Selection.objects);
+
+        switch (mode)
         {
-            var current = new List<UnityEngine.Object>(Selection.objects);
-            foreach (var item in toSelect)
-                if (current.Contains(item)) current.Remove(item);
-                else current.Add(item);
-            Selection.objects = current.ToArray();
-        }
-        else
-        {
-            Selection.objects = toSelect.ToArray();
+            case SelectionMode.Replace:
+                // Non-additive fixture/group clicks, "Select group" button.
+                Selection.objects = fixtures.ToArray();
+                break;
+
+            case SelectionMode.Toggle:
+                // Toggle or invert each individual fixture's selection state.
+                foreach (var fixture in fixtures)
+                    if (current.Contains(fixture)) current.Remove(fixture);
+                    else current.Add(fixture);
+                Selection.objects = new List<UnityEngine.Object>(current).ToArray();
+                break;
+
+            case SelectionMode.Add:
+                // Adds the fixtures to the current pool of selected fixtures.
+                foreach (var fixture in fixtures) current.Add(fixture);
+                Selection.objects = new List<UnityEngine.Object>(current).ToArray();
+                break;
+
+            case SelectionMode.Remove:
+                // Removes the specified fixtures from the current pool.
+                foreach (var fixture in fixtures) current.Remove(fixture);
+                Selection.objects = new List<UnityEngine.Object>(current).ToArray();
+                break;
+
+            case SelectionMode.SmartToggle:
+                // Ddeselect all if already all selected, else select all.
+                bool allSelected = fixtures.TrueForAll(obj => current.Contains(obj));
+                if (allSelected)
+                    foreach (var fixture in fixtures) current.Remove(fixture);
+                else
+                    foreach (var fixture in fixtures) current.Add(fixture);
+                Selection.objects = new List<UnityEngine.Object>(current).ToArray();
+                break;
         }
     }
+
 
     private void DrawEmptyState(Rect rect)
     {
         GUI.Label(rect, "No fixture map loaded.\nUse Load map… to open a FixtureMap.json.", _emptyStateStyle);
+    }
+
+    private bool IsGroupSelected(GroupEntry group, HashSet<UnityEngine.Object> selectionSet)
+    {
+        return group.fixtures != null && group.fixtures.Count > 0 &&
+               group.fixtures.TrueForAll(fi =>
+                   fi >= 0 && fi < _fixtureObjects.Count &&
+                   _fixtureObjects[fi] != null &&
+                   selectionSet.Contains(_fixtureObjects[fi]));
     }
 
     private void DrawGroups()
@@ -793,14 +812,8 @@ public class EditorFixtureMap : EditorWindow
             if (!gl.valid) continue;
             Rect r = gl.rect;
 
-            // A group is "selected" when all its member fixtures are in the selection.
-            // In reality the actual FixtureGroup object in the scene isn't ever selected.
             var g = _groups[gi];
-            bool selected = g.fixtures != null && g.fixtures.Count > 0 &&
-                            g.fixtures.TrueForAll(fi =>
-                                fi >= 0 && fi < _fixtureObjects.Count &&
-                                _fixtureObjects[fi] != null &&
-                                selectionSet.Contains(_fixtureObjects[fi]));
+            bool selected = IsGroupSelected(g, selectionSet);
 
             Color fill    = selected ? _theme.groupFill_Active.ToColor()   : _theme.groupFill.ToColor();
             Color outline = selected ? _theme.groupOutline_Active.ToColor() : _theme.groupOutline.ToColor();
@@ -1125,18 +1138,15 @@ public class EditorFixtureMap : EditorWindow
         if (_selectedGroupIndex < 0) return;
         var group = _selectionGroups[_selectedGroupIndex];
         var objects = GroupFixtureObjects(group);
-        if (objects.Count > 0)
-            Selection.objects = objects.ToArray();
+        SetFixtureSelection(objects, SelectionMode.Replace);
     }
 
     private void OnSgDeselect()
     {
         if (_selectedGroupIndex < 0) return;
         var group = _selectionGroups[_selectedGroupIndex];
-        var toRemove = new HashSet<UnityEngine.Object>(GroupFixtureObjects(group));
-        var current  = new List<UnityEngine.Object>(Selection.objects);
-        current.RemoveAll(o => toRemove.Contains(o));
-        Selection.objects = current.ToArray();
+        var objects = GroupFixtureObjects(group);
+        SetFixtureSelection(objects, SelectionMode.Remove);
     }
 
     private void OnSgAdd()

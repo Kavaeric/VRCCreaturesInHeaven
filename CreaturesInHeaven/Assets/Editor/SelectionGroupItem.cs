@@ -16,6 +16,7 @@ public class SelectionGroupItem : VisualElement
     private VisualElement _viewContainer, _editContainer;
 
     private EventCallback<KeyDownEvent> _renameKeyHandler;
+    public int GroupIndex { get; set; } = -1;
 
     public SelectionGroupItem()
     {
@@ -36,28 +37,26 @@ public class SelectionGroupItem : VisualElement
         _itemButton = new Button();
         _itemButton.AddToClassList("sg-item-btn");
         _itemButton.AddToClassList("grow");
-        _itemButton.style.unityTextAlign = TextAnchor.MiddleLeft;
 
         // Group size label
         _countLabel = new Label();
         _countLabel.AddToClassList("sg-item-count");
         _countLabel.AddToClassList("text-sm");
         _countLabel.AddToClassList("text-muted");
-        _countLabel.style.unityTextAlign = TextAnchor.MiddleRight;
 
         // Selection control
         _groupReplaceSelectionBtn = new Button();
-        _groupReplaceSelectionBtn.text = "S";
+        _groupReplaceSelectionBtn.style.backgroundImage = new StyleBackground(AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/Icons/Select.png"));
         _groupReplaceSelectionBtn.AddToClassList("btn-icon-sm");
         _groupReplaceSelectionBtn.AddToClassList("btn-tertiary");
 
         _groupAddSelectionBtn = new Button();
-        _groupAddSelectionBtn.text = "+";
+        _groupAddSelectionBtn.style.backgroundImage = new StyleBackground(AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/Icons/Select add.png"));
         _groupAddSelectionBtn.AddToClassList("btn-icon-sm");
         _groupAddSelectionBtn.AddToClassList("btn-tertiary");
 
         _groupRemoveSelectionBtn = new Button();
-        _groupRemoveSelectionBtn.text = "-";
+        _groupRemoveSelectionBtn.style.backgroundImage = new StyleBackground(AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/Icons/Select remove.png"));
         _groupRemoveSelectionBtn.AddToClassList("btn-icon-sm");
         _groupRemoveSelectionBtn.AddToClassList("btn-tertiary");
 
@@ -155,5 +154,20 @@ public class SelectionGroupItem : VisualElement
             AddToClassList("sg-selected");
         else
             RemoveFromClassList("sg-selected");
+    }
+
+    // Update the background icon based on how many fixtures in the group are selected.
+    public void SetSelectionState(int selectedCount, int totalCount)
+    {
+        string iconPath;
+        if (selectedCount == 0)
+            iconPath = "Assets/Editor/Icons/Selected unselected.png";
+        else if (selectedCount == totalCount)
+            iconPath = "Assets/Editor/Icons/Selected full.png";
+        else
+            iconPath = "Assets/Editor/Icons/Selected partial.png";
+
+        var icon = AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
+        _itemButton.style.backgroundImage = new StyleBackground(icon);
     }
 }

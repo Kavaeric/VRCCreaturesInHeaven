@@ -143,11 +143,11 @@ public class EditorTempoMonitor : EditorWindow
     private int _cachedResolutionFrames = -1;
     private int _lastAnimFrame = -1;
     private string _cachedResolutionLabel;
-    private VectorImage _cachedResolutionIcon;
+    private Texture2D _cachedResolutionIcon;
     private bool _cachedResolutionIsClean;
 
     // Note icons loaded once at CreateGUI so UpdateReadout never hits AssetDatabase per frame
-    private Dictionary<string, VectorImage> _noteIcons;
+    private Dictionary<string, Texture2D> _noteIcons;
 
     // --- Lifecycle ---------------------------------------------------
 
@@ -208,19 +208,19 @@ public class EditorTempoMonitor : EditorWindow
         _markersGrid = root.Q<VisualElement>("markers-grid");
 
         string iconDir = "Assets/Editor/Icons/Music";
-        _noteIcons = new Dictionary<string, VectorImage>
+        _noteIcons = new Dictionary<string, Texture2D>
         {
-            ["NoteLonga"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteLonga.svg"),
-            ["NoteDoubleWhole"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteDoubleWhole.svg"),
-            ["NoteWhole"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteWhole.svg"),
-            ["NoteHalf"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteHalf.svg"),
-            ["NoteQuarter"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteQuarter.svg"),
-            ["NoteEighth"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/NoteEighth.svg"),
-            ["Note16"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/Note16.svg"),
-            ["Note32"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/Note32.svg"),
-            ["Note64"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/Note64.svg"),
-            ["Note128"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/Note128.svg"),
-            ["Note256"] = AssetDatabase.LoadAssetAtPath<VectorImage>($"{iconDir}/Note256.svg"),
+            ["NoteLonga"] = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/NoteLonga.png"),
+            ["NoteDoubleWhole"] = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/NoteDoubleWhole.png"),
+            ["NoteWhole"] = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/NoteWhole.png"),
+            ["NoteHalf"] = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/NoteHalf.png"),
+            ["NoteQuarter"] = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/NoteQuarter.png"),
+            ["NoteEighth"] = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/NoteEighth.png"),
+            ["Note16"] = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/Note16.png"),
+            ["Note32"] = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/Note32.png"),
+            ["Note64"] = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/Note64.png"),
+            ["Note128"] = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/Note128.png"),
+            ["Note256"] = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/Note256.png"),
         };
 
         // Seek fields: each is editable and seeks on blur if the value changed.
@@ -603,7 +603,7 @@ public class EditorTempoMonitor : EditorWindow
 
     // Checks whether the clip's frame count maps cleanly to a musical note value
     // (e.g. 1 frame = 1/16th note). Reports the nearest candidate if not clean.
-    private (string label, VectorImage icon, bool isClean) ClipResolution(int frames)
+    private (string label, Texture2D icon, bool isClean) ClipResolution(int frames)
     {
         int measures = SongTotalMeasures;
 

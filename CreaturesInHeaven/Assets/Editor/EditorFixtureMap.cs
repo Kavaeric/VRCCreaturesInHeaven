@@ -229,6 +229,7 @@ public class EditorFixtureMap : EditorWindow
     {
         _canvas?.MarkDirtyRepaint();
         UpdateSgButtons();
+        RefreshSgListSelectionStates();
     }
 
     public void CreateGUI()
@@ -996,6 +997,7 @@ public class EditorFixtureMap : EditorWindow
         {
             int idx = i;
             var item = new SelectionGroupItem();
+            item.GroupIndex = idx;
             item.SetSelected(i == _selectedGroupIndex);
 
             if (i == _selectedGroupIndex && _sgRenaming)
@@ -1016,11 +1018,29 @@ public class EditorFixtureMap : EditorWindow
                     () => OnSgAddSelection(idx),
                     () => OnSgRemoveSelection(idx)
                 );
+                int selectedCount = GetGroupSelectionCount(group);
+                int totalCount = group.fixtures?.Count ?? 0;
+                item.SetSelectionState(selectedCount, totalCount);
             }
 
             _sgList.Add(item);
         }
         UpdateSgButtons();
+    }
+
+    // Update selection state icons for all visible items in the selection group list.
+    private void RefreshSgListSelectionStates()
+    {
+        for (int i = 0; i < _sgList.childCount; i++)
+        {
+            if (_sgList[i] is SelectionGroupItem item && item.GroupIndex >= 0 && item.GroupIndex < _selectionGroups.Count)
+            {
+                var group = _selectionGroups[item.GroupIndex];
+                int selectedCount = GetGroupSelectionCount(group);
+                int totalCount = group.fixtures?.Count ?? 0;
+                item.SetSelectionState(selectedCount, totalCount);
+            }
+        }
     }
 
     private void OnSgListItemClicked(int index)
@@ -1062,8 +1082,8 @@ public class EditorFixtureMap : EditorWindow
 
         if (!hasGroup)
         {
-            _sgAddBtn.text    = "Add 0 fixture(s) to this group";
-            _sgRemoveBtn.text = "Remove 0 fixture(s) from this group";
+            _sgAddBtn.text    = "Add 0 to group";
+            _sgRemoveBtn.text = "Remove 0 from group";
             return;
         }
 
@@ -1079,8 +1099,8 @@ public class EditorFixtureMap : EditorWindow
             else removeCount++;
         }
 
-        _sgAddBtn.text    = $"Add {addCount} fixture(s) to this group";
-        _sgRemoveBtn.text = $"Remove {removeCount} fixture(s) from this group";
+        _sgAddBtn.text    = $"Add {addCount} to group";
+        _sgRemoveBtn.text = $"Remove {removeCount} from group";
     }
 
     private List<int> GetSelectedFixtureIndices()
@@ -1091,6 +1111,18 @@ public class EditorFixtureMap : EditorWindow
             if (_fixtureObjects[i] != null && selectionSet.Contains(_fixtureObjects[i]))
                 result.Add(i);
         return result;
+    }
+
+    // Count how many fixtures in a group are currently selected.
+    private int GetGroupSelectionCount(SelectionGroup group)
+    {
+        if (group.fixtures == null || group.fixtures.Count == 0) return 0;
+        var selectionSet = new HashSet<UnityEngine.Object>(Selection.objects);
+        int count = 0;
+        foreach (int idx in group.fixtures)
+            if (idx >= 0 && idx < _fixtureObjects.Count && _fixtureObjects[idx] != null && selectionSet.Contains(_fixtureObjects[idx]))
+                count++;
+        return count;
     }
 
     // Collects root + head + props objects for a single fixture index, respecting selection toggle settings.

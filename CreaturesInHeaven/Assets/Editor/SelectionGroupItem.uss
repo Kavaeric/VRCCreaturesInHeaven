@@ -6,7 +6,6 @@
     align-items: center;
     height: 28px;
     border-radius: 2px;
-    border-width: 1px;
     border-color: transparent;
     background-color: transparent;
 }
@@ -17,18 +16,28 @@
 
 .sg-item.sg-selected {
     background-color: rgba(102, 63, 255, 0.35);
-    border-color: rgba(141, 104, 255, 0.8);
-    border-width: 1px;
 }
 
 .sg-item-btn {
     flex-grow: 1;
     height: 100%;
     padding: 4px;
+    padding-left: 28px;
     border-color: transparent;
-    border-width: 0;
     background-color: transparent;
     -unity-text-align: middle-left;
+
+    background-position-x: 2px;
+    background-position-y: center;
+    background-size: 24px;
+}
+
+.sg-item-btn:focus {
+    border-color: rgba(141, 104, 255, 0.8);
+}
+
+.sg-item .btn-icon-sm {
+    background-size: 18px;
 }
 
 .sg-item-count {

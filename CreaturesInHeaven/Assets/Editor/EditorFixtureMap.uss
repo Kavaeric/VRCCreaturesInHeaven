@@ -29,6 +29,13 @@
     flex-shrink: 0;
 }
 
+#sg-search > TextInput {
+    padding-left: 24px;
+    background-image: url('Icons/Search.png');
+    background-size: 16px;
+    background-position-x: 6px;
+}
+
 #sg-list {
     border-width: 2px;
     border-color: rgba(255, 255, 255, 0.08);

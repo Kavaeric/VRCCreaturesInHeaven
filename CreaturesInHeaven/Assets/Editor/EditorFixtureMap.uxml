@@ -10,20 +10,34 @@
             <ui:VisualElement class="w-1" />
             <ui:Button name="reload-btn" text="↺" class="btn-icon-sm shrink-0" />
         </ui:VisualElement>
+
         <ui:VisualElement class="h-2" />
         <ui:IMGUIContainer name="canvas" class="grow canvas" />
         <ui:VisualElement class="h-2" />
+
+        <ui:Label text="Selection options" class="font-bold" />
+        <ui:VisualElement class="h-1" />
+        <ui:VisualElement class="col">
+            <ui:Toggle name="include-main-fixture-toggle" label="Include main fixture object" class="toggle-left max-w-60" />
+            <ui:Toggle name="include-fixture-head-toggle" label="Include fixture head" class="toggle-left max-w-60" />
+            <ui:Toggle name="include-props-transform-toggle" label="Include _PropsTransform object" class="toggle-left  max-w-60" />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="h-2" />
+        <ui:VisualElement class="separator" />
+        <ui:VisualElement class="h-2" />
+
         <ui:VisualElement class="row items-center">
             <ui:VisualElement class="col grow">
                 <ui:Label text="Selection groups" class="font-bold" />
                 <ui:VisualElement class="h-0p5" />
 
                 <ui:VisualElement class="row grow">
-                    <ui:Button name="sg-create-btn" text="Create new..." class="btn-sm" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                    <ui:Button name="sg-create-btn" text="Create new..." parse-escape-sequences="true" display-tooltip-when-elided="true" />
                     <ui:VisualElement class="w-0p5" />
-                    <ui:Button name="sg-rename-btn" text="Rename..." class="btn-sm" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                    <ui:Button name="sg-rename-btn" text="Rename" parse-escape-sequences="true" display-tooltip-when-elided="true" />
                     <ui:VisualElement class="grow" />
-                    <ui:Button name="sg-delete-btn" text="Delete" class="btn-sm btn-danger" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                    <ui:Button name="sg-delete-btn" text="Delete group" class="btn-danger" parse-escape-sequences="true" display-tooltip-when-elided="true" />
                     
                     <ui:VisualElement class="w-1" />
                     <ui:VisualElement class="w-60" />
@@ -33,16 +47,25 @@
 
                 <ui:VisualElement class="row">
 
-                    <ui:VisualElement class="col grow shrink max-h-60">
-                        <ui:ScrollView name="sg-list" class="grow" />
+                    <ui:VisualElement class="col grow shrink">
+                        <ui:ScrollView name="sg-list" class="grow max-h-60" />
+
+                        <ui:VisualElement class="h-1" />
+
+                        <ui:VisualElement class="col">
+                            <ui:Label text="Filter by name" class="font-bold" />
+                            <ui:VisualElement class="h-0p5" />
+                            <ui:TextField name="sg-search" class="grow"/>
+                        </ui:VisualElement>
+
                     </ui:VisualElement>
 
                     <ui:VisualElement class="w-1" />
 
                     <ui:VisualElement class="col w-60">
-                        <ui:Button name="sg-select-btn" text="Select this group" class="btn-sm" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                        <ui:Button name="sg-select-btn" text="Select these fixtures" class="btn-sm" parse-escape-sequences="true" display-tooltip-when-elided="true" />
                         <ui:VisualElement class="h-0p5" />
-                        <ui:Button name="sg-deselect-btn" text="Deselect this group" class="btn-sm" parse-escape-sequences="true" display-tooltip-when-elided="true" />
+                        <ui:Button name="sg-deselect-btn" text="Deselect these fixtures" class="btn-sm" parse-escape-sequences="true" display-tooltip-when-elided="true" />
                         <ui:VisualElement class="h-0p5" />
                         <ui:Button name="sg-add-btn" text="Add 0 fixture(s) to group" class="btn-sm" parse-escape-sequences="true" display-tooltip-when-elided="true" />
                         <ui:VisualElement class="h-0p5" />

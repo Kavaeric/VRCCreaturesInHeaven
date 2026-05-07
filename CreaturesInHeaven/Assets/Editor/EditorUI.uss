@@ -40,6 +40,7 @@
 .h-1    { height:  4px; }
 .h-2    { height:  8px; }
 .h-4    { height: 16px; }
+.h-6    { height: 24px; }
 .h-9    { height: 36px; }
 .h-12   { height: 48px; }
 
@@ -48,6 +49,8 @@
 
 .max-h-40 { height: 160px; }
 .max-h-60 { height: 240px; }
+
+.h-1f1 { height: 100%; }
 
 .w-0p5 { width:   2px; }
 .w-1    { width:   4px; }
@@ -68,6 +71,7 @@
 
 .max-w-20 { max-width:  80px; }
 .max-w-30 { max-width: 120px; }
+.max-w-60 { max-width: 240px; }
 
 .w-1f2 { width: 50%; }
 .w-1f3 { width: 33.3%; }
@@ -169,12 +173,39 @@ TextElement {
     cursor: text;
 }
 
+Toggle {
+    -unity-text-align: middle-left;
+}
+
+.toggle-left {
+    flex-direction: row-reverse;
+    -unity-text-align: middle-left;
+}
+
+.toggle-left > .unity-base-field__input {
+    flex-grow: 0;
+}
+
+.toggle-left > .unity-label{
+    flex-grow: 1;
+}
+
 .unity-base-field {
-    min-height: var(--interactive-sm);
     margin: 0;
 }
 
 .unity-base-field__input {
     margin: 0;
     padding: 4px;
+}
+
+TextField,
+TextInput {
+    height: 28px;
+    -unity-text-align: middle-left;
+}
+
+TextField > Label {
+    flex-grow: 0;
+    min-width: initial;
 }

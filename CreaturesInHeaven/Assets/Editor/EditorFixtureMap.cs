@@ -140,6 +140,11 @@ public class EditorFixtureMap : EditorWindow
     private IMGUIContainer _canvas;
     private Label          _pathLabel;
 
+    // Selection options state
+    private bool _includeMainFixture = true;
+    private bool _includeFixtureHead = true;
+    private bool _includePropsTransform = true;
+
     // Selection groups state
     private List<SelectionGroup> _selectionGroups    = new();
     private int                  _selectedGroupIndex = -1;
@@ -147,6 +152,8 @@ public class EditorFixtureMap : EditorWindow
 
     // Selection groups UI refs
     private ScrollView _sgList;
+    private TextField  _sgSearchField;
+    private string     _sgSearchText = "";
     private Button     _sgCreateBtn, _sgRenameBtn, _sgDeleteBtn;
     private Button     _sgSelectBtn, _sgDeselectBtn, _sgAddBtn, _sgRemoveBtn;
 
@@ -186,7 +193,7 @@ public class EditorFixtureMap : EditorWindow
 
     // Tunable layout parameters — bound to footer fields.
     private float _minGap                   = 0.1f;
-    private float _gapCompressionK          = 2f;
+    private float _gapCompressionK          = 4f;
     private float _nodeCompressionK         = 5f;
     private float _nodeCompressionThreshold = 4f;
     private bool  _flipY                    = false;
@@ -259,8 +266,22 @@ public class EditorFixtureMap : EditorWindow
             _canvas.MarkDirtyRepaint();
         });
 
+        // Wire selection options toggles — all default to true
+        var mainFixtureToggle = rootVisualElement.Q<Toggle>("include-main-fixture-toggle");
+        mainFixtureToggle.value = _includeMainFixture;
+        mainFixtureToggle.RegisterValueChangedCallback(e => _includeMainFixture = e.newValue);
+
+        var fixtureHeadToggle = rootVisualElement.Q<Toggle>("include-fixture-head-toggle");
+        fixtureHeadToggle.value = _includeFixtureHead;
+        fixtureHeadToggle.RegisterValueChangedCallback(e => _includeFixtureHead = e.newValue);
+
+        var propsTransformToggle = rootVisualElement.Q<Toggle>("include-props-transform-toggle");
+        propsTransformToggle.value = _includePropsTransform;
+        propsTransformToggle.RegisterValueChangedCallback(e => _includePropsTransform = e.newValue);
+
         // Wire selection groups panel
         _sgList        = rootVisualElement.Q<ScrollView>("sg-list");
+        _sgSearchField = rootVisualElement.Q<TextField>("sg-search");
         _sgCreateBtn   = rootVisualElement.Q<Button>("sg-create-btn");
         _sgRenameBtn   = rootVisualElement.Q<Button>("sg-rename-btn");
         _sgDeleteBtn   = rootVisualElement.Q<Button>("sg-delete-btn");
@@ -268,6 +289,12 @@ public class EditorFixtureMap : EditorWindow
         _sgDeselectBtn = rootVisualElement.Q<Button>("sg-deselect-btn");
         _sgAddBtn      = rootVisualElement.Q<Button>("sg-add-btn");
         _sgRemoveBtn   = rootVisualElement.Q<Button>("sg-remove-btn");
+
+        _sgSearchField.RegisterValueChangedCallback(e =>
+        {
+            _sgSearchText = e.newValue;
+            RefreshSgList();
+        });
 
         _sgCreateBtn.clicked   += OnSgCreate;
         _sgRenameBtn.clicked   += OnSgRename;
@@ -907,16 +934,20 @@ public class EditorFixtureMap : EditorWindow
         if (definitionTyped.Colour == FixtureDefinition.ColourMode.Blackbody)
             emissionColor = FixtureDefinition.BlackbodyToRGB(definitionTyped.ColourTemperature);
 
-        // Get brightness normalised to max brightness (PropsTransform.localScale.x in linear space).
+        // Get brightness normalised to max brightness (PropsTransform.localScale.x in linear space, convert to gamma for rendering).
         float brightness = 0f;
         if (driverTyped.PropsTransform != null)
-            brightness = Mathf.InverseLerp(0f, definitionTyped.Profile.BrightnessMax, driverTyped.PropsTransform.localScale.x);
+        {
+            float linearScale = driverTyped.PropsTransform.localScale.x;
+            float gammaScale = Mathf.Sqrt(linearScale);
+            brightness = Mathf.InverseLerp(0f, definitionTyped.Profile.BrightnessMax, gammaScale);
+        }
 
         // Fill and outline colours have alpha modulated by brightness.
         Color fillColor = emissionColor;
         fillColor.a = brightness;
         Color outlineColor = emissionColor;
-        outlineColor.a = brightness * 0.5f + 0.5f;
+        outlineColor.a = brightness + 0.5f;
 
         float padding = .06f * _logicalScale * _zoom;
         var innerCorners = new Vector3[]
@@ -949,7 +980,23 @@ public class EditorFixtureMap : EditorWindow
     private void RefreshSgList()
     {
         _sgList.Clear();
+
+        // Build filtered list with original indices, excluding items being renamed
+        var filtered = new List<(int index, SelectionGroup group)>();
         for (int i = 0; i < _selectionGroups.Count; i++)
+        {
+            // Skip items being renamed unless the filter is empty
+            if (i == _selectedGroupIndex && _sgRenaming && !string.IsNullOrEmpty(_sgSearchText))
+                continue;
+
+            if (_selectionGroups[i].name.Contains(_sgSearchText, System.StringComparison.OrdinalIgnoreCase))
+                filtered.Add((i, _selectionGroups[i]));
+        }
+
+        // Sort alphabetically by name
+        filtered.Sort((a, b) => a.group.name.CompareTo(b.group.name));
+
+        foreach (var (i, group) in filtered)
         {
             int idx = i;
 
@@ -960,7 +1007,7 @@ public class EditorFixtureMap : EditorWindow
                 row.AddToClassList("sg-selected");
                 row.AddToClassList("row");
 
-                var field = new TextField { value = _selectionGroups[i].name };
+                var field = new TextField { value = group.name };
                 field.AddToClassList("grow");
                 field.AddToClassList("sg-rename-field");
                 field.RegisterCallback<KeyDownEvent>(e =>
@@ -986,10 +1033,25 @@ public class EditorFixtureMap : EditorWindow
             }
             else
             {
-                var btn = new Button(() => OnSgListItemClicked(idx)) { text = _selectionGroups[i].name };
-                btn.AddToClassList("sg-item");
-                if (i == _selectedGroupIndex) btn.AddToClassList("sg-selected");
-                _sgList.Add(btn);
+                var row = new VisualElement();
+                row.AddToClassList("sg-item");
+                row.AddToClassList("row");
+                if (i == _selectedGroupIndex) row.AddToClassList("sg-selected");
+
+                var btn = new Button(() => OnSgListItemClicked(idx)) { text = group.name };
+                btn.AddToClassList("sg-item-btn");
+                btn.AddToClassList("grow");
+                btn.style.unityTextAlign = TextAnchor.MiddleLeft;
+
+                var countLabel = new Label { text = (group.fixtures?.Count ?? 0).ToString() };
+                countLabel.AddToClassList("text-sm");
+                countLabel.AddToClassList("text-muted");
+                countLabel.style.minWidth = 24;
+                countLabel.style.unityTextAlign = TextAnchor.MiddleRight;
+
+                row.Add(btn);
+                row.Add(countLabel);
+                _sgList.Add(row);
             }
         }
         UpdateSgButtons();
@@ -1067,24 +1129,28 @@ public class EditorFixtureMap : EditorWindow
         return result;
     }
 
-    // Collects root + head + props objects for a single fixture index.
+    // Collects root + head + props objects for a single fixture index, respecting selection toggle settings.
     private void CollectFixtureObjects(int fixtureIndex, List<UnityEngine.Object> outList)
     {
         if (fixtureIndex < 0 || fixtureIndex >= _fixtureObjects.Count) return;
         var fixtureRoot = _fixtureObjects[fixtureIndex];
         if (fixtureRoot == null) return;
 
-        outList.Add(fixtureRoot);
+        if (_includeMainFixture)
+            outList.Add(fixtureRoot);
 
-        if (fixtureIndex < _fixtureDrivers.Count)
+        if (_includeFixtureHead || _includePropsTransform)
         {
-            var driver = _fixtureDrivers[fixtureIndex] as FixtureDriver;
-            if (driver != null)
+            if (fixtureIndex < _fixtureDrivers.Count)
             {
-                if (driver.Head != null)
-                    outList.Add(driver.Head.gameObject);
-                if (driver.PropsTransform != null)
-                    outList.Add(driver.PropsTransform.gameObject);
+                var driver = _fixtureDrivers[fixtureIndex] as FixtureDriver;
+                if (driver != null)
+                {
+                    if (_includeFixtureHead && driver.Head != null)
+                        outList.Add(driver.Head.gameObject);
+                    if (_includePropsTransform && driver.PropsTransform != null)
+                        outList.Add(driver.PropsTransform.gameObject);
+                }
             }
         }
     }

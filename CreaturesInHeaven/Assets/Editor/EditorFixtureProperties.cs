@@ -301,8 +301,82 @@ public class EditorFixtureProperties : EditorWindow
 
     private void OnEditorUpdate()
     {
-        if (_selection.Count > 0)
-            Repaint();
+        if (_selection.Count == 0) return;
+
+        // Update brightness
+        var brightnessValues = _selection.Select(s => Mathf.LinearToGammaSpace(s.driver.PropsTransform.localScale.x)).Distinct().ToList();
+        if (brightnessValues.Count == 1)
+        {
+            if (!Mathf.Approximately(_brightnessSlider.value, brightnessValues[0]))
+            {
+                _brightnessSlider.SetValueWithoutNotify(brightnessValues[0]);
+                _brightnessFloatField.SetValueWithoutNotify(brightnessValues[0]);
+            }
+        }
+
+        // Update spread
+        bool anyHasSpread = _selection.Any(s => s.profile.HasSpread);
+        if (anyHasSpread)
+        {
+            var spreadCapable = _selection.Where(s => s.profile.HasSpread).ToList();
+            var spreadValues = spreadCapable.Select(s => s.driver.PropsTransform.localScale.y).Distinct().ToList();
+            if (spreadValues.Count == 1)
+            {
+                if (!Mathf.Approximately(_spreadSlider.value, spreadValues[0]))
+                {
+                    _spreadSlider.SetValueWithoutNotify(spreadValues[0]);
+                    _spreadFloatField.SetValueWithoutNotify(spreadValues[0]);
+                }
+            }
+        }
+
+        // Update rotations
+        bool anyAxisXEnabled = _selection.Any(s => s.profile.AxisX.Enabled);
+        if (anyAxisXEnabled)
+        {
+            var axisXCapable = _selection.Where(s => s.profile.AxisX.Enabled).ToList();
+            var axisXValues = axisXCapable.Select(s => NormalizeAngle(s.driver.Head.localEulerAngles[0])).Distinct().ToList();
+            if (axisXValues.Count == 1)
+            {
+                if (!Mathf.Approximately(_axisXSlider.value, axisXValues[0]))
+                {
+                    _axisXSlider.SetValueWithoutNotify(axisXValues[0]);
+                    _axisXFloatField.SetValueWithoutNotify(axisXValues[0]);
+                }
+            }
+        }
+
+        bool anyAxisYEnabled = _selection.Any(s => s.profile.AxisY.Enabled);
+        if (anyAxisYEnabled)
+        {
+            var axisYCapable = _selection.Where(s => s.profile.AxisY.Enabled).ToList();
+            var axisYValues = axisYCapable.Select(s => NormalizeAngle(s.driver.Head.localEulerAngles[1])).Distinct().ToList();
+            if (axisYValues.Count == 1)
+            {
+                if (!Mathf.Approximately(_axisYSlider.value, axisYValues[0]))
+                {
+                    _axisYSlider.SetValueWithoutNotify(axisYValues[0]);
+                    _axisYFloatField.SetValueWithoutNotify(axisYValues[0]);
+                }
+            }
+        }
+
+        bool anyAxisZEnabled = _selection.Any(s => s.profile.AxisZ.Enabled);
+        if (anyAxisZEnabled)
+        {
+            var axisZCapable = _selection.Where(s => s.profile.AxisZ.Enabled).ToList();
+            var axisZValues = axisZCapable.Select(s => NormalizeAngle(s.driver.Head.localEulerAngles[2])).Distinct().ToList();
+            if (axisZValues.Count == 1)
+            {
+                if (!Mathf.Approximately(_axisZSlider.value, axisZValues[0]))
+                {
+                    _axisZSlider.SetValueWithoutNotify(axisZValues[0]);
+                    _axisZFloatField.SetValueWithoutNotify(axisZValues[0]);
+                }
+            }
+        }
+
+        Repaint();
     }
 
     private void OnSelectionChanged()

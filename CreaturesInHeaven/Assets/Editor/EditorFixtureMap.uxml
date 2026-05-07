@@ -8,7 +8,7 @@
             <ui:Label name="map-path-label" text="No map loaded" class="text-sm text-muted grow" />
             <ui:Button name="view-settings-btn" text="View settings…" class="btn-sm shrink-0" />
             <ui:VisualElement class="w-1" />
-            <ui:Button name="reload-btn" text="↺" class="btn-icon-sm shrink-0" />
+            <ui:Button name="reload-btn" text="↺" class="btn-icon-sm shrink-0" tooltip="Reload this panel" />
         </ui:VisualElement>
 
         <ui:VisualElement class="h-2" />
@@ -60,7 +60,7 @@
         <ui:VisualElement name="view-settings-panel" class="view-settings-panel">
             <ui:VisualElement class="row items-center">
                 <ui:Label text="View settings" class="font-bold grow" />
-                <ui:Button name="view-settings-close-btn" text="✕" class="btn-icon-sm" />
+                <ui:Button name="view-settings-close-btn" text="✕" class="btn-icon-sm btn-tertiary" />
             </ui:VisualElement>
             <ui:VisualElement class="h-2" />
             <ui:VisualElement class="row items-center">

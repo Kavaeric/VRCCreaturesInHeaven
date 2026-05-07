@@ -49,16 +49,19 @@ public class SelectionGroupItem : VisualElement
         _groupReplaceSelectionBtn.style.backgroundImage = new StyleBackground(AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/Icons/Select.png"));
         _groupReplaceSelectionBtn.AddToClassList("btn-icon-sm");
         _groupReplaceSelectionBtn.AddToClassList("btn-tertiary");
+        _groupReplaceSelectionBtn.tooltip = "Select fixtures in this group";
 
         _groupAddSelectionBtn = new Button();
         _groupAddSelectionBtn.style.backgroundImage = new StyleBackground(AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/Icons/Select add.png"));
         _groupAddSelectionBtn.AddToClassList("btn-icon-sm");
         _groupAddSelectionBtn.AddToClassList("btn-tertiary");
+        _groupAddSelectionBtn.tooltip = "Add this group's fixtures to current selection";
 
         _groupRemoveSelectionBtn = new Button();
         _groupRemoveSelectionBtn.style.backgroundImage = new StyleBackground(AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Editor/Icons/Select remove.png"));
         _groupRemoveSelectionBtn.AddToClassList("btn-icon-sm");
         _groupRemoveSelectionBtn.AddToClassList("btn-tertiary");
+        _groupRemoveSelectionBtn.tooltip = "Subtract this group's fixtures from current selection";
 
         _viewContainer.Add(_itemButton);
         _viewContainer.Add(_countLabel);

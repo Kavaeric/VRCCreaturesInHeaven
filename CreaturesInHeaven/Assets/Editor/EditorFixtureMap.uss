@@ -29,75 +29,10 @@
     flex-shrink: 0;
 }
 
-.sg-rename-field .unity-text-field__input {
-    padding: 4px 6px;
-    background-color: transparent;
-    border-color: transparent;
-}
-
 #sg-list {
     border-width: 2px;
     border-color: rgba(255, 255, 255, 0.08);
     border-radius: 2px;
     background-color: rgba(0, 0, 0, 0.1);
     padding: 4px;
-}
-
-.sg-item {
-    height: 28px;
-    padding: 2px 6px;
-    margin: 1px 0;
-    background-color: rgba(255, 255, 255, 0.05);
-    border-radius: 2px;
-    border-width: 1px;
-    border-color: rgba(255, 255, 255, 0.08);
-    -unity-text-align: middle-left;
-}
-
-.sg-item:hover {
-    background-color: rgba(87, 62, 188, 0.35);
-}
-
-.sg-item-btn {
-    background-color: none;
-    border-color: none;
-    border-width: 0;
-    height: 24px;
-    margin-top: -1px;
-    margin-left: -6px;
-    padding-left: 6px; 
-}
-
-.sg-selected {
-    background-color: rgba(102, 63, 255, 0.35);
-    border-color: rgba(141, 104, 255, 0.8);
-    border-width: 1px;
-}
-
-.sg-rename-field {
-    height: 24px;
-    margin-top: -1px;
-    margin-left: -7px;
-    padding: 0;
-}
-
-.sg-rename-field > TextInput {
-    height: 24px;
-    padding: 0;
-    margin: 0;
-}
-
-.sg-item > .btn-icon-sm {
-    height: 28px;
-    background-color: none;
-    margin-top: -4px;
-    border-color: none;
-}
-
-.sg-item > .btn-icon-sm:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-.sg-item > .btn-icon-sm:active {
-    background-color: rgba(255, 255, 255, 0.2);
 }

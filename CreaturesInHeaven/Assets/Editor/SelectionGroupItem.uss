@@ -1,0 +1,51 @@
+/* SelectionGroupItem component styles */
+
+.sg-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 28px;
+    border-radius: 2px;
+    border-width: 1px;
+    border-color: transparent;
+    background-color: transparent;
+}
+
+.sg-item:hover {
+    background-color: rgba(87, 62, 188, 0.35);
+}
+
+.sg-item.sg-selected {
+    background-color: rgba(102, 63, 255, 0.35);
+    border-color: rgba(141, 104, 255, 0.8);
+    border-width: 1px;
+}
+
+.sg-item-btn {
+    flex-grow: 1;
+    height: 100%;
+    padding: 4px;
+    border-color: transparent;
+    border-width: 0;
+    background-color: transparent;
+    -unity-text-align: middle-left;
+}
+
+.sg-item-count {
+    flex-grow: 0;
+    padding: 4px;
+}
+
+.sg-rename-field {
+    height: 24px;
+    padding: 0;
+    flex-grow: 1;
+}
+
+.sg-rename-field > TextField, 
+.sg-rename-field > TextInput {
+    height: 100%;
+    border-width: 0;
+    border-radius: 1px;
+    background-color: rgba(0, 0, 0, 0.5);
+}

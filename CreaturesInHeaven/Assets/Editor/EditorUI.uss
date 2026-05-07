@@ -129,6 +129,10 @@ Button {
     cursor: link;
 }
 
+Button:focus {
+    border-color: #7baefa;
+}
+
 Button.btn-sm {
     height: var(--interactive-sm);
     padding: 8px;
@@ -163,6 +167,23 @@ Button.btn-danger:active {
 
 Button.btn-danger:focus {
     border-color: #f66;
+}
+
+Button.btn-tertiary {
+    background-color: transparent;
+    border-color: transparent;
+}
+
+Button.btn-tertiary:hover {
+    background-color: rgba(255, 255, 255, 0.1)
+}
+
+Button.btn-tertiary:active {
+    background-color: rgba(255, 255, 255, 0.2)
+}
+
+Button.btn-tertiary:focus {
+    border-color: #7baefa;
 }
 
 EnumField {

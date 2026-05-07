@@ -155,7 +155,7 @@ public class EditorFixtureMap : EditorWindow
     private TextField  _sgSearchField;
     private string     _sgSearchText = "";
     private Button     _sgCreateBtn, _sgRenameBtn, _sgDeleteBtn;
-    private Button     _sgSelectBtn, _sgDeselectBtn, _sgAddBtn, _sgRemoveBtn;
+    private Button     _sgAddBtn, _sgRemoveBtn;
 
     // Cached IMGUI styles. Initialised once on first draw.
     // GUI.skin not available at CreateGUI time.
@@ -285,8 +285,6 @@ public class EditorFixtureMap : EditorWindow
         _sgCreateBtn   = rootVisualElement.Q<Button>("sg-create-btn");
         _sgRenameBtn   = rootVisualElement.Q<Button>("sg-rename-btn");
         _sgDeleteBtn   = rootVisualElement.Q<Button>("sg-delete-btn");
-        _sgSelectBtn   = rootVisualElement.Q<Button>("sg-select-btn");
-        _sgDeselectBtn = rootVisualElement.Q<Button>("sg-deselect-btn");
         _sgAddBtn      = rootVisualElement.Q<Button>("sg-add-btn");
         _sgRemoveBtn   = rootVisualElement.Q<Button>("sg-remove-btn");
 
@@ -299,10 +297,8 @@ public class EditorFixtureMap : EditorWindow
         _sgCreateBtn.clicked   += OnSgCreate;
         _sgRenameBtn.clicked   += OnSgRename;
         _sgDeleteBtn.clicked   += OnSgDelete;
-        _sgSelectBtn.clicked   += OnSgSelect;
-        _sgDeselectBtn.clicked += OnSgDeselect;
-        _sgAddBtn.clicked      += OnSgAdd;
-        _sgRemoveBtn.clicked   += OnSgRemove;
+        _sgAddBtn.clicked      += OnSgAddFixtures;
+        _sgRemoveBtn.clicked   += OnSgRemoveFixtures;
 
         LoadTheme();
 
@@ -999,60 +995,30 @@ public class EditorFixtureMap : EditorWindow
         foreach (var (i, group) in filtered)
         {
             int idx = i;
+            var item = new SelectionGroupItem();
+            item.SetSelected(i == _selectedGroupIndex);
 
             if (i == _selectedGroupIndex && _sgRenaming)
             {
-                var row = new VisualElement();
-                row.AddToClassList("sg-item");
-                row.AddToClassList("sg-selected");
-                row.AddToClassList("row");
-
-                var field = new TextField { value = group.name };
-                field.AddToClassList("grow");
-                field.AddToClassList("sg-rename-field");
-                field.RegisterCallback<KeyDownEvent>(e =>
-                {
-                    if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter)
-                    { CommitRename(idx, field.value); e.StopPropagation(); }
-                    else if (e.keyCode == KeyCode.Escape)
-                    { CancelRename(); e.StopPropagation(); }
-                });
-
-                var confirmBtn = new Button(() => CommitRename(idx, field.value)) { text = "✓" };
-                confirmBtn.AddToClassList("btn-icon-sm");
-
-                var cancelBtn = new Button(CancelRename) { text = "✕" };
-                cancelBtn.AddToClassList("btn-icon-sm");
-
-                row.Add(field);
-                row.Add(confirmBtn);
-                row.Add(cancelBtn);
-                _sgList.Add(row);
-
-                field.schedule.Execute(() => field.Focus()).StartingIn(0);
+                item.SetEditMode(
+                    group.name,
+                    newName => CommitRename(idx, newName),
+                    () => CancelRename()
+                );
             }
             else
             {
-                var row = new VisualElement();
-                row.AddToClassList("sg-item");
-                row.AddToClassList("row");
-                if (i == _selectedGroupIndex) row.AddToClassList("sg-selected");
-
-                var btn = new Button(() => OnSgListItemClicked(idx)) { text = group.name };
-                btn.AddToClassList("sg-item-btn");
-                btn.AddToClassList("grow");
-                btn.style.unityTextAlign = TextAnchor.MiddleLeft;
-
-                var countLabel = new Label { text = (group.fixtures?.Count ?? 0).ToString() };
-                countLabel.AddToClassList("text-sm");
-                countLabel.AddToClassList("text-muted");
-                countLabel.style.minWidth = 24;
-                countLabel.style.unityTextAlign = TextAnchor.MiddleRight;
-
-                row.Add(btn);
-                row.Add(countLabel);
-                _sgList.Add(row);
+                item.SetViewMode(
+                    group.name,
+                    group.fixtures?.Count ?? 0,
+                    () => OnSgListItemClicked(idx),
+                    () => OnSgReplaceSelection(idx),
+                    () => OnSgAddSelection(idx),
+                    () => OnSgRemoveSelection(idx)
+                );
             }
+
+            _sgList.Add(item);
         }
         UpdateSgButtons();
     }
@@ -1091,8 +1057,6 @@ public class EditorFixtureMap : EditorWindow
         _sgCreateBtn.SetEnabled(hasMap);
         _sgRenameBtn.SetEnabled(hasGroup);
         _sgDeleteBtn.SetEnabled(hasGroup);
-        _sgSelectBtn.SetEnabled(hasGroup);
-        _sgDeselectBtn.SetEnabled(hasGroup);
         _sgAddBtn.SetEnabled(hasGroup);
         _sgRemoveBtn.SetEnabled(hasGroup);
 
@@ -1199,23 +1163,19 @@ public class EditorFixtureMap : EditorWindow
         RefreshSgList();
     }
 
-    private void OnSgSelect()
+    private void SetSgSelection(int groupIndex, SelectionMode mode)
     {
-        if (_selectedGroupIndex < 0) return;
-        var group = _selectionGroups[_selectedGroupIndex];
+        if (groupIndex < 0 || groupIndex >= _selectionGroups.Count) return;
+        var group = _selectionGroups[groupIndex];
         var objects = GroupFixtureObjects(group);
-        SetFixtureSelection(objects, SelectionMode.Replace);
+        SetFixtureSelection(objects, mode);
     }
 
-    private void OnSgDeselect()
-    {
-        if (_selectedGroupIndex < 0) return;
-        var group = _selectionGroups[_selectedGroupIndex];
-        var objects = GroupFixtureObjects(group);
-        SetFixtureSelection(objects, SelectionMode.Remove);
-    }
+    private void OnSgReplaceSelection(int groupIndex) => SetSgSelection(groupIndex, SelectionMode.Replace);
+    private void OnSgAddSelection(int groupIndex) => SetSgSelection(groupIndex, SelectionMode.Add);
+    private void OnSgRemoveSelection(int groupIndex) => SetSgSelection(groupIndex, SelectionMode.Remove);
 
-    private void OnSgAdd()
+    private void OnSgAddFixtures()
     {
         if (_selectedGroupIndex < 0) return;
         var selectedIdx = GetSelectedFixtureIndices();
@@ -1231,7 +1191,7 @@ public class EditorFixtureMap : EditorWindow
         UpdateSgButtons();
     }
 
-    private void OnSgRemove()
+    private void OnSgRemoveFixtures()
     {
         if (_selectedGroupIndex < 0) return;
         var selectedIdx = new HashSet<int>(GetSelectedFixtureIndices());

@@ -38,6 +38,19 @@ public class EditorFixtureMap : EditorWindow
     }
 
     [Serializable]
+    private struct SelectionGroup
+    {
+        public string    name;
+        public List<int> fixtures;
+    }
+
+    [Serializable]
+    private struct SelectionGroupFile
+    {
+        public List<SelectionGroup> groups;
+    }
+
+    [Serializable]
     private struct ThemeColour
     {
         public float r, g, b, a;
@@ -119,6 +132,15 @@ public class EditorFixtureMap : EditorWindow
     private IMGUIContainer _canvas;
     private Label          _pathLabel;
 
+    // Selection groups state
+    private List<SelectionGroup> _selectionGroups    = new();
+    private int                  _selectedGroupIndex = -1;
+
+    // Selection groups UI refs
+    private ScrollView _sgList;
+    private Button     _sgCreateBtn, _sgRenameBtn, _sgDeleteBtn;
+    private Button     _sgSelectBtn, _sgDeselectBtn, _sgAddBtn, _sgRemoveBtn;
+
     // Cached IMGUI styles. Initialised once on first draw.
     // GUI.skin not available at CreateGUI time.
     private GUIStyle _nodeLabelStyle;
@@ -154,6 +176,9 @@ public class EditorFixtureMap : EditorWindow
 
     // Pixels of margin around outermost node edges when drawing a group box.
     private const float GroupMargin = 12f;
+
+    // Selection groups file extension
+    private string SelectionsPath => string.IsNullOrEmpty(_mapPath) ? null : _mapPath + ".selections.json";
 
     // Tunable layout parameters — bound to footer fields.
     private float _minGap                   = 0.1f;
@@ -192,6 +217,7 @@ public class EditorFixtureMap : EditorWindow
     private void OnSelectionChanged()
     {
         _canvas?.MarkDirtyRepaint();
+        UpdateSgButtons();
     }
 
     public void CreateGUI()
@@ -221,6 +247,24 @@ public class EditorFixtureMap : EditorWindow
             RecalculateLayout();
             _canvas.MarkDirtyRepaint();
         });
+
+        // Wire selection groups panel
+        _sgList        = rootVisualElement.Q<ScrollView>("sg-list");
+        _sgCreateBtn   = rootVisualElement.Q<Button>("sg-create-btn");
+        _sgRenameBtn   = rootVisualElement.Q<Button>("sg-rename-btn");
+        _sgDeleteBtn   = rootVisualElement.Q<Button>("sg-delete-btn");
+        _sgSelectBtn   = rootVisualElement.Q<Button>("sg-select-btn");
+        _sgDeselectBtn = rootVisualElement.Q<Button>("sg-deselect-btn");
+        _sgAddBtn      = rootVisualElement.Q<Button>("sg-add-btn");
+        _sgRemoveBtn   = rootVisualElement.Q<Button>("sg-remove-btn");
+
+        _sgCreateBtn.clicked   += OnSgCreate;
+        _sgRenameBtn.clicked   += OnSgRename;
+        _sgDeleteBtn.clicked   += OnSgDelete;
+        _sgSelectBtn.clicked   += OnSgSelect;
+        _sgDeselectBtn.clicked += OnSgDeselect;
+        _sgAddBtn.clicked      += OnSgAdd;
+        _sgRemoveBtn.clicked   += OnSgRemove;
 
         LoadTheme();
 
@@ -287,11 +331,39 @@ public class EditorFixtureMap : EditorWindow
             RecalculateLayout();
             Debug.Log($"  [EditorFixtureMap] RecalculateLayout: {sw.ElapsedMilliseconds}ms");
 
+            LoadSelectionGroups();
+            RefreshSgList();
+
             _canvas.MarkDirtyRepaint();
         }
         catch (Exception ex)
         {
             Debug.LogError($"  [EditorFixtureMap] Failed to load {absolutePath}: {ex.Message}");
+        }
+    }
+
+    private void SaveSelectionGroups()
+    {
+        string path = SelectionsPath;
+        if (path == null) return;
+        try { File.WriteAllText(path, JsonUtility.ToJson(new SelectionGroupFile { groups = _selectionGroups }, prettyPrint: true)); }
+        catch (Exception ex) { Debug.LogWarning($"[EditorFixtureMap] Could not save selections: {ex.Message}"); }
+    }
+
+    private void LoadSelectionGroups()
+    {
+        _selectionGroups    = new();
+        _selectedGroupIndex = -1;
+        string path = SelectionsPath;
+        if (path == null || !File.Exists(path)) return;
+        try
+        {
+            var file = JsonUtility.FromJson<SelectionGroupFile>(File.ReadAllText(path));
+            _selectionGroups = file.groups ?? new();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[EditorFixtureMap] Could not load selections: {ex.Message}");
         }
     }
 
@@ -869,6 +941,177 @@ public class EditorFixtureMap : EditorWindow
         return angle;
     }
 
+    // --- Selection Groups UI ----------------------------------------
+
+    private void RefreshSgList()
+    {
+        _sgList.Clear();
+        for (int i = 0; i < _selectionGroups.Count; i++)
+        {
+            int idx = i;
+            var btn = new Button(() => OnSgListItemClicked(idx)) { text = _selectionGroups[i].name };
+            btn.AddToClassList("sg-item");
+            if (i == _selectedGroupIndex) btn.AddToClassList("sg-selected");
+            _sgList.Add(btn);
+        }
+        UpdateSgButtons();
+    }
+
+    private void OnSgListItemClicked(int index)
+    {
+        _selectedGroupIndex = (_selectedGroupIndex == index) ? -1 : index;
+        RefreshSgList();
+    }
+
+    private void UpdateSgButtons()
+    {
+        bool hasMap     = _fixtures.Count > 0;
+        bool hasGroup   = _selectedGroupIndex >= 0 && _selectedGroupIndex < _selectionGroups.Count;
+
+        _sgCreateBtn.SetEnabled(hasMap);
+        _sgRenameBtn.SetEnabled(hasGroup);
+        _sgDeleteBtn.SetEnabled(hasGroup);
+        _sgSelectBtn.SetEnabled(hasGroup);
+        _sgDeselectBtn.SetEnabled(hasGroup);
+        _sgAddBtn.SetEnabled(hasGroup);
+        _sgRemoveBtn.SetEnabled(hasGroup);
+
+        if (!hasGroup)
+        {
+            _sgAddBtn.text    = "Add 0 fixture(s) to this group";
+            _sgRemoveBtn.text = "Remove 0 fixture(s) from this group";
+            return;
+        }
+
+        var group = _selectionGroups[_selectedGroupIndex];
+        var groupSet    = new HashSet<int>(group.fixtures ?? new List<int>());
+        var selectedIdx = GetSelectedFixtureIndices();
+
+        int addCount    = 0;
+        int removeCount = 0;
+        foreach (int idx in selectedIdx)
+        {
+            if (!groupSet.Contains(idx)) addCount++;
+            else removeCount++;
+        }
+
+        _sgAddBtn.text    = $"Add {addCount} fixture(s) to this group";
+        _sgRemoveBtn.text = $"Remove {removeCount} fixture(s) from this group";
+    }
+
+    private List<int> GetSelectedFixtureIndices()
+    {
+        var selectionSet = new HashSet<UnityEngine.Object>(Selection.objects);
+        var result = new List<int>();
+        for (int i = 0; i < _fixtureObjects.Count; i++)
+            if (_fixtureObjects[i] != null && selectionSet.Contains(_fixtureObjects[i]))
+                result.Add(i);
+        return result;
+    }
+
+    private List<UnityEngine.Object> GroupFixtureObjects(SelectionGroup group)
+    {
+        var result = new List<UnityEngine.Object>();
+        if (group.fixtures == null) return result;
+        foreach (int fi in group.fixtures)
+        {
+            if (fi < 0 || fi >= _fixtureObjects.Count) continue;
+            var obj = _fixtureObjects[fi];
+            if (obj != null) result.Add(obj);
+        }
+        return result;
+    }
+
+    private void OnSgCreate()
+    {
+        InputDialog.Show("Create Selection Group", "Group name:", "Group " + (_selectionGroups.Count + 1), newName =>
+        {
+            var group = new SelectionGroup
+            {
+                name     = newName,
+                fixtures = GetSelectedFixtureIndices()
+            };
+            _selectionGroups.Add(group);
+            _selectedGroupIndex = _selectionGroups.Count - 1;
+            SaveSelectionGroups();
+            RefreshSgList();
+        });
+    }
+
+    private void OnSgRename()
+    {
+        if (_selectedGroupIndex < 0) return;
+        string current = _selectionGroups[_selectedGroupIndex].name;
+        InputDialog.Show("Rename Group", "New name:", current, newName =>
+        {
+            var g = _selectionGroups[_selectedGroupIndex];
+            g.name = newName;
+            _selectionGroups[_selectedGroupIndex] = g;
+            SaveSelectionGroups();
+            RefreshSgList();
+        });
+    }
+
+    private void OnSgDelete()
+    {
+        if (_selectedGroupIndex < 0) return;
+        string name = _selectionGroups[_selectedGroupIndex].name;
+        if (!EditorUtility.DisplayDialog("Delete Group", $"Delete \"{name}\"?", "Delete", "Cancel")) return;
+
+        _selectionGroups.RemoveAt(_selectedGroupIndex);
+        _selectedGroupIndex = Mathf.Clamp(_selectedGroupIndex, -1, _selectionGroups.Count - 1);
+        if (_selectionGroups.Count == 0) _selectedGroupIndex = -1;
+
+        SaveSelectionGroups();
+        RefreshSgList();
+    }
+
+    private void OnSgSelect()
+    {
+        if (_selectedGroupIndex < 0) return;
+        var group = _selectionGroups[_selectedGroupIndex];
+        var objects = GroupFixtureObjects(group);
+        if (objects.Count > 0)
+            Selection.objects = objects.ToArray();
+    }
+
+    private void OnSgDeselect()
+    {
+        if (_selectedGroupIndex < 0) return;
+        var group = _selectionGroups[_selectedGroupIndex];
+        var toRemove = new HashSet<UnityEngine.Object>(GroupFixtureObjects(group));
+        var current  = new List<UnityEngine.Object>(Selection.objects);
+        current.RemoveAll(o => toRemove.Contains(o));
+        Selection.objects = current.ToArray();
+    }
+
+    private void OnSgAdd()
+    {
+        if (_selectedGroupIndex < 0) return;
+        var selectedIdx = GetSelectedFixtureIndices();
+        var group = _selectionGroups[_selectedGroupIndex];
+        if (group.fixtures == null) group.fixtures = new List<int>();
+        var groupSet = new HashSet<int>(group.fixtures);
+        foreach (int idx in selectedIdx)
+            groupSet.Add(idx);
+        group.fixtures = new List<int>(groupSet);
+        group.fixtures.Sort();
+        _selectionGroups[_selectedGroupIndex] = group;
+        SaveSelectionGroups();
+        UpdateSgButtons();
+    }
+
+    private void OnSgRemove()
+    {
+        if (_selectedGroupIndex < 0) return;
+        var selectedIdx = new HashSet<int>(GetSelectedFixtureIndices());
+        var group = _selectionGroups[_selectedGroupIndex];
+        group.fixtures?.RemoveAll(i => selectedIdx.Contains(i));
+        _selectionGroups[_selectedGroupIndex] = group;
+        SaveSelectionGroups();
+        UpdateSgButtons();
+    }
+
     // --- JSON parsing ------------------------------------------------
 
     [Serializable]
@@ -969,5 +1212,45 @@ public class EditorFixtureMap : EditorWindow
         if (absNorm.StartsWith(dataPath))
             return "Assets" + absNorm.Substring(dataPath.Length);
         return null;
+    }
+
+    // Modal input dialog for group name prompts
+    private class InputDialog : EditorWindow
+    {
+        private string _label;
+        private string _value = "";
+        private bool   _confirmed;
+        private Action<string> _onConfirm;
+
+        public static void Show(string title, string label, string defaultValue, Action<string> onConfirm)
+        {
+            var win = CreateInstance<InputDialog>();
+            win.titleContent = new GUIContent(title);
+            win._label       = label;
+            win._value       = defaultValue;
+            win._onConfirm   = onConfirm;
+            win.ShowModalUtility();
+        }
+
+        private void OnGUI()
+        {
+            EditorGUILayout.LabelField(_label);
+            GUI.SetNextControlName("input");
+            _value = EditorGUILayout.TextField(_value);
+            GUI.FocusControl("input");
+            GUILayout.FlexibleSpace();
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button("OK") || (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Return))
+                { _confirmed = true; Close(); }
+                if (GUILayout.Button("Cancel")) Close();
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (_confirmed && !string.IsNullOrWhiteSpace(_value))
+                _onConfirm?.Invoke(_value.Trim());
+        }
     }
 }

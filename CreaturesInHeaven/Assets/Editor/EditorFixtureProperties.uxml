@@ -54,86 +54,85 @@
                     <uie:ColorField name="emission-colour-field" />
                 </ui:VisualElement>
             </ui:VisualElement>
-
-
         </ui:VisualElement>
 
         <ui:VisualElement class="h-2" />
 
-        <!-- Illumination -->
-        <ui:VisualElement name="panel-illumination" class="panel-frame col">
+        <ui:VisualElement class="row">
+            <!-- Illumination -->
+            <ui:VisualElement name="panel-illumination" class="panel-frame col" style="width: 50%;">
 
-            <!-- Brightness -->
-            <ui:VisualElement name="brightness-control">
-                <ui:Label class="font-bold" text="Brightness" />
-                <ui:VisualElement class="h-0p5" />
-                <ui:VisualElement class="row">
-                    <ui:FloatField name="brightness-float-field" class="min-w-10" low-value="0" high-value="1" />
-                    <ui:Slider name="brightness-slider" class="grow" low-value="0" high-value="1" />
-                </ui:VisualElement>
-            </ui:VisualElement>
-            
-            <ui:VisualElement class="h-2" />
-            <ui:VisualElement class="separator" />
-            <ui:VisualElement class="h-2" />
-
-            <!-- Spread -->
-            <ui:VisualElement name="spread-control">
-                <ui:Label class="font-bold" text="Spread" />
-                <ui:VisualElement class="h-0p5" />
-                <ui:VisualElement class="row">
-                    <ui:Label name="spread-placeholder" text="Fixture does not have programmable spread." class="text-muted"/>
-                    <ui:FloatField name="spread-float-field" class="min-w-10" low-value="0" high-value="1" />
-                    <ui:Slider name="spread-slider" class="grow" low-value="0" high-value="1" />
-                </ui:VisualElement>
-            </ui:VisualElement>
-        </ui:VisualElement>
-
-        <ui:VisualElement class="h-2" />
-
-        <!-- Rotation/transform -->
-        <ui:VisualElement name="panel-transform" class="panel-frame col">
-
-            <!-- Rotation -->
-            <ui:VisualElement name="rotation-section" class="col">
-                <ui:Label class="font-bold text-sm" text="Rotation" />
-
-                <ui:VisualElement class="h-1" />
-
-                <ui:Label name="rotation-placeholder" text="Fixture does not have programmable rotation." class="text-muted"/>
-
-                <ui:VisualElement name="axis-x-control">
-                    <ui:Label name="axis-x-placeholder" text="X (tilt)" />
+                <!-- Brightness -->
+                <ui:VisualElement name="brightness-control">
+                    <ui:Label class="font-bold" text="Brightness" />
                     <ui:VisualElement class="h-0p5" />
                     <ui:VisualElement class="row">
-                        <ui:FloatField name="axis-x-float-field" class="min-w-10" low-value="-180" high-value="180" />
-                        <ui:Slider name="axis-x-slider" class="grow" low-value="-180" high-value="1" />
+                        <ui:FloatField name="brightness-float-field" class="min-w-10" low-value="0" high-value="1" />
+                        <ui:Slider name="brightness-slider" class="grow" low-value="0" high-value="1" />
                     </ui:VisualElement>
                 </ui:VisualElement>
                 
-                <ui:VisualElement class="h-1" />
+                <ui:VisualElement class="h-2" />
+                <ui:VisualElement class="separator" />
+                <ui:VisualElement class="h-2" />
 
-                <ui:VisualElement name="axis-y-control">
-                    <ui:Label name="axis-y-placeholder" text="Y (pan)" />
+                <!-- Spread -->
+                <ui:VisualElement name="spread-control">
+                    <ui:Label class="font-bold" text="Spread" />
                     <ui:VisualElement class="h-0p5" />
                     <ui:VisualElement class="row">
-                        <ui:FloatField name="axis-y-float-field" class="min-w-10" low-value="-180" high-value="180" />
-                        <ui:Slider name="axis-y-slider" class="grow" low-value="-180" high-value="180" />
-                    </ui:VisualElement>
-                </ui:VisualElement>
-                
-                <ui:VisualElement class="h-1" />
-
-                <ui:VisualElement name="axis-z-control">
-                    <ui:Label name="axis-z-placeholder" text="Z (roll)" />
-                    <ui:VisualElement class="h-0p5" />
-                    <ui:VisualElement class="row">
-                        <ui:FloatField name="axis-z-float-field" class="min-w-10" low-value="-180" high-value="180" />
-                        <ui:Slider name="axis-z-slider" class="grow" low-value="-180" high-value="180" />
+                        <ui:Label name="spread-placeholder" text="Fixture does not have programmable spread." class="text-muted"/>
+                        <ui:FloatField name="spread-float-field" class="min-w-10" low-value="0" high-value="1" />
+                        <ui:Slider name="spread-slider" class="grow" low-value="0" high-value="1" />
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
 
+            <ui:VisualElement class="w-2" />
+
+            <!-- Rotation/transform -->
+            <ui:VisualElement name="panel-transform" class="panel-frame col" style="width: 50%;">
+
+                <!-- Rotation -->
+                <ui:VisualElement name="rotation-section" class="col">
+                    <ui:Label class="font-bold text-sm" text="Rotation" />
+
+                    <ui:VisualElement class="h-1" />
+
+                    <ui:Label name="rotation-placeholder" text="Fixture does not have programmable rotation." class="text-muted"/>
+
+                    <ui:VisualElement name="axis-x-control">
+                        <ui:Label name="axis-x-placeholder" text="X (tilt)" />
+                        <ui:VisualElement class="h-0p5" />
+                        <ui:VisualElement class="row">
+                            <ui:FloatField name="axis-x-float-field" class="min-w-10" low-value="-180" high-value="180" />
+                            <ui:Slider name="axis-x-slider" class="grow" low-value="-180" high-value="1" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    
+                    <ui:VisualElement class="h-1" />
+
+                    <ui:VisualElement name="axis-y-control">
+                        <ui:Label name="axis-y-placeholder" text="Y (pan)" />
+                        <ui:VisualElement class="h-0p5" />
+                        <ui:VisualElement class="row">
+                            <ui:FloatField name="axis-y-float-field" class="min-w-10" low-value="-180" high-value="180" />
+                            <ui:Slider name="axis-y-slider" class="grow" low-value="-180" high-value="180" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    
+                    <ui:VisualElement class="h-1" />
+
+                    <ui:VisualElement name="axis-z-control">
+                        <ui:Label name="axis-z-placeholder" text="Z (roll)" />
+                        <ui:VisualElement class="h-0p5" />
+                        <ui:VisualElement class="row">
+                            <ui:FloatField name="axis-z-float-field" class="min-w-10" low-value="-180" high-value="180" />
+                            <ui:Slider name="axis-z-slider" class="grow" low-value="-180" high-value="180" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
         </ui:VisualElement>
 
     </ui:ScrollView>

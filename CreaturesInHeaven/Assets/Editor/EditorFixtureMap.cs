@@ -90,17 +90,17 @@ public class EditorFixtureMap : EditorWindow
 
     // --- Viewmodel ---------------------------------------------------
 
-    // Precomputed canvas-space layout for a single fixture node.
+    // Precomputed viewmodel layout for a single fixture node.
     private struct FixtureLayout
     {
-        public Vector2 centre;   // canvas-space centre pixel
-        public Vector2 halfExt;  // half-width and half-height in pixels
+        public Vector2 centre;   // viewmodel-space centre
+        public Vector2 halfExt;  // half-width and half-height in viewmodel space
     }
 
-    // Precomputed canvas-space layout for a group bounding box.
+    // Precomputed viewmodel layout for a group bounding box.
     private struct GroupLayout
     {
-        public Rect rect;        // canvas-space bounding rect including padding
+        public Rect rect;        // viewmodel-space bounding rect including padding
         public bool valid;       // false if the group has no valid member fixtures
     }
 
@@ -135,6 +135,7 @@ public class EditorFixtureMap : EditorWindow
     // Selection groups state
     private List<SelectionGroup> _selectionGroups    = new();
     private int                  _selectedGroupIndex = -1;
+    private bool                 _sgRenaming         = false;
 
     // Selection groups UI refs
     private ScrollView _sgList;
@@ -546,14 +547,20 @@ public class EditorFixtureMap : EditorWindow
             float gMinY = float.MaxValue, gMaxY = float.MinValue;
             bool any = false;
 
+            // Compute bounding box in viewmodel space from fixture layouts
             foreach (int fi in g.fixtures)
             {
                 if (fi < 0 || fi >= _fixtureLayouts.Count) continue;
                 var fl = _fixtureLayouts[fi];
-                if (fl.centre.x - fl.halfExt.x < gMinX) gMinX = fl.centre.x - fl.halfExt.x;
-                if (fl.centre.x + fl.halfExt.x > gMaxX) gMaxX = fl.centre.x + fl.halfExt.x;
-                if (fl.centre.y - fl.halfExt.y < gMinY) gMinY = fl.centre.y - fl.halfExt.y;
-                if (fl.centre.y + fl.halfExt.y > gMaxY) gMaxY = fl.centre.y + fl.halfExt.y;
+                float flMinX = fl.centre.x - fl.halfExt.x;
+                float flMaxX = fl.centre.x + fl.halfExt.x;
+                float flMinY = fl.centre.y - fl.halfExt.y;
+                float flMaxY = fl.centre.y + fl.halfExt.y;
+
+                if (flMinX < gMinX) gMinX = flMinX;
+                if (flMaxX > gMaxX) gMaxX = flMaxX;
+                if (flMinY < gMinY) gMinY = flMinY;
+                if (flMaxY > gMaxY) gMaxY = flMaxY;
                 any = true;
             }
 
@@ -569,8 +576,8 @@ public class EditorFixtureMap : EditorWindow
                 rect  = new Rect(
                     gMinX - GroupMargin,
                     gMinY - GroupMargin,
-                    (gMaxX - gMinX) + GroupMargin * 2f,
-                    (gMaxY - gMinY) + GroupMargin * 2f
+                    gMaxX - gMinX + GroupMargin * 2f,
+                    gMaxY - gMinY + GroupMargin * 2f
                 ),
             });
         }
@@ -822,7 +829,7 @@ public class EditorFixtureMap : EditorWindow
             Color fill    = selected ? _theme.groupFill_Active.ToColor()   : _theme.groupFill.ToColor();
             Color outline = selected ? _theme.groupOutline_Active.ToColor() : _theme.groupOutline.ToColor();
 
-            // Apply zoom and pan transform
+            // Transform from viewmodel space to screen space (applying zoom and pan)
             Vector2 minScreen = ToScreen(new Vector2(r.xMin, r.yMin));
             Vector2 maxScreen = ToScreen(new Vector2(r.xMax, r.yMax));
             var corners = new Vector3[]
@@ -836,7 +843,7 @@ public class EditorFixtureMap : EditorWindow
 
             if (selected)
             {
-                float labelW = Mathf.Max((maxScreen.x - minScreen.x), 120f);
+                float labelW = Mathf.Max(maxScreen.x - minScreen.x, 120f);
                 var labelRect = new Rect((minScreen.x + maxScreen.x) * 0.5f - labelW * 0.5f, maxScreen.y + 2f, labelW, 32f);
                 GUI.Label(labelRect, g.name, _groupLabelStyle);
             }
@@ -955,10 +962,45 @@ public class EditorFixtureMap : EditorWindow
         for (int i = 0; i < _selectionGroups.Count; i++)
         {
             int idx = i;
-            var btn = new Button(() => OnSgListItemClicked(idx)) { text = _selectionGroups[i].name };
-            btn.AddToClassList("sg-item");
-            if (i == _selectedGroupIndex) btn.AddToClassList("sg-selected");
-            _sgList.Add(btn);
+
+            if (i == _selectedGroupIndex && _sgRenaming)
+            {
+                var row = new VisualElement();
+                row.AddToClassList("sg-item");
+                row.AddToClassList("sg-selected");
+                row.AddToClassList("row");
+
+                var field = new TextField { value = _selectionGroups[i].name };
+                field.AddToClassList("grow");
+                field.AddToClassList("sg-rename-field");
+                field.RegisterCallback<KeyDownEvent>(e =>
+                {
+                    if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter)
+                    { CommitRename(idx, field.value); e.StopPropagation(); }
+                    else if (e.keyCode == KeyCode.Escape)
+                    { CancelRename(); e.StopPropagation(); }
+                });
+
+                var confirmBtn = new Button(() => CommitRename(idx, field.value)) { text = "✓" };
+                confirmBtn.AddToClassList("btn-icon-sm");
+
+                var cancelBtn = new Button(CancelRename) { text = "✕" };
+                cancelBtn.AddToClassList("btn-icon-sm");
+
+                row.Add(field);
+                row.Add(confirmBtn);
+                row.Add(cancelBtn);
+                _sgList.Add(row);
+
+                field.schedule.Execute(() => field.Focus()).StartingIn(0);
+            }
+            else
+            {
+                var btn = new Button(() => OnSgListItemClicked(idx)) { text = _selectionGroups[i].name };
+                btn.AddToClassList("sg-item");
+                if (i == _selectedGroupIndex) btn.AddToClassList("sg-selected");
+                _sgList.Add(btn);
+            }
         }
         UpdateSgButtons();
     }
@@ -966,6 +1008,26 @@ public class EditorFixtureMap : EditorWindow
     private void OnSgListItemClicked(int index)
     {
         _selectedGroupIndex = (_selectedGroupIndex == index) ? -1 : index;
+        RefreshSgList();
+    }
+
+    private void CommitRename(int index, string newName)
+    {
+        newName = newName.Trim();
+        if (!string.IsNullOrEmpty(newName))
+        {
+            var g = _selectionGroups[index];
+            g.name = newName;
+            _selectionGroups[index] = g;
+            SaveSelectionGroups();
+        }
+        _sgRenaming = false;
+        RefreshSgList();
+    }
+
+    private void CancelRename()
+    {
+        _sgRenaming = false;
         RefreshSgList();
     }
 
@@ -1030,32 +1092,23 @@ public class EditorFixtureMap : EditorWindow
 
     private void OnSgCreate()
     {
-        InputDialog.Show("Create Selection Group", "Group name:", "Group " + (_selectionGroups.Count + 1), newName =>
+        var group = new SelectionGroup
         {
-            var group = new SelectionGroup
-            {
-                name     = newName,
-                fixtures = GetSelectedFixtureIndices()
-            };
-            _selectionGroups.Add(group);
-            _selectedGroupIndex = _selectionGroups.Count - 1;
-            SaveSelectionGroups();
-            RefreshSgList();
-        });
+            name     = "Group " + (_selectionGroups.Count + 1),
+            fixtures = GetSelectedFixtureIndices()
+        };
+        _selectionGroups.Add(group);
+        _selectedGroupIndex = _selectionGroups.Count - 1;
+        _sgRenaming = true;
+        SaveSelectionGroups();
+        RefreshSgList();
     }
 
     private void OnSgRename()
     {
         if (_selectedGroupIndex < 0) return;
-        string current = _selectionGroups[_selectedGroupIndex].name;
-        InputDialog.Show("Rename Group", "New name:", current, newName =>
-        {
-            var g = _selectionGroups[_selectedGroupIndex];
-            g.name = newName;
-            _selectionGroups[_selectedGroupIndex] = g;
-            SaveSelectionGroups();
-            RefreshSgList();
-        });
+        _sgRenaming = true;
+        RefreshSgList();
     }
 
     private void OnSgDelete()
@@ -1218,45 +1271,5 @@ public class EditorFixtureMap : EditorWindow
         if (absNorm.StartsWith(dataPath))
             return "Assets" + absNorm.Substring(dataPath.Length);
         return null;
-    }
-
-    // Modal input dialog for group name prompts
-    private class InputDialog : EditorWindow
-    {
-        private string _label;
-        private string _value = "";
-        private bool   _confirmed;
-        private Action<string> _onConfirm;
-
-        public static void Show(string title, string label, string defaultValue, Action<string> onConfirm)
-        {
-            var win = CreateInstance<InputDialog>();
-            win.titleContent = new GUIContent(title);
-            win._label       = label;
-            win._value       = defaultValue;
-            win._onConfirm   = onConfirm;
-            win.ShowModalUtility();
-        }
-
-        private void OnGUI()
-        {
-            EditorGUILayout.LabelField(_label);
-            GUI.SetNextControlName("input");
-            _value = EditorGUILayout.TextField(_value);
-            GUI.FocusControl("input");
-            GUILayout.FlexibleSpace();
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                if (GUILayout.Button("OK") || (Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Return))
-                { _confirmed = true; Close(); }
-                if (GUILayout.Button("Cancel")) Close();
-            }
-        }
-
-        private void OnDestroy()
-        {
-            if (_confirmed && !string.IsNullOrWhiteSpace(_value))
-                _onConfirm?.Invoke(_value.Trim());
-        }
     }
 }

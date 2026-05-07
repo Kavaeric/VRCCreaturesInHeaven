@@ -703,26 +703,7 @@ public class EditorFixtureMap : EditorWindow
                 // Collect all objects to select for the group's member fixtures (root + head + props).
                 var toSelect = new List<UnityEngine.Object>();
                 foreach (int fi in _groups[groupHit].fixtures)
-                {
-                    if (fi < 0 || fi >= _fixtureObjects.Count) continue;
-                    var fixtureRoot = _fixtureObjects[fi];
-                    if (fixtureRoot == null) continue;
-
-                    toSelect.Add(fixtureRoot);
-
-                    // Include head and props transform from cached driver
-                    if (fi < _fixtureDrivers.Count)
-                    {
-                        var driver = _fixtureDrivers[fi] as FixtureDriver;
-                        if (driver != null)
-                        {
-                            if (driver.Head != null)
-                                toSelect.Add(driver.Head.gameObject);
-                            if (driver.PropsTransform != null)
-                                toSelect.Add(driver.PropsTransform.gameObject);
-                        }
-                    }
-                }
+                    CollectFixtureObjects(fi, toSelect);
 
                 if (toSelect.Count > 0)
                 {
@@ -775,21 +756,8 @@ public class EditorFixtureMap : EditorWindow
 
         if (obj is GameObject go)
         {
-            toSelect.Add(go);
-
-            // Find the fixture index to access cached driver
             int fixtureIndex = _fixtureObjects.IndexOf(go);
-            if (fixtureIndex >= 0 && fixtureIndex < _fixtureDrivers.Count)
-            {
-                var driver = _fixtureDrivers[fixtureIndex] as FixtureDriver;
-                if (driver != null)
-                {
-                    if (driver.Head != null)
-                        toSelect.Add(driver.Head.gameObject);
-                    if (driver.PropsTransform != null)
-                        toSelect.Add(driver.PropsTransform.gameObject);
-                }
-            }
+            CollectFixtureObjects(fixtureIndex, toSelect);
         }
         else
         {
@@ -1086,16 +1054,34 @@ public class EditorFixtureMap : EditorWindow
         return result;
     }
 
+    // Collects root + head + props objects for a single fixture index.
+    private void CollectFixtureObjects(int fixtureIndex, List<UnityEngine.Object> outList)
+    {
+        if (fixtureIndex < 0 || fixtureIndex >= _fixtureObjects.Count) return;
+        var fixtureRoot = _fixtureObjects[fixtureIndex];
+        if (fixtureRoot == null) return;
+
+        outList.Add(fixtureRoot);
+
+        if (fixtureIndex < _fixtureDrivers.Count)
+        {
+            var driver = _fixtureDrivers[fixtureIndex] as FixtureDriver;
+            if (driver != null)
+            {
+                if (driver.Head != null)
+                    outList.Add(driver.Head.gameObject);
+                if (driver.PropsTransform != null)
+                    outList.Add(driver.PropsTransform.gameObject);
+            }
+        }
+    }
+
     private List<UnityEngine.Object> GroupFixtureObjects(SelectionGroup group)
     {
         var result = new List<UnityEngine.Object>();
         if (group.fixtures == null) return result;
         foreach (int fi in group.fixtures)
-        {
-            if (fi < 0 || fi >= _fixtureObjects.Count) continue;
-            var obj = _fixtureObjects[fi];
-            if (obj != null) result.Add(obj);
-        }
+            CollectFixtureObjects(fi, result);
         return result;
     }
 

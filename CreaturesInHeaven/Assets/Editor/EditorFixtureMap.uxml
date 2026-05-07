@@ -6,6 +6,8 @@
             <ui:Button name="load-btn" text="Load map…" class="btn-sm shrink-0" />
             <ui:VisualElement class="w-2" />
             <ui:Label name="map-path-label" text="No map loaded" class="text-sm text-muted grow" />
+            <ui:Button name="view-settings-btn" text="View settings…" class="btn-sm shrink-0" />
+            <ui:VisualElement class="w-1" />
             <ui:Button name="reload-btn" text="↺" class="btn-icon-sm shrink-0" />
         </ui:VisualElement>
         <ui:VisualElement class="h-2" />
@@ -51,38 +53,36 @@
 
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement class="h-2" />
-        <ui:VisualElement class="separator" />
-        <ui:VisualElement class="h-2" />
-        <ui:VisualElement class="row items-center">
-            <ui:VisualElement class="col">
-                <ui:Label text="Flip y-axis" class="font-bold" />
-                <ui:VisualElement class="h-0p5" />
+
+        <ui:VisualElement name="view-settings-panel" class="view-settings-panel">
+            <ui:VisualElement class="row items-center">
+                <ui:Label text="View settings" class="font-bold grow" />
+                <ui:Button name="view-settings-close-btn" text="✕" class="btn-icon-sm" />
+            </ui:VisualElement>
+            <ui:VisualElement class="h-2" />
+            <ui:VisualElement class="row items-center">
+                <ui:Label text="Flip y-axis" class="grow" />
                 <ui:Toggle name="flip-y-toggle" />
             </ui:VisualElement>
-            <ui:VisualElement class="w-1" />
-            <ui:VisualElement class="col">
-                <ui:Label text="Minimum gap" class="font-bold" />
-                <ui:VisualElement class="h-0p5" />
-                <ui:FloatField name="min-gap-field" />
+            <ui:VisualElement class="h-1" />
+            <ui:VisualElement class="row items-center">
+                <ui:Label text="Minimum gap" class="grow" />
+                <ui:FloatField name="min-gap-field" class="view-settings-field" />
             </ui:VisualElement>
-            <ui:VisualElement class="w-1" />
-            <ui:VisualElement class="col">
-                <ui:Label text="Gap compression" class="font-bold" />
-                <ui:VisualElement class="h-0p5" />
-                <ui:FloatField name="gap-compression-k-field" />
+            <ui:VisualElement class="h-1" />
+            <ui:VisualElement class="row items-center">
+                <ui:Label text="Gap compression" class="grow" />
+                <ui:FloatField name="gap-compression-k-field" class="view-settings-field" />
             </ui:VisualElement>
-            <ui:VisualElement class="w-1" />
-            <ui:VisualElement class="col">
-                <ui:Label text="Node compression threshold" class="font-bold" />
-                <ui:VisualElement class="h-0p5" />
-                <ui:FloatField name="node-compression-threshold-field" />
+            <ui:VisualElement class="h-1" />
+            <ui:VisualElement class="row items-center">
+                <ui:Label text="Node compression threshold" class="grow" />
+                <ui:FloatField name="node-compression-threshold-field" class="view-settings-field" />
             </ui:VisualElement>
-            <ui:VisualElement class="w-1" />
-            <ui:VisualElement class="col">
-                <ui:Label text="Node compression" class="font-bold" />
-                <ui:VisualElement class="h-0p5" />
-                <ui:FloatField name="node-compression-k-field" />
+            <ui:VisualElement class="h-1" />
+            <ui:VisualElement class="row items-center">
+                <ui:Label text="Node compression" class="grow" />
+                <ui:FloatField name="node-compression-k-field" class="view-settings-field" />
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

@@ -234,6 +234,12 @@ public class EditorFixtureMap : EditorWindow
         rootVisualElement.Q<Button>("load-btn").clicked   += PromptLoad;
         rootVisualElement.Q<Button>("reload-btn").clicked += Reload;
 
+        var viewSettingsPanel = rootVisualElement.Q<VisualElement>("view-settings-panel");
+        rootVisualElement.Q<Button>("view-settings-btn").clicked += () =>
+            viewSettingsPanel.EnableInClassList("visible", !viewSettingsPanel.ClassListContains("visible"));
+        rootVisualElement.Q<Button>("view-settings-close-btn").clicked += () =>
+            viewSettingsPanel.RemoveFromClassList("visible");
+
         BindFloatField("min-gap-field",                    _minGap,                   v => _minGap                   = v);
         BindFloatField("gap-compression-k-field",          _gapCompressionK,          v => _gapCompressionK          = v);
         BindFloatField("node-compression-k-field",         _nodeCompressionK,         v => _nodeCompressionK         = v);

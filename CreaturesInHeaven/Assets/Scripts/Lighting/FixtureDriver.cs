@@ -50,7 +50,6 @@ public class FixtureDriver : UdonSharpBehaviour
             return;
         }
 
-
         if (!PropsTransform.gameObject.activeSelf)
         {
             _propBlock.SetColor("_EmissionColor", new Color(0f, 0f, 0f, 0f));

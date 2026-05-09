@@ -124,132 +124,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &120343241 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6402316974198846999, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &120343243 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 4889050117861857218, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &126704874 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 4508825397373229659, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &126704876 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 2707345894975437710, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &137187298 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 55784028898711826, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &137187300 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 2001519319402051783, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &161560707
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: Lighting Seq 02 Concourse Night_LMA7
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 7
-  sortingID: 7
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
---- !u!114 &372725534
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: Lighting Seq 02 Concourse Night_LMA3
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 3
-  sortingID: 3
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &396777393
 GameObject:
   m_ObjectHideFlags: 0
@@ -373,19 +247,7 @@ MonoBehaviour:
   cloudShadowOffsetY: 0
   supersample: 0
   UID: 1621708734
---- !u!1 &458945295 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 568477148857978892, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &458945297 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 2081611375116087769, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &465204138
+--- !u!114 &447219059
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -395,12 +257,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: Lighting Seq 02 Concourse Night_LMA5
+  m_Name: Lighting Seq 02 Concourse Night_LMA7
   m_EditorClassIdentifier: 
   resolution: 4096
   bitmask: 1
-  id: 5
-  sortingID: 5
+  id: 7
+  sortingID: 7
   isImplicit: 1
   area: 0
   totalVertexCount: 0
@@ -430,54 +292,51 @@ MonoBehaviour:
   fixPos3D: 0
   voxelSize: {x: 1, y: 1, z: 1}
   passedFilter: 0
---- !u!1 &583275281 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2204563732101932696, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
+--- !u!114 &632109080
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
---- !u!23 &583275283 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 403304681382250317, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &606925203 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 9010815425236531880, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &606925205 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 7353292507439618941, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &767461995 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 4626795390887986425, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &767461997 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 6572248931020088620, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &817305693 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7674159751335877579, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &817305695 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 8178796211845085726, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
+  m_Name: Lighting Seq 02 Concourse Night_LMA3
+  m_EditorClassIdentifier: 
+  resolution: 4096
+  bitmask: 1
+  id: 3
+  sortingID: 3
+  isImplicit: 1
+  area: 0
+  totalVertexCount: 0
+  vertexCounter: 0
+  sceneLodLevel: -1
+  autoResolution: 0
+  sceneName: 
+  tag: -1
+  containsTerrains: 0
+  probes: 0
+  mode: 1
+  renderMode: 1000
+  renderDirMode: 1000
+  atlasPacker: 1000
+  holeFilling: 0
+  vertexSamplingDensity: 0
+  computeSSS: 0
+  sssSamples: 16
+  sssDensity: 10
+  sssColor: {r: 1, g: 1, b: 1, a: 1}
+  sssScale: 1
+  fakeShadowBias: 0
+  transparentSelfShadow: 0
+  flipNormal: 0
+  parentName: 
+  overridePath: 
+  fixPos3D: 0
+  voxelSize: {x: 1, y: 1, z: 1}
+  passedFilter: 0
 --- !u!1 &849486841
 GameObject:
   m_ObjectHideFlags: 0
@@ -631,145 +490,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: -92.843, y: 4.123993, z: -3.4700012}
---- !u!1 &860610382 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6468080421527136562, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &860610384 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 4810900687118862567, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &902773072 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7635961691641453759, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &902773074 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 8284546077628579178, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &929909956 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8585763507964240313, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &929909958 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 7792984494773354604, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &987517515 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6872293125873048547, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &987517517 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 4926857040106240566, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1021105389
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: Lighting Seq 02 Concourse Night_LMA1
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 1
-  sortingID: 1
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
---- !u!114 &1069918607
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: Lighting Seq 02 Concourse Night_LMA6
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 6
-  sortingID: 6
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
---- !u!114 &1276549581
+--- !u!114 &904546953
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -814,147 +535,6 @@ MonoBehaviour:
   fixPos3D: 0
   voxelSize: {x: 1, y: 1, z: 1}
   passedFilter: 0
---- !u!1 &1304756841 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1060312452299790793, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &1304756843 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 1564439013776898076, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1358710482 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7057652246679257577, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &1358710484 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 8858911572259610684, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1374411675 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6314007551169087433, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &1374411677 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 5521166964661085724, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1381942794 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7852686519746863786, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &1381942796 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 8645403549044114303, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1419618277 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5300743224723733323, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &1419618279 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 5949529508613249694, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1561421849 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1547589978367944512, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &1561421851 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 1043384389297030805, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1563456797 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2759648176740328278, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &1563456799 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 4417117630633525891, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1566773800
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: Lighting Seq 02 Concourse Night_LMA4
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 4
-  sortingID: 4
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
---- !u!1 &1578554375 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 674051736716952116, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &1578554377 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 1322450853865481185, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1631824993
 GameObject:
   m_ObjectHideFlags: 0
@@ -1060,51 +640,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 24.784, z: 0}
---- !u!114 &1669896493
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: Lighting Seq 02 Concourse Night_LM0
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 0
-  sortingID: 0
-  isImplicit: 1
-  area: 5464336
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &1674270527
 GameObject:
   m_ObjectHideFlags: 1
@@ -1134,8 +669,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b7fa80e7116296f4eb4f49ec1544ee22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  renderSettingsBounces: 5
-  renderSettingsGISamples: 16
+  renderSettingsBounces: 4
+  renderSettingsGISamples: 8
   renderSettingsGIBackFaceWeight: 0
   renderSettingsTileSize: 512
   renderSettingsPriority: 2
@@ -1208,7 +743,7 @@ MonoBehaviour:
   renderSettingsDenoiserType: 101
   renderSettingsExportTerrainTrees: 0
   renderSettingsShowPerf: 1
-  renderSettingsSampleDiv: 2
+  renderSettingsSampleDiv: 4
   renderSettingsAtlasPacker: 0
   renderSettingsBatchPoints: 1
   renderSettingsCompressVolumes: 0
@@ -1222,70 +757,67 @@ MonoBehaviour:
   renderSettingsRTPVHeight: 360
   renderSettingsRTPVExposure: 0.99999994
   renderSettingsRemoveDuplicateLightmaps: 0
-  lastBakeTime: 966
+  lastBakeTime: 177
   enlightenWarningShown: 0
   enlightenWarningShown2: 0
   uniqueLights:
-  - {fileID: 987517515}
   - {fileID: 1664471457}
   - {fileID: 396777393}
   implicitGroups:
-  - {fileID: 372725534}
-  - {fileID: 1276549581}
-  - {fileID: 1276549581}
-  - {fileID: 161560707}
-  - {fileID: 1276549581}
-  - {fileID: 1276549581}
-  - {fileID: 465204138}
-  - {fileID: 1276549581}
-  - {fileID: 1021105389}
-  - {fileID: 1021105389}
-  - {fileID: 1021105389}
-  - {fileID: 1021105389}
-  - {fileID: 1566773800}
-  - {fileID: 1021105389}
-  - {fileID: 372725534}
-  - {fileID: 1069918607}
-  - {fileID: 1021105389}
-  - {fileID: 1021105389}
-  - {fileID: 1669896493}
-  - {fileID: 1799439354}
-  - {fileID: 1276549581}
-  - {fileID: 1021105389}
-  - {fileID: 1021105389}
-  - {fileID: 1276549581}
+  - {fileID: 1896284840}
+  - {fileID: 904546953}
+  - {fileID: 1896284840}
+  - {fileID: 632109080}
+  - {fileID: 904546953}
+  - {fileID: 904546953}
+  - {fileID: 1896284840}
+  - {fileID: 1896284840}
+  - {fileID: 904546953}
+  - {fileID: 1896284840}
+  - {fileID: 2138323224}
+  - {fileID: 904546953}
+  - {fileID: 1896284840}
+  - {fileID: 1896284840}
+  - {fileID: 1896284840}
+  - {fileID: 1968582635}
+  - {fileID: 1822398741}
+  - {fileID: 447219059}
+  - {fileID: 1970272489}
+  - {fileID: 632109080}
+  - {fileID: 2064403350}
+  - {fileID: 1896284840}
+  - {fileID: 904546953}
   implicitGroupedObjects:
-  - {fileID: 120343241}
-  - {fileID: 126704874}
-  - {fileID: 137187298}
-  - {fileID: 458945295}
-  - {fileID: 583275281}
-  - {fileID: 606925203}
-  - {fileID: 767461995}
-  - {fileID: 817305693}
-  - {fileID: 860610382}
-  - {fileID: 902773072}
-  - {fileID: 929909956}
-  - {fileID: 1304756841}
-  - {fileID: 1358710482}
-  - {fileID: 1374411675}
-  - {fileID: 1381942794}
-  - {fileID: 1419618277}
-  - {fileID: 1561421849}
-  - {fileID: 1563456797}
-  - {fileID: 1578554375}
-  - {fileID: 1778681084}
-  - {fileID: 1861713469}
-  - {fileID: 1934935985}
-  - {fileID: 2046464702}
-  - {fileID: 2067466039}
+  - {fileID: 6158864631373787130}
+  - {fileID: 6158864631373787129}
+  - {fileID: 6158864631373787128}
+  - {fileID: 6158864631373787127}
+  - {fileID: 6158864631373787126}
+  - {fileID: 6158864631373787125}
+  - {fileID: 6158864631373787124}
+  - {fileID: 6158864631373787123}
+  - {fileID: 6158864631373787122}
+  - {fileID: 6158864631373787121}
+  - {fileID: 6158864631373787120}
+  - {fileID: 6158864631373787119}
+  - {fileID: 6158864631373787118}
+  - {fileID: 6158864631373787117}
+  - {fileID: 6158864631373787116}
+  - {fileID: 6158864631373787115}
+  - {fileID: 6158864631373787114}
+  - {fileID: 6158864631373787113}
+  - {fileID: 6158864631373787112}
+  - {fileID: 6158864631373787111}
+  - {fileID: 6158864631373787110}
+  - {fileID: 6158864631373787109}
+  - {fileID: 6158864631373787108}
   bounds:
   - m_Center: {x: -195.41327, y: 46.22394, z: 537.9378}
     m_Extent: {x: 1422.6143, y: 50.22394, z: 1946.4277}
   - m_Center: {x: -125.30371, y: 5.9070673, z: 99.212006}
     m_Extent: {x: 176.40051, y: 9.175172, z: 379.40686}
-  - m_Center: {x: 72.147095, y: 4.9595547, z: -60.39383}
-    m_Extent: {x: 280.9583, y: 8.227659, z: 283.64523}
+  - m_Center: {x: -47.14792, y: 4.9595547, z: -60.39383}
+    m_Extent: {x: 161.6633, y: 8.227659, z: 283.64523}
   - m_Center: {x: 42.885036, y: 4.659413, z: -75.48988}
     m_Extent: {x: 63.71508, y: 7.7925453, z: 171.4899}
   - m_Center: {x: 10.414998, y: 5.5, z: 56}
@@ -1316,37 +848,6 @@ MonoBehaviour:
   lightmapHasRNM: 000000000000000000
   lights:
   - tform:
-      e00: -1
-      e01: 0
-      e02: -0.0000011622905
-      e03: -19.830029
-      e10: 0
-      e11: 1
-      e12: 0
-      e13: 9.83
-      e20: 0.0000011622905
-      e21: 0
-      e22: -1
-      e23: 32.000023
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    color: {r: 1, g: 1, b: 1, a: 1}
-    intensity: 50
-    range: 100
-    radius: 0
-    samples: 256
-    samples2: 16
-    bitmask: 0
-    bakeToIndirect: 1
-    selfShadow: 1
-    realisticFalloff: 0
-    projMode: 0
-    cookie: {fileID: 0}
-    angle: 30
-    UID: 1
-  - tform:
       e00: 1
       e01: 0
       e02: 0
@@ -1376,7 +877,7 @@ MonoBehaviour:
     projMode: 0
     cookie: {fileID: 8900000, guid: 5966986f66f8efb48bf21fa85ae2187e, type: 3}
     angle: 30
-    UID: 2
+    UID: 1
   - tform:
       e00: -0.89966583
       e01: -0.13934657
@@ -1407,35 +908,33 @@ MonoBehaviour:
     projMode: 0
     cookie: {fileID: 0}
     angle: 30
-    UID: 3
+    UID: 2
   modifiedAssetPathList: []
   modifiedAssets: []
   bakedRenderers:
-  - {fileID: 120343243}
-  - {fileID: 126704876}
-  - {fileID: 137187300}
-  - {fileID: 458945297}
-  - {fileID: 583275283}
-  - {fileID: 606925205}
-  - {fileID: 767461997}
-  - {fileID: 817305695}
-  - {fileID: 860610384}
-  - {fileID: 902773074}
-  - {fileID: 929909958}
-  - {fileID: 987517517}
-  - {fileID: 1304756843}
-  - {fileID: 1358710484}
-  - {fileID: 1374411677}
-  - {fileID: 1381942796}
-  - {fileID: 1419618279}
-  - {fileID: 1561421851}
-  - {fileID: 1563456799}
-  - {fileID: 1578554377}
-  - {fileID: 1778681086}
-  - {fileID: 1861713471}
-  - {fileID: 1934935987}
-  - {fileID: 2046464704}
-  - {fileID: 2067466041}
+  - {fileID: 6158864631373787107}
+  - {fileID: 6158864631373787106}
+  - {fileID: 6158864631373787105}
+  - {fileID: 6158864631373787104}
+  - {fileID: 6158864631373787103}
+  - {fileID: 6158864631373787102}
+  - {fileID: 6158864631373787101}
+  - {fileID: 6158864631373787100}
+  - {fileID: 6158864631373787099}
+  - {fileID: 6158864631373787098}
+  - {fileID: 6158864631373787097}
+  - {fileID: 6158864631373787096}
+  - {fileID: 6158864631373787095}
+  - {fileID: 6158864631373787094}
+  - {fileID: 6158864631373787093}
+  - {fileID: 6158864631373787092}
+  - {fileID: 6158864631373787091}
+  - {fileID: 6158864631373787090}
+  - {fileID: 6158864631373787089}
+  - {fileID: 6158864631373787088}
+  - {fileID: 6158864631373787087}
+  - {fileID: 6158864631373787086}
+  - {fileID: 6158864631373787085}
   nonBakedRenderers: []
   bakedLights:
   - {fileID: 396777394}
@@ -1456,37 +955,33 @@ MonoBehaviour:
   rnmMaps1: []
   rnmMaps2: []
   mapsMode: 
-  bakedIDs: 0300000002000000020000000700000002000000020000000500000002000000010000000100000001000000ffffffff01000000040000000100000003000000060000000100000001000000000000000800000002000000010000000100000002000000
+  bakedIDs: 0100000002000000010000000300000002000000020000000100000001000000020000000100000000000000020000000100000001000000010000000800000005000000070000000600000003000000040000000100000002000000
   bakedScaleOffset:
-  - {x: 0.6233286, y: 0.6233286, z: 0.00019282172, w: 0.00019282172}
-  - {x: 0.33858615, y: 0.33858615, z: 0.33977938, w: 0.5629415}
-  - {x: 0.09372727, y: 0.09372727, z: 0.5631866, w: 0.3583588}
-  - {x: 0.9993817, y: 0.9993817, z: 0.0003091526, w: 0.0003091526}
-  - {x: 0.5621959, y: 0.5621959, z: 0.00017391058, w: 0.00017391058}
-  - {x: 0.33858618, y: 0.33858618, z: 0.00039774415, w: 0.5629415}
-  - {x: 0.99938166, y: 0.99938166, z: 0.0003091523, w: 0.0003091523}
-  - {x: 0.35695726, y: 0.35695726, z: 0.5629231, w: 0.00037935466}
-  - {x: 0.117378004, y: 0.117378004, z: 0.8003955, w: 0.41329542}
-  - {x: 0.11737802, y: 0.11737802, z: 0.5631628, w: 0.41329542}
-  - {x: 0.21747239, y: 0.21747239, z: 0.71616846, w: 0.7820086}
-  - {x: 1, y: 1, z: 0, w: 0}
   - {x: 0.21747263, y: 0.21747263, z: 0.71616846, w: 0.5632803}
+  - {x: 0.23631641, y: 0.23631641, z: 0.7383784, w: 0.6120885}
+  - {x: 0.21747239, y: 0.21747239, z: 0.71616846, w: 0.7820086}
+  - {x: 0.37540376, y: 0.37540376, z: 0.6241553, w: 0.00044099477}
+  - {x: 0.36792454, y: 0.36792454, z: 0.36922118, w: 0.6117202}
+  - {x: 0.36792457, y: 0.36792457, z: 0.0004322086, w: 0.6117202}
+  - {x: 0.35695714, y: 0.35695714, z: 0.35809532, w: 0.562923}
+  - {x: 0.35695723, y: 0.35695723, z: 0.0003793544, w: 0.562923}
+  - {x: 0.3878875, y: 0.3878875, z: 0.61170024, w: 0.00041222567}
+  - {x: 0.4120278, y: 0.4120278, z: 0.5628678, w: 0.00032422872}
+  - {x: 1.0005382, y: 1.0005382, z: -0.00026911788, w: -0.00026911788}
+  - {x: 0.101848714, y: 0.101848714, z: 0.6119865, w: 0.3894105}
+  - {x: 0.117378004, y: 0.117378004, z: 0.68177915, w: 0.41329542}
+  - {x: 0.11737802, y: 0.11737802, z: 0.5631628, w: 0.41329542}
+  - {x: 0.117378004, y: 0.117378004, z: 0.8003955, w: 0.41329542}
+  - {x: 0.9993817, y: 0.9993817, z: 0.00030915329, w: 0.00030915329}
+  - {x: 0.99938166, y: 0.99938166, z: 0.0003091523, w: 0.0003091523}
+  - {x: 0.9993817, y: 0.9993817, z: 0.0003091526, w: 0.0003091526}
+  - {x: 0.99938166, y: 0.99938166, z: 0.0003091523, w: 0.0003091523}
+  - {x: 0.6233286, y: 0.6233286, z: 0.00019282172, w: 0.00019282172}
   - {x: 0.99938166, y: 0.99938166, z: 0.0003091509, w: 0.0003091509}
   - {x: 0.5621958, y: 0.5621958, z: 0.0001739104, w: 0.0001739104}
-  - {x: 0.37540376, y: 0.37540376, z: 0.6241553, w: 0.00044099477}
-  - {x: 0.99938166, y: 0.99938166, z: 0.0003091523, w: 0.0003091523}
-  - {x: 0.117378004, y: 0.117378004, z: 0.68177915, w: 0.41329542}
-  - {x: 0.35695723, y: 0.35695723, z: 0.0003793544, w: 0.562923}
-  - {x: 1.0005382, y: 1.0005382, z: -0.00026911788, w: -0.00026911788}
-  - {x: 0.9993817, y: 0.9993817, z: 0.00030915329, w: 0.00030915329}
-  - {x: 0.21747246, y: 0.21747246, z: 0.6794999, w: 0.7820085}
-  - {x: 0.4120278, y: 0.4120278, z: 0.5628678, w: 0.00032422872}
-  - {x: 0.35695714, y: 0.35695714, z: 0.35809532, w: 0.562923}
-  - {x: 0.21747246, y: 0.21747246, z: 0.6794999, w: 0.5632804}
-  bakedVertexOffset: ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+  - {x: 0.61091, y: 0.61091, z: 0.00018897989, w: 0.00018897989}
+  bakedVertexOffset: ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
   bakedVertexColorMesh:
-  - {fileID: 0}
-  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -1539,32 +1034,31 @@ MonoBehaviour:
     rnmMaps2: []
     mapsMode: 
     bakedRenderers:
-    - {fileID: 120343243}
-    - {fileID: 126704876}
-    - {fileID: 137187300}
-    - {fileID: 458945297}
-    - {fileID: 583275283}
-    - {fileID: 606925205}
-    - {fileID: 767461997}
-    - {fileID: 817305695}
-    - {fileID: 860610384}
-    - {fileID: 902773074}
-    - {fileID: 929909958}
-    - {fileID: 987517517}
-    - {fileID: 1304756843}
-    - {fileID: 1358710484}
-    - {fileID: 1374411677}
-    - {fileID: 1381942796}
-    - {fileID: 1419618279}
-    - {fileID: 1561421851}
-    - {fileID: 1563456799}
-    - {fileID: 1578554377}
-    - {fileID: 1778681086}
-    - {fileID: 1861713471}
-    - {fileID: 1934935987}
-    - {fileID: 2046464704}
-    - {fileID: 2067466041}
-    bakedIDs: 0300000002000000020000000700000002000000020000000500000002000000010000000100000001000000ffffffff01000000040000000100000003000000060000000100000001000000000000000800000002000000010000000100000002000000
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    bakedIDs: 030000000200000002000000070000000200000002000000050000000200000001000000010000000100000001000000040000000100000003000000060000000100000001000000000000000800000002000000010000000100000002000000
     bakedScaleOffset:
     - {x: 0.6233286, y: 0.6233286, z: 0.00019282172, w: 0.00019282172}
     - {x: 0.33858615, y: 0.33858615, z: 0.33977938, w: 0.5629415}
@@ -1577,7 +1071,6 @@ MonoBehaviour:
     - {x: 0.117378004, y: 0.117378004, z: 0.8003955, w: 0.41329542}
     - {x: 0.11737802, y: 0.11737802, z: 0.5631628, w: 0.41329542}
     - {x: 0.21747239, y: 0.21747239, z: 0.71616846, w: 0.7820086}
-    - {x: 1, y: 1, z: 0, w: 0}
     - {x: 0.21747263, y: 0.21747263, z: 0.71616846, w: 0.5632803}
     - {x: 0.99938166, y: 0.99938166, z: 0.0003091509, w: 0.0003091509}
     - {x: 0.5621958, y: 0.5621958, z: 0.0001739104, w: 0.0001739104}
@@ -1592,7 +1085,6 @@ MonoBehaviour:
     - {x: 0.35695714, y: 0.35695714, z: 0.35809532, w: 0.562923}
     - {x: 0.21747246, y: 0.21747246, z: 0.6794999, w: 0.5632804}
     bakedVertexColorMesh:
-    - {fileID: 0}
     - {fileID: 0}
     - {fileID: 0}
     - {fileID: 0}
@@ -1638,19 +1130,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1778681084 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1168013645329996231, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &1778681086 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 807659773319952402, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1799439354
+--- !u!114 &1822398741
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1660,12 +1140,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: Lighting Seq 02 Concourse Night_LMA8
+  m_Name: Lighting Seq 02 Concourse Night_LMA5
   m_EditorClassIdentifier: 
   resolution: 4096
   bitmask: 1
-  id: 8
-  sortingID: 8
+  id: 5
+  sortingID: 5
   isImplicit: 1
   area: 0
   totalVertexCount: 0
@@ -1695,18 +1175,6 @@ MonoBehaviour:
   fixPos3D: 0
   voxelSize: {x: 1, y: 1, z: 1}
   passedFilter: 0
---- !u!1 &1861713469 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3574955829870529582, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &1861713471 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 3070389599924301307, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
 --- !u!850595691 &1868073472
 LightingSettings:
   m_ObjectHideFlags: 0
@@ -1771,43 +1239,232 @@ LightingSettings:
   m_PVRTiledBaking: 0
   m_NumRaysToShootPerTexel: -1
   m_RespectSceneVisibilityWhenBakingGI: 0
---- !u!1 &1934935985 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1524744063212781876, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
+--- !u!114 &1896284840
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
---- !u!23 &1934935987 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 1020072829971898593, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
+  m_Name: Lighting Seq 02 Concourse Night_LMA1
+  m_EditorClassIdentifier: 
+  resolution: 4096
+  bitmask: 1
+  id: 1
+  sortingID: 1
+  isImplicit: 1
+  area: 0
+  totalVertexCount: 0
+  vertexCounter: 0
+  sceneLodLevel: -1
+  autoResolution: 0
+  sceneName: 
+  tag: -1
+  containsTerrains: 0
+  probes: 0
+  mode: 1
+  renderMode: 1000
+  renderDirMode: 1000
+  atlasPacker: 1000
+  holeFilling: 0
+  vertexSamplingDensity: 0
+  computeSSS: 0
+  sssSamples: 16
+  sssDensity: 10
+  sssColor: {r: 1, g: 1, b: 1, a: 1}
+  sssScale: 1
+  fakeShadowBias: 0
+  transparentSelfShadow: 0
+  flipNormal: 0
+  parentName: 
+  overridePath: 
+  fixPos3D: 0
+  voxelSize: {x: 1, y: 1, z: 1}
+  passedFilter: 0
+--- !u!114 &1968582635
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &2046464702 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5072420013662993035, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
+  m_Name: Lighting Seq 02 Concourse Night_LMA8
+  m_EditorClassIdentifier: 
+  resolution: 4096
+  bitmask: 1
+  id: 8
+  sortingID: 8
+  isImplicit: 1
+  area: 0
+  totalVertexCount: 0
+  vertexCounter: 0
+  sceneLodLevel: -1
+  autoResolution: 0
+  sceneName: 
+  tag: -1
+  containsTerrains: 0
+  probes: 0
+  mode: 1
+  renderMode: 1000
+  renderDirMode: 1000
+  atlasPacker: 1000
+  holeFilling: 0
+  vertexSamplingDensity: 0
+  computeSSS: 0
+  sssSamples: 16
+  sssDensity: 10
+  sssColor: {r: 1, g: 1, b: 1, a: 1}
+  sssScale: 1
+  fakeShadowBias: 0
+  transparentSelfShadow: 0
+  flipNormal: 0
+  parentName: 
+  overridePath: 
+  fixPos3D: 0
+  voxelSize: {x: 1, y: 1, z: 1}
+  passedFilter: 0
+--- !u!114 &1970272489
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
---- !u!23 &2046464704 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 6729546970422664030, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
+  m_Name: Lighting Seq 02 Concourse Night_LMA6
+  m_EditorClassIdentifier: 
+  resolution: 4096
+  bitmask: 1
+  id: 6
+  sortingID: 6
+  isImplicit: 1
+  area: 0
+  totalVertexCount: 0
+  vertexCounter: 0
+  sceneLodLevel: -1
+  autoResolution: 0
+  sceneName: 
+  tag: -1
+  containsTerrains: 0
+  probes: 0
+  mode: 1
+  renderMode: 1000
+  renderDirMode: 1000
+  atlasPacker: 1000
+  holeFilling: 0
+  vertexSamplingDensity: 0
+  computeSSS: 0
+  sssSamples: 16
+  sssDensity: 10
+  sssColor: {r: 1, g: 1, b: 1, a: 1}
+  sssScale: 1
+  fakeShadowBias: 0
+  transparentSelfShadow: 0
+  flipNormal: 0
+  parentName: 
+  overridePath: 
+  fixPos3D: 0
+  voxelSize: {x: 1, y: 1, z: 1}
+  passedFilter: 0
+--- !u!114 &2064403350
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &2067466039 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8980417869723663835, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
+  m_Name: Lighting Seq 02 Concourse Night_LMA4
+  m_EditorClassIdentifier: 
+  resolution: 4096
+  bitmask: 1
+  id: 4
+  sortingID: 4
+  isImplicit: 1
+  area: 0
+  totalVertexCount: 0
+  vertexCounter: 0
+  sceneLodLevel: -1
+  autoResolution: 0
+  sceneName: 
+  tag: -1
+  containsTerrains: 0
+  probes: 0
+  mode: 1
+  renderMode: 1000
+  renderDirMode: 1000
+  atlasPacker: 1000
+  holeFilling: 0
+  vertexSamplingDensity: 0
+  computeSSS: 0
+  sssSamples: 16
+  sssDensity: 10
+  sssColor: {r: 1, g: 1, b: 1, a: 1}
+  sssScale: 1
+  fakeShadowBias: 0
+  transparentSelfShadow: 0
+  flipNormal: 0
+  parentName: 
+  overridePath: 
+  fixPos3D: 0
+  voxelSize: {x: 1, y: 1, z: 1}
+  passedFilter: 0
+--- !u!114 &2138323224
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
---- !u!23 &2067466041 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 7467010001569930254, guid: 91251dc06209f304396123b6204d6c13,
-    type: 3}
-  m_PrefabInstance: {fileID: 1618123984650710867}
-  m_PrefabAsset: {fileID: 0}
---- !u!1001 &1618123984650710867
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
+  m_Name: Lighting Seq 02 Concourse Night_LM0
+  m_EditorClassIdentifier: 
+  resolution: 4096
+  bitmask: 1
+  id: 0
+  sortingID: 0
+  isImplicit: 1
+  area: 5462353
+  totalVertexCount: 0
+  vertexCounter: 0
+  sceneLodLevel: -1
+  autoResolution: 0
+  sceneName: 
+  tag: -1
+  containsTerrains: 0
+  probes: 0
+  mode: 1
+  renderMode: 1000
+  renderDirMode: 1000
+  atlasPacker: 1000
+  holeFilling: 0
+  vertexSamplingDensity: 0
+  computeSSS: 0
+  sssSamples: 16
+  sssDensity: 10
+  sssColor: {r: 1, g: 1, b: 1, a: 1}
+  sssScale: 1
+  fakeShadowBias: 0
+  transparentSelfShadow: 0
+  flipNormal: 0
+  parentName: 
+  overridePath: 
+  fixPos3D: 0
+  voxelSize: {x: 1, y: 1, z: 1}
+  passedFilter: 0
+--- !u!1001 &6158864631373787084
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -1815,66 +1472,342 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 261735959572450833, guid: 91251dc06209f304396123b6204d6c13,
+    - target: {fileID: 3450333062393390212, guid: efa01545da4368645aa06e17ff070762,
+        type: 3}
+      propertyPath: m_Name
+      value: Airport lobby night
+      objectReference: {fileID: 0}
+    - target: {fileID: 6012164612147720145, guid: efa01545da4368645aa06e17ff070762,
         type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 261735959572450833, guid: 91251dc06209f304396123b6204d6c13,
+    - target: {fileID: 6012164612147720145, guid: efa01545da4368645aa06e17ff070762,
         type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 261735959572450833, guid: 91251dc06209f304396123b6204d6c13,
+    - target: {fileID: 6012164612147720145, guid: efa01545da4368645aa06e17ff070762,
         type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 261735959572450833, guid: 91251dc06209f304396123b6204d6c13,
+    - target: {fileID: 6012164612147720145, guid: efa01545da4368645aa06e17ff070762,
         type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 261735959572450833, guid: 91251dc06209f304396123b6204d6c13,
+    - target: {fileID: 6012164612147720145, guid: efa01545da4368645aa06e17ff070762,
         type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 261735959572450833, guid: 91251dc06209f304396123b6204d6c13,
+    - target: {fileID: 6012164612147720145, guid: efa01545da4368645aa06e17ff070762,
         type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 261735959572450833, guid: 91251dc06209f304396123b6204d6c13,
+    - target: {fileID: 6012164612147720145, guid: efa01545da4368645aa06e17ff070762,
         type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 261735959572450833, guid: 91251dc06209f304396123b6204d6c13,
+    - target: {fileID: 6012164612147720145, guid: efa01545da4368645aa06e17ff070762,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 261735959572450833, guid: 91251dc06209f304396123b6204d6c13,
+    - target: {fileID: 6012164612147720145, guid: efa01545da4368645aa06e17ff070762,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 261735959572450833, guid: 91251dc06209f304396123b6204d6c13,
+    - target: {fileID: 6012164612147720145, guid: efa01545da4368645aa06e17ff070762,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9163887393541997892, guid: 91251dc06209f304396123b6204d6c13,
-        type: 3}
-      propertyPath: m_Name
-      value: Airport
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 91251dc06209f304396123b6204d6c13, type: 3}
+  m_SourcePrefab: {fileID: 100100000, guid: efa01545da4368645aa06e17ff070762, type: 3}
+--- !u!23 &6158864631373787085 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 6149229691421369997, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787086 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 2040553606343608284, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787087 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 3044307492547822076, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787088 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 1375785391663281666, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787089 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 170671947517459294, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787090 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 5489323001994989593, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787091 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 863549007893005548, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787092 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 6628105558587447762, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787093 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 1300801437677725991, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787094 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 2465226463152315562, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787095 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 6824211523616040789, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787096 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 5406698470359980295, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787097 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 4797717476121920033, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787098 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 6838336144757653793, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787099 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 2399938638124686302, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787100 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 7890976967933616963, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787101 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 984748981012101790, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787102 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 3945861603643423421, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787103 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 8456858590246951502, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787104 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 2824887347828695743, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787105 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 4388932317476413868, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787106 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 8814274243034647611, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787107 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 5005927272781257180, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787108 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5644857114034374488, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787109 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 527339802533520905, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787110 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3548680344828911657, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787111 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 582998407437440983, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787112 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1828080241680669323, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787113 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6281679666355204556, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787114 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1223586358379226425, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787115 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4682405040269965319, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787116 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 652349543986661618, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787117 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4122695917737983359, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787118 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5022784934833374848, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787119 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5767017570177382610, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787120 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6454809249582277620, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787121 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5036812250180034804, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787122 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4201496755667712523, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787123 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8539561354604266134, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787124 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1633253652351736651, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787125 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3297330131121167208, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787126 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7952284252074081179, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787127 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4338365446349423466, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787128 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2875656940338692217, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787129 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7012786082653351406, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787130 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6807292151680907273, guid: efa01545da4368645aa06e17ff070762,
+    type: 3}
+  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1883,5 +1816,5 @@ SceneRoots:
   - {fileID: 1664471459}
   - {fileID: 1631824995}
   - {fileID: 849486845}
-  - {fileID: 1618123984650710867}
+  - {fileID: 6158864631373787084}
   - {fileID: 1674270529}

@@ -344,28 +344,20 @@ public class EditorFixtureMap : EditorWindow
     {
         try
         {
-            var sw = System.Diagnostics.Stopwatch.StartNew();
-
             string json = File.ReadAllText(absolutePath);
             ParseMap(json, out _fixtures, out _groups);
-            Debug.Log($"  [EditorFixtureMap] Parse: {sw.ElapsedMilliseconds}ms");
 
             _mapPath  = absolutePath;
             EditorPrefs.SetString("EditorFixtureMap.lastPath", absolutePath);
 
             string projectRelative = ToProjectRelative(absolutePath);
             _pathLabel.text = projectRelative ?? absolutePath;
-
-            sw.Restart();
             ResolveSceneObjects();
-            Debug.Log($"  [EditorFixtureMap] ResolveSceneObjects: {sw.ElapsedMilliseconds}ms");
 
-            sw.Restart();
             _zoom = 1f;
             _panOffset = Vector2.zero;
             ComputeLogicalLayout();
             UpdateViewport();
-            Debug.Log($"  [EditorFixtureMap] ComputeLogicalLayout: {sw.ElapsedMilliseconds}ms");
 
             LoadSelectionGroups();
             RefreshSgList();
@@ -405,20 +397,15 @@ public class EditorFixtureMap : EditorWindow
 
     private void ResolveSceneObjects()
     {
-        var sw = System.Diagnostics.Stopwatch.StartNew();
-
         _fixtureObjects = new List<UnityEngine.Object>(_fixtures.Count);
         _fixtureDefinitions = new List<UnityEngine.Object>(_fixtures.Count);
         _fixtureDrivers = new List<UnityEngine.Object>(_fixtures.Count);
 
-        // Fast path: find all FixtureDefinition and FixtureDriver components in the scene.
-        sw.Restart();
+        // Find all FixtureDefinition and FixtureDriver components in the scene.
         var allDefinitions = FindObjectsByType<FixtureDefinition>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         var allDrivers = FindObjectsByType<FixtureDriver>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        Debug.Log($"  [EditorFixtureMap]   FindObjectsByType: {sw.ElapsedMilliseconds}ms ({allDefinitions.Length} defs, {allDrivers.Length} drivers)");
 
-        // Build lookup by GameObject for fast matching.
-        sw.Restart();
+        // Build lookup by GameObject.
         var definitionsByGameObject = new Dictionary<GameObject, FixtureDefinition>(allDefinitions.Length);
         var driversByGameObject = new Dictionary<GameObject, FixtureDriver>(allDrivers.Length);
 
@@ -426,11 +413,9 @@ public class EditorFixtureMap : EditorWindow
             definitionsByGameObject[def.gameObject] = def;
         foreach (var drv in allDrivers)
             driversByGameObject[drv.gameObject] = drv;
-        Debug.Log($"  [EditorFixtureMap]   Build lookup: {sw.ElapsedMilliseconds}ms");
 
-        // Build a map of GlobalObjectId -> sceneObject via reverse lookup from known objects.
+        // Build a map of GlobalObjectId to sceneObject via reverse lookup from known objects.
         // This avoids slow GlobalObjectIdentifierToObjectSlow calls entirely.
-        sw.Restart();
         var globalIdCache = new Dictionary<string, UnityEngine.Object>();
 
         // Cache all FixtureDefinition scene objects by their GlobalObjectId string.
@@ -449,10 +434,7 @@ public class EditorFixtureMap : EditorWindow
                 globalIdCache[gidStr] = drv.gameObject;
         }
 
-        Debug.Log($"  [EditorFixtureMap]   Build GlobalObjectId cache: {sw.ElapsedMilliseconds}ms");
-
         // Match fixtures by looking up their GlobalObjectId string in the cache.
-        sw.Restart();
         for (int i = 0; i < _fixtures.Count; i++)
         {
             var f = _fixtures[i];
@@ -476,7 +458,6 @@ public class EditorFixtureMap : EditorWindow
             _fixtureDefinitions.Add(def);
             _fixtureDrivers.Add(drv);
         }
-        Debug.Log($"  [EditorFixtureMap]   Resolve from cache: {sw.ElapsedMilliseconds}ms ({_fixtures.Count} fixtures)");
     }
 
     // --- Layout ------------------------------------------------------
@@ -1030,6 +1011,8 @@ public class EditorFixtureMap : EditorWindow
     // Update selection state icons for all visible items in the selection group list.
     private void RefreshSgListSelectionStates()
     {
+        if (_sgList == null) return;
+
         for (int i = 0; i < _sgList.childCount; i++)
         {
             if (_sgList[i] is SelectionGroupItem item && item.GroupIndex >= 0 && item.GroupIndex < _selectionGroups.Count)
@@ -1070,6 +1053,9 @@ public class EditorFixtureMap : EditorWindow
 
     private void UpdateSgButtons()
     {
+        // UI elements may not exist if the window hasn't been created yet or is not visible
+        if (_sgCreateBtn == null) return;
+
         bool hasMap     = _fixtures.Count > 0;
         bool hasGroup   = _selectedGroupIndex >= 0 && _selectedGroupIndex < _selectionGroups.Count;
 

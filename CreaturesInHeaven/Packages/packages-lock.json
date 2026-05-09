@@ -1,11 +1,5 @@
 {
   "dependencies": {
-    "com.poiyomi.toon": {
-      "version": "file:com.poiyomi.toon",
-      "depth": 0,
-      "source": "embedded",
-      "dependencies": {}
-    },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
       "depth": 0,
@@ -49,6 +43,13 @@
         "com.unity.nuget.mono-cecil": "1.11.4",
         "com.unity.modules.unityanalytics": "1.0.0"
       },
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.editorcoroutines": {
+      "version": "1.0.0",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
       "url": "https://packages.unity.com"
     },
     "com.unity.ext.nunit": {
@@ -243,11 +244,13 @@
       "source": "embedded",
       "dependencies": {}
     },
-    "s-ilent.filamented": {
-      "version": "file:s-ilent.filamented",
+    "red.sim.lightvolumes": {
+      "version": "file:red.sim.lightvolumes",
       "depth": 0,
       "source": "embedded",
-      "dependencies": {}
+      "dependencies": {
+        "com.unity.editorcoroutines": "1.0.0"
+      }
     },
     "com.unity.modules.ai": {
       "version": "1.0.0",

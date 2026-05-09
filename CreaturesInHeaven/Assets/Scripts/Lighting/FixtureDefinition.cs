@@ -37,29 +37,14 @@ public class FixtureDefinition : MonoBehaviour
     // the resulting RGB is written to EmissionColor and synced to FixtureDriver.
     public float ColourTemperature = 6500f;
 
-    // --- Editor preview ----------------------------------------------
-
-#if UNITY_EDITOR
     private FixtureDriver _driver;
+#if UNITY_EDITOR
     private MaterialPropertyBlock _propBlock;
+#endif
 
     private void OnEnable()
     {
         _driver = GetComponent<FixtureDriver>();
-        _propBlock = new MaterialPropertyBlock();
-    }
-
-    private void Update()
-    {
-        if (Application.isPlaying) return;
-        if (_driver == null || _driver.PropsTransform == null || _driver.HeadRenderer == null) return;
-
-        if (!_driver.PropsTransform.gameObject.activeSelf)
-        {
-            _propBlock.SetColor("_EmissionColor", Color.black);
-            _driver.HeadRenderer.SetPropertyBlock(_propBlock);
-            return;
-        }
 
         // Resolve emission colour: blackbody overrides the RGB picker.
         Color emission = EmissionColor;
@@ -67,7 +52,31 @@ public class FixtureDefinition : MonoBehaviour
             emission = BlackbodyToRGB(ColourTemperature);
 
         // Keep FixtureDriver in sync so values are correct at runtime.
-        _driver.EmissionColor = emission;
+        if (_driver != null)
+            _driver.EmissionColor = emission;
+
+#if UNITY_EDITOR
+        _propBlock = new MaterialPropertyBlock();
+#endif
+    }
+
+#if UNITY_EDITOR
+    private void Update()
+    {
+        if (Application.isPlaying) return;
+        if (_driver == null || _driver.PropsTransform == null || _driver.HeadRenderer == null) return;
+
+        // Resolve emission colour: blackbody overrides the RGB picker.
+        Color emission = EmissionColor;
+        if (Colour == ColourMode.Blackbody)
+            emission = BlackbodyToRGB(ColourTemperature);
+
+        if (!_driver.PropsTransform.gameObject.activeSelf)
+        {
+            _propBlock.SetColor("_EmissionColor", Color.black);
+            _driver.HeadRenderer.SetPropertyBlock(_propBlock);
+            return;
+        }
 
         float linearBrightness = _driver.PropsTransform.localScale.x;
         float spread           = _driver.PropsTransform.localScale.y;

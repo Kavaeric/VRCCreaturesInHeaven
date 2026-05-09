@@ -35,7 +35,6 @@ public class SetLighting : UdonSharpBehaviour
         RenderSettings.ambientIntensity = AmbientIntensity;
 
         // SH, only applies to players and dynamic objects
-        // Might not actually be needed
         //SphericalHarmonicsL2 SH = new SphericalHarmonicsL2();
         //SH.AddDirectionalLight(Vector3.up, ambientSkyColor * SHIntensity, 1);
         //SH.AddDirectionalLight(Vector3.down, ambientGroundColor * SHIntensity, 1);

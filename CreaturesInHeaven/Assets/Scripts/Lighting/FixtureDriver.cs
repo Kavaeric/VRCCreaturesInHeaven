@@ -60,7 +60,6 @@ public class FixtureDriver : UdonSharpBehaviour
         float brightness   = PropsTransform.localScale.x;
         float spread  = PropsTransform.localScale.y;
 
-        // Brightness is stored in linear space (converted at author time in the editor).
         _propBlock.SetColor("_EmissionColor", EmissionColor * brightness);
         _propBlock.SetFloat("_Spread", spread);
         HeadRenderer.SetPropertyBlock(_propBlock);

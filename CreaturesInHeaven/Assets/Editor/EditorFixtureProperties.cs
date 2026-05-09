@@ -151,12 +151,11 @@ public class EditorFixtureProperties : EditorWindow
         _brightnessFloatField.RegisterValueChangedCallback(e =>
         {
             _brightnessSlider.SetValueWithoutNotify(e.newValue);
-            float newLinear = Mathf.GammaToLinearSpace(e.newValue);
             foreach (var (_, driver, _) in _selection)
             {
                 Undo.RecordObject(driver.PropsTransform, "Fixture Brightness");
                 var scale = driver.PropsTransform.localScale;
-                scale.x = newLinear;
+                scale.x = e.newValue;
                 driver.PropsTransform.localScale = scale;
             }
         });
@@ -164,12 +163,11 @@ public class EditorFixtureProperties : EditorWindow
         _brightnessSlider.RegisterValueChangedCallback(e =>
         {
             _brightnessFloatField.SetValueWithoutNotify(e.newValue);
-            float newLinear = Mathf.GammaToLinearSpace(e.newValue);
             foreach (var (_, driver, _) in _selection)
             {
                 Undo.RecordObject(driver.PropsTransform, "Fixture Brightness");
                 var scale = driver.PropsTransform.localScale;
-                scale.x = newLinear;
+                scale.x = e.newValue;
                 driver.PropsTransform.localScale = scale;
             }
         });
@@ -304,7 +302,7 @@ public class EditorFixtureProperties : EditorWindow
         if (_selection.Count == 0) return;
 
         // Update brightness
-        var brightnessValues = _selection.Select(s => Mathf.LinearToGammaSpace(s.driver.PropsTransform.localScale.x)).Distinct().ToList();
+        var brightnessValues = _selection.Select(s => s.driver.PropsTransform.localScale.x).Distinct().ToList();
         if (brightnessValues.Count == 1)
         {
             if (!Mathf.Approximately(_brightnessSlider.value, brightnessValues[0]))
@@ -498,7 +496,7 @@ public class EditorFixtureProperties : EditorWindow
         _brightnessSlider.lowValue = minBrightness;
         _brightnessSlider.highValue = maxBrightness;
 
-        var brightnessValues = _selection.Select(s => Mathf.LinearToGammaSpace(s.driver.PropsTransform.localScale.x)).Distinct().ToList();
+        var brightnessValues = _selection.Select(s => s.driver.PropsTransform.localScale.x).Distinct().ToList();
         if (brightnessValues.Count == 1)
         {
             _brightnessSlider.SetValueWithoutNotify(brightnessValues[0]);

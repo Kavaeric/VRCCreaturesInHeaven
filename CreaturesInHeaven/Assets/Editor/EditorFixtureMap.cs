@@ -931,13 +931,12 @@ public class EditorFixtureMap : EditorWindow
         if (definitionTyped.Colour == FixtureDefinition.ColourMode.Blackbody)
             emissionColor = FixtureDefinition.BlackbodyToRGB(definitionTyped.ColourTemperature);
 
-        // Get brightness normalised to max brightness (PropsTransform.localScale.x in linear space, convert to gamma for rendering).
+        // Get brightness normalised to max brightness.
         float brightness = 0f;
         if (driverTyped.PropsTransform != null)
         {
-            float linearScale = driverTyped.PropsTransform.localScale.x;
-            float gammaScale = Mathf.Sqrt(linearScale);
-            brightness = Mathf.InverseLerp(0f, definitionTyped.Profile.BrightnessMax, gammaScale);
+            float scale = driverTyped.PropsTransform.localScale.x;
+            brightness = Mathf.InverseLerp(0f, definitionTyped.Profile.BrightnessMax, scale);
         }
 
         // Fill and outline colours have alpha modulated by brightness.

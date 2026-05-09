@@ -427,7 +427,7 @@ MonoBehaviour:
   bakedScaleOffsetTerrain: []
   assetList: []
   uvOverlapAssetList: 
-  idremap: 090000000a0000000b0000000c0000000d0000000e0000000f0000001000000011000000
+  idremap: 000000000100000002000000030000000400000005000000060000000700000008000000
   usesRealtimeGI: 0
   emptyDirectionTex: {fileID: 0}
   anyVolumes: 0
@@ -15254,6 +15254,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: ef797b8717d1cbb4e9daa019d9652fe7,
+        type: 3}
+      propertyPath: m_ScaleInLightmap
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: ef797b8717d1cbb4e9daa019d9652fe7,
         type: 3}

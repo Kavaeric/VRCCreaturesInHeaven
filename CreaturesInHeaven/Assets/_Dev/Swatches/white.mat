@@ -12,6 +12,7 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
+  - BAKERY_MONOSH
   - _BICUBIC_SAMPLING_ON
   - _REFLECTIONS_ON
   - _SPECULAR_HIGHLIGHTS_ON
@@ -45,7 +46,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DFG:
-        m_Texture: {fileID: 2800000, guid: b6b1f1fa6be1ce54f8bcd5428c160a28, type: 3}
+        m_Texture: {fileID: 2800000, guid: a10c95bc318a7a444b0ea3229dd64b50, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DefaultDetailSampler:
@@ -233,7 +234,7 @@ Material:
     - _BAKERY_SHNONLINEAR: 0
     - _Bakery: 0
     - _BakeryLMSpecStrength: 1
-    - _BakeryMode: 0
+    - _BakeryMode: 3
     - _BakeryVertexLM: 0
     - _BicubicSampling: 1
     - _BlendMode: 0
@@ -367,7 +368,7 @@ Material:
     - _RippleSpeed: 18
     - _RippleStrength: 1
     - _RoughnessChannel: 1
-    - _RoughnessStrength: 1
+    - _RoughnessStrength: 0.5
     - _SSREdgeFade: 0.1
     - _SSRHeight: 0.2
     - _SSRStrength: 1
@@ -462,7 +463,7 @@ Material:
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _DetailColor: {r: 1, g: 1, b: 1, a: 1}
-    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
     - _LTCGI_DiffuseColor: {r: 1, g: 1, b: 1, a: 1}
     - _LTCGI_SpecularColor: {r: 1, g: 1, b: 1, a: 1}
     - _PuddleTint: {r: 0, g: 0, b: 0, a: 0.1}

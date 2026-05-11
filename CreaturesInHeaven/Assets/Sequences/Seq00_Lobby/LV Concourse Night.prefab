@@ -1,0 +1,225 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6391380197614016660
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3201652191521729035}
+  - component: {fileID: 5696048506514896893}
+  - component: {fileID: 6227872053571629270}
+  - component: {fileID: 9184991095732780464}
+  m_Layer: 0
+  m_Name: LV Concourse Night
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3201652191521729035
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6391380197614016660}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 5, z: 0}
+  m_LocalScale: {x: 40.5, y: 10.5, z: 80.5}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 3345031004489186617}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5696048506514896893
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6391380197614016660}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7cdafe690df4b545944c1a3d0c49e71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Dynamic: 0
+  Additive: 0
+  Color: {r: 1, g: 1, b: 1, a: 1}
+  Intensity: 1
+  SmoothBlending: 0.25
+  Texture0: {fileID: 11700000, guid: 384faec2261696a48b3a50d028041ae3, type: 2}
+  Texture1: {fileID: 11700000, guid: b4b7f6d8907f2c94491846e9bc752834, type: 2}
+  Texture2: {fileID: 11700000, guid: 267d40963b87660499e7d89235dd4131, type: 2}
+  ShadowsTexture: {fileID: 0}
+  Exposure: 0
+  Shadows: 0
+  Highlights: 0
+  Bake: 1
+  PointLightShadows: 1
+  ShadowsScale: 1
+  BlurShadows: 1
+  AdaptiveResolution: 1
+  VoxelsPerUnit: 1
+  Resolution: {x: 40, y: 10, z: 80}
+  PreviewVoxels: 0
+  BakeryVolume: {fileID: 1550871981382505699}
+  LightVolumeInstance: {fileID: 6227872053571629270}
+  LightVolumeSetup: {fileID: 0}
+--- !u!114 &6227872053571629270
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6391380197614016660}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21bc8ec8ba5e5f3408667533e591f313, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  _udonSharpBackingUdonBehaviour: {fileID: 9184991095732780464}
+  Color: {r: 1, g: 1, b: 1, a: 1}
+  Intensity: 1
+  IsDynamic: 0
+  IsAdditive: 0
+  InvBakedRotation: {x: 0, y: 0, z: 0, w: 1}
+  BoundsUvwMin0: {x: 0.023809524, y: 0.083333336, z: 0.0020325202, w: 0.9523809}
+  BoundsUvwMin1: {x: 0.023809524, y: 0.083333336, z: 0.16869919, w: 0.8333334}
+  BoundsUvwMin2: {x: 0.023809524, y: 0.083333336, z: 0.33536586, w: 0.16260163}
+  BoundsUvwMinOcclusion: {x: 0, y: 0, z: 0, w: 1}
+  BoundsUvwMax0: {x: 0.97619045, y: 0.9166667, z: 0.16463415, w: 0}
+  BoundsUvwMax1: {x: 0.97619045, y: 0.9166667, z: 0.33130082, w: 0}
+  BoundsUvwMax2: {x: 0.97619045, y: 0.9166667, z: 0.49796748, w: 0}
+  InvLocalEdgeSmoothing: {x: 162, y: 42, z: 322, w: 0}
+  InvWorldMatrix:
+    e00: 0.024691358
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 0.0952381
+    e12: 0
+    e13: -0.47619048
+    e20: 0
+    e21: 0
+    e22: 0.0124223605
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  RelativeRotation: {x: 0, y: 0, z: 0, w: 1}
+  RelativeRotationRow0: {x: 1, y: 0, z: 0}
+  RelativeRotationRow1: {x: 0, y: 1, z: 0}
+  IsRotated: 0
+  BakeOcclusion: 0
+  IsInitialized: 1
+  LightVolumeManager: {fileID: 0}
+  IsIterartedThrough: 0
+--- !u!114 &9184991095732780464
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6391380197614016660}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45115577ef41a5b4ca741ed302693907, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactTextPlacement: {fileID: 0}
+  interactText: Use
+  interactTextGO: {fileID: 0}
+  proximity: 2
+  SynchronizePosition: 0
+  AllowCollisionOwnershipTransfer: 0
+  Reliable: 0
+  _syncMethod: 1
+  serializedProgramAsset: {fileID: 11400000, guid: 611315e158b450e469f2d548b1ae6441,
+    type: 2}
+  programSource: {fileID: 11400000, guid: 78b75a58aad622e40bdf6e6d713d2487, type: 2}
+  serializedPublicVariablesBytesString: Ai8AAAAAATIAAABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlAFQAYQBiAGwAZQAsACAAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4AAAAAAAYBAAAAAAAAACcBBAAAAHQAeQBwAGUAAWgAAABTAHkAcwB0AGUAbQAuAEMAbwBsAGwAZQBjAHQAaQBvAG4AcwAuAEcAZQBuAGUAcgBpAGMALgBMAGkAcwB0AGAAMQBbAFsAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4ALgBJAG4AdABlAHIAZgBhAGMAZQBzAC4ASQBVAGQAbwBuAFYAYQByAGkAYQBiAGwAZQAsACAAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4AXQBdACwAIABtAHMAYwBvAHIAbABpAGIAAQEJAAAAVgBhAHIAaQBhAGIAbABlAHMALwEAAAABaAAAAFMAeQBzAHQAZQBtAC4AQwBvAGwAbABlAGMAdABpAG8AbgBzAC4ARwBlAG4AZQByAGkAYwAuAEwAaQBzAHQAYAAxAFsAWwBWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAEkAbgB0AGUAcgBmAGEAYwBlAHMALgBJAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlACwAIABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgBdAF0ALAAgAG0AcwBjAG8AcgBsAGkAYgABAAAABgEAAAAAAAAAAi8CAAAAAUkAAABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlAGAAMQBbAFsAUwB5AHMAdABlAG0ALgBJAG4AdAAzADIALAAgAG0AcwBjAG8AcgBsAGkAYgBdAF0ALAAgAFYAUgBDAC4AVQBkAG8AbgAuAEMAbwBtAG0AbwBuAAIAAAAGAgAAAAAAAAAnAQQAAAB0AHkAcABlAAEXAAAAUwB5AHMAdABlAG0ALgBTAHQAcgBpAG4AZwAsACAAbQBzAGMAbwByAGwAaQBiACcBCgAAAFMAeQBtAGIAbwBsAE4AYQBtAGUAAR8AAABfAF8AXwBVAGQAbwBuAFMAaABhAHIAcABCAGUAaABhAHYAaQBvAHUAcgBWAGUAcgBzAGkAbwBuAF8AXwBfACcBBAAAAHQAeQBwAGUAARYAAABTAHkAcwB0AGUAbQAuAEkAbgB0ADMAMgAsACAAbQBzAGMAbwByAGwAaQBiABcBBQAAAFYAYQBsAHUAZQACAAAABwUHBQcF
+  publicVariablesUnityEngineObjects: []
+  publicVariablesSerializationDataFormat: 0
+--- !u!1 &9139849916359369886
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3345031004489186617}
+  - component: {fileID: 1550871981382505699}
+  m_Layer: 0
+  m_Name: Bakery Volume - LV Concourse Night
+  m_TagString: EditorOnly
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3345031004489186617
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9139849916359369886}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3201652191521729035}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1550871981382505699
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9139849916359369886}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17ce3c1d3490b7143a67ebdc73cab6c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableBaking: 1
+  bounds:
+    m_Center: {x: 0, y: 5, z: 0}
+    m_Extent: {x: 20.25, y: 5.25, z: 40.25}
+  adaptiveRes: 0
+  voxelsPerUnit: 0.5
+  resolutionX: 40
+  resolutionY: 10
+  resolutionZ: 80
+  encoding: 0
+  shadowmaskEncoding: 0
+  firstLightIsAlwaysAlpha: 0
+  denoise: 1
+  isGlobal: 0
+  bakedTexture0: {fileID: 11700000, guid: 11a345b4ccd9fbc4a9b1482831a3ff98, type: 2}
+  bakedTexture1: {fileID: 11700000, guid: 445c03d0070fee84a9dd9658faca668a, type: 2}
+  bakedTexture2: {fileID: 11700000, guid: 8c3cbb992b567994ebbf3ab0d143a503, type: 2}
+  bakedTexture3: {fileID: 0}
+  bakedMask: {fileID: 0}
+  supportRotationAfterBake: 0
+  rotateAroundY: 0
+  _rotateAroundXYZ: 1
+  multiVolumePriority: 0

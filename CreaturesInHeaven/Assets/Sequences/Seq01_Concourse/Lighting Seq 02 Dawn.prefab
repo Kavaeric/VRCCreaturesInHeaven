@@ -1,0 +1,547 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &405842893896464080
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8539834868228519493}
+  m_Layer: 0
+  m_Name: Lighting Seq 02 Dawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8539834868228519493
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 405842893896464080}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1439743273881822132}
+  - {fileID: 4638675317411960719}
+  - {fileID: 8985146894455886974}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1897156721865055824
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4638675317411960719}
+  - component: {fileID: 6933180338843367616}
+  - component: {fileID: 7138050148653681419}
+  - component: {fileID: 6291635831671680614}
+  m_Layer: 0
+  m_Name: LV Airport Dawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4638675317411960719
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1897156721865055824}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0.258819, z: -0, w: 0.9659259}
+  m_LocalPosition: {x: 63.724575, y: 13.884832, z: 107.270996}
+  m_LocalScale: {x: 592.99854, y: 40.76583, z: 991.8219}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 9201697660124046602}
+  m_Father: {fileID: 8539834868228519493}
+  m_LocalEulerAnglesHint: {x: 0, y: -30, z: 0}
+--- !u!114 &6933180338843367616
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1897156721865055824}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7cdafe690df4b545944c1a3d0c49e71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Dynamic: 0
+  Additive: 0
+  Color: {r: 1, g: 1, b: 1, a: 1}
+  Intensity: 1
+  SmoothBlending: 0.25
+  Texture0: {fileID: 11700000, guid: e619912e687a95e4a8559e558a45a309, type: 2}
+  Texture1: {fileID: 11700000, guid: 4afc190aa67516d409ba90c77a8c0e61, type: 2}
+  Texture2: {fileID: 11700000, guid: 0fe46d592e59c2f4bbdc2da2edddd640, type: 2}
+  ShadowsTexture: {fileID: 0}
+  Exposure: 0
+  Shadows: 0
+  Highlights: 0
+  Bake: 1
+  PointLightShadows: 1
+  ShadowsScale: 1
+  BlurShadows: 1
+  AdaptiveResolution: 1
+  VoxelsPerUnit: 0.1
+  Resolution: {x: 59, y: 4, z: 99}
+  PreviewVoxels: 0
+  BakeryVolume: {fileID: 7686351923356798026}
+  LightVolumeInstance: {fileID: 7138050148653681419}
+  LightVolumeSetup: {fileID: 0}
+--- !u!114 &7138050148653681419
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1897156721865055824}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21bc8ec8ba5e5f3408667533e591f313, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  _udonSharpBackingUdonBehaviour: {fileID: 6291635831671680614}
+  Color: {r: 1, g: 1, b: 1, a: 1}
+  Intensity: 1
+  IsDynamic: 0
+  IsAdditive: 0
+  InvBakedRotation: {x: 0, y: 0.258819, z: 0, w: 0.9659259}
+  BoundsUvwMin0: {x: 0.016393442, y: 0.083333336, z: 0.55133927, w: 0.96721315}
+  BoundsUvwMin1: {x: 0.016393442, y: 0.5833333, z: 0.55133927, w: 0.3333333}
+  BoundsUvwMin2: {x: 0.016393442, y: 0.083333336, z: 0.77678573, w: 0.22098213}
+  BoundsUvwMinOcclusion: {x: 0, y: 0, z: 0, w: 1}
+  BoundsUvwMax0: {x: 0.9836066, y: 0.41666666, z: 0.7723214, w: 0}
+  BoundsUvwMax1: {x: 0.9836066, y: 0.9166667, z: 0.7723214, w: 0}
+  BoundsUvwMax2: {x: 0.9836066, y: 0.41666666, z: 0.99776787, w: 0}
+  InvLocalEdgeSmoothing: {x: 2371.9941, y: 154.142, z: 3967.2878, w: 0}
+  InvWorldMatrix:
+    e00: 0.0014604174
+    e01: 0
+    e02: 0.0008431723
+    e03: -0.18351242
+    e10: 0
+    e11: 0.024530347
+    e12: 0
+    e13: -0.34059978
+    e20: -0.0005041227
+    e21: 0
+    e22: 0.0008731662
+    e23: -0.061540402
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  RelativeRotation: {x: 0, y: 0, z: 0, w: 1.0000001}
+  RelativeRotationRow0: {x: 1, y: 0, z: 0}
+  RelativeRotationRow1: {x: 0, y: 1, z: 0}
+  IsRotated: 0
+  BakeOcclusion: 0
+  IsInitialized: 1
+  LightVolumeManager: {fileID: 0}
+  IsIterartedThrough: 0
+--- !u!114 &6291635831671680614
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1897156721865055824}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45115577ef41a5b4ca741ed302693907, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactTextPlacement: {fileID: 0}
+  interactText: Use
+  interactTextGO: {fileID: 0}
+  proximity: 2
+  SynchronizePosition: 0
+  AllowCollisionOwnershipTransfer: 0
+  Reliable: 0
+  _syncMethod: 1
+  serializedProgramAsset: {fileID: 11400000, guid: 611315e158b450e469f2d548b1ae6441,
+    type: 2}
+  programSource: {fileID: 11400000, guid: 78b75a58aad622e40bdf6e6d713d2487, type: 2}
+  serializedPublicVariablesBytesString: Ai8AAAAAATIAAABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlAFQAYQBiAGwAZQAsACAAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4AAAAAAAYBAAAAAAAAACcBBAAAAHQAeQBwAGUAAWgAAABTAHkAcwB0AGUAbQAuAEMAbwBsAGwAZQBjAHQAaQBvAG4AcwAuAEcAZQBuAGUAcgBpAGMALgBMAGkAcwB0AGAAMQBbAFsAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4ALgBJAG4AdABlAHIAZgBhAGMAZQBzAC4ASQBVAGQAbwBuAFYAYQByAGkAYQBiAGwAZQAsACAAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4AXQBdACwAIABtAHMAYwBvAHIAbABpAGIAAQEJAAAAVgBhAHIAaQBhAGIAbABlAHMALwEAAAABaAAAAFMAeQBzAHQAZQBtAC4AQwBvAGwAbABlAGMAdABpAG8AbgBzAC4ARwBlAG4AZQByAGkAYwAuAEwAaQBzAHQAYAAxAFsAWwBWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAEkAbgB0AGUAcgBmAGEAYwBlAHMALgBJAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlACwAIABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgBdAF0ALAAgAG0AcwBjAG8AcgBsAGkAYgABAAAABgEAAAAAAAAAAi8CAAAAAUkAAABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlAGAAMQBbAFsAUwB5AHMAdABlAG0ALgBJAG4AdAAzADIALAAgAG0AcwBjAG8AcgBsAGkAYgBdAF0ALAAgAFYAUgBDAC4AVQBkAG8AbgAuAEMAbwBtAG0AbwBuAAIAAAAGAgAAAAAAAAAnAQQAAAB0AHkAcABlAAEXAAAAUwB5AHMAdABlAG0ALgBTAHQAcgBpAG4AZwAsACAAbQBzAGMAbwByAGwAaQBiACcBCgAAAFMAeQBtAGIAbwBsAE4AYQBtAGUAAR8AAABfAF8AXwBVAGQAbwBuAFMAaABhAHIAcABCAGUAaABhAHYAaQBvAHUAcgBWAGUAcgBzAGkAbwBuAF8AXwBfACcBBAAAAHQAeQBwAGUAARYAAABTAHkAcwB0AGUAbQAuAEkAbgB0ADMAMgAsACAAbQBzAGMAbwByAGwAaQBiABcBBQAAAFYAYQBsAHUAZQACAAAABwUHBQcF
+  publicVariablesUnityEngineObjects: []
+  publicVariablesSerializationDataFormat: 0
+--- !u!1 &3206608062478621093
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1439743273881822132}
+  - component: {fileID: 729123686103859958}
+  m_Layer: 0
+  m_Name: Reflection Probe
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1439743273881822132
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3206608062478621093}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.02, y: -2, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8539834868228519493}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!215 &729123686103859958
+ReflectionProbe:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3206608062478621093}
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Type: 0
+  m_Mode: 1
+  m_RefreshMode: 1
+  m_TimeSlicingMode: 1
+  m_Resolution: 128
+  m_UpdateFrequency: 0
+  m_BoxSize: {x: 50, y: 20, z: 200}
+  m_BoxOffset: {x: 0, y: 5, z: 0}
+  m_NearClip: 1
+  m_FarClip: 2500
+  m_ShadowDistance: 100
+  m_ClearFlags: 1
+  m_BackGroundColor: {r: 1, g: 1, b: 1, a: 0}
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 1
+  m_IntensityMultiplier: 1
+  m_BlendDistance: 1
+  m_HDR: 1
+  m_BoxProjection: 1
+  m_RenderDynamicObjects: 0
+  m_UseOcclusionCulling: 1
+  m_Importance: 1
+  m_CustomBakedTexture: {fileID: 0}
+--- !u!1 &4038912376757926659
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5898926272210280294}
+  - component: {fileID: 272074416323650789}
+  m_Layer: 0
+  m_Name: Bakery Volume - LV Concourse Dawn
+  m_TagString: EditorOnly
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5898926272210280294
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4038912376757926659}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8985146894455886974}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &272074416323650789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4038912376757926659}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17ce3c1d3490b7143a67ebdc73cab6c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableBaking: 1
+  bounds:
+    m_Center: {x: 0, y: 5, z: 0}
+    m_Extent: {x: 20.25, y: 5.25, z: 40.25}
+  adaptiveRes: 0
+  voxelsPerUnit: 0.5
+  resolutionX: 40
+  resolutionY: 10
+  resolutionZ: 80
+  encoding: 0
+  shadowmaskEncoding: 0
+  firstLightIsAlwaysAlpha: 0
+  denoise: 1
+  isGlobal: 0
+  bakedTexture0: {fileID: 11700000, guid: 708a24b72b204884288dffb3dea014ab, type: 2}
+  bakedTexture1: {fileID: 11700000, guid: 7978b2d49cd0ab446aa77093344c87b1, type: 2}
+  bakedTexture2: {fileID: 11700000, guid: b2cd96486ba04ce45b1d3c9d0c796255, type: 2}
+  bakedTexture3: {fileID: 0}
+  bakedMask: {fileID: 0}
+  supportRotationAfterBake: 0
+  rotateAroundY: 0
+  _rotateAroundXYZ: 1
+  multiVolumePriority: 0
+--- !u!1 &4787905416177252138
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8985146894455886974}
+  - component: {fileID: 1219240077758691828}
+  - component: {fileID: 7152321533898560056}
+  - component: {fileID: 1702973689660248277}
+  m_Layer: 0
+  m_Name: LV Concourse Dawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8985146894455886974
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4787905416177252138}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 5, z: 0}
+  m_LocalScale: {x: 40.5, y: 10.5, z: 80.5}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 5898926272210280294}
+  m_Father: {fileID: 8539834868228519493}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1219240077758691828
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4787905416177252138}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7cdafe690df4b545944c1a3d0c49e71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Dynamic: 0
+  Additive: 0
+  Color: {r: 1, g: 1, b: 1, a: 1}
+  Intensity: 1
+  SmoothBlending: 0.25
+  Texture0: {fileID: 11700000, guid: 708a24b72b204884288dffb3dea014ab, type: 2}
+  Texture1: {fileID: 11700000, guid: 7978b2d49cd0ab446aa77093344c87b1, type: 2}
+  Texture2: {fileID: 11700000, guid: b2cd96486ba04ce45b1d3c9d0c796255, type: 2}
+  ShadowsTexture: {fileID: 0}
+  Exposure: 0
+  Shadows: 0
+  Highlights: 0
+  Bake: 1
+  PointLightShadows: 1
+  ShadowsScale: 1
+  BlurShadows: 1
+  AdaptiveResolution: 1
+  VoxelsPerUnit: 1
+  Resolution: {x: 40, y: 10, z: 80}
+  PreviewVoxels: 0
+  BakeryVolume: {fileID: 272074416323650789}
+  LightVolumeInstance: {fileID: 7152321533898560056}
+  LightVolumeSetup: {fileID: 0}
+--- !u!114 &7152321533898560056
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4787905416177252138}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21bc8ec8ba5e5f3408667533e591f313, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  _udonSharpBackingUdonBehaviour: {fileID: 1702973689660248277}
+  Color: {r: 1, g: 1, b: 1, a: 1}
+  Intensity: 1
+  IsDynamic: 0
+  IsAdditive: 0
+  InvBakedRotation: {x: 0, y: 0, z: 0, w: 1}
+  BoundsUvwMin0: {x: 0.016393442, y: 0.083333336, z: 0.002232143, w: 0.6557377}
+  BoundsUvwMin1: {x: 0.016393442, y: 0.083333336, z: 0.18526785, w: 0.8333334}
+  BoundsUvwMin2: {x: 0.016393442, y: 0.083333336, z: 0.36830357, w: 0.17857142}
+  BoundsUvwMinOcclusion: {x: 0, y: 0, z: 0, w: 1}
+  BoundsUvwMax0: {x: 0.6721311, y: 0.9166667, z: 0.18080357, w: 0}
+  BoundsUvwMax1: {x: 0.6721311, y: 0.9166667, z: 0.3638393, w: 0}
+  BoundsUvwMax2: {x: 0.6721311, y: 0.9166667, z: 0.546875, w: 0}
+  InvLocalEdgeSmoothing: {x: 162, y: 42, z: 322, w: 0}
+  InvWorldMatrix:
+    e00: 0.024691358
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 0.0952381
+    e12: 0
+    e13: -0.47619048
+    e20: 0
+    e21: 0
+    e22: 0.0124223605
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  RelativeRotation: {x: 0, y: 0, z: 0, w: 1}
+  RelativeRotationRow0: {x: 1, y: 0, z: 0}
+  RelativeRotationRow1: {x: 0, y: 1, z: 0}
+  IsRotated: 0
+  BakeOcclusion: 0
+  IsInitialized: 1
+  LightVolumeManager: {fileID: 0}
+  IsIterartedThrough: 0
+--- !u!114 &1702973689660248277
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4787905416177252138}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45115577ef41a5b4ca741ed302693907, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactTextPlacement: {fileID: 0}
+  interactText: Use
+  interactTextGO: {fileID: 0}
+  proximity: 2
+  SynchronizePosition: 0
+  AllowCollisionOwnershipTransfer: 0
+  Reliable: 0
+  _syncMethod: 1
+  serializedProgramAsset: {fileID: 11400000, guid: 611315e158b450e469f2d548b1ae6441,
+    type: 2}
+  programSource: {fileID: 11400000, guid: 78b75a58aad622e40bdf6e6d713d2487, type: 2}
+  serializedPublicVariablesBytesString: Ai8AAAAAATIAAABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlAFQAYQBiAGwAZQAsACAAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4AAAAAAAYBAAAAAAAAACcBBAAAAHQAeQBwAGUAAWgAAABTAHkAcwB0AGUAbQAuAEMAbwBsAGwAZQBjAHQAaQBvAG4AcwAuAEcAZQBuAGUAcgBpAGMALgBMAGkAcwB0AGAAMQBbAFsAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4ALgBJAG4AdABlAHIAZgBhAGMAZQBzAC4ASQBVAGQAbwBuAFYAYQByAGkAYQBiAGwAZQAsACAAVgBSAEMALgBVAGQAbwBuAC4AQwBvAG0AbQBvAG4AXQBdACwAIABtAHMAYwBvAHIAbABpAGIAAQEJAAAAVgBhAHIAaQBhAGIAbABlAHMALwEAAAABaAAAAFMAeQBzAHQAZQBtAC4AQwBvAGwAbABlAGMAdABpAG8AbgBzAC4ARwBlAG4AZQByAGkAYwAuAEwAaQBzAHQAYAAxAFsAWwBWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAEkAbgB0AGUAcgBmAGEAYwBlAHMALgBJAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlACwAIABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgBdAF0ALAAgAG0AcwBjAG8AcgBsAGkAYgABAAAABgEAAAAAAAAAAi8CAAAAAUkAAABWAFIAQwAuAFUAZABvAG4ALgBDAG8AbQBtAG8AbgAuAFUAZABvAG4AVgBhAHIAaQBhAGIAbABlAGAAMQBbAFsAUwB5AHMAdABlAG0ALgBJAG4AdAAzADIALAAgAG0AcwBjAG8AcgBsAGkAYgBdAF0ALAAgAFYAUgBDAC4AVQBkAG8AbgAuAEMAbwBtAG0AbwBuAAIAAAAGAgAAAAAAAAAnAQQAAAB0AHkAcABlAAEXAAAAUwB5AHMAdABlAG0ALgBTAHQAcgBpAG4AZwAsACAAbQBzAGMAbwByAGwAaQBiACcBCgAAAFMAeQBtAGIAbwBsAE4AYQBtAGUAAR8AAABfAF8AXwBVAGQAbwBuAFMAaABhAHIAcABCAGUAaABhAHYAaQBvAHUAcgBWAGUAcgBzAGkAbwBuAF8AXwBfACcBBAAAAHQAeQBwAGUAARYAAABTAHkAcwB0AGUAbQAuAEkAbgB0ADMAMgAsACAAbQBzAGMAbwByAGwAaQBiABcBBQAAAFYAYQBsAHUAZQACAAAABwUHBQcF
+  publicVariablesUnityEngineObjects: []
+  publicVariablesSerializationDataFormat: 0
+--- !u!1 &5397950988948430998
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9201697660124046602}
+  - component: {fileID: 7686351923356798026}
+  m_Layer: 0
+  m_Name: Bakery Volume - LV Airport Dawn
+  m_TagString: EditorOnly
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9201697660124046602
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5397950988948430998}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4638675317411960719}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7686351923356798026
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5397950988948430998}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17ce3c1d3490b7143a67ebdc73cab6c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableBaking: 1
+  bounds:
+    m_Center: {x: 63.724575, y: 13.884832, z: 107.270996}
+    m_Extent: {x: 296.49927, y: 20.382915, z: 495.91098}
+  adaptiveRes: 0
+  voxelsPerUnit: 0.5
+  resolutionX: 59
+  resolutionY: 4
+  resolutionZ: 99
+  encoding: 0
+  shadowmaskEncoding: 0
+  firstLightIsAlwaysAlpha: 0
+  denoise: 1
+  isGlobal: 0
+  bakedTexture0: {fileID: 11700000, guid: e619912e687a95e4a8559e558a45a309, type: 2}
+  bakedTexture1: {fileID: 11700000, guid: 4afc190aa67516d409ba90c77a8c0e61, type: 2}
+  bakedTexture2: {fileID: 11700000, guid: 0fe46d592e59c2f4bbdc2da2edddd640, type: 2}
+  bakedTexture3: {fileID: 0}
+  bakedMask: {fileID: 0}
+  supportRotationAfterBake: 0
+  rotateAroundY: 0
+  _rotateAroundXYZ: 1
+  multiVolumePriority: 0

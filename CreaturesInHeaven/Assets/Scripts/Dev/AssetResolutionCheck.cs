@@ -2,6 +2,10 @@
 using UnityEngine;
 using UnityEditor;
 
+
+// AssetResolutionCheck
+// Editor-only script that calculates texel density falloff from a given position and headset spec.
+// Draws concentric rings marking density falloff over distance.
 public class AssetResolutionCheck : MonoBehaviour
 {
 #if UNITY_EDITOR
@@ -29,10 +33,10 @@ public class AssetResolutionCheck : MonoBehaviour
 
     HeadsetSpec GetSpec()
     {
-        if (headset == HeadsetPreset.ValveIndex)  return new HeadsetSpec { resX = 1440, resY = 1600, fovH = 108f,  fovV = 104f   };
-        if (headset == HeadsetPreset.QuestPro)    return new HeadsetSpec { resX = 1800, resY = 1920, fovH = 106f,  fovV = 95.57f };
-        if (headset == HeadsetPreset.Beyond2E)    return new HeadsetSpec { resX = 2560, resY = 2560, fovH = 110f,  fovV = 97f    };
-        if (headset == HeadsetPreset.SteamFrame)  return new HeadsetSpec { resX = 2160, resY = 2160, fovH = 110f,  fovV = 110f   };
+        if (headset == HeadsetPreset.ValveIndex) return new HeadsetSpec { resX = 1440, resY = 1600, fovH = 108f, fovV = 104f };
+        if (headset == HeadsetPreset.QuestPro) return new HeadsetSpec { resX = 1800, resY = 1920, fovH = 106f, fovV = 95.57f };
+        if (headset == HeadsetPreset.Beyond2E) return new HeadsetSpec { resX = 2560, resY = 2560, fovH = 110f, fovV = 97f };
+        if (headset == HeadsetPreset.SteamFrame) return new HeadsetSpec { resX = 2160, resY = 2160, fovH = 110f, fovV = 110f };
         return new HeadsetSpec { resX = customResX, resY = customResY, fovH = customFovH, fovV = customFovV };
     }
 

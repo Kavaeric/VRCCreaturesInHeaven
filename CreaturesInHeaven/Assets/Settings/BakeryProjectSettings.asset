@@ -18,15 +18,27 @@ MonoBehaviour:
   lightmapCompression: 0
   maxAssetMip: 100
   dirHighQuality: 1
-  texelPaddingForDefaultAtlasPacker: 3
-  texelPaddingForXatlasAtlasPacker: 1
+  texelPaddingForDefaultAtlasPacker: 8
+  texelPaddingForXatlasAtlasPacker: 2
   alphaMetaPassResolutionMultiplier: 2
   volumeRenderMode: 1000
-  deletePreviousLightmapsBeforeBake: 0
+  deletePreviousLightmapsBeforeBake: 1
   logLevel: 3
-  alternativeScaleInLightmap: 0
+  alternativeScaleInLightmap: 1
+  texelRoundingBehaviour: 0
+  alternativeGroupPacking: 0
   alignToTextureBlocksWithXatlas: 1
   generateSmoothPos: 1
   perTriangleSmoothPos: 1
   takeReceiveGIIntoAccount: 1
   removeRinging: 0
+  removeDirectRinging: 1
+  deringL2MaxLaplacian: 7
+  autoRenderRefProbes: 0
+  legacyFixPos3D: 0
+  optimizedLODs: 1
+  streamingMipmaps: 0
+  streamingPriority: 0
+  forceSpecificColorFormat: -1
+  forceSpecificDirFormat: -1
+  forceSpecificMaskFormat: -1

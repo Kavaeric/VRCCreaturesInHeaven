@@ -61,7 +61,7 @@ MonoBehaviour:
   enableBaking: 1
   receiveLightmaps: 1
   ignoreWarnings: 0
-  errorMessage: prefab contains unapplied data (AirportWalkway (UnityEngine.MeshRenderer).m_Materials.Array.data[0])
+  errorMessage: 
 --- !u!1 &8042836992664613569
 GameObject:
   m_ObjectHideFlags: 0
@@ -242,37 +242,31 @@ MonoBehaviour:
   - {fileID: 2800000, guid: 7e4ae445b5c8c6e46994a35cc568d1ba, type: 3}
   - {fileID: 2800000, guid: 5856099d849b67c4883f2211649117ff, type: 3}
   - {fileID: 2800000, guid: b527a0aa14ac82f4b9454ddb63fd077a, type: 3}
-  - {fileID: 2800000, guid: d748c2812e53e8b49b95f16f0d9aa3b0, type: 3}
-  - {fileID: 2800000, guid: 32b21db5c86ccc54da351502d58d6b70, type: 3}
-  - {fileID: 2800000, guid: 8a797f237c6bebd4a82031b3afff5e4f, type: 3}
   masks: []
   dirMaps:
   - {fileID: 2800000, guid: ddeb0315cf9009d4a9120877dd4f6f61, type: 3}
   - {fileID: 2800000, guid: 7f86bd432f120da4599e2ebed5910d63, type: 3}
   - {fileID: 2800000, guid: 6d31ab54f29ba1f42b25e61974c952a6, type: 3}
   - {fileID: 2800000, guid: 643063f069120e0498ebc2ecbb0d0a54, type: 3}
-  - {fileID: 2800000, guid: 89718b04d11adee4da9a1d48cd3c6e03, type: 3}
-  - {fileID: 2800000, guid: c73583da2b9db134c8c70f560fad46ef, type: 3}
-  - {fileID: 2800000, guid: 448824689da1bba4ead2a016243dacd4, type: 3}
   rnmMaps0: []
   rnmMaps1: []
   rnmMaps2: []
   mapsMode: 
-  bakedIDs: 02000000010000000400000003000000050000000600000005000000050000000500000005000000050000000500000000000000
+  bakedIDs: 01000000000000000300000002000000000000000000000000000000000000000000000000000000000000000000000000000000
   bakedScaleOffset:
-  - {x: 1.0005382, y: 1.0005382, z: -0.00026911788, w: -0.00026911788}
-  - {x: 1.0005382, y: 1.0005382, z: -0.00026911788, w: -0.00026911788}
-  - {x: 1.0005382, y: 1.0005382, z: -0.00026911788, w: -0.00026911788}
-  - {x: 1.0005382, y: 1.0005382, z: -0.00026911788, w: -0.00026911788}
-  - {x: 0.56596106, y: 0.56596106, z: 0.00017507642, w: 0.00017507642}
-  - {x: 0.9993817, y: 0.9993817, z: 0.0003091526, w: 0.0003091526}
-  - {x: 0.357399, y: 0.357399, z: 0.56669503, w: 0.00038384722}
-  - {x: 0.3573987, y: 0.3573987, z: 0.00038384754, w: 0.56669503}
-  - {x: 0.23781484, y: 0.23781484, z: 0.35866994, w: 0.5668148}
-  - {x: 0.118164346, y: 0.118164346, z: 0.75823337, w: 0.35879}
-  - {x: 0.07418745, y: 0.07418745, z: 0.9251453, w: 0.0006673423}
-  - {x: 0.19019642, y: 0.19019642, z: 0.5668624, w: 0.35871792}
-  - {x: 1.0005382, y: 1.0005382, z: -0.00026911788, w: -0.00026911788}
+  - {x: 0.7789031, y: 0.7789031, z: 0.0011734422, w: 0.0011734422}
+  - {x: 0.7789031, y: 0.7789031, z: 0.16025546, w: 0.0011734422}
+  - {x: 0.7789031, y: 0.7789031, z: 0.0011734422, w: 0.0011734422}
+  - {x: 0.7789031, y: 0.7789031, z: 0.0011734422, w: 0.0011734422}
+  - {x: 0.074367635, y: 0.074367635, z: 0.0018786829, w: 0.1765857}
+  - {x: 0.074367635, y: 0.074367635, z: 0.080003686, w: 0.1765857}
+  - {x: 0.0117422575, y: 0.0117422575, z: 0.001941371, w: 0.1610234}
+  - {x: 0.0117422575, y: 0.0117422575, z: 0.017566372, w: 0.1610234}
+  - {x: 0.16243456, y: 0.16243456, z: 0.16087255, w: 0.7830405}
+  - {x: 0.0127207795, y: 0.0127207795, z: 0.0019403915, w: 0.25477242}
+  - {x: -0.0005871128, y: -0.0005871128, z: 0.033203714, w: 0.16103573}
+  - {x: 0.12329371, y: 0.12329371, z: 0.0018297079, w: 0.2712633}
+  - {x: 0.15548706, y: 0.15548706, z: 0.0017974823, w: 0.0017974823}
   bakedVertexOffset: 
   bakedVertexColorMesh:
   - {fileID: 0}
@@ -293,7 +287,7 @@ MonoBehaviour:
   bakedScaleOffsetTerrain: []
   assetList: []
   uvOverlapAssetList: 
-  idremap: 00000000010000000200000003000000040000000500000006000000
+  idremap: 00000000
   usesRealtimeGI: 0
   emptyDirectionTex: {fileID: 2800000, guid: 04afea73344b7d049b5b7ac5ae315dd5, type: 3}
   anyVolumes: 0
@@ -949,6 +943,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 16f1e2788a74eb549ae1c5883e513da3,
         type: 3}
+      propertyPath: m_ScaleInLightmap
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 16f1e2788a74eb549ae1c5883e513da3,
+        type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: 1d5308a0299231d4da9629b447f88443, type: 2}
@@ -1156,6 +1155,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 9e31f33c178fce24a8f3ace0501f423a,
+        type: 3}
+      propertyPath: m_ScaleInLightmap
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 9e31f33c178fce24a8f3ace0501f423a,
         type: 3}
@@ -3980,7 +3984,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 16f1e2788a74eb549ae1c5883e513da3,
         type: 3}
       propertyPath: m_ScaleInLightmap
-      value: 0.25
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 16f1e2788a74eb549ae1c5883e513da3,
         type: 3}
@@ -5455,7 +5459,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 16f1e2788a74eb549ae1c5883e513da3,
         type: 3}
       propertyPath: m_ScaleInLightmap
-      value: 0.1
+      value: 0.02
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 16f1e2788a74eb549ae1c5883e513da3,
         type: 3}
@@ -8946,7 +8950,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 9e31f33c178fce24a8f3ace0501f423a,
         type: 3}
       propertyPath: m_ScaleInLightmap
-      value: 0.25
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 9e31f33c178fce24a8f3ace0501f423a,
         type: 3}
@@ -9961,6 +9965,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 16f1e2788a74eb549ae1c5883e513da3,
+        type: 3}
+      propertyPath: m_ScaleInLightmap
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 16f1e2788a74eb549ae1c5883e513da3,
         type: 3}
@@ -12065,7 +12074,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 9e31f33c178fce24a8f3ace0501f423a,
         type: 3}
       propertyPath: m_ScaleInLightmap
-      value: 0.1
+      value: 0.02
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 9e31f33c178fce24a8f3ace0501f423a,
         type: 3}
@@ -12580,7 +12589,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 16f1e2788a74eb549ae1c5883e513da3,
         type: 3}
       propertyPath: m_ScaleInLightmap
-      value: 0.1
+      value: 0.02
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 16f1e2788a74eb549ae1c5883e513da3,
         type: 3}
@@ -15998,7 +16007,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 16f1e2788a74eb549ae1c5883e513da3,
         type: 3}
       propertyPath: m_ScaleInLightmap
-      value: 0.25
+      value: 0.1
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: 16f1e2788a74eb549ae1c5883e513da3,
         type: 3}

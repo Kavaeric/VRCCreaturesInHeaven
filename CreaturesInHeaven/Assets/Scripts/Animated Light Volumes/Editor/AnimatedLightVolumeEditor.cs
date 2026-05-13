@@ -12,6 +12,8 @@ public class AnimatedLightVolumeEditor : Editor
 
         AnimatedLightVolume alv = (AnimatedLightVolume)target;
 
+        EditorGUILayout.LabelField($"Counted {alv.NumFrames} frames.");
+
         EditorGUILayout.Space(8);
 
         if (GUILayout.Button("Set Up CRT"))
@@ -27,7 +29,13 @@ public class AnimatedLightVolumeEditor : Editor
 
     static void Setup(AnimatedLightVolume alv)
     {
-        string assetDir = System.IO.Path.GetDirectoryName(AssetDatabase.GetAssetPath(MonoScript.FromMonoBehaviour(alv)));
+        // Mirror the Light Volumes package convention: store generated assets
+        // alongside the scene they belong to, not next to the script.
+        string scenePath = UnityEngine.SceneManagement.SceneManager.GetActiveScene().path;
+        string sceneName = System.IO.Path.GetFileNameWithoutExtension(scenePath);
+        string sceneDir  = System.IO.Path.GetDirectoryName(scenePath);
+        string assetDir  = $"{sceneDir}/{sceneName}/AnimatedLV";
+        CreateDirectory(assetDir);
 
         // Create material using the AnimatedLightVolume shader.
         Shader shader = Shader.Find("Hidden/AnimatedLightVolume");
@@ -46,7 +54,7 @@ public class AnimatedLightVolumeEditor : Editor
         else
         {
             mat = new Material(shader);
-            string matPath = $"{assetDir}/{alv.gameObject.name}_CRT.mat";
+            string matPath = $"{assetDir}/{alv.gameObject.name}_ALVRenderTexture.mat";
             AssetDatabase.CreateAsset(mat, matPath);
         }
 
@@ -59,7 +67,7 @@ public class AnimatedLightVolumeEditor : Editor
         else
         {
             crt = new CustomRenderTexture(1, 1, RenderTextureFormat.ARGBHalf);
-            string crtPath = $"{assetDir}/{alv.gameObject.name}_CRT.asset";
+            string crtPath = $"{assetDir}/{alv.gameObject.name}_ALVRenderTexture.asset";
             AssetDatabase.CreateAsset(crt, crtPath);
         }
 
@@ -82,7 +90,7 @@ public class AnimatedLightVolumeEditor : Editor
         }
         else
         {
-            Debug.LogWarning("[AnimatedLightVolume] No LightVolumeSetup found in scene — register the CRT manually.");
+            Debug.LogWarning("[AnimatedLightVolume] No LightVolumeSetup found in scene. Register the CRT manually by adding it to the list of AtlasPostProcessors in the scene's Light Volume Manager.");
         }
 
         EditorUtility.SetDirty(alv);
@@ -90,5 +98,19 @@ public class AnimatedLightVolumeEditor : Editor
         AssetDatabase.SaveAssets();
 
         Debug.Log($"[AnimatedLightVolume] Setup complete for '{alv.gameObject.name}'.");
+    }
+
+    // Creates each segment of a folder path that doesn't already exist.
+    internal static void CreateDirectory(string path)
+    {
+        string[] parts = path.Split('/');
+        string current = parts[0];
+        for (int i = 1; i < parts.Length; i++)
+        {
+            string next = $"{current}/{parts[i]}";
+            if (!AssetDatabase.IsValidFolder(next))
+                AssetDatabase.CreateFolder(current, parts[i]);
+            current = next;
+        }
     }
 }

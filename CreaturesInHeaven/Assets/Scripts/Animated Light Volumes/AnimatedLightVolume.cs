@@ -19,7 +19,7 @@ public class AnimatedLightVolume : UdonSharpBehaviour
 
     [Tooltip("Normalised playback position. 0 = first baked frame, 1 = last baked frame. Set this each frame from your driver script.")]
     [Range(0f, 1f)]
-    public float Time = 0f;
+    public float AnimTime = 0f;
 
     [Tooltip("If true, SH contribution is added on top of the existing atlas bake. If false, it replaces it.")]
     public bool Additive = true;
@@ -27,6 +27,8 @@ public class AnimatedLightVolume : UdonSharpBehaviour
     private Material _mat;
     private float _prevTime = -1f;
     private bool _prevAdditive;
+
+    public int NumFrames { get; private set; }
 
     void Start()
     {
@@ -46,15 +48,15 @@ public class AnimatedLightVolume : UdonSharpBehaviour
 
         // Derive layout from texture dimensions.
         // Y = H * numFrames, Z = D * 3.
-        int numFrames = PackedTex.height / (PackedTex.depth / 3);
-        _mat.SetFloat("_FrameScaleY", 1f / numFrames);
+        NumFrames = PackedTex.height / (PackedTex.depth / 3);
+        _mat.SetFloat("_FrameScaleY", 1f / NumFrames);
         _mat.SetFloat("_SliceScaleZ", 1f / 3f);
 
         _mat.SetFloat("_Additive", Additive ? 1f : 0f);
         _prevAdditive = Additive;
 
-        _mat.SetFloat("_Time4D", Time);
-        _prevTime = Time;
+        _mat.SetFloat("_Time4D", AnimTime);
+        _prevTime = AnimTime;
     }
 
     void Update()
@@ -62,10 +64,10 @@ public class AnimatedLightVolume : UdonSharpBehaviour
         if (_mat == null) return;
 
         // Only push to the material when values actually change.
-        if (Time != _prevTime)
+        if (AnimTime != _prevTime)
         {
-            _mat.SetFloat("_Time4D", Time);
-            _prevTime = Time;
+            _mat.SetFloat("_Time4D", AnimTime);
+            _prevTime = AnimTime;
         }
 
         if (Additive != _prevAdditive)

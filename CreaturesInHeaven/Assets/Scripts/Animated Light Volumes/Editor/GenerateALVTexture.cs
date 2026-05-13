@@ -11,7 +11,7 @@ using UnityEditor;
 //   Tex0: (L0.r,  L0.g,  L0.b,  L1r.z)
 //   Tex1: (L1r.x, L1g.x, L1b.x, L1g.z)
 //   Tex2: (L1r.y, L1g.y, L1b.y, L1b.z)
-public static class GenerateAVLTexture
+public static class GenerateALVTexture
 {
     // Spatial volume resolution for the test texture.
     const int W = 8, H = 8, D = 8;
@@ -19,8 +19,10 @@ public static class GenerateAVLTexture
     [MenuItem("Tools/Lighting/Generate Test ALV Texture")]
     static void GenerateTest()
     {
-        // Frame 0: overhead red.   L0=(1,0,0), L1r=(0,1,0)
-        // Frame 1: overhead blue.  L0=(0,0,1), L1b=(0,1,0)
+        // Frame 0: Overhead red
+        // Frame 1: Sideways blue
+        // Frame 2: Nothing
+        // Frame 3: Warm overhead
         var frames = new FrameSH[]
         {
             new FrameSH {
@@ -30,12 +32,28 @@ public static class GenerateAVLTexture
             },
             new FrameSH {
                 tex0 = new Color(0, 0, 1, 0),
+                tex1 = new Color(0, 0, 1, 0),
+                tex2 = new Color(0, 0, 0, 0),
+            },
+            new FrameSH {
+                tex0 = new Color(0, 0, 0, 0),
                 tex1 = new Color(0, 0, 0, 0),
-                tex2 = new Color(0, 0, 1, 0),
+                tex2 = new Color(0, 0, 0, 0),
+            },
+            new FrameSH {
+                tex0 = new Color(1.0f, 1.0f, 1.0f, 0.0f),
+                tex1 = new Color(0.0f, 0.0f, 0.0f, 0.0f),
+                tex2 = new Color(0.5f, 0.2f, 0.0f, 0.0f),
             },
         };
 
-        string path = "Assets/Scenes/Lighting test scene add/TestLight_Packed.asset";
+        string scenePath = UnityEngine.SceneManagement.SceneManager.GetActiveScene().path;
+        string sceneName = System.IO.Path.GetFileNameWithoutExtension(scenePath);
+        string sceneDir  = System.IO.Path.GetDirectoryName(scenePath);
+        string assetDir  = $"{sceneDir}/{sceneName}/AnimatedLV";
+        AnimatedLightVolumeEditor.CreateDirectory(assetDir);
+
+        string path = $"{assetDir}/TestLight_Packed.asset";
         SavePackedTexture(frames, W, H, D, path);
     }
 
@@ -58,7 +76,8 @@ public static class GenerateAVLTexture
             WriteBlock(pixels, w, totalHeight, h, d, yOffset, d * 2, frames[f].tex2);
         }
 
-        // Reuse existing asset to preserve GUID and serialised references.
+        // Reuse existing asset to preserve GUID.
+        // Prevents serialised field linkage breaking whenever the texture gets updated.
         Texture3D existing = AssetDatabase.LoadAssetAtPath<Texture3D>(assetPath);
         if (existing != null && existing.width == w && existing.height == totalHeight && existing.depth == totalDepth)
         {

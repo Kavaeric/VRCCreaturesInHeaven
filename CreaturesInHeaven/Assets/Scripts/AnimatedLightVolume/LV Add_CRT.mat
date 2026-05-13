@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Hidden_LightVolumeAnimTest
-  m_Shader: {fileID: 4800000, guid: 948d3d37a57af2c4eb9ee439aa3a5d39, type: 3}
+  m_Name: LV Add_CRT
+  m_Shader: {fileID: 4800000, guid: 56424eab4ba6a224fa6e95123b818dfd, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -24,10 +24,24 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _MainTex:
-        m_Texture: {fileID: 11700000, guid: e51ae3c0ce4348b4dbdb43b4056bdc9a, type: 2}
+        m_Texture: {fileID: 11700000, guid: bec3116eb7c47884dbdda0722a358e84, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _PackedTex:
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
-    m_Floats: []
-    m_Colors: []
+    m_Floats:
+    - _Additive: 1
+    - _FrameScaleY: 0.5
+    - _SliceScaleZ: 0.333
+    - _Time4D: 0
+    m_Colors:
+    - _UvwMax0: {r: 1, g: 1, b: 1, a: 0}
+    - _UvwMax1: {r: 1, g: 1, b: 1, a: 0}
+    - _UvwMax2: {r: 1, g: 1, b: 1, a: 0}
+    - _UvwMin0: {r: 0, g: 0, b: 0, a: 0}
+    - _UvwMin1: {r: 0, g: 0, b: 0, a: 0}
+    - _UvwMin2: {r: 0, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []

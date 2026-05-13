@@ -17,13 +17,15 @@ public class AnimatedLightVolume : UdonSharpBehaviour
     [Tooltip("Packed 4D SH texture produced by the baking tool. X = spatial, Y = time frames, Z = SH sub-textures.")]
     public Texture3D PackedTex;
 
-    [Tooltip("Normalised playback position. 0 = first baked frame, 1 = last baked frame. Set this each frame from your driver script.")]
-    [Range(0f, 1f)]
-    public float AnimTime = 0f;
-
     [Tooltip("If true, SH contribution is added on top of the existing atlas bake. If false, it replaces it.")]
     public bool Additive = true;
 
+    [Tooltip("Name of the Animator float parameter on this GameObject that drives playback position.")]
+    public string AnimTimeParameter = "AnimTime";
+
+    // AnimTime is driven by an Animator float parameter on this GameObject.
+    // Keyframe it in animation clips or blend trees as normal.
+    private Animator _animator;
     private Material _mat;
     private float _prevTime = -1f;
     private bool _prevAdditive;
@@ -34,6 +36,7 @@ public class AnimatedLightVolume : UdonSharpBehaviour
     {
         if (Crt == null || TargetVolume == null || PackedTex == null) return;
 
+        _animator = GetComponent<Animator>();
         _mat = Crt.material;
 
         // Push static properties — these only change if the volume or texture changes.
@@ -55,8 +58,9 @@ public class AnimatedLightVolume : UdonSharpBehaviour
         _mat.SetFloat("_Additive", Additive ? 1f : 0f);
         _prevAdditive = Additive;
 
-        _mat.SetFloat("_Time4D", AnimTime);
-        _prevTime = AnimTime;
+        float animTime = _animator != null ? _animator.GetFloat(AnimTimeParameter) : 0f;
+        _mat.SetFloat("_Time4D", animTime);
+        _prevTime = animTime;
     }
 
     void Update()
@@ -64,10 +68,11 @@ public class AnimatedLightVolume : UdonSharpBehaviour
         if (_mat == null) return;
 
         // Only push to the material when values actually change.
-        if (AnimTime != _prevTime)
+        float animTime = _animator != null ? _animator.GetFloat(AnimTimeParameter) : 0f;
+        if (animTime != _prevTime)
         {
-            _mat.SetFloat("_Time4D", AnimTime);
-            _prevTime = AnimTime;
+            _mat.SetFloat("_Time4D", animTime);
+            _prevTime = animTime;
         }
 
         if (Additive != _prevAdditive)

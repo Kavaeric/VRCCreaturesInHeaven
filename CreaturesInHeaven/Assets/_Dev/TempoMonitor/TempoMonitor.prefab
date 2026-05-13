@@ -593,7 +593,7 @@ BoxCollider:
     m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 1536
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
@@ -614,7 +614,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   interactTextPlacement: {fileID: 0}
-  interactText: Use
+  interactText: 
   interactTextGO: {fileID: 0}
   proximity: 2
   SynchronizePosition: 0
@@ -636,8 +636,8 @@ Rigidbody:
   m_GameObject: {fileID: 859256061594836942}
   serializedVersion: 4
   m_Mass: 0.3
-  m_Drag: 20
-  m_AngularDrag: 20
+  m_Drag: 999
+  m_AngularDrag: 999
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -672,9 +672,9 @@ MonoBehaviour:
   ExactGrip: {fileID: 0}
   allowManipulationWhenEquipped: 1
   orientation: 0
-  AutoHold: 2
+  AutoHold: 3
   InteractionText: 
-  UseText: Toggle metronome audio
+  UseText: 
   useEventBroadcastType: 0
   UseDownEventName: 
   UseUpEventName: 
@@ -685,7 +685,7 @@ MonoBehaviour:
   ThrowVelocityBoostScale: 0
   currentlyHeldBy: {fileID: 0}
   pickupable: 1
-  proximity: 0.2
+  proximity: 0.4
   version: 1
 --- !u!1 &877692713493039094
 GameObject:

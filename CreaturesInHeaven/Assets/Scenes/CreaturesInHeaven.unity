@@ -19120,8 +19120,8 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 698670299374823431, guid: 7c5ac24880595c2439e87e8637f07edc,
         type: 3}
-      propertyPath: m_ExcludeLayers.m_Bits
-      value: 1536
+      propertyPath: m_IsTrigger
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 859256061594836942, guid: 7c5ac24880595c2439e87e8637f07edc,
         type: 3}
@@ -19193,21 +19193,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7887287015538166525, guid: 7c5ac24880595c2439e87e8637f07edc,
-        type: 3}
-      propertyPath: AutoHold
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 7887287015538166525, guid: 7c5ac24880595c2439e87e8637f07edc,
-        type: 3}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8374900754778353317, guid: 7c5ac24880595c2439e87e8637f07edc,
-        type: 3}
-      propertyPath: interactText
-      value: 
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -4,7 +4,7 @@ using UnityEditor;
 public static class GenerateTestLightTexture
 {
     // Spatial volume resolution.
-    const int W = 2, H = 2, D = 2;
+    const int W = 8, H = 8, D = 8;
 
     // Texture layout:
     //   Y axis: time frames, each H rows tall. Total height = H * numFrames.
@@ -28,9 +28,9 @@ public static class GenerateTestLightTexture
         var frames = new FrameSH[]
         {
             new FrameSH {
-                tex0 = new Color(1, 0, 0, 0), // L0=red, L1r.z=0
+                tex0 = new Color(0, 0, 0, 0), // L0=red, L1r.z=0
                 tex1 = new Color(0, 0, 0, 0),
-                tex2 = new Color(1, 0, 0, 0), // L1r.y=1 (overhead)
+                tex2 = new Color(0, 0, 0, 0), // L1r.y=1 (overhead)
             },
             new FrameSH {
                 tex0 = new Color(0, 0, 1, 0), // L0=blue, L1r.z=0

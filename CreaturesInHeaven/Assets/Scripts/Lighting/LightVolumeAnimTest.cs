@@ -15,6 +15,9 @@ public class LightVolumeAnimTest : UdonSharpBehaviour
     public Texture3D PackedTex;
     // Must match the number of frames baked into PackedTex.
     public int NumFrames = 2;
+    // If true, fixture contribution is added on top of the existing atlas bake.
+    // If false, the atlas data is replaced entirely.
+    public bool Additive = true;
 
     void Start()
     {
@@ -37,6 +40,7 @@ public class LightVolumeAnimTest : UdonSharpBehaviour
             VRCShader.SetGlobalFloat(VRCShader.PropertyToID("_UdonLVAnimTest_FrameScaleY"), 1.0f / NumFrames);
             VRCShader.SetGlobalFloat(VRCShader.PropertyToID("_UdonLVAnimTest_SliceScaleZ"), 1.0f / 3.0f);
             VRCShader.SetGlobalFloat(VRCShader.PropertyToID("_UdonLVAnimTest_NumFrames"), NumFrames);
+            VRCShader.SetGlobalFloat(VRCShader.PropertyToID("_UdonLVAnimTest_Additive"), Additive ? 1.0f : 0.0f);
         }
     }
 }

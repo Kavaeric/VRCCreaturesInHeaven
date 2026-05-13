@@ -5,7 +5,11 @@
         <ui:VisualElement class="col">
 
             <!-- Top utility bar -->
-            <ui:VisualElement class="row items-end">
+            <ui:VisualElement class="row items-center">
+                <ui:Button name="load-cues-btn" text="Load cues…" class="btn-sm" />
+                <ui:VisualElement class="w-1" />
+                <ui:Label name="cues-path-label" text="No cues loaded" class="text-sm text-muted shrink grow" />
+                <ui:VisualElement class="w-1" />
                 <ui:Button name="refresh-btn" text="Refresh" class="btn-sm" />
             </ui:VisualElement>
             <ui:VisualElement class="h-2" />

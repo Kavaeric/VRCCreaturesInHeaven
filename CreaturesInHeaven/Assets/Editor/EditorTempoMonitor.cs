@@ -21,8 +21,7 @@ public class EditorTempoMonitor : EditorWindow
     private MusicEngine _musicEngine;
     private AudioClip _audioClip;
     private SongCue[] _cues = new SongCue[0];
-
-    private const string CuesPath = "Assets/Editor/SongCues.json";
+    private string _cuesPath = "";  // absolute path, persisted via EditorPrefs
 
     // --- Timing parameters (read from MusicEngine) -------------------
 
@@ -128,6 +127,7 @@ public class EditorTempoMonitor : EditorWindow
     private TextField _valTimeMs;
     private TextField _valTimeS;
     private TextField _valTimeNorm;
+    private Label _cuesPathLabel;
     private Label _statusEngine;
     private Label _animClipName;
     private Label _animClipBeatFrame;
@@ -153,7 +153,9 @@ public class EditorTempoMonitor : EditorWindow
 
     private void OnEnable()
     {
-        LoadCues();
+        string saved = EditorPrefs.GetString("EditorTempoMonitor.cuesPath", "");
+        if (!string.IsNullOrEmpty(saved) && File.Exists(saved))
+            LoadCues(saved);
         FindAnimationWindow();
         FindMusicEngine();
         EditorApplication.update += OnEditorUpdate;
@@ -206,6 +208,7 @@ public class EditorTempoMonitor : EditorWindow
         _animResolutionIcon = root.Q<Image>("anim-resolution-icon");
         _playBtn = root.Q<Button>("play-btn");
         _markersGrid = root.Q<VisualElement>("markers-grid");
+        _cuesPathLabel = root.Q<Label>("cues-path-label");
 
         string iconDir = "Assets/Editor/Icons/Music";
         _noteIcons = new Dictionary<string, Texture2D>
@@ -255,11 +258,13 @@ public class EditorTempoMonitor : EditorWindow
         });
 
         // Buttons
+        root.Q<Button>("load-cues-btn").clicked += PromptLoadCues;
+
         root.Q<Button>("refresh-btn").clicked += () =>
         {
             FindMusicEngine();
             FindAnimationWindow();
-            LoadCues();
+            if (!string.IsNullOrEmpty(_cuesPath)) LoadCues(_cuesPath);
             RebuildMarkerButtons();
             _cachedResolutionFrames = -1; // invalidate so ClipResolution reruns after clip change
             UpdateReadout();
@@ -285,6 +290,7 @@ public class EditorTempoMonitor : EditorWindow
         stepUnitField.Init(_stepUnit);
         stepUnitField.RegisterValueChangedCallback(e => _stepUnit = (StepUnit)e.newValue);
 
+        UpdateCuesPathLabel();
         RebuildMarkerButtons();
         UpdateReadout();
     }
@@ -670,13 +676,48 @@ public class EditorTempoMonitor : EditorWindow
             BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
     }
 
-    private void LoadCues()
+    private void PromptLoadCues()
     {
-        string fullPath = Path.Combine(Application.dataPath, "../", CuesPath);
-        if (!File.Exists(fullPath)) return;
-        string json = File.ReadAllText(fullPath);
-        var list = JsonUtility.FromJson<SongCueList>(json);
-        _cues = list?.cues ?? new SongCue[0];
+        string dir  = string.IsNullOrEmpty(_cuesPath) ? "Assets" : Path.GetDirectoryName(_cuesPath);
+        string path = EditorUtility.OpenFilePanel("Open Song Cues", dir, "json");
+        if (string.IsNullOrEmpty(path)) return;
+        LoadCues(path);
+        RebuildMarkerButtons();
+        UpdateReadout();
+    }
+
+    private void LoadCues(string absolutePath)
+    {
+        if (!File.Exists(absolutePath)) return;
+        try
+        {
+            string json = File.ReadAllText(absolutePath);
+            var list = JsonUtility.FromJson<SongCueList>(json);
+            _cues = list?.cues ?? new SongCue[0];
+            _cuesPath = absolutePath;
+            EditorPrefs.SetString("EditorTempoMonitor.cuesPath", absolutePath);
+            UpdateCuesPathLabel();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[EditorTempoMonitor] Failed to load cues from {absolutePath}: {ex.Message}");
+        }
+    }
+
+    private void UpdateCuesPathLabel()
+    {
+        if (_cuesPathLabel == null) return;
+        if (string.IsNullOrEmpty(_cuesPath))
+        {
+            _cuesPathLabel.text = "No cues loaded";
+            return;
+        }
+        // Show a project-relative path if possible, otherwise the full path
+        string dataPath = Application.dataPath.Replace('\\', '/');
+        string absNorm  = _cuesPath.Replace('\\', '/');
+        _cuesPathLabel.text = absNorm.StartsWith(dataPath)
+            ? "Assets" + absNorm.Substring(dataPath.Length)
+            : absNorm;
     }
 
     // Copies timing config and audio clip reference out of the MusicEngine component.

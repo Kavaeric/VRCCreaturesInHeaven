@@ -20,9 +20,12 @@ Shader "Hidden/AnimatedLightVolume"
         // Normalised playback position: 0 = first frame, 1 = last frame.
         _Time4D ("Time", Range(0, 1)) = 0
 
-        // 1 = add fixture contribution on top of existing atlas data
-        // 0 = replace atlas data entirely
-        _Additive ("Additive", Float) = 1
+        // Blending mode (matches ALVBlendingMode enum):
+        // 0 = Replace, 1 = Add, 2 = Subtract, 3 = Multiply
+        _BlendMode ("Blend Mode", Int) = 1
+
+        // Scales the SH contribution before blending.
+        _Intensity ("Intensity", Range(0, 1)) = 1
     }
     SubShader
     {
@@ -43,7 +46,8 @@ Shader "Hidden/AnimatedLightVolume"
             float _FrameScaleY;
             float _SliceScaleZ;
             float _Time4D;
-            float _Additive;
+            float _Intensity;
+            int   _BlendMode;
 
             // Sample one SH sub-texture for a given frame index and SH slot (0, 1 or 2).
             float4 SamplePacked(float3 local, int frame, int shSlot)
@@ -56,10 +60,10 @@ Shader "Hidden/AnimatedLightVolume"
 
             // Lerp between two adjacent frames for one SH sub-texture.
             // t is in [0, numFrames), derived from _Time4D by the caller.
-            float4 SampleLerped(float3 local, float t, int shSlot, int numFrames)
+            float4 SampleLerped(float3 local, float t, uint shSlot, int numFrames)
             {
-                int   frameA = (int)t % numFrames;
-                int   frameB = (frameA + 1) % numFrames;
+                uint  frameA = (uint)t % numFrames;
+                uint  frameB = (frameA + 1) % numFrames;
                 float blend  = frac(t);
                 return lerp(SamplePacked(local, frameA, shSlot), SamplePacked(local, frameB, shSlot), blend);
             }
@@ -79,21 +83,23 @@ Shader "Hidden/AnimatedLightVolume"
                 // Derive frame count from FrameScaleY (= 1/numFrames).
                 int   numFrames = (int)round(1.0 / _FrameScaleY);
                 float t         = _Time4D * (numFrames - 1);
-                float4 base     = _Additive > 0 ? col : float4(0, 0, 0, 0);
 
-                if (inTex0)
+                // Resolve which SH slot and local UVW this texel belongs to.
+                float3 local;
+                uint   shSlot;
+                if (inTex0) { local = (uvw - _UvwMin0) / (_UvwMax0 - _UvwMin0); shSlot = 0; }
+                else if (inTex1) { local = (uvw - _UvwMin1) / (_UvwMax1 - _UvwMin1); shSlot = 1; }
+                else             { local = (uvw - _UvwMin2) / (_UvwMax2 - _UvwMin2); shSlot = 2; }
+
+                float4 sh = SampleLerped(local, t, shSlot, numFrames) * _Intensity;
+
+                switch (_BlendMode)
                 {
-                    float3 local = (uvw - _UvwMin0) / (_UvwMax0 - _UvwMin0);
-                    return base + SampleLerped(local, t, 0, numFrames);
+                    case 1:  return col + sh;  // Add
+                    case 2:  return col - sh;  // Subtract
+                    case 3:  return col * sh;  // Multiply
+                    default: return sh;        // Replace
                 }
-                if (inTex1)
-                {
-                    float3 local = (uvw - _UvwMin1) / (_UvwMax1 - _UvwMin1);
-                    return base + SampleLerped(local, t, 1, numFrames);
-                }
-                // inTex2
-                float3 local = (uvw - _UvwMin2) / (_UvwMax2 - _UvwMin2);
-                return base + SampleLerped(local, t, 2, numFrames);
             }
             ENDCG
         }

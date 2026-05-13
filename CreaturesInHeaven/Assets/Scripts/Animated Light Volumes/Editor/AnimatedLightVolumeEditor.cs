@@ -8,23 +8,94 @@ public class AnimatedLightVolumeEditor : Editor
 {
     public override void OnInspectorGUI()
     {
-        DrawDefaultInspector();
+        serializedObject.Update();
 
         AnimatedLightVolume alv = (AnimatedLightVolume)target;
 
-        EditorGUILayout.LabelField($"Counted {alv.NumFrames} frames.");
+        // --- Setup ---------------------------------------------------
+        EditorGUILayout.LabelField("Setup", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("TargetVolume"),
+            new GUIContent("Target volume", "The LightVolumeInstance whose atlas region this component writes into."));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("Crt"),
+            new GUIContent("Render texture", "The CustomRenderTexture that runs the CRT shader. Created by the setup button below."));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("AnimatedTexture"),
+            new GUIContent("Animation texture", "Packed 4D SH texture produced by the baking tool."));
 
-        EditorGUILayout.Space(8);
+        EditorGUILayout.Space(4);
 
-        if (GUILayout.Button("Set Up CRT"))
-        {
+        if (GUILayout.Button("Set Up CRT", GUILayout.Height(32)))
             Setup(alv);
-        }
 
         if (alv.Crt != null && alv.TargetVolume == null)
-        {
             EditorGUILayout.HelpBox("Assign a Target Volume to complete setup.", MessageType.Warning);
+
+        // --- Shader behaviour ----------------------------------------
+        EditorGUILayout.Space(8);
+        EditorGUILayout.LabelField("Behaviour", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("Blending"),
+            new GUIContent("Blending mode", "How this volume's SH contribution is composited onto the atlas bake."));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("Intensity"),
+            new GUIContent("Intensity", "Scales the SH contribution before blending. Used when the Animator parameter below is empty."));
+
+        // --- Playback ------------------------------------------------
+        EditorGUILayout.Space(8);
+        EditorGUILayout.LabelField("Playback", EditorStyles.boldLabel);
+
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("AnimatorSource"),
+            new GUIContent("Animator", "Animator that drives playback. Can be on any GameObject."));
+
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("Time"),
+            new GUIContent("Time", "Normalised playback position. Used when the Animator parameter below is empty."));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("AnimTimeParameter"),
+            new GUIContent("Time parameter", "Animator float parameter that overrides Time at runtime. Leave empty to use the field value above."));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("IntensityParameter"),
+            new GUIContent("Intensity parameter", "Animator float parameter that overrides Intensity at runtime. Leave empty to use the field value above."));
+
+        Animator animator = alv.AnimatorSource;
+        if (animator == null)
+        {
+            EditorGUILayout.HelpBox("Assign an animator and create float parameters matching the names above to start animating this Light Volume.a", MessageType.Info);
         }
+        else
+        {
+            // Read the current value of the parameter from the animator, if it exists.
+            float currentTime = 0f;
+            bool paramFound = false;
+            foreach (var param in animator.parameters)
+            {
+                if (param.name == alv.AnimTimeParameter && param.type == AnimatorControllerParameterType.Float)
+                {
+                    currentTime = animator.GetFloat(alv.AnimTimeParameter);
+                    paramFound = true;
+                    break;
+                }
+            }
+
+            if (!paramFound)
+                EditorGUILayout.HelpBox($"Parameter \"{alv.AnimTimeParameter}\" not found on the Animator. Make sure it exists and is a Float.", MessageType.Warning);
+            else
+            {
+                EditorGUI.BeginDisabledGroup(true);
+                EditorGUILayout.Slider(new GUIContent("Current time", "Current value of the Animator parameter. Read-only."), currentTime, 0f, 1f);
+                EditorGUI.EndDisabledGroup();
+            }
+        }
+
+        // --- Info ----------------------------------------------------
+        EditorGUILayout.Space(8);
+        EditorGUILayout.LabelField("Debug", EditorStyles.boldLabel);
+
+        if (alv.AnimatedTexture != null)
+        {
+            int numFrames = alv.AnimatedTexture.height / (alv.AnimatedTexture.depth / 3);
+            EditorGUILayout.LabelField("Frames", numFrames.ToString());
+        }
+        else
+        {
+            EditorGUILayout.LabelField("Frames", "—");
+        }
+
+        serializedObject.ApplyModifiedProperties();
     }
 
     static void Setup(AnimatedLightVolume alv)

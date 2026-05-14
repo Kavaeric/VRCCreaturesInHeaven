@@ -14,7 +14,7 @@ using UnityEditor;
 public static class GenerateALVTexture
 {
     // Spatial volume resolution for the test texture.
-    const int W = 8, H = 8, D = 8;
+    const int W = 18, H = 18, D = 18;
 
     [MenuItem("Tools/Lighting/Generate Test ALV Texture")]
     static void GenerateTest()
@@ -26,24 +26,9 @@ public static class GenerateALVTexture
         var frames = new FrameSH[]
         {
             new FrameSH {
-                tex0 = new Color(1, 0, 0, 0),
-                tex1 = new Color(0, 0, 0, 0),
-                tex2 = new Color(1, 0, 0, 0),
-            },
-            new FrameSH {
-                tex0 = new Color(0, 0, 1, 0),
-                tex1 = new Color(0, 0, 1, 0),
-                tex2 = new Color(0, 0, 0, 0),
-            },
-            new FrameSH {
                 tex0 = new Color(0, 0, 0, 0),
                 tex1 = new Color(0, 0, 0, 0),
                 tex2 = new Color(0, 0, 0, 0),
-            },
-            new FrameSH {
-                tex0 = new Color(1.0f, 1.0f, 1.0f, 0.0f),
-                tex1 = new Color(0.0f, 0.0f, 0.0f, 0.0f),
-                tex2 = new Color(0.5f, 0.2f, 0.0f, 0.0f),
             },
         };
 

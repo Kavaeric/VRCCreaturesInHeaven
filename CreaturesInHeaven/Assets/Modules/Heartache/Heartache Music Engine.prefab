@@ -342,7 +342,7 @@ GameObject:
   m_Layer: 0
   m_Name: Heartache Music Engine
   m_TagString: Untagged
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 2800000, guid: 18465cdfddff5454fba4a54084dd4f0e, type: 3}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -389,11 +389,14 @@ MonoBehaviour:
   BPM: 80
   BeatsPerMeasure: 4
   TicksPerBeat: 4
+  CustomStartTime: 0
+  AudienceManager: {fileID: 0}
   TickListeners: []
   MusicPlayer: {fileID: 0}
   MusicPlayerLobby: {fileID: 0}
   animators: []
-  SpawnTeleporter: {fileID: 0}
+  SequenceListeners: []
+  StartTeleporter: {fileID: 0}
   ButtonStart: {fileID: 0}
   ButtonJoin: {fileID: 0}
 --- !u!114 &3591708473756515537

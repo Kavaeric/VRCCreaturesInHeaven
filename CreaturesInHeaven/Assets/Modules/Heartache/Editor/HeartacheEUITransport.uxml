@@ -41,6 +41,7 @@
                 <ui:Label name="status-engine" class="text-sm grow" />
                 <ui:VisualElement class="h-4" />
                 <ui:VisualElement class="col">
+                    <!-- Primary tempo readout -->
                     <ui:VisualElement class="row items-end justify-center">
                         <ui:VisualElement class="col">
                             <ui:Label text="Measure" class="font-bold text-xs" />
@@ -70,6 +71,7 @@
                 <ui:VisualElement class="separator" />
                 <ui:VisualElement class="h-2" />
                 <ui:VisualElement class="row">
+                    <!-- Index readout -->
                     <ui:VisualElement class="grow">
                         <ui:Label text="Measure index" class="font-bold text-sm" />
                         <ui:VisualElement class="h-0p5" />
@@ -101,19 +103,20 @@
                 <ui:VisualElement class="separator" />
                 <ui:VisualElement class="h-2" />
                 <ui:VisualElement class="row items-stretch">
-                    <ui:VisualElement class="grow shrink-0">
+                    <!-- Wall clock time readout -->
+                    <ui:VisualElement class="w-1f3 grow-0">
                         <ui:Label text="Time (m:s)" class="font-bold text-sm" />
                         <ui:VisualElement class="h-0p5" />
                         <ui:TextField name="val-time-ms" class="value-col__value" />
                     </ui:VisualElement>
                     <ui:VisualElement class="w-2" />
-                    <ui:VisualElement class="grow shrink-0">
+                    <ui:VisualElement class="w-1f3 grow-0">
                         <ui:Label text="Time (s)" class="font-bold text-sm" />
                         <ui:VisualElement class="h-0p5" />
                         <ui:TextField name="val-time-s" class="value-col__value" />
                     </ui:VisualElement>
                     <ui:VisualElement class="w-2" />
-                    <ui:VisualElement class="grow shrink-0 min-w-30">
+                    <ui:VisualElement class="w-1f3 grow-0">
                         <ui:Label text="Float time" class="font-bold text-sm" />
                         <ui:VisualElement class="h-0p5" />
                         <ui:TextField name="val-time-norm" class="value-col__value" />

@@ -167,9 +167,6 @@ public class HeartacheEUITransport : EditorWindow
         StopPlayback();
     }
 
-    // CreateGUI replaces OnGUI. Called once to build the element tree.
-    // After this, OnEditorUpdate writes directly to the cached element refs
-    // so we don't have to draw the whole thing over and over again.
     // Returns the project-relative path to the directory containing this script.
     // Used to load sibling assets (UXML, USS, icons) without hardcoding folder paths.
     private static string ScriptDir()
@@ -185,6 +182,11 @@ public class HeartacheEUITransport : EditorWindow
 
     public void CreateGUI()
     {
+        // Set window icon
+        string iconPath = $"{ScriptDir()}/Resources/Icons/Icon EUI HeartacheTransport@2x.png";
+        Texture2D windowIcon = AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
+        titleContent = new GUIContent("Transport", windowIcon);
+
         var root = rootVisualElement;
 
         string dir = ScriptDir();

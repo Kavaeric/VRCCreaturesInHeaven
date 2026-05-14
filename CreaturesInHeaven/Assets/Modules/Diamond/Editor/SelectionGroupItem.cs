@@ -19,30 +19,37 @@ public class SelectionGroupItem : VisualElement
     private EventCallback<KeyDownEvent> _renameKeyHandler;
     public int GroupIndex { get; set; } = -1;
 
-    // Returns the project-relative path to the directory containing this script.
-    private static string ScriptDir()
+    // Cached statics — loaded once on first instantiation.
+    private static StyleSheet _sharedStyleSheet;
+    private static Texture2D _iconSelect, _iconSelectAdd, _iconSelectRemove;
+
+    private static void EnsureSharedAssets()
     {
+        if (_sharedStyleSheet != null) return;
+
+        string dir = null;
         foreach (var guid in AssetDatabase.FindAssets($"t:MonoScript {nameof(SelectionGroupItem)}"))
         {
             string path = AssetDatabase.GUIDToAssetPath(guid);
             if (path.EndsWith($"{nameof(SelectionGroupItem)}.cs"))
-                return Path.GetDirectoryName(path).Replace('\\', '/');
+            { dir = Path.GetDirectoryName(path).Replace('\\', '/'); break; }
         }
-        return "Assets/Modules/Diamond/Editor";
-    }
+        dir ??= "Assets/Modules/Diamond/Editor";
+        string iconDir = dir + "/Resources/Icons";
 
-    // Returns the project-relative path to Diamond's editor icon directory.
-    private static string IconDir() => ScriptDir() + "/Resources/Icons";
+        _sharedStyleSheet   = AssetDatabase.LoadAssetAtPath<StyleSheet>($"{dir}/SelectionGroupItem.uss");
+        _iconSelect         = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/Select.png");
+        _iconSelectAdd      = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/Select add.png");
+        _iconSelectRemove   = AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/Select remove.png");
+    }
 
     public SelectionGroupItem()
     {
-        string dir = ScriptDir();
-        string iconDir = IconDir();
+        EnsureSharedAssets();
 
         // Load component-specific styles
-        var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>($"{dir}/SelectionGroupItem.uss");
-        if (styleSheet != null)
-            styleSheets.Add(styleSheet);
+        if (_sharedStyleSheet != null)
+            styleSheets.Add(_sharedStyleSheet);
 
         AddToClassList("sg-item");
         AddToClassList("row");
@@ -65,19 +72,19 @@ public class SelectionGroupItem : VisualElement
 
         // Selection control
         _groupReplaceSelectionBtn = new Button();
-        _groupReplaceSelectionBtn.style.backgroundImage = new StyleBackground(AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/Select.png"));
+        _groupReplaceSelectionBtn.style.backgroundImage = new StyleBackground(_iconSelect);
         _groupReplaceSelectionBtn.AddToClassList("btn-icon-sm");
         _groupReplaceSelectionBtn.AddToClassList("btn-tertiary");
         _groupReplaceSelectionBtn.tooltip = "Select fixtures in this group";
 
         _groupAddSelectionBtn = new Button();
-        _groupAddSelectionBtn.style.backgroundImage = new StyleBackground(AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/Select add.png"));
+        _groupAddSelectionBtn.style.backgroundImage = new StyleBackground(_iconSelectAdd);
         _groupAddSelectionBtn.AddToClassList("btn-icon-sm");
         _groupAddSelectionBtn.AddToClassList("btn-tertiary");
         _groupAddSelectionBtn.tooltip = "Add this group's fixtures to current selection";
 
         _groupRemoveSelectionBtn = new Button();
-        _groupRemoveSelectionBtn.style.backgroundImage = new StyleBackground(AssetDatabase.LoadAssetAtPath<Texture2D>($"{iconDir}/Select remove.png"));
+        _groupRemoveSelectionBtn.style.backgroundImage = new StyleBackground(_iconSelectRemove);
         _groupRemoveSelectionBtn.AddToClassList("btn-icon-sm");
         _groupRemoveSelectionBtn.AddToClassList("btn-tertiary");
         _groupRemoveSelectionBtn.tooltip = "Subtract this group's fixtures from current selection";

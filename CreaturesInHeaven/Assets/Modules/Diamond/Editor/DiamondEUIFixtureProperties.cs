@@ -80,6 +80,12 @@ public class DiamondEUIFixtureProperties : EditorWindow
 
     public void CreateGUI()
     {
+        // Set window icon
+        string iconPath = $"{ScriptDir()}/Resources/Icons/Icon EUI DiamondFixtureProperties@2x.png";
+        Texture2D windowIcon = AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
+        titleContent = new GUIContent("Fixture properties", windowIcon);
+
+        // Create UXML layout
         var uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>($"{ScriptDir()}/DiamondEUIFixtureProperties.uxml");
         uxml.CloneTree(rootVisualElement);
 

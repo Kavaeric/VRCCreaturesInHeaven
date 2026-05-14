@@ -19,7 +19,7 @@ public class GenerateFixtureMap : EditorWindow
 
     private void OnGUI()
     {
-        EditorGUILayout.LabelField("Fixture Map Generator", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Fixture map generator", EditorStyles.boldLabel);
         EditorGUILayout.Space(4);
 
         _root = (GameObject)EditorGUILayout.ObjectField(

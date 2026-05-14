@@ -247,6 +247,12 @@ public class DiamondEUIFixtureMap : EditorWindow
 
     public void CreateGUI()
     {
+        // Set window icon
+        string iconPath = $"{ScriptDir()}/Resources/Icons/Icon EUI DiamondFixtureMap@2x.png";
+        Texture2D windowIcon = AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
+        titleContent = new GUIContent("Fixture map", windowIcon);
+
+        // Create UXML layout
         var uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>($"{ScriptDir()}/DiamondEUIFixtureMap.uxml");
         uxml.CloneTree(rootVisualElement);
 
@@ -346,6 +352,9 @@ public class DiamondEUIFixtureMap : EditorWindow
         try
         {
             _theme = JsonUtility.FromJson<Theme>(File.ReadAllText(fullPath));
+            _nodeLabelStyle = null;
+            _groupLabelStyle = null;
+            _emptyStateStyle = null;
         }
         catch (Exception ex)
         {
@@ -986,6 +995,7 @@ public class DiamondEUIFixtureMap : EditorWindow
         // Sort alphabetically by name
         filtered.Sort((a, b) => a.group.name.CompareTo(b.group.name));
 
+        var selectionSet = new HashSet<UnityEngine.Object>(Selection.objects);
         foreach (var (i, group) in filtered)
         {
             int idx = i;
@@ -1011,7 +1021,7 @@ public class DiamondEUIFixtureMap : EditorWindow
                     () => OnSgAddSelection(idx),
                     () => OnSgRemoveSelection(idx)
                 );
-                int selectedCount = GetGroupSelectionCount(group);
+                int selectedCount = GetGroupSelectionCount(group, selectionSet);
                 int totalCount = group.fixtures?.Count ?? 0;
                 item.SetSelectionState(selectedCount, totalCount);
             }
@@ -1112,10 +1122,10 @@ public class DiamondEUIFixtureMap : EditorWindow
     }
 
     // Count how many fixtures in a group are currently selected.
-    private int GetGroupSelectionCount(SelectionGroup group)
+    private int GetGroupSelectionCount(SelectionGroup group, HashSet<UnityEngine.Object> selectionSet = null)
     {
         if (group.fixtures == null || group.fixtures.Count == 0) return 0;
-        var selectionSet = new HashSet<UnityEngine.Object>(Selection.objects);
+        selectionSet ??= new HashSet<UnityEngine.Object>(Selection.objects);
         int count = 0;
         foreach (int idx in group.fixtures)
             if (idx >= 0 && idx < _fixtureObjects.Count && _fixtureObjects[idx] != null && selectionSet.Contains(_fixtureObjects[idx]))

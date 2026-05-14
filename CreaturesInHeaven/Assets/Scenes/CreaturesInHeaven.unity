@@ -21447,9 +21447,9 @@ GameObject:
   - component: {fileID: 1796876506}
   - component: {fileID: 1796876505}
   m_Layer: 0
-  m_Name: AudienceManager
+  m_Name: Heartache Audience Manager
   m_TagString: Untagged
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 2800000, guid: 225974e664f285447a8d8abfe0bbcad2, type: 3}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -25810,8 +25810,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2459268033968411494, guid: f3a5ecc365bcf0a4499768a99caf2b24,
         type: 3}
+      propertyPath: m_Icon
+      value: 
+      objectReference: {fileID: 2800000, guid: 68a51f86fad2f62409a28dd79f78dc62, type: 3}
+    - target: {fileID: 2459268033968411494, guid: f3a5ecc365bcf0a4499768a99caf2b24,
+        type: 3}
       propertyPath: m_Name
-      value: MusicEngine
+      value: Heartache Music Engine
       objectReference: {fileID: 0}
     - target: {fileID: 3405217171717972434, guid: f3a5ecc365bcf0a4499768a99caf2b24,
         type: 3}
@@ -30585,8 +30590,8 @@ SceneRoots:
   - {fileID: 2035943763}
   - {fileID: 358170790}
   - {fileID: 4643811999136047176}
-  - {fileID: 2054890422}
   - {fileID: 1796876507}
+  - {fileID: 2054890422}
   - {fileID: 949569209}
   - {fileID: 1442845927}
   - {fileID: 1288492156}

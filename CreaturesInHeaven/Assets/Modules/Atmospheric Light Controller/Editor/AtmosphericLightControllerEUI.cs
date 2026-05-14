@@ -2,7 +2,7 @@ using UnityEditor;
 using UnityEngine;
 
 [CustomEditor(typeof(AtmosphericLightController))]
-public class AtmosphericLightControllerEditor : Editor
+public class AtmosphericLightControllerEUI : Editor
 {
     public override void OnInspectorGUI()
     {

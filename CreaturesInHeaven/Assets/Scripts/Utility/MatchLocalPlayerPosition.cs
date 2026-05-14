@@ -16,7 +16,7 @@ public class MatchLocalPlayerPosition : UdonSharpBehaviour
 {
     [SerializeField] private MatchLocalPlayerPositionMode mode = MatchLocalPlayerPositionMode.OnEnable;
     [SerializeField] private Vector3 offset = Vector3.zero;
-    [SerializeField] private AudienceManager audienceManager;
+    [SerializeField] private HeartacheAudienceManager audienceManager;
 
     private bool afterStart;
     void Start()

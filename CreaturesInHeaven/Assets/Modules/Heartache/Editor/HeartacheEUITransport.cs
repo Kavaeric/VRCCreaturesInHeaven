@@ -153,7 +153,7 @@ public class HeartacheEUITransport : EditorWindow
 
     private void OnEnable()
     {
-        string saved = EditorPrefs.GetString("HeartacheEUITempoMonitor.cuesPath", "");
+        string saved = EditorPrefs.GetString("HeartacheEUITransport.cuesPath", "");
         if (!string.IsNullOrEmpty(saved) && File.Exists(saved))
             LoadCues(saved);
         FindAnimationWindow();
@@ -709,12 +709,12 @@ public class HeartacheEUITransport : EditorWindow
             var list = JsonUtility.FromJson<SongCueList>(json);
             _cues = list?.cues ?? new HeartacheEUISongCue[0];
             _cuesPath = absolutePath;
-            EditorPrefs.SetString("HeartacheEUITempoMonitor.cuesPath", absolutePath);
+            EditorPrefs.SetString("HeartacheEUITransport.cuesPath", absolutePath);
             UpdateCuesPathLabel();
         }
         catch (Exception ex)
         {
-            Debug.LogWarning($"[HeartacheEUITempoMonitor] Failed to load cues from {absolutePath}: {ex.Message}");
+            Debug.LogWarning($"[HeartacheEUITransport] Failed to load cues from {absolutePath}: {ex.Message}");
         }
     }
 

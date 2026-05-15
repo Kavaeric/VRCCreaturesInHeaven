@@ -1,0 +1,114 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <Style src="project://database/Assets/Modules/Atelier/AtelierUI.uss" />
+    <Style src="ALVBakeTexture.uss" />
+
+    <ui:ScrollView class="p-2">
+
+        <!-- Setup -->
+        <ui:VisualElement class="panel-frame col">
+            <ui:Label text="Setup" class="font-bold" />
+
+            <ui:VisualElement class="h-1" />
+
+            <ui:VisualElement class="col">
+                <ui:Label text="Animator" for="animator-field" />
+                <ui:VisualElement class="h-0p5" />
+                <uie:ObjectField name="animator-field" type="UnityEngine.Animator, UnityEngine" allow-scene-objects="true" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="h-1" />
+
+            <ui:VisualElement class="col">
+                <ui:Label text="Animation clip" for="clip-field" />
+                <ui:VisualElement class="h-0p5" />
+                <uie:ObjectField name="clip-field" type="UnityEngine.AnimationClip, UnityEngine" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="h-1" />
+
+            <ui:VisualElement class="col">
+                <ui:Label text="Light volume" for="volume-field" />
+                <ui:VisualElement class="h-0p5" />
+                <uie:ObjectField name="volume-field" allow-scene-objects="true" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement class="h-2" />
+
+        <!-- Bake -->
+        <ui:VisualElement class="panel-frame col">
+            <ui:Label text="Bake output" class="font-bold" />
+            <ui:VisualElement class="h-1" />
+
+            <ui:VisualElement class="col">
+                <ui:Label text="No. of frames" for="frame-count-field" />
+                <ui:VisualElement class="h-0p5" />
+                <uie:IntegerField name="frame-count-field" value="8" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="h-1" />
+
+            <ui:VisualElement class="col">
+                <ui:Label text="Output texture name" for="output-name-field" />
+                <ui:VisualElement class="h-0p5" />
+                <ui:TextField name="output-name-field" value="ALV_Bake" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement class="h-2" />
+
+        <!-- Preview -->
+        <ui:VisualElement class="panel-frame col">
+            <ui:Label text="Preview" class="font-bold" />
+            <ui:VisualElement class="h-1" />
+
+            <ui:VisualElement name="preview-controls" class="row items-center">
+                <ui:Button     name="prev-btn"         text="◀"  class="btn-icon-sm" />
+                <ui:Button     name="next-btn"         text="▶"  class="btn-icon-sm" />
+
+                <ui:VisualElement class="w-1" />
+                <uie:IntegerField name="preview-frame-field" class="shrink" />
+                <ui:VisualElement class="w-1" />
+                <ui:Label      name="preview-frame-max"      class="text-muted" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="h-1" />
+
+            <ui:VisualElement class="row items-center">
+                <ui:Label text="Animation frame" class="grow text-muted text-sm" />
+                <ui:Label name="anim-frame-label" class="text-sm" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement class="h-2" />
+
+        <!-- Status / bake button -->
+        <ui:HelpBox name="validation-box" message-type="Warning" />
+        <ui:HelpBox name="bake-progress-box" message-type="Info" />
+
+        <ui:VisualElement class="h-1" />
+
+        <!-- Estimates -->
+        <ui:VisualElement class="row items-center">
+            <ui:Label text="Output resolution" for="output-res" class="grow font-bold" />
+            <ui:Label name="output-res" text="—" />
+        </ui:VisualElement>
+        <ui:VisualElement class="h-0p5" />
+        <ui:VisualElement class="row items-center">
+            <ui:Label text="VRAM size" for="vram-size" class="grow font-bold" />
+            <ui:Label name="vram-size" text="—" />
+        </ui:VisualElement>
+        <ui:VisualElement class="h-0p5" />
+        <ui:VisualElement class="row items-center">
+            <ui:Label text="Estimated bundle size" for="estimated-bundle-size" class="grow font-bold" />
+            <ui:Label name="estimated-bundle-size" text="—" />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="h-1" />
+
+        <ui:Button name="bake-btn" text="Bake animated light volume" />
+        <ui:VisualElement class="h-1" />
+        <ui:Button name="cancel-btn" text="Cancel" class="btn-danger" />
+
+    </ui:ScrollView>
+</ui:UXML>

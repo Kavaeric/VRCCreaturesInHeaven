@@ -14,21 +14,33 @@ using UnityEditor;
 public static class GenerateALVTexture
 {
     // Spatial volume resolution for the test texture.
-    const int W = 18, H = 18, D = 18;
+    const int W = 18, H = 14, D = 18;
 
     [MenuItem("Tools/Lighting/Generate Test ALV Texture")]
     static void GenerateTest()
     {
-        // Frame 0: Overhead red
-        // Frame 1: Sideways blue
-        // Frame 2: Nothing
-        // Frame 3: Warm overhead
+        int voxels = W * H * D;
         var frames = new FrameSH[]
         {
             new FrameSH {
-                tex0 = new Color(0, 0, 0, 0),
-                tex1 = new Color(0, 0, 0, 0),
-                tex2 = new Color(0, 0, 0, 0),
+                tex0 = FillArray(voxels, new Color(1, 0, 0, 0)),
+                tex1 = FillArray(voxels, new Color(0, 0, 0, 0)),
+                tex2 = FillArray(voxels, new Color(1, 0, 0, 0)),
+            },
+            new FrameSH {
+                tex0 = FillArray(voxels, new Color(0, 0, 1, 0)),
+                tex1 = FillArray(voxels, new Color(0, 0, 1, 0)),
+                tex2 = FillArray(voxels, new Color(0, 0, 0, 0)),
+            },
+            new FrameSH {
+                tex0 = FillArray(voxels, Color.black),
+                tex1 = FillArray(voxels, Color.black),
+                tex2 = FillArray(voxels, Color.black),
+            },
+            new FrameSH {
+                tex0 = FillArray(voxels, new Color(1.0f, 1.0f, 1.0f, 0f)),
+                tex1 = FillArray(voxels, Color.black),
+                tex2 = FillArray(voxels, new Color(0.5f, 0.2f, 0f, 0f)),
             },
         };
 
@@ -36,15 +48,23 @@ public static class GenerateALVTexture
         string sceneName = System.IO.Path.GetFileNameWithoutExtension(scenePath);
         string sceneDir  = System.IO.Path.GetDirectoryName(scenePath);
         string assetDir  = $"{sceneDir}/{sceneName}/AnimatedLV";
-        AnimatedLightVolumeEditor.CreateDirectory(assetDir);
+        ALVEditor.CreateDirectory(assetDir);
 
         string path = $"{assetDir}/TestLight_Packed.asset";
         SavePackedTexture(frames, W, H, D, path);
     }
 
-    // Builds a packed Texture3D from an array of FrameSH and saves it at the
-    // given asset path. If an asset already exists at that path, its pixel data
-    // is updated in place so serialised references (GUIDs) remain stable.
+    static Color[] FillArray(int count, Color value)
+    {
+        Color[] arr = new Color[count];
+        for (int i = 0; i < count; i++) arr[i] = value;
+        return arr;
+    }
+
+    // Builds a packed Texture3D from an array of FrameSH and saves it at the given asset path.
+    // Each FrameSH.tex0/1/2 must be a Color[] of length w*h*d in XYZ order (x fastest).
+    // If an asset already exists at that path, its pixel data is updated in place so serialised
+    // references (GUIDs) remain stable.
     public static void SavePackedTexture(FrameSH[] frames, int w, int h, int d, string assetPath)
     {
         int numFrames   = frames.Length;
@@ -56,9 +76,9 @@ public static class GenerateALVTexture
         for (int f = 0; f < numFrames; f++)
         {
             int yOffset = f * h;
-            WriteBlock(pixels, w, totalHeight, h, d, yOffset, 0,     frames[f].tex0);
-            WriteBlock(pixels, w, totalHeight, h, d, yOffset, d,     frames[f].tex1);
-            WriteBlock(pixels, w, totalHeight, h, d, yOffset, d * 2, frames[f].tex2);
+            CopyBlock(pixels, frames[f].tex0, w, totalHeight, h, d, yOffset, 0);
+            CopyBlock(pixels, frames[f].tex1, w, totalHeight, h, d, yOffset, d);
+            CopyBlock(pixels, frames[f].tex2, w, totalHeight, h, d, yOffset, d * 2);
         }
 
         // Reuse existing asset to preserve GUID.
@@ -86,20 +106,22 @@ public static class GenerateALVTexture
         }
 
         AssetDatabase.SaveAssets();
-        Debug.Log($"[GenerateAVLTexture] Saved {assetPath} ({w}x{totalHeight}x{totalDepth}, {numFrames} frames)");
+        Debug.Log($"[GenerateALVTexture] Saved {assetPath} ({w}x{totalHeight}x{totalDepth}, {numFrames} frames)");
     }
 
-    // Fills a w x blockH x blockD block at (yOffset, zOffset) with a constant colour.
-    static void WriteBlock(Color[] pixels, int w, int totalHeight, int blockH, int blockD, int yOffset, int zOffset, Color value)
+    // Copies a w*h*d source block (XYZ order, x fastest) into the packed pixel array
+    // at the given yOffset and zOffset within the atlas layout.
+    static void CopyBlock(Color[] dst, Color[] src, int w, int totalHeight, int blockH, int blockD, int yOffset, int zOffset)
     {
         for (int z = 0; z < blockD; z++)
             for (int y = 0; y < blockH; y++)
                 for (int x = 0; x < w; x++)
-                    pixels[x + (y + yOffset) * w + (z + zOffset) * w * totalHeight] = value;
+                    dst[x + (y + yOffset) * w + (z + zOffset) * w * totalHeight] = src[x + y * w + z * w * blockH];
     }
 
+    // One baked frame: three SH textures as flat Color arrays, length w*h*d, XYZ order (x fastest).
     public struct FrameSH
     {
-        public Color tex0, tex1, tex2;
+        public Color[] tex0, tex1, tex2;
     }
 }

@@ -19,6 +19,15 @@ public class AnimatedLightVolume : UdonSharpBehaviour
     [Tooltip("Packed 4D SH texture produced by the baking tool. X = spatial, Y = time frames, Z = SH sub-textures.")]
     public Texture3D AnimatedTexture;
 
+    // Y size of one frame slice in the packed texture (== ALVTextureInfo.frameY).
+    // Stored separately because height = frameY * numFrames, and the two can't
+    // be separated from texture dimensions alone when H != D.
+    // Set automatically by the editor when AnimatedTexture is assigned via sidecar.
+    [HideInInspector] public int FrameY;
+
+    // Editor-only voxel preview state. Controlled by ALVEditor inspector.
+    [HideInInspector] public bool PreviewVoxels = false;
+    [HideInInspector] public int PreviewFrame = 0;
     [Tooltip("How this volume's SH contribution is composited onto the atlas bake.")]
     public ALVBlendingMode Blending = ALVBlendingMode.Add;
 
@@ -30,7 +39,7 @@ public class AnimatedLightVolume : UdonSharpBehaviour
     public float Time = 0f;
 
     [Tooltip("Name of the float parameter on the Animator that overrides Time at runtime. Leave empty to use the field value above.")]
-    public string AnimTimeParameter = "ALVTime";
+    public string AnimTimeParameter = "";
 
     [Tooltip("Intensity of the SH contribution. 0 = no contribution, 1 = full strength.")]
     public float Intensity = 1f;
@@ -64,8 +73,11 @@ public class AnimatedLightVolume : UdonSharpBehaviour
         _mat.SetTexture("_PackedTex", AnimatedTexture);
 
         // Derive layout from texture dimensions.
-        // Y = H * numFrames, Z = D * 3.
-        NumFrames = AnimatedTexture.height / (AnimatedTexture.depth / 3);
+        // Y = spatialH * numFrames, Z = D * 3. FrameY is stored separately
+        // because H and D can differ, making them impossible to separate from texture
+        // dimensions alone.
+        int spatialH = FrameY > 0 ? FrameY : (AnimatedTexture.depth / 3);
+        NumFrames = AnimatedTexture.height / spatialH;
         _mat.SetFloat("_FrameScaleY", 1f / NumFrames);
         _mat.SetFloat("_SliceScaleZ", 1f / 3f);
 
@@ -106,4 +118,5 @@ public class AnimatedLightVolume : UdonSharpBehaviour
             _intensity = intensity;
         }
     }
+
 }

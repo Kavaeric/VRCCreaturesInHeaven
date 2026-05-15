@@ -41,9 +41,9 @@
             <ui:VisualElement class="h-1" />
 
             <ui:VisualElement class="col">
-                <ui:Label text="No. of frames" for="frame-count-field" />
+                <ui:Label text="No. of samples" for="sample-count-field" />
                 <ui:VisualElement class="h-0p5" />
-                <uie:IntegerField name="frame-count-field" value="8" />
+                <uie:IntegerField name="sample-count-field" value="8" />
             </ui:VisualElement>
 
             <ui:VisualElement class="h-1" />
@@ -69,26 +69,30 @@
                 <ui:VisualElement class="w-1" />
                 <uie:IntegerField name="preview-frame-field" class="shrink" />
                 <ui:VisualElement class="w-1" />
-                <ui:Label      name="preview-frame-max"      class="text-muted" />
+                <ui:Label name="preview-frame-max" />
             </ui:VisualElement>
 
             <ui:VisualElement class="h-1" />
 
             <ui:VisualElement class="row items-center">
-                <ui:Label text="Animation frame" class="grow text-muted text-sm" />
-                <ui:Label name="anim-frame-label" class="text-sm" />
+                <ui:Label text="Animation frame" for="anim-frame-counter" class="grow text-sm" />
+                <ui:Label name="anim-frame-counter" class="text-sm" />
             </ui:VisualElement>
         </ui:VisualElement>
 
         <ui:VisualElement class="h-2" />
 
         <!-- Status / bake button -->
-        <ui:HelpBox name="validation-box" message-type="Warning" />
         <ui:HelpBox name="bake-progress-box" message-type="Info" />
 
         <ui:VisualElement class="h-1" />
 
-        <!-- Estimates -->
+        <!-- Output -->
+        <ui:VisualElement class="row items-center">
+            <ui:Label text="Sample frame interval" for="anim-frame-interval" class="grow font-bold" />
+            <ui:Label name="anim-frame-interval" />
+        </ui:VisualElement>
+        <ui:VisualElement class="h-0p5" />
         <ui:VisualElement class="row items-center">
             <ui:Label text="Output resolution" for="output-res" class="grow font-bold" />
             <ui:Label name="output-res" text="—" />
@@ -109,6 +113,8 @@
         <ui:Button name="bake-btn" text="Bake animated light volume" />
         <ui:VisualElement class="h-1" />
         <ui:Button name="cancel-btn" text="Cancel" class="btn-danger" />
+        <ui:VisualElement class="h-0p5" />
+        <ui:HelpBox name="validation-box" message-type="Warning" />
 
     </ui:ScrollView>
 </ui:UXML>

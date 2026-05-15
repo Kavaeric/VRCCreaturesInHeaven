@@ -8,7 +8,7 @@ public class ALVEditor : Editor
 {
     Texture3D _prevTexture;
 
-    // Voxel preview GPU resources — rebuilt when the volume, resolution, texture, or frame changes.
+    // Voxel preview GPU resources. Rebuilt when the volume, resolution, texture, or frame changes.
     ComputeBuffer _posBuf;
     ComputeBuffer _sh0Buf, _sh1Buf, _sh2Buf;
     ComputeBuffer _argsBuf;
@@ -65,7 +65,7 @@ public class ALVEditor : Editor
                 ALVTextureInfo info = ALVTextureInfo.Load(texPath);
                 if (info != null)
                 {
-                    alv.FrameY = info.frameY;
+                    alv.SampleY = info.sampleY;
                     EditorUtility.SetDirty(alv);
                 }
             }
@@ -104,7 +104,7 @@ public class ALVEditor : Editor
         Animator animator = alv.AnimatorSource;
         if (animator == null)
         {
-            EditorGUILayout.HelpBox("Assign an animator and create float parameters matching the names above to start animating this Light Volume.a", MessageType.Info);
+            EditorGUILayout.HelpBox("Assign an animator and create float parameters matching the names above to start animating this Light Volume.", MessageType.Info);
         }
         else
         {
@@ -147,12 +147,12 @@ public class ALVEditor : Editor
         {
             if (alv.AnimatedTexture != null)
             {
-                int spatialH  = alv.FrameY > 0 ? alv.FrameY : (alv.AnimatedTexture.depth / 3);
-                int numFrames = alv.AnimatedTexture.height / spatialH;
-                int newFrame = EditorGUILayout.IntSlider("Frame", alv.PreviewFrame, 0, numFrames - 1);
-                if (newFrame != alv.PreviewFrame)
+                int sampleSizeY  = alv.SampleY > 0 ? alv.SampleY : (alv.AnimatedTexture.depth / 3);
+                int numSamples = alv.AnimatedTexture.height / sampleSizeY;
+                int newFrame = EditorGUILayout.IntSlider("Sample", alv.PreviewSample, 0, numSamples - 1);
+                if (newFrame != alv.PreviewSample)
                 {
-                    alv.PreviewFrame = newFrame;
+                    alv.PreviewSample = newFrame;
                     EditorUtility.SetDirty(alv);
                     SceneView.RepaintAll();
                 }
@@ -169,7 +169,7 @@ public class ALVEditor : Editor
                 SceneView.RepaintAll();
             }
 
-            // Slice controls — only shown when a target volume is assigned so we know the resolution.
+            // Slice controls. Only shown when a target volume is assigned so we know the resolution.
             if (alv.TargetVolume != null)
             {
                 LightVolume lv = alv.TargetVolume.GetComponent<LightVolume>();
@@ -189,15 +189,15 @@ public class ALVEditor : Editor
 
         if (alv.AnimatedTexture != null)
         {
-            int spatialH  = alv.FrameY > 0 ? alv.FrameY : (alv.AnimatedTexture.depth / 3);
-            int numFrames = alv.AnimatedTexture.height / spatialH;
-            EditorGUILayout.LabelField("Frame size", $"{alv.AnimatedTexture.width} x {spatialH} x {alv.AnimatedTexture.depth / 3}");
-            EditorGUILayout.LabelField("Frames", numFrames.ToString());
+            int sampleSizeY  = alv.SampleY > 0 ? alv.SampleY : (alv.AnimatedTexture.depth / 3);
+            int numSamples = alv.AnimatedTexture.height / sampleSizeY;
+            EditorGUILayout.LabelField("Sample size", $"{alv.AnimatedTexture.width} x {sampleSizeY} x {alv.AnimatedTexture.depth / 3}");
+            EditorGUILayout.LabelField("Samples", numSamples.ToString());
         }
         else
         {
-            EditorGUILayout.LabelField("Frame size", "—");
-            EditorGUILayout.LabelField("Frames", "—");
+            EditorGUILayout.LabelField("Sample size", "—");
+            EditorGUILayout.LabelField("Samples", "—");
         }
 
         serializedObject.ApplyModifiedProperties();
@@ -261,7 +261,7 @@ public class ALVEditor : Editor
             AssetDatabase.CreateAsset(crt, crtPath);
         }
 
-        // Configure CRT — the LightVolumeSetup will enforce these too, but set
+        // Configure the CRT. The LightVolumeSetup will enforce these too, but set
         // them here so the asset is in the right state before the scene is run.
         crt.dimension = TextureDimension.Tex3D;
         crt.graphicsFormat = UnityEngine.Experimental.Rendering.GraphicsFormat.R16G16B16A16_SFloat;
@@ -305,7 +305,7 @@ public class ALVEditor : Editor
         Vector3 scl = lv.GetScale();
 
         Texture3D tex = alv.AnimatedTexture;
-        int previewFrame = alv.PreviewFrame;
+        int previewFrame = alv.PreviewSample;
 
         // Rebuild buffers when volume, resolution, texture, frame, or slice changes.
         bool needRebuild = _posBuf == null
@@ -332,47 +332,46 @@ public class ALVEditor : Editor
             var sh1 = new System.Collections.Generic.List<Vector4>();
             var sh2 = new System.Collections.Generic.List<Vector4>();
 
-            // Sample all three SH textures for the selected frame if available.
-            Color[] pix0 = null, pix1 = null, pix2 = null;
-            int texW = 0, totalHeight = 0, yBase = 0, frameZ = 0;
+            // Sample all three SH textures for the selected sample if available.
+            // All three SH slots live in the same GetPixels() array, separated by sampleSize.z in Z.
+            Color[] pixels = null;
+            Vector3Int texSize = Vector3Int.zero;
+            Vector3Int sampleSize = Vector3Int.zero;
+            int sampleOrigin = 0;
             if (tex != null)
             {
-                int spatialFrameY = alv.FrameY > 0 ? alv.FrameY : (tex.depth / 3);
-                int frame = Mathf.Clamp(previewFrame, 0, tex.height / spatialFrameY - 1);
-                yBase       = frame * spatialFrameY;
-                texW        = tex.width;
-                totalHeight = tex.height;
-                frameZ      = tex.depth / 3;
-                pix0 = tex.GetPixels();
-                // tex1 and tex2 sit at z offsets frameZ and frameZ*2 respectively,
-                // so we can read from the same GetPixels() array with different z offsets.
-                pix1 = pix0;
-                pix2 = pix0;
+                sampleSize.y  = alv.SampleY > 0 ? alv.SampleY : (tex.depth / 3);
+                sampleSize.x  = tex.width;
+                sampleSize.z  = tex.depth / 3;
+                texSize       = new Vector3Int(tex.width, tex.height, tex.depth);
+                int sampleIdx = Mathf.Clamp(previewFrame, 0, texSize.y / sampleSize.y - 1);
+                sampleOrigin  = sampleIdx * sampleSize.y;
+                pixels        = tex.GetPixels();
             }
 
             Vector3 halfOffset = Vector3.one * 0.5f;
-            for (int vx = 0; vx < res.x; vx++)
-            for (int vy = 0; vy < res.y; vy++)
-            for (int vz = 0; vz < res.z; vz++)
+            for (int voxelX = 0; voxelX < res.x; voxelX++)
+            for (int voxelY = 0; voxelY < res.y; voxelY++)
+            for (int voxelZ = 0; voxelZ < res.z; voxelZ++)
             {
-                if (_sliceX && vx != _sliceXVal) continue;
-                if (_sliceY && vy != _sliceYVal) continue;
-                if (_sliceZ && vz != _sliceZVal) continue;
+                if (_sliceX && voxelX != _sliceXVal) continue;
+                if (_sliceY && voxelY != _sliceYVal) continue;
+                if (_sliceZ && voxelZ != _sliceZVal) continue;
 
                 Vector3 localPos = new Vector3(
-                    (vx + 0.5f) / res.x,
-                    (vy + 0.5f) / res.y,
-                    (vz + 0.5f) / res.z) - halfOffset;
+                    (voxelX + 0.5f) / res.x,
+                    (voxelY + 0.5f) / res.y,
+                    (voxelZ + 0.5f) / res.z) - halfOffset;
                 positions.Add(pos + rot * Vector3.Scale(localPos, scl));
 
-                if (pix0 != null)
+                if (pixels != null)
                 {
-                    // Packed layout: x + (y + yBase)*W + z*W*totalHeight
-                    // tex0 at z=vz, tex1 at z=vz+frameZ, tex2 at z=vz+frameZ*2
-                    int p0 = vx + (vy + yBase) * texW + vz              * texW * totalHeight;
-                    int p1 = vx + (vy + yBase) * texW + (vz + frameZ)   * texW * totalHeight;
-                    int p2 = vx + (vy + yBase) * texW + (vz + frameZ*2) * texW * totalHeight;
-                    Color c0 = pix0[p0], c1 = pix1[p1], c2 = pix2[p2];
+                    // Packed layout: x + (y + sampleOrigin) * texSize.x + z * texSize.x * texSize.y
+                    // SH slot 0 at z=voxelZ, slot 1 at z=voxelZ+sampleSize.z, slot 2 at z=voxelZ+sampleSize.z*2
+                    int p0 = voxelX + (voxelY + sampleOrigin) * texSize.x + voxelZ                       * texSize.x * texSize.y;
+                    int p1 = voxelX + (voxelY + sampleOrigin) * texSize.x + (voxelZ + sampleSize.z)      * texSize.x * texSize.y;
+                    int p2 = voxelX + (voxelY + sampleOrigin) * texSize.x + (voxelZ + sampleSize.z * 2)  * texSize.x * texSize.y;
+                    Color c0 = pixels[p0], c1 = pixels[p1], c2 = pixels[p2];
                     sh0.Add(new Vector4(c0.r, c0.g, c0.b, c0.a));
                     sh1.Add(new Vector4(c1.r, c1.g, c1.b, c1.a));
                     sh2.Add(new Vector4(c2.r, c2.g, c2.b, c2.a));

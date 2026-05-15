@@ -9,10 +9,10 @@ using UnityEditor;
 [System.Serializable]
 public class ALVTextureInfo
 {
-    public int frameX;     // Spatial width  of one frame (texture X)
-    public int frameY;     // Spatial height of one frame (texture Y per frame)
-    public int frameZ;     // Spatial depth  of one frame (texture Z / 3)
-    public int numFrames;  // Total number of baked frames
+    public int sampleX;     // Spatial width  of one sample (texture X)
+    public int sampleY;     // Spatial height of one sample (texture Y per sample)
+    public int sampleZ;     // Spatial depth  of one sample (texture Z / 3)
+    public int numSamples;  // Total number of baked samples
 
     // Derives the sidecar path from a texture asset path.
     public static string SidecarPath(string assetPath) =>

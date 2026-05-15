@@ -20,24 +20,24 @@ public static class GenerateALVTexture
     static void GenerateTest()
     {
         int voxels = W * H * D;
-        var frames = new FrameSH[]
+        var frames = new SampleSH[]
         {
-            new FrameSH {
+            new SampleSH {
                 tex0 = FillArray(voxels, new Color(1, 0, 0, 0)),
                 tex1 = FillArray(voxels, new Color(0, 0, 0, 0)),
                 tex2 = FillArray(voxels, new Color(1, 0, 0, 0)),
             },
-            new FrameSH {
+            new SampleSH {
                 tex0 = FillArray(voxels, new Color(0, 0, 1, 0)),
                 tex1 = FillArray(voxels, new Color(0, 0, 1, 0)),
                 tex2 = FillArray(voxels, new Color(0, 0, 0, 0)),
             },
-            new FrameSH {
+            new SampleSH {
                 tex0 = FillArray(voxels, Color.black),
                 tex1 = FillArray(voxels, Color.black),
                 tex2 = FillArray(voxels, Color.black),
             },
-            new FrameSH {
+            new SampleSH {
                 tex0 = FillArray(voxels, new Color(1.0f, 1.0f, 1.0f, 0f)),
                 tex1 = FillArray(voxels, Color.black),
                 tex2 = FillArray(voxels, new Color(0.5f, 0.2f, 0f, 0f)),
@@ -65,7 +65,7 @@ public static class GenerateALVTexture
     // Each FrameSH.tex0/1/2 must be a Color[] of length w*h*d in XYZ order (x fastest).
     // If an asset already exists at that path, its pixel data is updated in place so serialised
     // references (GUIDs) remain stable.
-    public static void SavePackedTexture(FrameSH[] frames, int w, int h, int d, string assetPath)
+    public static void SavePackedTexture(SampleSH[] frames, int w, int h, int d, string assetPath)
     {
         int numFrames   = frames.Length;
         int totalHeight = h * numFrames;
@@ -120,7 +120,7 @@ public static class GenerateALVTexture
     }
 
     // One baked frame: three SH textures as flat Color arrays, length w*h*d, XYZ order (x fastest).
-    public struct FrameSH
+    public struct SampleSH
     {
         public Color[] tex0, tex1, tex2;
     }

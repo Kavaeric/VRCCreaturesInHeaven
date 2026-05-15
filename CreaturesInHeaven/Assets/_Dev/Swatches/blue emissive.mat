@@ -8,20 +8,21 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: blue emissive
-  m_Shader: {fileID: 4800000, guid: 44078aff4de957844a86ead7ad169295, type: 3}
+  m_Shader: {fileID: 4800000, guid: cc6f91d2b31e3e4408db75c7c6a5f034, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords:
+  m_ValidKeywords:
   - _BICUBIC_SAMPLING_ON
   - _EMISSION_ON
   - _REFLECTIONS_ON
   - _SPECULAR_HIGHLIGHTS_ON
+  m_InvalidKeywords: []
   m_LightmapFlags: 1
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
+  m_CustomRenderQueue: 2000
+  stringTagMap:
+    RenderType: Opaque
   disabledShaderPasses:
   - ALWAYS
   m_LockedProperties: 
@@ -299,7 +300,7 @@ Material:
     - _EmissionPulseSpeed: 1
     - _EmissionPulseStrength: 1
     - _EmissionPulseWave: 0
-    - _EmissionStrength: 1
+    - _EmissionStrength: 0
     - _ExposureOcclusion: 0.2
     - _FPS: 24
     - _Filtering: 0
@@ -485,9 +486,9 @@ Material:
     - _specularAntiAliasingVariance: 0.15
     - intensity: 45
     m_Colors:
-    - _Color: {r: 0.19182372, g: 0.58621365, b: 1, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _DetailColor: {r: 1, g: 1, b: 1, a: 1}
-    - _EmissionColor: {r: 1.4980391, g: 1.4980391, b: 1.4980391, a: 1}
+    - _EmissionColor: {r: 0, g: 0.4020252, b: 1.9999999, a: 1}
     - _LTCGI_DiffuseColor: {r: 1, g: 1, b: 1, a: 1}
     - _LTCGI_SpecularColor: {r: 1, g: 1, b: 1, a: 1}
     - _PuddleTint: {r: 0, g: 0, b: 0, a: 0.1}

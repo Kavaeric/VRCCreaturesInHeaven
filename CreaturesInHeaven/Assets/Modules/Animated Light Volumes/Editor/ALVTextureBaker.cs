@@ -497,12 +497,7 @@ public class ALVTextureBaker : EditorWindow
         int d = res.z;
 
         // Packed texture dimensions: X unchanged, Y stacked by numFrames, Z = depth * numSlots.
-        int numSlots = _shMode switch
-        {
-            ALVSHMode.L1     => 3,
-            ALVSHMode.MonoL1 => 2,
-            _                => 1
-        };
+        int numSlots = ALVFormat.NumSlots(_shMode);
         
         int packedH = h * _sampleCount;
         int packedD = d * numSlots;
@@ -542,44 +537,19 @@ public class ALVTextureBaker : EditorWindow
         _collectedSamples.Clear();
 
         // Cache hierarchy paths now while references are guaranteed live.
-        _animatorPath     = GetHierarchyPath(_animator.gameObject);
-        _targetVolumePath = GetHierarchyPath(_targetVolume.gameObject);
+        _animatorPath     = ALVEditorUtils.GetHierarchyPath(_animator.gameObject);
+        _targetVolumePath = ALVEditorUtils.GetHierarchyPath(_targetVolume.gameObject);
 
         UpdateUI();
         BakeNextFrame();
     }
 
-    // Returns the full hierarchy path of a GameObject (e.g. "Root/Child/Leaf").
-    static string GetHierarchyPath(GameObject go)
-    {
-        string path = go.name;
-        Transform t = go.transform.parent;
-        while (t != null)
-        {
-            path = t.name + "/" + path;
-            t = t.parent;
-        }
-        return path;
-    }
-
-    // Re-finds a component by hierarchy path after Bakery may have reloaded the scene.
-    static T FindByPath<T>(string path) where T : Component
-    {
-        GameObject go = GameObject.Find(path);
-        if (go == null)
-        {
-            Debug.LogError($"  [ALVBakeTexture] Could not find GameObject at path \"{path}\". Was it renamed or destroyed?");
-            return null;
-        }
-        return go.GetComponent<T>();
-    }
-
     bool RefreshReferences()
     {
-        Animator animator = FindByPath<Animator>(_animatorPath);
+        Animator animator = ALVEditorUtils.FindByPath<Animator>(_animatorPath);
         if (animator == null) { AbortBake("Animator lost after scene reload!"); return false; }
 
-        LightVolume volume = FindByPath<LightVolume>(_targetVolumePath);
+        LightVolume volume = ALVEditorUtils.FindByPath<LightVolume>(_targetVolumePath);
         if (volume == null) { AbortBake("Target LightVolume lost after scene reload!"); return false; }
 
         _animator     = animator;
@@ -648,11 +618,8 @@ public class ALVTextureBaker : EditorWindow
         int h = bv.bakedTexture0.height;
         int d = bv.bakedTexture0.depth;
 
-        string scenePath = UnityEngine.SceneManagement.SceneManager.GetActiveScene().path;
-        string sceneName = Path.GetFileNameWithoutExtension(scenePath);
-        string sceneDir  = Path.GetDirectoryName(scenePath);
-        string assetDir  = $"{sceneDir}/{sceneName}/AnimatedLV";
-        ALVEditor.CreateDirectory(assetDir);
+        string assetDir = ALVEditorUtils.SceneAssetDir();
+        ALVEditorUtils.CreateDirectory(assetDir);
 
         string assetPath = $"{assetDir}/{_outputName}.asset";
         ALVTextureWriter.SavePackedTexture(_collectedSamples.ToArray(), w, h, d, assetPath, _shMode, _bitDepth);

@@ -22,7 +22,7 @@ public static class ALVTextureWriter
         ALVSHMode shMode = ALVSHMode.L1, ALVBitDepth bitDepth = ALVBitDepth.Depth8)
     {
         int numFrames = frames.Length;
-        int numSlots  = shMode == ALVSHMode.L1 ? 3 : shMode == ALVSHMode.MonoL1 ? 2 : 1;
+        int numSlots  = ALVFormat.NumSlots(shMode);
         int totalHeight = h * numFrames;
         int totalDepth  = d * numSlots;
 
@@ -65,7 +65,7 @@ public static class ALVTextureWriter
         // UNORM formats need signed SH values remapped from [-1,1] to [0,1] for storage.
         // The shader decodes back with value * 2 - 1.
         // RGB48 (MonoL1+Depth16) is also UNORM, so it needs the same remap as the Depth8 cases.
-        bool isUnorm = bitDepth == ALVBitDepth.Depth8 || (shMode == ALVSHMode.MonoL1 && bitDepth == ALVBitDepth.Depth16);
+        bool isUnorm = ALVFormat.IsUnorm(shMode, bitDepth);
         if (isUnorm)
         {
             for (int i = 0; i < pixels.Length; i++)

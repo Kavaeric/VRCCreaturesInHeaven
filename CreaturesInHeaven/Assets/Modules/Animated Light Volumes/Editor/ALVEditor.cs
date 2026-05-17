@@ -149,7 +149,7 @@ public class ALVEditor : Editor
         {
             if (alv.AnimatedTexture != null)
             {
-                int numSlots    = alv.SHMode == ALVSHMode.L1 ? 3 : alv.SHMode == ALVSHMode.MonoL1 ? 2 : 1;
+                int numSlots    = ALVFormat.NumSlots(alv.SHMode);
                 int sampleSizeY = alv.SampleY > 0 ? alv.SampleY : (alv.AnimatedTexture.depth / numSlots);
                 int numSamples = alv.AnimatedTexture.height / sampleSizeY;
                 int newFrame = EditorGUILayout.IntSlider("Sample", alv.PreviewSample, 0, numSamples - 1);
@@ -219,7 +219,7 @@ public class ALVEditor : Editor
 
         if (alv.AnimatedTexture != null)
         {
-            int numSlots    = alv.SHMode == ALVSHMode.L1 ? 3 : alv.SHMode == ALVSHMode.MonoL1 ? 2 : 1;
+            int numSlots    = ALVFormat.NumSlots(alv.SHMode);
             int sampleSizeY = alv.SampleY > 0 ? alv.SampleY : (alv.AnimatedTexture.depth / numSlots);
             int numSamples = alv.AnimatedTexture.height / sampleSizeY;
             EditorGUILayout.LabelField("Sample size", $"{alv.AnimatedTexture.width} x {sampleSizeY} x {alv.AnimatedTexture.depth / numSlots}");
@@ -252,11 +252,8 @@ public class ALVEditor : Editor
     {
         // Mirror the Light Volumes package convention: store generated assets
         // alongside the scene they belong to, not next to the script.
-        string scenePath = UnityEngine.SceneManagement.SceneManager.GetActiveScene().path;
-        string sceneName = System.IO.Path.GetFileNameWithoutExtension(scenePath);
-        string sceneDir  = System.IO.Path.GetDirectoryName(scenePath);
-        string assetDir  = $"{sceneDir}/{sceneName}/AnimatedLV";
-        CreateDirectory(assetDir);
+        string assetDir = ALVEditorUtils.SceneAssetDir();
+        ALVEditorUtils.CreateDirectory(assetDir);
 
         // Create material using the AnimatedLightVolume shader.
         Shader shader = Shader.Find("Hidden/AnimatedLightVolume");
@@ -371,7 +368,7 @@ public class ALVEditor : Editor
             int sampleOrigin = 0;
             if (tex != null)
             {
-                int numSlots  = alv.SHMode == ALVSHMode.L1 ? 3 : alv.SHMode == ALVSHMode.MonoL1 ? 2 : 1;
+                int numSlots  = ALVFormat.NumSlots(alv.SHMode);
                 sampleSize.y  = alv.SampleY > 0 ? alv.SampleY : (tex.depth / numSlots);
                 sampleSize.x  = tex.width;
                 sampleSize.z  = tex.depth / numSlots;
@@ -451,17 +448,4 @@ public class ALVEditor : Editor
             0, null, ShadowCastingMode.Off, false, alv.gameObject.layer);
     }
 
-    // Creates each segment of a folder path that doesn't already exist.
-    internal static void CreateDirectory(string path)
-    {
-        string[] parts = path.Split('/');
-        string current = parts[0];
-        for (int i = 1; i < parts.Length; i++)
-        {
-            string next = $"{current}/{parts[i]}";
-            if (!AssetDatabase.IsValidFolder(next))
-                AssetDatabase.CreateFolder(current, parts[i]);
-            current = next;
-        }
-    }
 }

@@ -1,4 +1,3 @@
-
 using UdonSharp;
 using UnityEngine;
 using VRC.SDKBase;
@@ -21,6 +20,23 @@ public enum ALVBitDepth
 {
     [InspectorName("8 bits per channel")]  Depth8,
     [InspectorName("16 bits per channel")] Depth16,
+}
+
+public static class ALVFormat
+{
+    // Returns the number of SH texture slots for a given mode.
+    // L1 = 3 slots, MonoL1 = 2 slots, MonoL0 = 1 slot.
+    public static int NumSlots(ALVSHMode shMode)
+    {
+        if (shMode == ALVSHMode.L1)     return 3;
+        if (shMode == ALVSHMode.MonoL1) return 2;
+        return 1;
+    }
+
+    // Returns true when the packed texture uses UNORM encoding (values remapped to [0,1]).
+    // The shader decodes back with value * 2 - 1.
+    public static bool IsUnorm(ALVSHMode shMode, ALVBitDepth bitDepth) =>
+        bitDepth == ALVBitDepth.Depth8 || (shMode == ALVSHMode.MonoL1 && bitDepth == ALVBitDepth.Depth16);
 }
 
 [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
@@ -115,7 +131,7 @@ public class AnimatedLightVolume : UdonSharpBehaviour
         // Y = sampleY * numSamples. SampleY is stored separately because H and D
         // can differ, making them impossible to separate from texture dimensions alone.
         // Z = spatialD * numSlots, where numSlots = 3 (L1), 2 (MonoL1), or 1 (MonoL0).
-        int numSlots = SHMode == ALVSHMode.L1 ? 3 : SHMode == ALVSHMode.MonoL1 ? 2 : 1;
+        int numSlots = ALVFormat.NumSlots(SHMode);
         int sampleY  = SampleY > 0 ? SampleY : (AnimatedTexture.depth / numSlots);
         NumSamples = AnimatedTexture.height / sampleY;
         _mat.SetInt("_NumSamples", NumSamples);
@@ -125,7 +141,7 @@ public class AnimatedLightVolume : UdonSharpBehaviour
         _mat.SetInt("_SHMode",   (int)SHMode);
         _mat.SetInt("_BitDepth", (int)BitDepth);
 
-        bool isUnorm = BitDepth == ALVBitDepth.Depth8 || (SHMode == ALVSHMode.MonoL1 && BitDepth == ALVBitDepth.Depth16);
+        bool isUnorm = ALVFormat.IsUnorm(SHMode, BitDepth);
         _mat.SetInt("_IsUnorm", isUnorm ? 1 : 0);
 
         _mat.SetInt("_BlendMode", (int)Blending);

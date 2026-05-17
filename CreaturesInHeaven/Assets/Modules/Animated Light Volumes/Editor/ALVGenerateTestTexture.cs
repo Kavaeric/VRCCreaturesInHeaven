@@ -12,11 +12,8 @@ public static class ALVGenerateTestTexture
     [MenuItem("Tools/Lighting/Generate ALV format test textures")]
     static void GenerateAll()
     {
-        string scenePath = UnityEngine.SceneManagement.SceneManager.GetActiveScene().path;
-        string sceneName = System.IO.Path.GetFileNameWithoutExtension(scenePath);
-        string sceneDir  = System.IO.Path.GetDirectoryName(scenePath);
-        string assetDir  = $"{sceneDir}/{sceneName}/AnimatedLV/FormatTest";
-        ALVEditor.CreateDirectory(assetDir);
+        string assetDir = ALVEditorUtils.SceneAssetDir() + "/FormatTest";
+        ALVEditorUtils.CreateDirectory(assetDir);
 
         var rng = new System.Random(9);
 

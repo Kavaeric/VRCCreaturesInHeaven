@@ -232,3 +232,23 @@ TextField > Label {
     flex-grow: 0;
     min-width: initial;
 }
+
+HelpBox {
+    border-color: rgba(0, 0, 0, .3);
+    background-color: rgba(255, 255, 255, .05);
+    margin: 0;
+    padding: 8px;
+}
+
+HelpBox > .unity-help-box__icon {
+    max-height: 28px;
+    max-width: 28px;
+    min-height: 28px;
+    min-width: 28px;
+    margin-right: 4px;
+}
+
+HelpBox > .unity-help-box__label {
+    font-size: 12px;
+}
+

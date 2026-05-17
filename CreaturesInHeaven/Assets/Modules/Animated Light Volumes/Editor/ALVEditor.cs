@@ -24,7 +24,7 @@ public class ALVEditor : Editor
     int _prevSliceXVal, _prevSliceYVal, _prevSliceZVal;
 
     enum SHDisplayMode { Full, L0Only, L1Only }
-    SHDisplayMode _shMode;
+    SHDisplayMode _previewSHDisplay;
 
     void OnDisable()
     {
@@ -65,7 +65,9 @@ public class ALVEditor : Editor
                 ALVTextureInfo info = ALVTextureInfo.Load(texPath);
                 if (info != null)
                 {
-                    alv.SampleY = info.sampleY;
+                    alv.SampleY          = info.sampleY;
+                    alv.SHMode     = info.shMode;   // shMode/bitDepth fields required; old sidecars are not supported
+                    alv.BitDepth   = info.bitDepth;
                     EditorUtility.SetDirty(alv);
                 }
             }
@@ -147,7 +149,8 @@ public class ALVEditor : Editor
         {
             if (alv.AnimatedTexture != null)
             {
-                int sampleSizeY  = alv.SampleY > 0 ? alv.SampleY : (alv.AnimatedTexture.depth / 3);
+                int numSlots    = alv.SHMode == ALVSHMode.L1 ? 3 : alv.SHMode == ALVSHMode.MonoL1 ? 2 : 1;
+                int sampleSizeY = alv.SampleY > 0 ? alv.SampleY : (alv.AnimatedTexture.depth / numSlots);
                 int numSamples = alv.AnimatedTexture.height / sampleSizeY;
                 int newFrame = EditorGUILayout.IntSlider("Sample", alv.PreviewSample, 0, numSamples - 1);
                 if (newFrame != alv.PreviewSample)
@@ -162,10 +165,10 @@ public class ALVEditor : Editor
                 EditorGUILayout.HelpBox("Assign an Animation texture to preview voxels.", MessageType.Info);
             }
 
-            SHDisplayMode newMode = (SHDisplayMode)EditorGUILayout.EnumPopup("SH display", _shMode);
-            if (newMode != _shMode)
+            SHDisplayMode newMode = (SHDisplayMode)EditorGUILayout.EnumPopup("SH display", _previewSHDisplay);
+            if (newMode != _previewSHDisplay)
             {
-                _shMode = newMode;
+                _previewSHDisplay = newMode;
                 SceneView.RepaintAll();
             }
 
@@ -183,15 +186,43 @@ public class ALVEditor : Editor
             }
         }
 
+        // --- Bake settings -------------------------------------------
+        EditorGUILayout.Space(8);
+        alv.BakeSettingsFoldout = EditorGUILayout.Foldout(alv.BakeSettingsFoldout, "Saved bake settings", true, EditorStyles.foldoutHeader);
+        if (alv.BakeSettingsFoldout)
+        {
+            EditorGUI.indentLevel++;
+            EditorGUI.BeginChangeCheck();
+
+            alv.BakeAnimator  = (Animator)EditorGUILayout.ObjectField("Animator", alv.BakeAnimator, typeof(Animator), allowSceneObjects: true);
+            alv.BakeClip      = (AnimationClip)EditorGUILayout.ObjectField("Animation clip", alv.BakeClip, typeof(AnimationClip), allowSceneObjects: false);
+            alv.BakeSampleCount = Mathf.Max(2, EditorGUILayout.IntField("No. of samples", alv.BakeSampleCount));
+
+            EditorGUILayout.BeginHorizontal();
+            alv.BakeStartFrame = Mathf.Max(0, EditorGUILayout.IntField("Start frame", alv.BakeStartFrame));
+            alv.BakeEndFrame   = EditorGUILayout.IntField("End frame (-1 = full)", alv.BakeEndFrame);
+            EditorGUILayout.EndHorizontal();
+
+            alv.BakeSHMode   = (ALVSHMode)  EditorGUILayout.EnumPopup("SH mode",   alv.BakeSHMode);
+            alv.BakeBitDepth = (ALVBitDepth)EditorGUILayout.EnumPopup("Bit depth", alv.BakeBitDepth);
+            alv.BakeOutputName = EditorGUILayout.TextField("Output name", alv.BakeOutputName);
+
+            if (EditorGUI.EndChangeCheck())
+                EditorUtility.SetDirty(alv);
+
+            EditorGUI.indentLevel--;
+        }
+
         // --- Info ----------------------------------------------------
         EditorGUILayout.Space(8);
         EditorGUILayout.LabelField("Debug", EditorStyles.boldLabel);
 
         if (alv.AnimatedTexture != null)
         {
-            int sampleSizeY  = alv.SampleY > 0 ? alv.SampleY : (alv.AnimatedTexture.depth / 3);
+            int numSlots    = alv.SHMode == ALVSHMode.L1 ? 3 : alv.SHMode == ALVSHMode.MonoL1 ? 2 : 1;
+            int sampleSizeY = alv.SampleY > 0 ? alv.SampleY : (alv.AnimatedTexture.depth / numSlots);
             int numSamples = alv.AnimatedTexture.height / sampleSizeY;
-            EditorGUILayout.LabelField("Sample size", $"{alv.AnimatedTexture.width} x {sampleSizeY} x {alv.AnimatedTexture.depth / 3}");
+            EditorGUILayout.LabelField("Sample size", $"{alv.AnimatedTexture.width} x {sampleSizeY} x {alv.AnimatedTexture.depth / numSlots}");
             EditorGUILayout.LabelField("Samples", numSamples.ToString());
         }
         else
@@ -340,9 +371,10 @@ public class ALVEditor : Editor
             int sampleOrigin = 0;
             if (tex != null)
             {
-                sampleSize.y  = alv.SampleY > 0 ? alv.SampleY : (tex.depth / 3);
+                int numSlots  = alv.SHMode == ALVSHMode.L1 ? 3 : alv.SHMode == ALVSHMode.MonoL1 ? 2 : 1;
+                sampleSize.y  = alv.SampleY > 0 ? alv.SampleY : (tex.depth / numSlots);
                 sampleSize.x  = tex.width;
-                sampleSize.z  = tex.depth / 3;
+                sampleSize.z  = tex.depth / numSlots;
                 texSize       = new Vector3Int(tex.width, tex.height, tex.depth);
                 int sampleIdx = Mathf.Clamp(previewFrame, 0, texSize.y / sampleSize.y - 1);
                 sampleOrigin  = sampleIdx * sampleSize.y;
@@ -409,7 +441,7 @@ public class ALVEditor : Editor
         _previewMaterial.SetBuffer("_SH1", _sh1Buf);
         _previewMaterial.SetBuffer("_SH2", _sh2Buf);
         _previewMaterial.SetFloat("_Scale", radius);
-        _previewMaterial.SetInt("_SHMode", (int)_shMode);
+        _previewMaterial.SetInt("_SHMode", (int)_previewSHDisplay);
         _argsBuf.SetData(new uint[] {
             _previewMesh.GetIndexCount(0), (uint)_posBuf.count,
             _previewMesh.GetIndexStart(0), (uint)_previewMesh.GetBaseVertex(0), 0u });

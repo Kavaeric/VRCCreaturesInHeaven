@@ -7,6 +7,22 @@ using VRCLightVolumes;
 
 public enum ALVBlendingMode { Replace, Add, Subtract, Multiply }
 
+// SH fidelity mode. Controls how many values are captured per voxel and how many
+// SH textures are packed per sample (Z = depth × numSlots).
+public enum ALVSHMode
+{
+    [InspectorName("L1")]     L1,
+    [InspectorName("MonoL1")] MonoL1,
+    [InspectorName("MonoL0")] MonoL0,
+}
+
+// Bit depth for the packed SH texture. Applies to whichever SH mode is in use.
+public enum ALVBitDepth
+{
+    [InspectorName("8 bits per channel")]  Depth8,
+    [InspectorName("16 bits per channel")] Depth16,
+}
+
 [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
 public class AnimatedLightVolume : UdonSharpBehaviour
 {
@@ -25,9 +41,28 @@ public class AnimatedLightVolume : UdonSharpBehaviour
     // Set automatically by the editor when AnimatedTexture is assigned via sidecar.
     [HideInInspector] public int SampleY;
 
+    // SH fidelity mode and bit depth of the packed texture. Set automatically by the
+    // editor when AnimatedTexture is assigned via sidecar.
+    [HideInInspector] public ALVSHMode   SHMode   = ALVSHMode.MonoL1;
+    [HideInInspector] public ALVBitDepth BitDepth = ALVBitDepth.Depth8;
+
     // Editor-only voxel preview state. Controlled by ALVEditor inspector.
     [HideInInspector] public bool PreviewVoxels = false;
     [HideInInspector] public int PreviewSample = 0;
+
+#if UNITY_EDITOR
+    // Bake settings — persisted here so the bake window can restore them when
+    // this volume is selected. Editor-only; stripped from runtime builds.
+    [HideInInspector] public Animator BakeAnimator;
+    [HideInInspector] public AnimationClip BakeClip;
+    [HideInInspector] public int BakeSampleCount = 8;
+    [HideInInspector] public int BakeStartFrame = 0;
+    [HideInInspector] public int BakeEndFrame = -1;
+    [HideInInspector] public ALVSHMode   BakeSHMode   = ALVSHMode.L1;
+    [HideInInspector] public ALVBitDepth BakeBitDepth = ALVBitDepth.Depth8;
+    [HideInInspector] public string BakeOutputName = "ALV_Bake";
+    [HideInInspector] public bool BakeSettingsFoldout = false;
+#endif
     [Tooltip("How this volume's SH contribution is composited onto the atlas bake.")]
     public ALVBlendingMode Blending = ALVBlendingMode.Add;
 
@@ -77,14 +112,21 @@ public class AnimatedLightVolume : UdonSharpBehaviour
         _mat.SetTexture("_PackedTex", AnimatedTexture);
 
         // Derive layout from texture dimensions.
-        // Y = spatialH * numSamples, Z = D * 3. SampleY is stored separately
-        // because H and D can differ, making them impossible to separate from texture
-        // dimensions alone.
-        int spatialH = SampleY > 0 ? SampleY : (AnimatedTexture.depth / 3);
-        NumSamples = AnimatedTexture.height / spatialH;
+        // Y = sampleY * numSamples. SampleY is stored separately because H and D
+        // can differ, making them impossible to separate from texture dimensions alone.
+        // Z = spatialD * numSlots, where numSlots = 3 (L1), 2 (MonoL1), or 1 (MonoL0).
+        int numSlots = SHMode == ALVSHMode.L1 ? 3 : SHMode == ALVSHMode.MonoL1 ? 2 : 1;
+        int sampleY  = SampleY > 0 ? SampleY : (AnimatedTexture.depth / numSlots);
+        NumSamples = AnimatedTexture.height / sampleY;
         _mat.SetInt("_NumSamples", NumSamples);
         _mat.SetFloat("_SampleScale", 1f / NumSamples);
-        _mat.SetFloat("_SliceScale", 1f / 3f);
+        _mat.SetFloat("_SliceScale", 1f / numSlots);
+
+        _mat.SetInt("_SHMode",   (int)SHMode);
+        _mat.SetInt("_BitDepth", (int)BitDepth);
+
+        bool isUnorm = BitDepth == ALVBitDepth.Depth8 || (SHMode == ALVSHMode.MonoL1 && BitDepth == ALVBitDepth.Depth16);
+        _mat.SetInt("_IsUnorm", isUnorm ? 1 : 0);
 
         _mat.SetInt("_BlendMode", (int)Blending);
         _blendMode = Blending;

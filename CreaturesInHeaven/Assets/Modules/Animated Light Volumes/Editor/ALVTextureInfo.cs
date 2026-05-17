@@ -9,10 +9,12 @@ using UnityEditor;
 [System.Serializable]
 public class ALVTextureInfo
 {
-    public int sampleX;     // Spatial width  of one sample (texture X)
-    public int sampleY;     // Spatial height of one sample (texture Y per sample)
-    public int sampleZ;     // Spatial depth  of one sample (texture Z / 3)
-    public int numSamples;  // Total number of baked samples
+    public int sampleX;                   // Spatial width  of one sample (texture X)
+    public int sampleY;                   // Spatial height of one sample (texture Y per sample)
+    public int sampleZ;                   // Spatial depth  of one sample (texture Z / numSlots)
+    public int numSamples;                // Total number of baked samples
+    public ALVSHMode   shMode;            // SH fidelity mode (L1 / MonoL1 / MonoL0)
+    public ALVBitDepth bitDepth;          // Bit depth (Depth8 / Depth16)
 
     // Derives the sidecar path from a texture asset path.
     public static string SidecarPath(string assetPath) =>

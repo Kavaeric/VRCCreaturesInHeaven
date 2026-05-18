@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <Style src="project://database/Assets/Modules/Atelier/AtelierUI.uss" />
+
+    <ui:ScrollView class="p-2">
+        
+        <ui:HelpBox text="Use this tool to estimate bake size in VRAM (uncompressed) and an approximate bundle (compressed) size." />
+
+        <ui:VisualElement class="h-1" />
+
+        <ui:VisualElement class="panel-frame col">
+            <ui:Label text="Bake output" class="font-bold" />
+            <ui:VisualElement class="h-1" />
+
+            <ui:VisualElement class="col grow">
+                <ui:Label text="Light volume dimensions" for="bake-output-dimensions-field" />
+                <ui:VisualElement class="h-0p5" />
+                <ui:Vector3IntField name="bake-output-dimensions-field" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="h-1" />
+
+            <ui:VisualElement class="col grow">
+                <ui:Label text="No of snapshots" for="bake-output-snapshots-field" />
+                <ui:VisualElement class="h-0p5" />
+                <uie:IntegerField name="bake-output-snapshots-field" value="80" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement class="h-2" />
+
+        <ui:Label text="VRAM (uncompressed) size" class="font-bold" />
+        <ui:Label text="Estimated sizes are in MB." />
+
+        <ui:VisualElement class="h-2" />
+
+        <ui:VisualElement class="col">
+            <ui:VisualElement class="row text-right">
+                <ui:VisualElement class="w-20" />
+                <ui:VisualElement class="w-0p5" />
+                <ui:VisualElement class="w-1f2">
+                    <ui:Label text="8-bit depth" class="font-bold" />
+                </ui:VisualElement>
+                <ui:VisualElement class="w-0p5" />
+                <ui:VisualElement class="w-1f2">
+                    <ui:Label text="16-bit depth" class="font-bold" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="h-1" />
+            <ui:VisualElement class="separator" />
+            <ui:VisualElement class="h-1" />
+
+            <ui:VisualElement class="row">
+                <ui:VisualElement class="w-20">
+                    <ui:Label text="L1" class="font-bold" />
+                </ui:VisualElement>
+                <ui:VisualElement class="w-0p5" />
+                <ui:VisualElement name="vram-est-L1-8bpc" class="w-1f2 text-right font-family-mono">
+                    <ui:Label text="—" />
+                </ui:VisualElement>
+                <ui:VisualElement class="w-0p5" />
+                <ui:VisualElement name="vram-est-L1-16bpc" class="w-1f2 text-right font-family-mono">
+                    <ui:Label text="—" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="h-1" />
+            <ui:VisualElement class="separator" />
+            <ui:VisualElement class="h-1" />
+
+            <ui:VisualElement class="row">
+                <ui:VisualElement class="w-20">
+                    <ui:Label text="MonoL1" class="font-bold" />
+                </ui:VisualElement>
+                <ui:VisualElement class="w-0p5" />
+                <ui:VisualElement name="vram-est-monoL1-8bpc" class="w-1f2 text-right font-family-mono">
+                    <ui:Label text="—" />
+                </ui:VisualElement>
+                <ui:VisualElement class="w-0p5" />
+                <ui:VisualElement name="vram-est-monoL1-16bpc" class="w-1f2 text-right font-family-mono">
+                    <ui:Label text="—" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="h-1" />
+            <ui:VisualElement class="separator" />
+            <ui:VisualElement class="h-1" />
+
+            <ui:VisualElement class="row">
+                <ui:VisualElement class="w-20">
+                    <ui:Label text="MonoL0" class="font-bold" />
+                </ui:VisualElement>
+                <ui:VisualElement class="w-0p5" />
+                <ui:VisualElement name="vram-est-monoL0-8bpc" class="w-1f2 text-right font-family-mono">
+                    <ui:Label text="—" />
+                </ui:VisualElement>
+                <ui:VisualElement class="w-0p5" />
+                <ui:VisualElement name="vram-est-monoL0-16bpc" class="w-1f2 text-right font-family-mono">
+                    <ui:Label text="—" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="h-1" />
+            <ui:VisualElement class="separator" />
+
+        </ui:VisualElement>
+
+        <ui:VisualElement class="h-4" />
+
+        <ui:Label text="Bundle (compressed) size" class="font-bold" />
+        <ui:Label text="Estimated sizes are in MB." />
+
+        <ui:VisualElement class="h-2" />
+
+        <ui:VisualElement class="col">
+            <ui:VisualElement class="row text-right">
+                <ui:VisualElement class="w-20" />
+                <ui:VisualElement class="w-0p5" />
+                <ui:VisualElement class="w-1f2">
+                    <ui:Label text="8-bit depth" class="font-bold" />
+                </ui:VisualElement>
+                <ui:VisualElement class="w-0p5" />
+                <ui:VisualElement class="w-1f2">
+                    <ui:Label text="16-bit depth" class="font-bold" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="h-1" />
+            <ui:VisualElement class="separator" />
+            <ui:VisualElement class="h-1" />
+
+            <ui:VisualElement class="row">
+                <ui:VisualElement class="w-20">
+                    <ui:Label text="L1" class="font-bold" />
+                </ui:VisualElement>
+                <ui:VisualElement class="w-0p5" />
+                <ui:VisualElement name="bundle-est-L1-8bpc" class="w-1f2 row justify-end font-family-mono">
+                    <ui:Label name="bundle-est-L1-8bpc-lo" text="—" class="text-right" />
+                    <ui:Label name="bundle-est-L1-8bpc-sep" text="–" />
+                    <ui:Label name="bundle-est-L1-8bpc-hi" text="—" class="text-right" />
+                </ui:VisualElement>
+                <ui:VisualElement class="w-0p5" />
+                <ui:VisualElement name="bundle-est-L1-16bpc" class="w-1f2 row justify-end font-family-mono">
+                    <ui:Label name="bundle-est-L1-16bpc-lo" text="—" class="text-right" />
+                    <ui:Label name="bundle-est-L1-16bpc-sep" text="–" />
+                    <ui:Label name="bundle-est-L1-16bpc-hi" text="—" class="text-right" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="h-1" />
+            <ui:VisualElement class="separator" />
+            <ui:VisualElement class="h-1" />
+
+            <ui:VisualElement class="row">
+                <ui:VisualElement class="w-20">
+                    <ui:Label text="MonoL1" class="font-bold" />
+                </ui:VisualElement>
+                <ui:VisualElement class="w-0p5" />
+                <ui:VisualElement name="bundle-est-monoL1-8bpc" class="w-1f2 row justify-end font-family-mono">
+                    <ui:Label name="bundle-est-monoL1-8bpc-lo" text="—" class="text-right" />
+                    <ui:Label name="bundle-est-monoL1-8bpc-sep" text="–" />
+                    <ui:Label name="bundle-est-monoL1-8bpc-hi" text="—" class="text-right" />
+                </ui:VisualElement>
+                <ui:VisualElement class="w-0p5" />
+                <ui:VisualElement name="bundle-est-monoL1-16bpc" class="w-1f2 row justify-end font-family-mono">
+                    <ui:Label name="bundle-est-monoL1-16bpc-lo" text="—" class="text-right" />
+                    <ui:Label name="bundle-est-monoL1-16bpc-sep" text="–" />
+                    <ui:Label name="bundle-est-monoL1-16bpc-hi" text="—" class="text-right" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="h-1" />
+            <ui:VisualElement class="separator" />
+            <ui:VisualElement class="h-1" />
+
+            <ui:VisualElement class="row">
+                <ui:VisualElement class="w-20">
+                    <ui:Label text="MonoL0" class="font-bold" />
+                </ui:VisualElement>
+                <ui:VisualElement class="w-0p5" />
+                <ui:VisualElement name="bundle-est-monoL0-8bpc" class="w-1f2 row justify-end font-family-mono">
+                    <ui:Label name="bundle-est-monoL0-8bpc-lo" text="—" class="text-right" />
+                    <ui:Label name="bundle-est-monoL0-8bpc-sep" text="–" />
+                    <ui:Label name="bundle-est-monoL0-8bpc-hi" text="—" class="text-right" />
+                </ui:VisualElement>
+                <ui:VisualElement class="w-0p5" />
+                <ui:VisualElement name="bundle-est-monoL0-16bpc" class="w-1f2 row justify-end font-family-mono">
+                    <ui:Label name="bundle-est-monoL0-16bpc-lo" text="—" class="text-right" />
+                    <ui:Label name="bundle-est-monoL0-16bpc-sep" text="–" />
+                    <ui:Label name="bundle-est-monoL0-16bpc-hi" text="—" class="text-right" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+                <ui:VisualElement class="h-1" />
+            <ui:VisualElement class="separator" />
+
+        </ui:VisualElement>
+    </ui:ScrollView>
+</ui:UXML>

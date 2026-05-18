@@ -1,6 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
     <Style src="project://database/Assets/Modules/Atelier/AtelierUI.uss" />
-    <Style src="ALVBakeTexture.uss" />
 
     <ui:ScrollView class="p-2">
 
@@ -76,7 +76,7 @@
             
 
             <ui:VisualElement class="col">
-                <ui:Label text="SH mode" for="sh-mode-field" />
+                <ui:Label text="Lighting data mode" for="sh-mode-field" />
                 <ui:VisualElement class="h-0p5" />
                 <ui:EnumField name="sh-mode-field" />
                 <ui:VisualElement class="h-0p5" />

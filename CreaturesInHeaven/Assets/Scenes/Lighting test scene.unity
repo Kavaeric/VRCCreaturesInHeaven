@@ -15536,12 +15536,6 @@ MonoBehaviour:
   fixPos3D: 0
   voxelSize: {x: 1, y: 1, z: 1}
   passedFilter: 0
---- !u!95 &1607264312 stripped
-Animator:
-  m_CorrespondingSourceObject: {fileID: 4103016181260717979, guid: 2de4a84f595dfdd428644457d77eccd2,
-    type: 3}
-  m_PrefabInstance: {fileID: 2039010039}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1635059593
 GameObject:
   m_ObjectHideFlags: 0
@@ -16592,8 +16586,8 @@ MonoBehaviour:
   BitDepth: 0
   PreviewVoxels: 0
   PreviewSnapshot: 0
-  BakeAnimator: {fileID: 1607264312}
-  BakeClip: {fileID: 7400000, guid: 0afa8bff6b8c1b342b4834bf50186501, type: 2}
+  BakeAnimator: {fileID: 572279933}
+  BakeClip: {fileID: 7400000, guid: 4dcb6828e8975854e8227b34defa681c, type: 2}
   BakeSnapshotCount: 8
   BakeStartFrame: 0
   BakeEndFrame: -1

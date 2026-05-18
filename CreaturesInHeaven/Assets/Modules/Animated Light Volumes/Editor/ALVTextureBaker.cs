@@ -109,6 +109,10 @@ public class ALVTextureBaker : EditorWindow
         if (_baking) AbortBake("Window closed");
     }
 
+    // Fires at ~10Hz; catches externally-nulled references (deleted object, scene change)
+    // that don't trigger the field's value-changed callback.
+    void OnInspectorUpdate() => UpdateUI();
+
     // Returns the project-relative path to the directory containing this script.
     static string ScriptDir()
     {
@@ -150,6 +154,8 @@ public class ALVTextureBaker : EditorWindow
     Label _outputResLabel;
     Label _vramSizeLabel;
     Label _bundleSizeLabel;
+    VisualElement _showWithVolume;
+    VisualElement _hideWithVolume;
 
     public void CreateGUI()
     {
@@ -326,6 +332,10 @@ public class ALVTextureBaker : EditorWindow
         _bakeBtn.clicked   += StartBake;
         _cancelBtn.clicked += () => AbortBake("Cancelled by user");
 
+        // --- Volume-dependant section ---
+        _showWithVolume = rootVisualElement.Q<VisualElement>("show-with-volume");
+        _hideWithVolume = rootVisualElement.Q<VisualElement>("hide-with-volume");
+
         // --- Output estimate labels ---
         _animFrameInterval = rootVisualElement.Q<Label>("anim-frame-interval");
         _outputResLabel    = rootVisualElement.Q<Label>("output-res");
@@ -439,6 +449,13 @@ public class ALVTextureBaker : EditorWindow
     {
         if (_bakeBtn == null) return;
 
+        // Re-read the field in case the referenced object was deleted or the scene changed,
+        // since the callback won't fire in those cases.
+        _targetVolume = _volumeField?.value as LightVolume;
+
+        _showWithVolume.style.display = _targetVolume != null ? DisplayStyle.Flex : DisplayStyle.None;
+        _hideWithVolume.style.display = _targetVolume != null ? DisplayStyle.None : DisplayStyle.Flex;
+
         string error = Validate();
 
         // Validation box: only shown when there's an error and not currently baking
@@ -516,7 +533,6 @@ public class ALVTextureBaker : EditorWindow
     // --- Validation -----------------------------------------------------
     string Validate()
     {
-        if (_targetVolume == null) return "Assign a target Light Volume to bake.";
         if (_animator == null)     return "Assign an Animator to bake.";
         if (_animClip == null)     return "Assign an Animation Clip to bake.";
         if (_targetVolume.BakeryVolume == null)

@@ -4,15 +4,15 @@ using UnityEditor;
 
 // Sidecar metadata written alongside a packed ALV Texture3D asset.
 // Stored as JSON at <textureName>.alv.json, adjacent to the texture asset.
-// Read by AnimatedLightVolumeEditor when AnimatedTexture is assigned, so
-// SpatialHeight can be populated without manual entry.
+// Read by ALVEditor when AnimatedTexture is assigned, so the snapshot
+// layout can be populated without manual entry.
 [System.Serializable]
 public class ALVTextureInfo
 {
-    public int sampleX;                   // Spatial width  of one sample (texture X)
-    public int sampleY;                   // Spatial height of one sample (texture Y per sample)
-    public int sampleZ;                   // Spatial depth  of one sample (texture Z / numSlots)
-    public int numSamples;                // Total number of baked samples
+    public int snapshotX;                 // Spatial width  of one snapshot (texture X)
+    public int snapshotY;                 // Spatial height of one snapshot (texture Y per snapshot)
+    public int snapshotZ;                 // Spatial depth  of one snapshot (texture Z / numSlots)
+    public int numSnapshots;              // Total number of baked snapshots
     public ALVSHMode   shMode;            // SH fidelity mode (L1 / MonoL1 / MonoL0)
     public ALVBitDepth bitDepth;          // Bit depth (Depth8 / Depth16)
 

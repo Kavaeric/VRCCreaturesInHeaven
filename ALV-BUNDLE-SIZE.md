@@ -26,7 +26,7 @@ similar to real-world lighting patterns.
 
 Volume sizes tested:
 
-| Dims | Samples | Total voxels |
+| Dims | Snapshots | Total voxels |
 |---|---|---|
 | 4×4×4 | 64 | 4,096 |
 | 8×8×8 | 64 | 32,768 |

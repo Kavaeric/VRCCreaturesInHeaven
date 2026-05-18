@@ -8,7 +8,7 @@ public class ALVEditor : Editor
 {
     Texture3D _prevTexture;
 
-    // Voxel preview GPU resources. Rebuilt when the volume, resolution, texture, or frame changes.
+    // Voxel preview GPU resources. Rebuilt when the volume, resolution, texture, or snapshot changes.
     ComputeBuffer _posBuf;
     ComputeBuffer _sh0Buf, _sh1Buf, _sh2Buf;
     ComputeBuffer _argsBuf;
@@ -17,7 +17,7 @@ public class ALVEditor : Editor
     LightVolume _prevLV;
     Vector3Int _prevRes;
     Texture3D _prevPreviewTexture;
-    int _prevPreviewFrame = -1;
+    int _prevPreviewSnapshot = -1;
     bool _sliceX, _sliceY, _sliceZ;
     int _sliceXVal, _sliceYVal, _sliceZVal;
     bool _prevSliceX, _prevSliceY, _prevSliceZ;
@@ -55,7 +55,7 @@ public class ALVEditor : Editor
         EditorGUILayout.PropertyField(serializedObject.FindProperty("AnimatedTexture"),
             new GUIContent("Animation texture", "Packed 4D SH texture produced by the baking tool."));
 
-        // When a new texture is assigned, read the sidecar JSON and populate FrameY.
+        // When a new texture is assigned, read the sidecar JSON and populate SnapshotY.
         if (alv.AnimatedTexture != _prevTexture)
         {
             _prevTexture = alv.AnimatedTexture;
@@ -65,9 +65,9 @@ public class ALVEditor : Editor
                 ALVTextureInfo info = ALVTextureInfo.Load(texPath);
                 if (info != null)
                 {
-                    alv.SampleY          = info.sampleY;
-                    alv.SHMode     = info.shMode;   // shMode/bitDepth fields required; old sidecars are not supported
-                    alv.BitDepth   = info.bitDepth;
+                    alv.SnapshotY = info.snapshotY;
+                    alv.SHMode    = info.shMode;
+                    alv.BitDepth  = info.bitDepth;
                     EditorUtility.SetDirty(alv);
                 }
             }
@@ -149,13 +149,11 @@ public class ALVEditor : Editor
         {
             if (alv.AnimatedTexture != null)
             {
-                int numSlots    = ALVFormat.NumSlots(alv.SHMode);
-                int sampleSizeY = alv.SampleY > 0 ? alv.SampleY : (alv.AnimatedTexture.depth / numSlots);
-                int numSamples = alv.AnimatedTexture.height / sampleSizeY;
-                int newFrame = EditorGUILayout.IntSlider("Sample", alv.PreviewSample, 0, numSamples - 1);
-                if (newFrame != alv.PreviewSample)
+                int numSnapshots  = alv.AnimatedTexture.height / alv.SnapshotY;
+                int newSnapshot   = EditorGUILayout.IntSlider("Snapshot", alv.PreviewSnapshot, 0, numSnapshots - 1);
+                if (newSnapshot != alv.PreviewSnapshot)
                 {
-                    alv.PreviewSample = newFrame;
+                    alv.PreviewSnapshot = newSnapshot;
                     EditorUtility.SetDirty(alv);
                     SceneView.RepaintAll();
                 }
@@ -196,7 +194,7 @@ public class ALVEditor : Editor
 
             alv.BakeAnimator  = (Animator)EditorGUILayout.ObjectField("Animator", alv.BakeAnimator, typeof(Animator), allowSceneObjects: true);
             alv.BakeClip      = (AnimationClip)EditorGUILayout.ObjectField("Animation clip", alv.BakeClip, typeof(AnimationClip), allowSceneObjects: false);
-            alv.BakeSampleCount = Mathf.Max(2, EditorGUILayout.IntField("No. of samples", alv.BakeSampleCount));
+            alv.BakeSnapshotCount = Mathf.Max(2, EditorGUILayout.IntField("No. of snapshots", alv.BakeSnapshotCount));
 
             EditorGUILayout.BeginHorizontal();
             alv.BakeStartFrame = Mathf.Max(0, EditorGUILayout.IntField("Start frame", alv.BakeStartFrame));
@@ -219,16 +217,15 @@ public class ALVEditor : Editor
 
         if (alv.AnimatedTexture != null)
         {
-            int numSlots    = ALVFormat.NumSlots(alv.SHMode);
-            int sampleSizeY = alv.SampleY > 0 ? alv.SampleY : (alv.AnimatedTexture.depth / numSlots);
-            int numSamples = alv.AnimatedTexture.height / sampleSizeY;
-            EditorGUILayout.LabelField("Sample size", $"{alv.AnimatedTexture.width} x {sampleSizeY} x {alv.AnimatedTexture.depth / numSlots}");
-            EditorGUILayout.LabelField("Samples", numSamples.ToString());
+            int numSnapshots = alv.AnimatedTexture.height / alv.SnapshotY;
+            int snapshotZ    = alv.AnimatedTexture.depth / ALVFormat.NumSlots(alv.SHMode);
+            EditorGUILayout.LabelField("Snapshot size", $"{alv.AnimatedTexture.width} x {alv.SnapshotY} x {snapshotZ}");
+            EditorGUILayout.LabelField("Snapshots", numSnapshots.ToString());
         }
         else
         {
-            EditorGUILayout.LabelField("Sample size", "—");
-            EditorGUILayout.LabelField("Samples", "—");
+            EditorGUILayout.LabelField("Snapshot size", "—");
+            EditorGUILayout.LabelField("Snapshots", "—");
         }
 
         serializedObject.ApplyModifiedProperties();
@@ -333,24 +330,24 @@ public class ALVEditor : Editor
         Vector3 scl = lv.GetScale();
 
         Texture3D tex = alv.AnimatedTexture;
-        int previewFrame = alv.PreviewSample;
+        int previewSnapshot = alv.PreviewSnapshot;
 
-        // Rebuild buffers when volume, resolution, texture, frame, or slice changes.
+        // Rebuild buffers when volume, resolution, texture, snapshot, or slice changes.
         bool needRebuild = _posBuf == null
             || lv != _prevLV
             || res != _prevRes
             || tex != _prevPreviewTexture
-            || previewFrame != _prevPreviewFrame
+            || previewSnapshot != _prevPreviewSnapshot
             || _sliceX != _prevSliceX || _sliceXVal != _prevSliceXVal
             || _sliceY != _prevSliceY || _sliceYVal != _prevSliceYVal
             || _sliceZ != _prevSliceZ || _sliceZVal != _prevSliceZVal;
 
         if (needRebuild)
         {
-            _prevLV             = lv;
-            _prevRes            = res;
-            _prevPreviewTexture = tex;
-            _prevPreviewFrame   = previewFrame;
+            _prevLV               = lv;
+            _prevRes              = res;
+            _prevPreviewTexture   = tex;
+            _prevPreviewSnapshot  = previewSnapshot;
             _prevSliceX = _sliceX; _prevSliceXVal = _sliceXVal;
             _prevSliceY = _sliceY; _prevSliceYVal = _sliceYVal;
             _prevSliceZ = _sliceZ; _prevSliceZVal = _sliceZVal;
@@ -360,22 +357,21 @@ public class ALVEditor : Editor
             var sh1 = new System.Collections.Generic.List<Vector4>();
             var sh2 = new System.Collections.Generic.List<Vector4>();
 
-            // Sample all three SH textures for the selected sample if available.
-            // All three SH slots live in the same GetPixels() array, separated by sampleSize.z in Z.
+            // Sample all three SH textures for the selected snapshot if available.
+            // All three SH slots live in the same GetPixels() array, separated by snapshotSize.z in Z.
             Color[] pixels = null;
             Vector3Int texSize = Vector3Int.zero;
-            Vector3Int sampleSize = Vector3Int.zero;
-            int sampleOrigin = 0;
+            Vector3Int snapshotSize = Vector3Int.zero;
+            int snapshotOrigin = 0;
             if (tex != null)
             {
-                int numSlots  = ALVFormat.NumSlots(alv.SHMode);
-                sampleSize.y  = alv.SampleY > 0 ? alv.SampleY : (tex.depth / numSlots);
-                sampleSize.x  = tex.width;
-                sampleSize.z  = tex.depth / numSlots;
-                texSize       = new Vector3Int(tex.width, tex.height, tex.depth);
-                int sampleIdx = Mathf.Clamp(previewFrame, 0, texSize.y / sampleSize.y - 1);
-                sampleOrigin  = sampleIdx * sampleSize.y;
-                pixels        = tex.GetPixels();
+                snapshotSize.x  = tex.width;
+                snapshotSize.y  = alv.SnapshotY;
+                snapshotSize.z  = tex.depth / ALVFormat.NumSlots(alv.SHMode);
+                texSize         = new Vector3Int(tex.width, tex.height, tex.depth);
+                int snapshotIdx = Mathf.Clamp(previewSnapshot, 0, texSize.y / snapshotSize.y - 1);
+                snapshotOrigin  = snapshotIdx * snapshotSize.y;
+                pixels          = tex.GetPixels();
             }
 
             Vector3 halfOffset = Vector3.one * 0.5f;
@@ -395,11 +391,11 @@ public class ALVEditor : Editor
 
                 if (pixels != null)
                 {
-                    // Packed layout: x + (y + sampleOrigin) * texSize.x + z * texSize.x * texSize.y
-                    // SH slot 0 at z=voxelZ, slot 1 at z=voxelZ+sampleSize.z, slot 2 at z=voxelZ+sampleSize.z*2
-                    int p0 = voxelX + (voxelY + sampleOrigin) * texSize.x + voxelZ                       * texSize.x * texSize.y;
-                    int p1 = voxelX + (voxelY + sampleOrigin) * texSize.x + (voxelZ + sampleSize.z)      * texSize.x * texSize.y;
-                    int p2 = voxelX + (voxelY + sampleOrigin) * texSize.x + (voxelZ + sampleSize.z * 2)  * texSize.x * texSize.y;
+                    // Packed layout: x + (y + snapshotOrigin) * texSize.x + z * texSize.x * texSize.y
+                    // SH slot 0 at z=voxelZ, slot 1 at z=voxelZ+snapshotSize.z, slot 2 at z=voxelZ+snapshotSize.z*2
+                    int p0 = voxelX + (voxelY + snapshotOrigin) * texSize.x + voxelZ                          * texSize.x * texSize.y;
+                    int p1 = voxelX + (voxelY + snapshotOrigin) * texSize.x + (voxelZ + snapshotSize.z)       * texSize.x * texSize.y;
+                    int p2 = voxelX + (voxelY + snapshotOrigin) * texSize.x + (voxelZ + snapshotSize.z * 2)   * texSize.x * texSize.y;
                     Color c0 = pixels[p0], c1 = pixels[p1], c2 = pixels[p2];
                     sh0.Add(new Vector4(c0.r, c0.g, c0.b, c0.a));
                     sh1.Add(new Vector4(c1.r, c1.g, c1.b, c1.a));

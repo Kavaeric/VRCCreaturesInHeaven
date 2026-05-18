@@ -5,8 +5,8 @@ using VRCLightVolumes;
 // Texture generation tool for AnimatedLightVolume.
 // Produces a packed Texture3D with layout:
 //   X = spatial width
-//   Y = spatial height * time frames  (frame 0 at Y=0, frame 1 at Y=H, etc.)
-//   Z = spatial depth * numSlots      (numSlots = 3 for L1, 2 for MonoL1, 1 for MonoL0)
+//   Y = spatial height * numSnapshots  (snapshot 0 at Y=0, snapshot 1 at Y=H, etc.)
+//   Z = spatial depth * numSlots       (numSlots = 3 for L1, 2 for MonoL1, 1 for MonoL0)
 //
 // SH packing per voxel:
 //   Tex0: (L0.r,  L0.g,  L0.b,  L1r.z)
@@ -14,30 +14,29 @@ using VRCLightVolumes;
 //   Tex2: (L1r.y, L1g.y, L1b.y, L1b.z)
 public static class ALVTextureWriter
 {
-    // Builds a packed Texture3D from an array of SampleSH and saves it at the given asset path.
-    // Each SampleSH.tex0/1/2 must be a Color[] of length w*h*d in XYZ order (x fastest).
+    // Builds a packed Texture3D from an array of SnapshotSH and saves it at the given asset path.
+    // Each SnapshotSH.tex0/1/2 must be a Color[] of length w*h*d in XYZ order (x fastest).
     // If an asset already exists at that path, its pixel data is updated in place so serialised
     // references (GUIDs) remain stable.
-    public static void SavePackedTexture(SampleSH[] frames, int w, int h, int d, string assetPath,
+    public static void SavePackedTexture(SnapshotSH[] snapshots, int w, int h, int d, string assetPath,
         ALVSHMode shMode = ALVSHMode.L1, ALVBitDepth bitDepth = ALVBitDepth.Depth8)
     {
-        int numFrames = frames.Length;
-        int numSlots  = ALVFormat.NumSlots(shMode);
-        int totalHeight = h * numFrames;
-        int totalDepth  = d * numSlots;
+        int numSnapshots = snapshots.Length;
+        int totalHeight  = ALVFormat.PackedHeight(h, numSnapshots);
+        int totalDepth   = ALVFormat.PackedDepth(d, shMode);
 
         Color[] pixels = new Color[w * totalHeight * totalDepth];
 
-        for (int f = 0; f < numFrames; f++)
+        for (int s = 0; s < numSnapshots; s++)
         {
-            int yOffset = f * h;
+            int yOffset = s * h;
             switch (shMode)
             {
                 case ALVSHMode.L1:
                     // Full: 3 slots — tex0/1/2 passed through as-is.
-                    CopyBlock(pixels, frames[f].tex0, w, totalHeight, h, d, yOffset, 0);
-                    CopyBlock(pixels, frames[f].tex1, w, totalHeight, h, d, yOffset, d);
-                    CopyBlock(pixels, frames[f].tex2, w, totalHeight, h, d, yOffset, d * 2);
+                    CopyBlock(pixels, snapshots[s].tex0, w, totalHeight, h, d, yOffset, 0);
+                    CopyBlock(pixels, snapshots[s].tex1, w, totalHeight, h, d, yOffset, d);
+                    CopyBlock(pixels, snapshots[s].tex2, w, totalHeight, h, d, yOffset, d * 2);
                     break;
 
                 case ALVSHMode.MonoL1:
@@ -45,7 +44,7 @@ public static class ALVTextureWriter
                     // 2 slots: Tex0 = (L0.r, L0.g, L0.b, 0), Tex1 = (L1.x, L1.y, L1.z, 0).
                     Color[] t0 = new Color[w * h * d];
                     Color[] t1 = new Color[w * h * d];
-                    DownsampleMonoL1(frames[f], w * h * d, t0, t1);
+                    DownsampleMonoL1(snapshots[s], w * h * d, t0, t1);
                     CopyBlock(pixels, t0, w, totalHeight, h, d, yOffset, 0);
                     CopyBlock(pixels, t1, w, totalHeight, h, d, yOffset, d);
                     break;
@@ -55,7 +54,7 @@ public static class ALVTextureWriter
                 {
                     // 1 slot: Tex0 = (L0, L1.x, L1.y, L1.z).
                     Color[] t0 = new Color[w * h * d];
-                    DownsampleMonoL0(frames[f], w * h * d, t0);
+                    DownsampleMonoL0(snapshots[s], w * h * d, t0);
                     CopyBlock(pixels, t0, w, totalHeight, h, d, yOffset, 0);
                     break;
                 }
@@ -111,23 +110,23 @@ public static class ALVTextureWriter
         }
 
         AssetDatabase.SaveAssets();
-        Debug.Log($"[GenerateALVTexture] Saved {assetPath} ({w}x{totalHeight}x{totalDepth}, {numFrames} frames, {shMode}, {bitDepth})");
+        Debug.Log($"[GenerateALVTexture] Saved {assetPath} ({w}x{totalHeight}x{totalDepth}, {numSnapshots} snapshots, {shMode}, {bitDepth})");
     }
 
     // MonoL1: collapses the three per-channel L1 direction vectors into one shared direction,
     // weighted by each channel's L0 intensity so brighter channels pull the direction more.
-    static void DownsampleMonoL1(SampleSH frame, int count, Color[] t0Out, Color[] t1Out)
+    static void DownsampleMonoL1(SnapshotSH snapshot, int count, Color[] t0Out, Color[] t1Out)
     {
         for (int i = 0; i < count; i++)
         {
-            float l0r = frame.tex0[i].r, l0g = frame.tex0[i].g, l0b = frame.tex0[i].b;
+            float l0r = snapshot.tex0[i].r, l0g = snapshot.tex0[i].g, l0b = snapshot.tex0[i].b;
 
             // Reconstruct per-channel L1 vectors from the full packing layout:
             //   tex0.a = L1r.z, tex1 = (L1r.x, L1g.x, L1b.x, L1g.z),
             //   tex2 = (L1r.y, L1g.y, L1b.y, L1b.z)
-            Vector3 L1r = new Vector3(frame.tex1[i].r, frame.tex2[i].r, frame.tex0[i].a);
-            Vector3 L1g = new Vector3(frame.tex1[i].g, frame.tex2[i].g, frame.tex1[i].a);
-            Vector3 L1b = new Vector3(frame.tex1[i].b, frame.tex2[i].b, frame.tex2[i].a);
+            Vector3 L1r = new Vector3(snapshot.tex1[i].r, snapshot.tex2[i].r, snapshot.tex0[i].a);
+            Vector3 L1g = new Vector3(snapshot.tex1[i].g, snapshot.tex2[i].g, snapshot.tex1[i].a);
+            Vector3 L1b = new Vector3(snapshot.tex1[i].b, snapshot.tex2[i].b, snapshot.tex2[i].a);
 
             float denom = l0r + l0g + l0b;
             Vector3 L1mono = denom > 1e-6f
@@ -140,16 +139,16 @@ public static class ALVTextureWriter
     }
 
     // MonoL0: collapses to a single intensity value (max of L0.rgb) plus shared L1 direction.
-    static void DownsampleMonoL0(SampleSH frame, int count, Color[] t0Out)
+    static void DownsampleMonoL0(SnapshotSH snapshot, int count, Color[] t0Out)
     {
         for (int i = 0; i < count; i++)
         {
-            float l0r = frame.tex0[i].r, l0g = frame.tex0[i].g, l0b = frame.tex0[i].b;
+            float l0r = snapshot.tex0[i].r, l0g = snapshot.tex0[i].g, l0b = snapshot.tex0[i].b;
             float l0  = Mathf.Max(l0r, Mathf.Max(l0g, l0b));
 
-            Vector3 L1r = new Vector3(frame.tex1[i].r, frame.tex2[i].r, frame.tex0[i].a);
-            Vector3 L1g = new Vector3(frame.tex1[i].g, frame.tex2[i].g, frame.tex1[i].a);
-            Vector3 L1b = new Vector3(frame.tex1[i].b, frame.tex2[i].b, frame.tex2[i].a);
+            Vector3 L1r = new Vector3(snapshot.tex1[i].r, snapshot.tex2[i].r, snapshot.tex0[i].a);
+            Vector3 L1g = new Vector3(snapshot.tex1[i].g, snapshot.tex2[i].g, snapshot.tex1[i].a);
+            Vector3 L1b = new Vector3(snapshot.tex1[i].b, snapshot.tex2[i].b, snapshot.tex2[i].a);
 
             float denom = l0r + l0g + l0b;
             Vector3 L1mono = denom > 1e-6f
@@ -160,20 +159,13 @@ public static class ALVTextureWriter
         }
     }
 
-    // Returns the number of bytes per texel for the given SH mode and bit depth.
-    // Mirrors the format selection in SavePackedTexture.
+    // Forwards to ALVFormat.BytesPerTexel; kept here for call-site compatibility.
     public static int BytesPerTexel(ALVSHMode shMode, ALVBitDepth bitDepth) =>
-        (shMode, bitDepth) switch
-        {
-            (ALVSHMode.MonoL1, ALVBitDepth.Depth8)  => 3, // RGB24
-            (ALVSHMode.MonoL1, ALVBitDepth.Depth16) => 6, // RGB48
-            (_,                ALVBitDepth.Depth8)  => 4, // RGBA32
-            _                                       => 8, // RGBAHalf
-        };
+        ALVFormat.BytesPerTexel(shMode, bitDepth);
 
     // Applies SH dering per voxel to suppress L1 ringing from area lights.
     // Mirrors LVUtils.DeringSingleSH: clamps each channel's L1 magnitude to L0 * 1.13.
-    public static SampleSH DeringSample(Color[] t0, Color[] t1, Color[] t2)
+    public static SnapshotSH DeringSnapshot(Color[] t0, Color[] t1, Color[] t2)
     {
         int count = t0.Length;
         Color[] r0 = new Color[count], r1 = new Color[count], r2 = new Color[count];
@@ -190,7 +182,7 @@ public static class ALVTextureWriter
             r1[i] = new Color(L1r.x,   L1g.x,   L1b.x,   L1g.z);
             r2[i] = new Color(L1r.y,   L1g.y,   L1b.y,   L1b.z);
         }
-        return new SampleSH { tex0 = r0, tex1 = r1, tex2 = r2 };
+        return new SnapshotSH { tex0 = r0, tex1 = r1, tex2 = r2 };
     }
 
     // Copies a w*h*d source block (XYZ order, x fastest) into the packed pixel array
@@ -203,8 +195,8 @@ public static class ALVTextureWriter
                     dst[x + (y + yOffset) * w + (z + zOffset) * w * totalHeight] = src[x + y * w + z * w * blockH];
     }
 
-    // One baked frame: three SH textures as flat Color arrays, length w*h*d, XYZ order (x fastest).
-    public struct SampleSH
+    // One baked snapshot: three SH textures as flat Color arrays, length w*h*d, XYZ order (x fastest).
+    public struct SnapshotSH
     {
         public Color[] tex0, tex1, tex2;
     }

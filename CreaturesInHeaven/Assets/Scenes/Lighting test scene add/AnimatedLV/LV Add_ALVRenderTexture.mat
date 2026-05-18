@@ -24,7 +24,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _MainTex:
-        m_Texture: {fileID: 11700000, guid: cf436d0480fc58048b0ea23686a8867b, type: 2}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _PackedTex:
@@ -33,14 +33,17 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _BandScale: 0.333
     - _BitDepth: 0
     - _BlendMode: 1
     - _Intensity: 1
     - _IsUnorm: 1
     - _NumSamples: 2
+    - _NumSnapshots: 2
     - _SHMode: 0
     - _SampleScale: 0.5
     - _SliceScale: 0.333
+    - _SnapshotScale: 0.5
     - _Time4D: 0
     m_Colors:
     - _UvwMax0: {r: 1, g: 1, b: 1, a: 0}

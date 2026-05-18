@@ -7,7 +7,7 @@ using VRCLightVolumes;
 public enum ALVBlendingMode { Replace, Add, Subtract, Multiply }
 
 // SH fidelity mode. Controls how many values are captured per voxel and how many
-// SH textures are packed per sample (Z = depth × numSlots).
+// SH textures are packed per snapshot (Z = depth × numSlots).
 public enum ALVSHMode
 {
     [InspectorName("L1")]     L1,
@@ -37,6 +37,29 @@ public static class ALVFormat
     // The shader decodes back with value * 2 - 1.
     public static bool IsUnorm(ALVSHMode shMode, ALVBitDepth bitDepth) =>
         bitDepth == ALVBitDepth.Depth8 || (shMode == ALVSHMode.MonoL1 && bitDepth == ALVBitDepth.Depth16);
+
+    // Packed texture layout:
+    //   X = spatial width  (unchanged)
+    //   Y = spatial height * numSnapshots  (snapshot index stacked along Y)
+    //   Z = spatial depth  * numSlots      (slot index stacked along Z)
+
+    public static int PackedHeight(int spatialH, int numSnapshots) => spatialH * numSnapshots;
+    public static int PackedDepth(int spatialD, ALVSHMode shMode)  => spatialD * NumSlots(shMode);
+
+    // Bytes per texel for the packed texture format. Mirrors the format selection in ALVTextureWriter.
+    // Used for asset size estimation.
+    // MonoL1 uses RGB formats (no alpha), all others use RGBA.
+    public static int BytesPerTexel(ALVSHMode shMode, ALVBitDepth bitDepth)
+    {
+        if (shMode == ALVSHMode.MonoL1 && bitDepth == ALVBitDepth.Depth8) return 3; // RGB24
+        if (shMode == ALVSHMode.MonoL1 && bitDepth == ALVBitDepth.Depth16) return 6; // RGB48
+        if (bitDepth == ALVBitDepth.Depth8) return 4; // RGBA32
+        return 8; // RGBAHalf
+    }
+
+    // VRAM occupied by a packed texture, in megabytes.
+    public static double VramMB(int w, int h, int d, int numSnapshots, ALVSHMode shMode, ALVBitDepth bitDepth) =>
+        (long)w * h * d * numSnapshots * (double)NumSlots(shMode) * BytesPerTexel(shMode, bitDepth) / (1024.0 * 1024.0);
 }
 
 [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
@@ -51,11 +74,8 @@ public class AnimatedLightVolume : UdonSharpBehaviour
     [Tooltip("Packed 4D SH texture produced by the baking tool.")]
     public Texture3D AnimatedTexture;
 
-    // Y size of one sample slice in the packed texture (== ALVTextureInfo.sampleY).
-    // Stored separately because height = sampleY * numSamples, and the two can't
-    // be separated from texture dimensions alone when H != D.
-    // Set automatically by the editor when AnimatedTexture is assigned via sidecar.
-    [HideInInspector] public int SampleY;
+    // Y size of one snapshot slice in the packed texture. Set from the sidecar by the editor.
+    [HideInInspector] public int SnapshotY;
 
     // SH fidelity mode and bit depth of the packed texture. Set automatically by the
     // editor when AnimatedTexture is assigned via sidecar.
@@ -64,14 +84,14 @@ public class AnimatedLightVolume : UdonSharpBehaviour
 
     // Editor-only voxel preview state. Controlled by ALVEditor inspector.
     [HideInInspector] public bool PreviewVoxels = false;
-    [HideInInspector] public int PreviewSample = 0;
+    [HideInInspector] public int PreviewSnapshot = 0;
 
 #if UNITY_EDITOR
-    // Bake settings — persisted here so the bake window can restore them when
+    // Bake settings. Persisted here so the bake window can restore them when
     // this volume is selected. Editor-only; stripped from runtime builds.
     [HideInInspector] public Animator BakeAnimator;
     [HideInInspector] public AnimationClip BakeClip;
-    [HideInInspector] public int BakeSampleCount = 8;
+    [HideInInspector] public int BakeSnapshotCount = 8;
     [HideInInspector] public int BakeStartFrame = 0;
     [HideInInspector] public int BakeEndFrame = -1;
     [HideInInspector] public ALVSHMode   BakeSHMode   = ALVSHMode.L1;
@@ -85,7 +105,7 @@ public class AnimatedLightVolume : UdonSharpBehaviour
     [Tooltip("Animator that drives playback.")]
     public Animator AnimatorSource;
 
-    [Tooltip("Normalised playback position. 0 = first sample, 1 = last sample.")]
+    [Tooltip("Normalised playback position. 0 = first snapshot, 1 = last snapshot.")]
     [Range(0f, 1f)]
     public float Time = 0f;
 
@@ -106,7 +126,7 @@ public class AnimatedLightVolume : UdonSharpBehaviour
     private bool _hasAnimTimeParam;
     private bool _hasIntensityParam;
 
-    public int NumSamples { get; private set; }
+    public int NumSnapshots { get; private set; }
 
     void Start()
     {
@@ -127,15 +147,10 @@ public class AnimatedLightVolume : UdonSharpBehaviour
 
         _mat.SetTexture("_PackedTex", AnimatedTexture);
 
-        // Derive layout from texture dimensions.
-        // Y = sampleY * numSamples. SampleY is stored separately because H and D
-        // can differ, making them impossible to separate from texture dimensions alone.
-        // Z = spatialD * numSlots, where numSlots = 3 (L1), 2 (MonoL1), or 1 (MonoL0).
+        NumSnapshots = AnimatedTexture.height / SnapshotY;
         int numSlots = ALVFormat.NumSlots(SHMode);
-        int sampleY  = SampleY > 0 ? SampleY : (AnimatedTexture.depth / numSlots);
-        NumSamples = AnimatedTexture.height / sampleY;
-        _mat.SetInt("_NumSamples", NumSamples);
-        _mat.SetFloat("_SampleScale", 1f / NumSamples);
+        _mat.SetInt("_NumSnapshots", NumSnapshots);
+        _mat.SetFloat("_SnapshotScale", 1f / NumSnapshots);
         _mat.SetFloat("_SliceScale", 1f / numSlots);
 
         _mat.SetInt("_SHMode",   (int)SHMode);

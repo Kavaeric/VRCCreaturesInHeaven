@@ -41,9 +41,9 @@
             <ui:VisualElement class="h-1" />
 
             <ui:VisualElement class="col">
-                <ui:Label text="No. of samples" for="sample-count-field" />
+                <ui:Label text="No. of snapshots" for="snapshot-count-field" />
                 <ui:VisualElement class="h-0p5" />
-                <uie:IntegerField name="sample-count-field" value="8" />
+                <uie:IntegerField name="snapshot-count-field" value="8" />
             </ui:VisualElement>
 
             <ui:VisualElement class="h-1" />
@@ -85,7 +85,7 @@
 
                 <ui:HelpBox name="mode-hint-MonoL1" text="Full RGB light colour, but unlike full L1, uses just a single set of X, Y, and Z components rather than a set per colour channel for 6 total channels per voxel.\n\nIsn't able to represent different colours shining from different directions on one voxel as accurately, but baked texture size is ~33% smaller versus full L1 at 16bpc, or ~50% smaller at 8bpc since the unused alpha channel can be dropped entirely. Good enough for the majority of scenarios." />
 
-                <ui:HelpBox name="mode-hint-MonoL0" text="Monochromatic light intensity and X, Y, and Z direction components for 4 channels per voxel.\n\nLosing the ability to vary colour across a single sample makes this the smallest baking format available, ~67% smaller than full L1." />
+                <ui:HelpBox name="mode-hint-MonoL0" text="Monochromatic light intensity and X, Y, and Z direction components for 4 channels per voxel.\n\nLosing the ability to vary colour across a single snapshot makes this the smallest baking format available, ~67% smaller than full L1." />
             </ui:VisualElement>
 
             <ui:VisualElement class="h-2" />
@@ -118,9 +118,9 @@
                 <ui:Button name="end-btn" text="▶|" class="btn-icon-sm" />
 
                 <ui:VisualElement class="w-1" />
-                <uie:IntegerField name="preview-frame-field" class="shrink" />
+                <uie:IntegerField name="preview-snapshot-field" class="shrink" />
                 <ui:VisualElement class="w-1" />
-                <ui:Label name="preview-frame-max" />
+                <ui:Label name="preview-snapshot-max" />
             </ui:VisualElement>
 
             <ui:VisualElement class="h-1" />
@@ -140,7 +140,7 @@
 
         <!-- Output -->
         <ui:VisualElement class="row items-center">
-            <ui:Label text="Sample frame interval" for="anim-frame-interval" class="grow font-bold" />
+            <ui:Label text="Snapshot frame interval" for="anim-frame-interval" class="grow font-bold" />
             <ui:Label name="anim-frame-interval" />
         </ui:VisualElement>
         <ui:VisualElement class="h-0p5" />

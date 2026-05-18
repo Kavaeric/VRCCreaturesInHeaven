@@ -11350,11 +11350,11 @@ MonoBehaviour:
   DynamicMaterials:
   - {fileID: 2100000, guid: 6016623027257e5499093113ce58381d, type: 2}
   - {fileID: 2100000, guid: 06be3d7ca28c54c449bb62f964b2701d, type: 2}
-  - {fileID: 2100000, guid: 1a9ef9fe20187a347a7051b6c8cb5ddf, type: 2}
   - {fileID: 2100000, guid: e36e36af5b6441e4c874c26fd8f5851e, type: 2}
   - {fileID: 2100000, guid: 29db5c224da6c774aa1087295976793e, type: 2}
   - {fileID: 2100000, guid: 28e69fb0f0602524db4e8508a3b51f87, type: 2}
   - {fileID: 2100000, guid: 6c8ff0501edb41245be5163c7f24461b, type: 2}
+  - {fileID: 2100000, guid: 1a9ef9fe20187a347a7051b6c8cb5ddf, type: 2}
   LightMapsNear: []
   LightMapsFar: []
   LightMode: 0
@@ -13824,14 +13824,14 @@ MonoBehaviour:
   TargetVolume: {fileID: 1950454027}
   Crt: {fileID: 8600000, guid: 4389a9a7b3d9bc34ab08b3eb3126d461, type: 2}
   AnimatedTexture: {fileID: 11700000, guid: 83dbc764c2167ff49972630c56fd668c, type: 2}
-  SampleY: 26
+  SnapshotY: 26
   SHMode: 1
   BitDepth: 0
   PreviewVoxels: 0
-  PreviewSample: 0
+  PreviewSnapshot: 0
   BakeAnimator: {fileID: 1607264312}
   BakeClip: {fileID: 7400000, guid: 0afa8bff6b8c1b342b4834bf50186501, type: 2}
-  BakeSampleCount: 25
+  BakeSnapshotCount: 8
   BakeStartFrame: 0
   BakeEndFrame: -1
   BakeSHMode: 1

@@ -7,7 +7,7 @@ using System;
 public static class ALVGenerateTestTexture
 {
     const int W = 4, H = 4, D = 4;
-    const int NumFrames = 64;
+    const int NumSnapshots = 64;
 
     [MenuItem("Tools/Lighting/Generate ALV format test textures")]
     static void GenerateAll()
@@ -17,11 +17,11 @@ public static class ALVGenerateTestTexture
 
         var rng = new System.Random(9);
 
-        // Generate NumFrames of Gaussian-blob SH data, shared across all format variants.
-        var frames = GaussianFrames(W, H, D, NumFrames, rng);
+        // Generate NumSnapshots of Gaussian-blob SH data, shared across all format variants.
+        var snapshots = GaussianSnapshots(W, H, D, NumSnapshots, rng);
 
         var report = new System.Text.StringBuilder();
-        report.AppendLine($"ALV format test — {W}x{H}x{D}, {NumFrames} frames (Gaussian blobs)");
+        report.AppendLine($"ALV format test — {W}x{H}x{D}, {NumSnapshots} snapshots (Gaussian blobs)");
         report.AppendLine($"{DateTime.Now}");
         report.AppendLine();
         report.AppendLine(new string('-', 75));
@@ -35,11 +35,9 @@ public static class ALVGenerateTestTexture
             {
                 string name = $"ALV_Test_{shMode}_{(bitDepth == ALVBitDepth.Depth8 ? "8bpc" : "16bpc")}";
                 string path = $"{assetDir}/{name}.asset";
-                ALVTextureWriter.SavePackedTexture(frames, W, H, D, path, shMode, bitDepth);
+                ALVTextureWriter.SavePackedTexture(snapshots, W, H, D, path, shMode, bitDepth);
 
-                int bpt      = ALVTextureWriter.BytesPerTexel(shMode, bitDepth);
-                int numSlots = shMode == ALVSHMode.L1 ? 3 : shMode == ALVSHMode.MonoL1 ? 2 : 1;
-                double vram  = (long)W * H * D * NumFrames * numSlots * bpt / (1024.0 * 1024.0);
+                double vram = ALVFormat.VramMB(W, H, D, NumSnapshots, shMode, bitDepth);
                 generated.Add((name, path, vram));
             }
         }
@@ -118,10 +116,10 @@ public static class ALVGenerateTestTexture
         Debug.Log($"[ALVFormatTest] Report written to {reportPath}");
     }
 
-    // Generates NumFrames of SH data mixing Gaussian point lights with static dark zones.
+    // Generates numSnapshots of SH data mixing Gaussian point lights with static dark zones.
     // Lights pulse sinusoidally for temporal variation; dark zones are fixed in space,
     // producing stretches of near-zero values that mimic shadowed or unlit regions.
-    static ALVTextureWriter.SampleSH[] GaussianFrames(int w, int h, int d, int numFrames, System.Random rng)
+    static ALVTextureWriter.SnapshotSH[] GaussianSnapshots(int w, int h, int d, int numSnapshots, System.Random rng)
     {
         const int   numLights        = 8;
         const int   numBlockers      = 3;
@@ -146,7 +144,7 @@ public static class ALVGenerateTestTexture
         }
 
         // Blockers are wider than lights and static — they carve out spatially coherent
-        // dark regions without varying per-frame, which is realistic for shadowed areas.
+        // dark regions without varying per-snapshot, which is realistic for shadowed areas.
         var blockerPos    = new Vector3[numBlockers];
         var blockerRadius = new float[numBlockers];
 
@@ -156,10 +154,10 @@ public static class ALVGenerateTestTexture
             blockerRadius[i] = Mathf.Max(2f, maxDim * Mathf.Lerp(blockerRadiusMin, blockerRadiusMax, Rand01(rng)));
         }
 
-        var frames = new ALVTextureWriter.SampleSH[numFrames];
-        for (int f = 0; f < numFrames; f++)
+        var snapshots = new ALVTextureWriter.SnapshotSH[numSnapshots];
+        for (int snap = 0; snap < numSnapshots; snap++)
         {
-            float t     = numFrames > 1 ? (float)f / numFrames : 0f;
+            float t     = numSnapshots > 1 ? (float)snap / numSnapshots : 0f;
             int   count = w * h * d;
             Color[] tex0 = new Color[count];
             Color[] tex1 = new Color[count];
@@ -223,10 +221,10 @@ public static class ALVGenerateTestTexture
                 tex2[idx] = new Color(L1r.y, L1g.y, L1b.y, L1b.z);
             }
 
-            frames[f] = new ALVTextureWriter.SampleSH { tex0 = tex0, tex1 = tex1, tex2 = tex2 };
+            snapshots[snap] = new ALVTextureWriter.SnapshotSH { tex0 = tex0, tex1 = tex1, tex2 = tex2 };
         }
 
-        return frames;
+        return snapshots;
     }
 
     static float Rand01(System.Random rng) => (float)rng.NextDouble();

@@ -9,11 +9,11 @@ using VRCLightVolumes;
 
 // Bakes an AnimatedLightVolume texture by:
 //   1. Force-evaluating an Animator to N evenly-spaced times across an AnimationClip.
-//   2. Triggering a Bakery bake for each sampled frame.
-//   3. Reading BakeryVolume.bakedTexture0/1/2 after each bake
-//   4. Packing all bakes into a Texture3D via ALVTextureWriter.SavePackedTexture
+//   2. Triggering a Bakery bake for each snapshot.
+//   3. Reading BakeryVolume.bakedTexture0/1/2 after each bake.
+//   4. Packing all snapshots into a Texture3D via ALVTextureWriter.SavePackedTexture.
 //
-// Open via Tools > Lighting > Bake ALV Texture
+// Open via Tools > Lighting > Bake animated light volume...
 #if BAKERY_INCLUDED
 public class ALVTextureBaker : EditorWindow
 {
@@ -24,7 +24,7 @@ public class ALVTextureBaker : EditorWindow
     AnimationClip _animClip;
     int _startFrame = 0;
     int _endFrame = -1; // -1 = use last frame of clip
-    int _sampleCount = 8;
+    int _snapshotCount = 8;
     ALVSHMode   _shMode   = ALVSHMode.MonoL1;
     ALVBitDepth _bitDepth = ALVBitDepth.Depth8;
     string _outputName = "ALV_Bake";
@@ -32,20 +32,21 @@ public class ALVTextureBaker : EditorWindow
     // --- Internal bake state --------------------------------------------
 
     bool _baking = false;
-    int _currentSample = 0;
-    readonly List<ALVTextureWriter.SampleSH> _collectedSamples = new();
+    int _currentSnapshot = 0;
+    readonly List<ALVTextureWriter.SnapshotSH> _collectedSnapshots = new();
 
-    // Hierarchy paths resolved at bake start, used to re-find objects each frame
-    // in case Bakery's scene management destroys the live references mid-bake.
+    // Hierarchy paths resolved at bake start, used to re-find objects across
+    // snapshots in case Bakery's scene management destroys the live references mid-bake.
     string _animatorPath;
     string _targetVolumePath;
 
-    // Stopwatch runs for each bake; first completed bake sets _secsPerSampleBake for time estimate.
-    readonly System.Diagnostics.Stopwatch _frameStopwatch = new();
-    double _secsPerSampleBake = -1;
+    // Stopwatch runs for each snapshot bake; first completed bake sets
+    // _secsPerSnapshotBake for the time estimate.
+    readonly System.Diagnostics.Stopwatch _snapshotStopwatch = new();
+    double _secsPerSnapshotBake = -1;
 
-    // 0-based index of the currently previewed animation frame for baking.
-    int _previewFrame = 0;
+    // 0-based index of the currently previewed snapshot.
+    int _previewSnapshot = 0;
 
     // --- Animation window (reflection) ----------------------------------
     // The Animation window has no public API for setting the current frame,
@@ -79,11 +80,11 @@ public class ALVTextureBaker : EditorWindow
     float BakeEnd      => _animClip != null ? (_endFrame < 0 ? _animClip.length : Mathf.Clamp(_endFrame / _animClip.frameRate, BakeStart, _animClip.length)) : 0f;
     float BakeDuration => BakeEnd - BakeStart;
 
-    // Returns the animation window frame index for a given bake sample index (0-based).
-    int SampleToAnimFrame(int bakeFrame)
+    // Returns the animation window frame index for a given snapshot index (0-based).
+    int SnapshotToAnimFrame(int snapshotIndex)
     {
         if (_animClip == null) return 0;
-        float t = BakeStart + ((_sampleCount > 1) ? BakeDuration * bakeFrame / (_sampleCount - 1) : 0f);
+        float t = BakeStart + ((_snapshotCount > 1) ? BakeDuration * snapshotIndex / (_snapshotCount - 1) : 0f);
         return Mathf.RoundToInt(t * _animClip.frameRate);
     }
 
@@ -128,7 +129,7 @@ public class ALVTextureBaker : EditorWindow
     ObjectField _clipField;
     IntegerField _startFrameField;
     IntegerField _endFrameField;
-    IntegerField _sampleCountField;
+    IntegerField _snapshotCountField;
     TextField _outputNameField;
     EnumField _shModeField;
     EnumField _bitDepthField;
@@ -141,8 +142,8 @@ public class ALVTextureBaker : EditorWindow
     HelpBox _bakeProgressBox;
     Button _bakeBtn;
     Button _cancelBtn;
-    IntegerField _previewFrameField;
-    Label _previewFrameMax;
+    IntegerField _previewSnapshotField;
+    Label _previewSnapshotMax;
     Label _animFrameCounter;
     Label _animFrameInterval;
     VisualElement _previewControls;
@@ -193,7 +194,7 @@ public class ALVTextureBaker : EditorWindow
             _animClip = e.newValue as AnimationClip;
             _startFrame = 0;
             _endFrame = -1;
-            _previewFrame = 0;
+            _previewSnapshot = 0;
             UpdateRangeFields();
             UpdatePreviewReadout();
             SaveToALV();
@@ -221,13 +222,13 @@ public class ALVTextureBaker : EditorWindow
 
         // --- Bake fields ---
 
-        _sampleCountField = rootVisualElement.Q<IntegerField>("sample-count-field");
-        _sampleCountField.value = _sampleCount;
-        _sampleCountField.RegisterCallback<FocusOutEvent>(_ =>
+        _snapshotCountField = rootVisualElement.Q<IntegerField>("snapshot-count-field");
+        _snapshotCountField.value = _snapshotCount;
+        _snapshotCountField.RegisterCallback<FocusOutEvent>(_ =>
         {
-            _sampleCount = Mathf.Max(_sampleCountField.value, 2);
-            _sampleCountField.SetValueWithoutNotify(_sampleCount);
-            _previewFrame = Mathf.Clamp(_previewFrame, 0, _sampleCount - 1);
+            _snapshotCount = Mathf.Max(_snapshotCountField.value, 2);
+            _snapshotCountField.SetValueWithoutNotify(_snapshotCount);
+            _previewSnapshot = Mathf.Clamp(_previewSnapshot, 0, _snapshotCount - 1);
             UpdatePreviewReadout();
             SaveToALV();
             UpdateUI();
@@ -272,48 +273,48 @@ public class ALVTextureBaker : EditorWindow
         // --- Preview controls ---
 
         _previewControls   = rootVisualElement.Q<VisualElement>("preview-controls");
-        _previewFrameField = rootVisualElement.Q<IntegerField>("preview-frame-field");
-        _previewFrameMax   = rootVisualElement.Q<Label>("preview-frame-max");
+        _previewSnapshotField = rootVisualElement.Q<IntegerField>("preview-snapshot-field");
+        _previewSnapshotMax   = rootVisualElement.Q<Label>("preview-snapshot-max");
         _animFrameCounter  = rootVisualElement.Q<Label>("anim-frame-counter");
 
-        _previewFrameField.RegisterValueChangedCallback(e =>
+        _previewSnapshotField.RegisterValueChangedCallback(e =>
         {
             // Field is 1-indexed; clamp to valid range then push back if corrected.
-            _previewFrame = Mathf.Clamp(e.newValue - 1, 0, _sampleCount - 1);
-            _previewFrameField.SetValueWithoutNotify(_previewFrame + 1);
+            _previewSnapshot = Mathf.Clamp(e.newValue - 1, 0, _snapshotCount - 1);
+            _previewSnapshotField.SetValueWithoutNotify(_previewSnapshot + 1);
             UpdatePreviewReadout();
         });
 
         rootVisualElement.Q<Button>("start-btn").clicked += () =>
         {
-            _previewFrame = 0;
+            _previewSnapshot = 0;
             UpdatePreviewReadout();
-            AnimationWindowFrame = SampleToAnimFrame(_previewFrame);
+            AnimationWindowFrame = SnapshotToAnimFrame(_previewSnapshot);
         };
 
         rootVisualElement.Q<Button>("prev-btn").clicked += () =>
         {
-            if (_previewFrame > 0) _previewFrame--;
+            if (_previewSnapshot > 0) _previewSnapshot--;
             UpdatePreviewReadout();
-            AnimationWindowFrame = SampleToAnimFrame(_previewFrame);
+            AnimationWindowFrame = SnapshotToAnimFrame(_previewSnapshot);
         };
 
         rootVisualElement.Q<Button>("next-btn").clicked += () =>
         {
-            if (_previewFrame < _sampleCount - 1) _previewFrame++;
+            if (_previewSnapshot < _snapshotCount - 1) _previewSnapshot++;
             UpdatePreviewReadout();
-            AnimationWindowFrame = SampleToAnimFrame(_previewFrame);
+            AnimationWindowFrame = SnapshotToAnimFrame(_previewSnapshot);
         };
 
         rootVisualElement.Q<Button>("end-btn").clicked += () =>
         {
-            _previewFrame = _sampleCount - 1;
+            _previewSnapshot = _snapshotCount - 1;
             UpdatePreviewReadout();
-            AnimationWindowFrame = SampleToAnimFrame(_previewFrame);
+            AnimationWindowFrame = SnapshotToAnimFrame(_previewSnapshot);
         };
 
-        _previewFrameField.RegisterCallback<FocusOutEvent>(_ =>
-            AnimationWindowFrame = SampleToAnimFrame(_previewFrame));
+        _previewSnapshotField.RegisterCallback<FocusOutEvent>(_ =>
+            AnimationWindowFrame = SnapshotToAnimFrame(_previewSnapshot));
 
         // --- Status / bake buttons ---
 
@@ -342,7 +343,7 @@ public class ALVTextureBaker : EditorWindow
         if (alv == null) return;
         _animator      = alv.BakeAnimator;
         _animClip      = alv.BakeClip;
-        _sampleCount   = alv.BakeSampleCount;
+        _snapshotCount   = alv.BakeSnapshotCount;
         _startFrame    = alv.BakeStartFrame;
         _endFrame      = alv.BakeEndFrame;
         _shMode    = alv.BakeSHMode;
@@ -351,7 +352,7 @@ public class ALVTextureBaker : EditorWindow
 
         _animatorField?.SetValueWithoutNotify(_animator);
         _clipField?.SetValueWithoutNotify(_animClip);
-        _sampleCountField?.SetValueWithoutNotify(_sampleCount);
+        _snapshotCountField?.SetValueWithoutNotify(_snapshotCount);
         _outputNameField?.SetValueWithoutNotify(_outputName);
         _shModeField?.SetValueWithoutNotify(_shMode);
         _bitDepthField?.SetValueWithoutNotify(_bitDepth);
@@ -369,7 +370,7 @@ public class ALVTextureBaker : EditorWindow
         if (alv == null) return;
         alv.BakeAnimator    = _animator;
         alv.BakeClip        = _animClip;
-        alv.BakeSampleCount = _sampleCount;
+        alv.BakeSnapshotCount = _snapshotCount;
         alv.BakeStartFrame  = _startFrame;
         alv.BakeEndFrame    = _endFrame;
         alv.BakeSHMode      = _shMode;
@@ -420,17 +421,17 @@ public class ALVTextureBaker : EditorWindow
         _endFrameField?.SetValueWithoutNotify(_endFrame);
     }
 
-    // Refreshes the preview frame field and anim-frame-counter label.
+    // Refreshes the preview snapshot field and anim-frame-counter label.
     void UpdatePreviewReadout()
     {
-        if (_previewFrameField == null) return;
+        if (_previewSnapshotField == null) return;
 
-        bool canPreview = _animClip != null && _sampleCount >= 2;
+        bool canPreview = _animClip != null && _snapshotCount >= 2;
         _previewControls?.SetEnabled(canPreview);
 
-        _previewFrameField.SetValueWithoutNotify(_previewFrame + 1);
-        _previewFrameMax.text  = $"/ {_sampleCount}";
-        _animFrameCounter.text = canPreview ? $"f{SampleToAnimFrame(_previewFrame)}" : "—";
+        _previewSnapshotField.SetValueWithoutNotify(_previewSnapshot + 1);
+        _previewSnapshotMax.text  = $"/ {_snapshotCount}";
+        _animFrameCounter.text = canPreview ? $"f{SnapshotToAnimFrame(_previewSnapshot)}" : "—";
     }
 
     // Refreshes validation message and bake/cancel button visibility.
@@ -449,11 +450,11 @@ public class ALVTextureBaker : EditorWindow
         _bakeProgressBox.style.display = _baking ? DisplayStyle.Flex : DisplayStyle.None;
         if (_baking)
         {
-            int remaining = _sampleCount - _currentSample;
-            string etr = _secsPerSampleBake >= 0
-                ? $"\n(~{System.TimeSpan.FromSeconds(_secsPerSampleBake * (remaining + 2)):m\\:ss} remaining)"
+            int remaining = _snapshotCount - _currentSnapshot;
+            string etr = _secsPerSnapshotBake >= 0
+                ? $"\n(~{System.TimeSpan.FromSeconds(_secsPerSnapshotBake * (remaining + 2)):m\\:ss} remaining)"
                 : "";
-            _bakeProgressBox.text = $"Baking sample {_currentSample + 1} / {_sampleCount}…{etr}";
+            _bakeProgressBox.text = $"Baking snapshot {_currentSnapshot + 1} / {_snapshotCount}…{etr}";
         }
 
         _bakeBtn.style.display   = _baking ? DisplayStyle.None : DisplayStyle.Flex;
@@ -472,9 +473,9 @@ public class ALVTextureBaker : EditorWindow
             return;
         }
 
-        // Display number of animation frames in between baked frames.
-        // Subtract one from _sampleCount since we're accounting for sampling both the first and last frame.
-        float frameInterval = Mathf.Round(BakeDuration * _animClip.frameRate) / (_sampleCount - 1);
+        // Display number of animation frames in between snapshots.
+        // Subtract one from _snapshotCount since we capture both the first and last frame.
+        float frameInterval = Mathf.Round(BakeDuration * _animClip.frameRate) / (_snapshotCount - 1);
         _animFrameInterval.text = $"f{frameInterval:0.#}";
     }
 
@@ -496,21 +497,16 @@ public class ALVTextureBaker : EditorWindow
         int h = res.y;
         int d = res.z;
 
-        // Packed texture dimensions: X unchanged, Y stacked by numFrames, Z = depth * numSlots.
-        int numSlots = ALVFormat.NumSlots(_shMode);
-        
-        int packedH = h * _sampleCount;
-        int packedD = d * numSlots;
+        int packedH = ALVFormat.PackedHeight(h, _snapshotCount);
+        int packedD = ALVFormat.PackedDepth(d, _shMode);
         _outputResLabel.text = $"{w} × {packedH} × {packedD}";
 
-        int bytesPerTexel = ALVTextureWriter.BytesPerTexel(_shMode, _bitDepth);
-        long voxels = (long)w * h * d;
-        double vram = voxels * _sampleCount * (double)numSlots * bytesPerTexel / (1024.0 * 1024.0);
+        double vram = ALVFormat.VramMB(w, h, d, _snapshotCount, _shMode, _bitDepth);
 
         // Per-format bundle size range derived from noise (worst-case upper bound) and
         // Gaussian-blob (realistic lower bound) AssetBundle compression tests.
         // See ALV-BUNDLE-SIZE.md at the repo root for methodology and full data.
-        double bundleLow = vram * 0.5;
+        double bundleLow  = vram * 0.5;
         double bundleHigh = vram * (_shMode == ALVSHMode.MonoL0 ? 0.7 : 0.9);
 
         _vramSizeLabel.text   = $"{vram:0.00} MB";
@@ -532,16 +528,16 @@ public class ALVTextureBaker : EditorWindow
     void StartBake()
     {
         _baking = true;
-        _currentSample = 0;
-        _secsPerSampleBake = -1;
-        _collectedSamples.Clear();
+        _currentSnapshot = 0;
+        _secsPerSnapshotBake = -1;
+        _collectedSnapshots.Clear();
 
         // Cache hierarchy paths now while references are guaranteed live.
         _animatorPath     = ALVEditorUtils.GetHierarchyPath(_animator.gameObject);
         _targetVolumePath = ALVEditorUtils.GetHierarchyPath(_targetVolume.gameObject);
 
         UpdateUI();
-        BakeNextFrame();
+        BakeNextSnapshot();
     }
 
     bool RefreshReferences()
@@ -561,19 +557,19 @@ public class ALVTextureBaker : EditorWindow
         return true;
     }
 
-    void BakeNextFrame()
+    void BakeNextSnapshot()
     {
         if (!RefreshReferences()) return;
 
-        // Frame 0 = BakeStart, frame N-1 = BakeEnd (last frame inclusive).
-        float t = BakeStart + (_sampleCount > 1 ? BakeDuration * _currentSample / (_sampleCount - 1) : 0f);
+        // Snapshot 0 = BakeStart, snapshot N-1 = BakeEnd (last snapshot inclusive).
+        float t = BakeStart + (_snapshotCount > 1 ? BakeDuration * _currentSnapshot / (_snapshotCount - 1) : 0f);
 
         // Force-evaluate the animator to the target time.
         _animator.Play(_animClip.name, 0, t / _animClip.length);
         _animator.Update(0f);
 
         // Trigger a full Bakery bake. OnBakeFinished fires when it completes.
-        _frameStopwatch.Restart();
+        _snapshotStopwatch.Restart();
         EditorWindow.GetWindow<ftRenderLightmap>().RenderButton(showMsgWindows: false);
 
         UpdateUI();
@@ -583,26 +579,26 @@ public class ALVTextureBaker : EditorWindow
     {
         if (!_baking) return;
 
-        _frameStopwatch.Stop();
-        if (_secsPerSampleBake < 0)
-            _secsPerSampleBake = _frameStopwatch.Elapsed.TotalSeconds;
+        _snapshotStopwatch.Stop();
+        if (_secsPerSnapshotBake < 0)
+            _secsPerSnapshotBake = _snapshotStopwatch.Elapsed.TotalSeconds;
 
         BakeryVolume bv = _targetVolume.BakeryVolume;
         if (bv.bakedTexture0 == null || bv.bakedTexture1 == null || bv.bakedTexture2 == null)
         {
-            AbortBake($"BakeryVolume textures are null after bake on frame {_currentSample}. Check Bakery output.");
+            AbortBake($"BakeryVolume textures are null after bake on snapshot {_currentSnapshot}. Check Bakery output.");
             return;
         }
 
-        _collectedSamples.Add(ALVTextureWriter.DeringSample(
+        _collectedSnapshots.Add(ALVTextureWriter.DeringSnapshot(
             bv.bakedTexture0.GetPixels(),
             bv.bakedTexture1.GetPixels(),
             bv.bakedTexture2.GetPixels()));
 
-        _currentSample++;
+        _currentSnapshot++;
 
-        if (_currentSample < _sampleCount)
-            BakeNextFrame();
+        if (_currentSnapshot < _snapshotCount)
+            BakeNextSnapshot();
         else
             FinishBake();
 
@@ -622,14 +618,14 @@ public class ALVTextureBaker : EditorWindow
         ALVEditorUtils.CreateDirectory(assetDir);
 
         string assetPath = $"{assetDir}/{_outputName}.asset";
-        ALVTextureWriter.SavePackedTexture(_collectedSamples.ToArray(), w, h, d, assetPath, _shMode, _bitDepth);
+        ALVTextureWriter.SavePackedTexture(_collectedSnapshots.ToArray(), w, h, d, assetPath, _shMode, _bitDepth);
 
-        new ALVTextureInfo { sampleX = w, sampleY = h, sampleZ = d, numSamples = _sampleCount, shMode = _shMode, bitDepth = _bitDepth }.Save(assetPath);
+        new ALVTextureInfo { snapshotX = w, snapshotY = h, snapshotZ = d, numSnapshots = _snapshotCount, shMode = _shMode, bitDepth = _bitDepth }.Save(assetPath);
 
         // Reload references to make it faster to re-bake a sequence if needed.
         RefreshReferences();
 
-        Debug.Log($"  [ALVBakeTexture] Done. {_sampleCount} samples baked into {assetPath} (sampleX={w} sampleY={h} sampleZ={d})");
+        Debug.Log($"  [ALVBakeTexture] Done. {_snapshotCount} snapshots baked into {assetPath} (snapshotX={w} snapshotY={h} snapshotZ={d})");
         UpdateUI();
     }
 

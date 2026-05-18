@@ -1,7 +1,7 @@
 // AnimatedLightVolume.shader
 //
-// Internal shader used to sample an animated light volume texture and apply it
-// to a VRC Light Volumes atlas.
+// Internal shader used to sample an animated light volume snapshot texture and
+// apply it to a VRC Light Volumes atlas.
 
 Shader "Hidden/AnimatedLightVolume"
 {
@@ -19,11 +19,11 @@ Shader "Hidden/AnimatedLightVolume"
         _UvwMax2 ("UVW Max 2", Vector) = (1, 1, 1, 0)
 
         // Packed texture layout parameters, derived from texture dimensions at setup time.
-        _NumSamples ("Num Samples", Int) = 2
-        _SampleScale ("Sample scale", Float) = 0.5   // = 1 / numSamples
-        _SliceScale  ("Slice scale",  Float) = 0.333 // = 1 / numSlots
+        _NumSnapshots  ("Num Snapshots",  Int) = 2
+        _SnapshotScale ("Snapshot scale", Float) = 0.5   // = 1 / numSnapshots
+        _SliceScale    ("Slice scale",    Float) = 0.333 // = 1 / numSlots
 
-        // Normalised playback position: 0 = first sample, 1 = last sample.
+        // Normalised playback position: 0 = first snapshot, 1 = last snapshot.
         _Time4D ("Time", Range(0, 1)) = 0
 
         // Blending mode (matches ALVBlendingMode enum):
@@ -61,8 +61,8 @@ Shader "Hidden/AnimatedLightVolume"
             float3 _UvwMin1, _UvwMax1;
             float3 _UvwMin2, _UvwMax2;
 
-            int   _NumSamples;
-            float _SampleScale;
+            int   _NumSnapshots;
+            float _SnapshotScale;
             float _SliceScale;
             float _Time4D;
             float _Intensity;
@@ -71,12 +71,12 @@ Shader "Hidden/AnimatedLightVolume"
             int   _BitDepth;
             int   _IsUnorm;
 
-            // Sample one slot from the packed texture for a given sample index and slot index.
-            float4 SamplePacked(float3 local, int sample, int slot)
+            // Sample one slot from the packed texture for a given snapshot index and slot index.
+            float4 SamplePacked(float3 local, int snapshot, int slot)
             {
                 float u = local.x;
-                float v = (local.y + sample) * _SampleScale;
-                float w = (local.z + slot)   * _SliceScale;
+                float v = (local.y + snapshot) * _SnapshotScale;
+                float w = (local.z + slot)     * _SliceScale;
                 float4 s = tex3D(_PackedTex, float3(u, v, w));
                 // UNORM formats store values remapped to [0,1]; decode back to [-1,1].
                 if (_IsUnorm)
@@ -84,15 +84,15 @@ Shader "Hidden/AnimatedLightVolume"
                 return s;
             }
 
-            // Lerp between two adjacent samples for a given slot.
-            // t is in [0, numSamples), derived from _Time4D by the caller.
+            // Lerp between two adjacent snapshots for a given slot.
+            // t is in [0, numSnapshots), derived from _Time4D by the caller.
             float4 SampleLerped(float3 local, float t, int slot)
             {
-                int   sampleA = (int)t % _NumSamples;
-                int   sampleB = (sampleA + 1) % _NumSamples;
-                float blend   = frac(t);
-                return lerp(SamplePacked(local, sampleA, slot),
-                            SamplePacked(local, sampleB, slot), blend);
+                int   snapshotA = (int)t % _NumSnapshots;
+                int   snapshotB = (snapshotA + 1) % _NumSnapshots;
+                float blend     = frac(t);
+                return lerp(SamplePacked(local, snapshotA, slot),
+                            SamplePacked(local, snapshotB, slot), blend);
             }
 
             // Reconstruct a full-SH (L1 mode) output from 3 packed slots.
@@ -147,7 +147,7 @@ Shader "Hidden/AnimatedLightVolume"
                 if (!inTex0 && !inTex1 && !inTex2)
                     return col;
 
-                float t = _Time4D * (_NumSamples - 1);
+                float t = _Time4D * (_NumSnapshots - 1);
 
                 // Resolve which atlas slot and local UVW this texel belongs to.
                 float3 local;

@@ -23,7 +23,7 @@ public class HeartacheMusicEngine : UdonSharpBehaviour
 
     // --- Song metadata ------------------------------------------------
     // Derived from the audio clip and timing parameters at Start().
-    // Read-only after initialisation — use these instead of recomputing.
+    // Read-only after initialisation. Use these instead of recomputing.
     public float SampleRate { get; private set; }
     public float SongLengthInSeconds { get; private set; }
     public float SongSampleCount { get; private set; }

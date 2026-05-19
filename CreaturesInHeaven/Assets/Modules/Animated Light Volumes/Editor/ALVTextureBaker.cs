@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
 using UnityEngine;
 using UnityEditor;
@@ -113,18 +112,6 @@ public class ALVTextureBaker : EditorWindow
     // that don't trigger the field's value-changed callback.
     void OnInspectorUpdate() => UpdateUI();
 
-    // Returns the project-relative path to the directory containing this script.
-    static string ScriptDir()
-    {
-        foreach (var guid in AssetDatabase.FindAssets($"t:MonoScript {nameof(ALVTextureBaker)}"))
-        {
-            string path = AssetDatabase.GUIDToAssetPath(guid);
-            if (path.EndsWith($"{nameof(ALVTextureBaker)}.cs"))
-                return Path.GetDirectoryName(path).Replace('\\', '/');
-        }
-        return "Assets/Modules/Animated Light Volumes/Editor";
-    }
-
     // --- UI -------------------------------------------------------------
 
     // Cached element refs, written to by CreateGUI and read/updated by bake logic.
@@ -159,7 +146,7 @@ public class ALVTextureBaker : EditorWindow
 
     public void CreateGUI()
     {
-        string dir = ScriptDir();
+        string dir = ALVEditorUtils.ScriptDir();
         var uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>($"{dir}/ALVBakeTexture.uxml");
         if (uxml == null)
         {
@@ -353,12 +340,12 @@ public class ALVTextureBaker : EditorWindow
         if (alv == null) return;
         _animator      = alv.BakeAnimator;
         _animClip      = alv.BakeClip;
-        _snapshotCount   = alv.BakeSnapshotCount;
+        _snapshotCount = alv.BakeSnapshotCount;
         _startFrame    = alv.BakeStartFrame;
         _endFrame      = alv.BakeEndFrame;
-        _shMode    = alv.BakeSHMode;
-        _bitDepth  = alv.BakeBitDepth;
-        _outputName = alv.BakeOutputName;
+        _shMode        = alv.BakeSHMode;
+        _bitDepth      = alv.BakeBitDepth;
+        _outputName    = alv.BakeOutputName;
 
         _animatorField?.SetValueWithoutNotify(_animator);
         _clipField?.SetValueWithoutNotify(_animClip);
@@ -378,41 +365,33 @@ public class ALVTextureBaker : EditorWindow
     {
         AnimatedLightVolume alv = ALVOnVolume;
         if (alv == null) return;
-        alv.BakeAnimator    = _animator;
-        alv.BakeClip        = _animClip;
+        alv.BakeAnimator      = _animator;
+        alv.BakeClip          = _animClip;
         alv.BakeSnapshotCount = _snapshotCount;
-        alv.BakeStartFrame  = _startFrame;
-        alv.BakeEndFrame    = _endFrame;
-        alv.BakeSHMode      = _shMode;
-        alv.BakeBitDepth    = _bitDepth;
-        alv.BakeOutputName  = _outputName;
+        alv.BakeStartFrame    = _startFrame;
+        alv.BakeEndFrame      = _endFrame;
+        alv.BakeSHMode        = _shMode;
+        alv.BakeBitDepth      = _bitDepth;
+        alv.BakeOutputName    = _outputName;
         EditorUtility.SetDirty(alv);
+    }
+
+    void ShowOnlyModeHint(HelpBox toShow)
+    {
+        _modeHintL1.style.display     = DisplayStyle.None;
+        _modeHintMonoL1.style.display = DisplayStyle.None;
+        _modeHintMonoL0.style.display = DisplayStyle.None;
+        toShow.style.display          = DisplayStyle.Flex;
     }
 
     void UpdateModeHint()
     {
         if (_modeHintL1 == null || _modeHintMonoL1 == null || _modeHintMonoL0 == null) return;
-
         switch (_shMode)
         {
-            case ALVSHMode.MonoL1:
-                _modeHintL1.style.display = DisplayStyle.None;
-                _modeHintMonoL1.style.display = DisplayStyle.Flex;
-                _modeHintMonoL0.style.display = DisplayStyle.None;
-                break;
-
-            case ALVSHMode.MonoL0:
-                _modeHintL1.style.display = DisplayStyle.None;
-                _modeHintMonoL1.style.display = DisplayStyle.None;
-                _modeHintMonoL0.style.display = DisplayStyle.Flex;
-                break;
-
-            // case ALVSHMode.L1
-            default:
-                _modeHintL1.style.display = DisplayStyle.Flex;
-                _modeHintMonoL1.style.display = DisplayStyle.None;
-                _modeHintMonoL0.style.display = DisplayStyle.None;
-                break;
+            case ALVSHMode.MonoL1:  ShowOnlyModeHint(_modeHintMonoL1); break;
+            case ALVSHMode.MonoL0:  ShowOnlyModeHint(_modeHintMonoL0); break;
+            default:                ShowOnlyModeHint(_modeHintL1);     break;
         }
     }
 
@@ -520,11 +499,9 @@ public class ALVTextureBaker : EditorWindow
 
         double vram = ALVFormat.VramMB(w, h, d, _snapshotCount, _shMode, _bitDepth);
 
-        // Per-format bundle size range derived from noise (worst-case upper bound) and
-        // Gaussian-blob (realistic lower bound) AssetBundle compression tests.
-        // See ALV-BUNDLE-SIZE.md at the repo root for methodology and full data.
-        double bundleLow  = vram * 0.5;
-        double bundleHigh = vram * (_shMode == ALVSHMode.MonoL0 ? 0.7 : 0.9);
+        // Per-format bundle size range. See ALVFormat for ratio constants and methodology.
+        double bundleLow  = vram * ALVFormat.BundleRatioLow;
+        double bundleHigh = vram * ALVFormat.BundleHighRatio(_shMode);
 
         _vramSizeLabel.text   = $"{vram:0.00} MB";
         _bundleSizeLabel.text = $"{bundleLow:0.00} – {bundleHigh:0.00} MB";

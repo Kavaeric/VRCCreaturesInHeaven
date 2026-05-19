@@ -19,7 +19,7 @@ public class SelectionGroupItem : VisualElement
     private EventCallback<KeyDownEvent> _renameKeyHandler;
     public int GroupIndex { get; set; } = -1;
 
-    // Cached statics — loaded once on first instantiation.
+    // Cached statics, loaded once on first instantiation.
     private static StyleSheet _sharedStyleSheet;
     private static Texture2D _iconSelect, _iconSelectAdd, _iconSelectRemove;
 

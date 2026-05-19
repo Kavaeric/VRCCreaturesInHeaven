@@ -1,4 +1,3 @@
-using System.IO;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -8,25 +7,6 @@ public class ALVEstimate : EditorWindow
 {
     [MenuItem("Tools/Lighting/Estimate bake size...")]
     static void Open() => GetWindow<ALVEstimate>("Estimate bake size");
-
-    // Returns the project-relative path to the directory containing this script.
-    static string ScriptDir()
-    {
-        foreach (var guid in AssetDatabase.FindAssets($"t:MonoScript {nameof(ALVTextureBaker)}"))
-        {
-            string path = AssetDatabase.GUIDToAssetPath(guid);
-            if (path.EndsWith($"{nameof(ALVTextureBaker)}.cs"))
-                return Path.GetDirectoryName(path).Replace('\\', '/');
-        }
-        return "Assets/Modules/Animated Light Volumes/Editor";
-    }
-
-    // Per-format bundle compression ratios derived from noise (high) and Gaussian-blob
-    // (low) AssetBundle tests. MonoL0 compresses better at the high end.
-    // See ALVTextureBaker.cs lines 506-510 for methodology reference.
-    const double BundleRatioLow    = 0.5;
-    const double BundleRatioHighL0 = 0.7;
-    const double BundleRatioHigh   = 0.9;
 
     Vector3Int _dimensions = Vector3Int.zero;
     int _snapshots = 80;
@@ -39,7 +19,7 @@ public class ALVEstimate : EditorWindow
 
     public void CreateGUI()
     {
-        string dir = ScriptDir();
+        string dir = ALVEditorUtils.ScriptDir();
         var uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>($"{dir}/ALVEstimate.uxml");
         if (uxml == null)
         {
@@ -117,10 +97,9 @@ public class ALVEstimate : EditorWindow
                     continue;
                 }
 
-                double vram      = ALVFormat.VramMB(_dimensions.x, _dimensions.y, _dimensions.z, _snapshots, shMode, bitDepth);
-                double ratioHigh = shMode == ALVSHMode.MonoL0 ? BundleRatioHighL0 : BundleRatioHigh;
-                lo.text = $"{vram * BundleRatioLow:F1} MB";
-                hi.text = $"{vram * ratioHigh:F1} MB";
+                double vram = ALVFormat.VramMB(_dimensions.x, _dimensions.y, _dimensions.z, _snapshots, shMode, bitDepth);
+                lo.text = $"{vram * ALVFormat.BundleRatioLow:F1} MB";
+                hi.text = $"{vram * ALVFormat.BundleHighRatio(shMode):F1} MB";
             }
         }
     }

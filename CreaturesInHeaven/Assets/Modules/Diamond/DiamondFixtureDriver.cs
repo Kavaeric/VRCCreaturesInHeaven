@@ -7,8 +7,8 @@ using UnityEngine;
 // applies brightness/collimation via MaterialPropertyBlock to preserve batching.
 //
 // _PropsTransform.localScale channels:
-//   x — Brightness (emissive multiplier, HDR range 0..2)
-//   y — Collimation (beam tightness, 0..1)
+//   x - Brightness (emissive multiplier, HDR range 0..2)
+//   y - Beam spread
 public class DiamondFixtureDriver : UdonSharpBehaviour
 {
     // --- Inspector references ----------------------------------------

@@ -139,7 +139,7 @@ public class HeartacheEUITransport : EditorWindow
     private Button _playBtn;
     private VisualElement _markersGrid;
 
-    // Cached per-clip resolution result — recomputed only when ClipTotalFrames changes
+    // Cached per-clip resolution result: recomputed only when ClipTotalFrames changes
     private int _cachedResolutionFrames = -1;
     private int _lastAnimFrame = -1;
     private string _cachedResolutionLabel;

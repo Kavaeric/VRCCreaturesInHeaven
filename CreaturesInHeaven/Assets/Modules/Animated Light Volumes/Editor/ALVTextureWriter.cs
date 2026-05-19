@@ -120,19 +120,8 @@ public static class ALVTextureWriter
         for (int i = 0; i < count; i++)
         {
             float l0r = snapshot.tex0[i].r, l0g = snapshot.tex0[i].g, l0b = snapshot.tex0[i].b;
-
-            // Reconstruct per-channel L1 vectors from the full packing layout:
-            //   tex0.a = L1r.z, tex1 = (L1r.x, L1g.x, L1b.x, L1g.z),
-            //   tex2 = (L1r.y, L1g.y, L1b.y, L1b.z)
-            Vector3 L1r = new Vector3(snapshot.tex1[i].r, snapshot.tex2[i].r, snapshot.tex0[i].a);
-            Vector3 L1g = new Vector3(snapshot.tex1[i].g, snapshot.tex2[i].g, snapshot.tex1[i].a);
-            Vector3 L1b = new Vector3(snapshot.tex1[i].b, snapshot.tex2[i].b, snapshot.tex2[i].a);
-
-            float denom = l0r + l0g + l0b;
-            Vector3 L1mono = denom > 1e-6f
-                ? (l0r * L1r + l0g * L1g + l0b * L1b) / denom
-                : Vector3.zero;
-
+            var (L1r, L1g, L1b) = UnpackL1Channels(snapshot.tex0[i], snapshot.tex1[i], snapshot.tex2[i]);
+            Vector3 L1mono = WeightedMonoL1(l0r, l0g, l0b, L1r, L1g, L1b);
             t0Out[i] = new Color(l0r, l0g, l0b, 0f);
             t1Out[i] = new Color(L1mono.x, L1mono.y, L1mono.z, 0f);
         }
@@ -145,18 +134,18 @@ public static class ALVTextureWriter
         {
             float l0r = snapshot.tex0[i].r, l0g = snapshot.tex0[i].g, l0b = snapshot.tex0[i].b;
             float l0  = Mathf.Max(l0r, Mathf.Max(l0g, l0b));
-
-            Vector3 L1r = new Vector3(snapshot.tex1[i].r, snapshot.tex2[i].r, snapshot.tex0[i].a);
-            Vector3 L1g = new Vector3(snapshot.tex1[i].g, snapshot.tex2[i].g, snapshot.tex1[i].a);
-            Vector3 L1b = new Vector3(snapshot.tex1[i].b, snapshot.tex2[i].b, snapshot.tex2[i].a);
-
-            float denom = l0r + l0g + l0b;
-            Vector3 L1mono = denom > 1e-6f
-                ? (l0r * L1r + l0g * L1g + l0b * L1b) / denom
-                : Vector3.zero;
-
+            var (L1r, L1g, L1b) = UnpackL1Channels(snapshot.tex0[i], snapshot.tex1[i], snapshot.tex2[i]);
+            Vector3 L1mono = WeightedMonoL1(l0r, l0g, l0b, L1r, L1g, L1b);
             t0Out[i] = new Color(l0, L1mono.x, L1mono.y, L1mono.z);
         }
+    }
+
+    // Blends three per-channel L1 vectors into one shared direction, weighted by each
+    // channel's L0 intensity. Returns zero when all channels are dark.
+    static Vector3 WeightedMonoL1(float l0r, float l0g, float l0b, Vector3 L1r, Vector3 L1g, Vector3 L1b)
+    {
+        float denom = l0r + l0g + l0b;
+        return denom > 1e-6f ? (l0r * L1r + l0g * L1g + l0b * L1b) / denom : Vector3.zero;
     }
 
     // Forwards to ALVFormat.BytesPerTexel; kept here for call-site compatibility.
@@ -171,19 +160,25 @@ public static class ALVTextureWriter
         Color[] r0 = new Color[count], r1 = new Color[count], r2 = new Color[count];
         for (int i = 0; i < count; i++)
         {
-            // Packing layout:
-            //   tex0: (L0.r, L0.g, L0.b, L1r.z)
-            //   tex1: (L1r.x, L1g.x, L1b.x, L1g.z)
-            //   tex2: (L1r.y, L1g.y, L1b.y, L1b.z)
-            Vector3 L1r = LVUtils.DeringSingleSH(t0[i].r, new Vector3(t1[i].r, t2[i].r, t0[i].a));
-            Vector3 L1g = LVUtils.DeringSingleSH(t0[i].g, new Vector3(t1[i].g, t2[i].g, t1[i].a));
-            Vector3 L1b = LVUtils.DeringSingleSH(t0[i].b, new Vector3(t1[i].b, t2[i].b, t2[i].a));
+            var (rawL1r, rawL1g, rawL1b) = UnpackL1Channels(t0[i], t1[i], t2[i]);
+            Vector3 L1r = LVUtils.DeringSingleSH(t0[i].r, rawL1r);
+            Vector3 L1g = LVUtils.DeringSingleSH(t0[i].g, rawL1g);
+            Vector3 L1b = LVUtils.DeringSingleSH(t0[i].b, rawL1b);
             r0[i] = new Color(t0[i].r, t0[i].g, t0[i].b, L1r.z);
             r1[i] = new Color(L1r.x,   L1g.x,   L1b.x,   L1g.z);
             r2[i] = new Color(L1r.y,   L1g.y,   L1b.y,   L1b.z);
         }
         return new SnapshotSH { tex0 = r0, tex1 = r1, tex2 = r2 };
     }
+
+    // Reconstructs the three per-channel L1 direction vectors from the full SH packing layout:
+    //   tex0.a = L1r.z, tex1 = (L1r.x, L1g.x, L1b.x, L1g.z), tex2 = (L1r.y, L1g.y, L1b.y, L1b.z)
+    static (Vector3 L1r, Vector3 L1g, Vector3 L1b) UnpackL1Channels(Color t0, Color t1, Color t2) =>
+    (
+        new Vector3(t1.r, t2.r, t0.a),
+        new Vector3(t1.g, t2.g, t1.a),
+        new Vector3(t1.b, t2.b, t2.a)
+    );
 
     // Copies a w*h*d source block (XYZ order, x fastest) into the packed pixel array
     // at the given yOffset and zOffset within the atlas layout.

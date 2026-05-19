@@ -60,6 +60,17 @@ public static class ALVFormat
     // VRAM occupied by a packed texture, in megabytes.
     public static double VramMB(int w, int h, int d, int numSnapshots, ALVSHMode shMode, ALVBitDepth bitDepth) =>
         (long)w * h * d * numSnapshots * (double)NumSlots(shMode) * BytesPerTexel(shMode, bitDepth) / (1024.0 * 1024.0);
+
+    // AssetBundle compression ratios relative to uncompressed VRAM size.
+    // Derived from noise (high/worst-case) and Gaussian-blob (low/realistic) bundle tests.
+    // MonoL0 compresses better at the high end due to its sparser data.
+    // See ALV-BUNDLE-SIZE.md at the repo root for methodology and full data.
+    public const double BundleRatioLow    = 0.5;
+    public const double BundleRatioHigh   = 0.9;
+    public const double BundleRatioHighL0 = 0.7;
+
+    public static double BundleHighRatio(ALVSHMode shMode) =>
+        shMode == ALVSHMode.MonoL0 ? BundleRatioHighL0 : BundleRatioHigh;
 }
 
 [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
@@ -137,7 +148,7 @@ public class AnimatedLightVolume : UdonSharpBehaviour
         _hasAnimTimeParam  = _animator != null && AnimTimeParameter  != "";
         _hasIntensityParam = _animator != null && IntensityParameter != "";
 
-        // Push static properties — these only change if the volume or texture changes.
+        // Push static properties, though only if the volume or texture changes.
         _mat.SetVector("_UvwMin0", TargetVolume.BoundsUvwMin0);
         _mat.SetVector("_UvwMax0", TargetVolume.BoundsUvwMax0);
         _mat.SetVector("_UvwMin1", TargetVolume.BoundsUvwMin1);

@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-// Custom inspector driven by FixtureProfile — only shows controls the fixture type supports.
+// Custom inspector driven by FixtureProfile. Only shows controls the fixture type supports.
 [CanEditMultipleObjects]
 [CustomEditor(typeof(DiamondFixtureDefinition))]
 public class DiamondEUIFixtureDefinition : Editor
@@ -58,13 +58,13 @@ public class DiamondEUIFixtureDefinition : Editor
             return;
         }
 
-        // Bail if selected fixtures use different profiles — controls would be ambiguous.
+        // Bail if selected fixtures use different profiles, as controls would be ambiguous.
         DiamondFixtureProfile commonProfile = ((DiamondFixtureDefinition)targets[0]).Profile;
         foreach (var t in targets)
         {
             if (((DiamondFixtureDefinition)t).Profile != commonProfile)
             {
-                EditorGUILayout.HelpBox("Selected fixtures use different profiles — edit them individually.", MessageType.Info);
+                EditorGUILayout.HelpBox("Selected fixtures use different profiles. Edit them individually.", MessageType.Info);
                 serializedObject.ApplyModifiedProperties();
                 return;
             }
@@ -100,7 +100,7 @@ public class DiamondEUIFixtureDefinition : Editor
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Material", EditorStyles.boldLabel);
 
-        // On/Off toggle — show mixed-value indicator if not unanimous.
+        // On/Off toggle. Show mixed-value indicator if not unanimous.
         bool firstOn = ((DiamondFixtureDefinition)targets[0]).GetComponent<DiamondFixtureDriver>().PropsTransform.gameObject.activeSelf;
         bool mixedOn = false;
         foreach (var t in targets)
@@ -125,7 +125,7 @@ public class DiamondEUIFixtureDefinition : Editor
             }
         }
 
-        // Brightness — display in gamma space; store linear in PropsTransform.localScale.x.
+        // Brightness: display in gamma space, store linear in PropsTransform.localScale.x.
         var firstDriver = ((DiamondFixtureDefinition)targets[0]).GetComponent<DiamondFixtureDriver>();
         float firstBrightnessGamma = firstDriver.PropsTransform != null
             ? Mathf.LinearToGammaSpace(firstDriver.PropsTransform.localScale.x) : 0f;

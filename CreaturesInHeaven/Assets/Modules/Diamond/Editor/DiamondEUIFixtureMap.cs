@@ -134,12 +134,12 @@ public class DiamondEUIFixtureMap : EditorWindow
     private double                     _lastRepaintTime      = 0;
     private const double               RepaintIntervalMs     = 30;
 
-    // Logical layout — recomputed when fixtures load or layout parameters change.
+    // Logical layout: recomputed when fixtures load or layout parameters change.
     private List<FixtureLayout>   _fixtureLayouts = new();
     private List<GroupLayout>     _groupLayouts   = new();
     private Rect                  _logicalBounds  = new();  // bounding rect in logical space
 
-    // Viewport — recomputed when canvas resizes. Transforms logical space to screen space.
+    // Viewport: recomputed when canvas resizes. Transforms logical space to screen space.
     private Vector2               _canvasSize;
     private float                 _logicalScale   = 1f;  // scale factor from logical to screen space
     private Vector2               _logicalOffset  = Vector2.zero;  // screen offset of logical origin
@@ -204,7 +204,7 @@ public class DiamondEUIFixtureMap : EditorWindow
     // Selection groups file extension
     private string SelectionsPath => string.IsNullOrEmpty(_mapPath) ? null : _mapPath + ".selections.json";
 
-    // Tunable layout parameters — bound to footer fields.
+    // Tunable layout parameters: bound to footer fields.
     private float _minGap                   = 0.1f;
     private float _gapCompressionK          = 4f;
     private float _nodeCompressionK         = 5f;
@@ -286,7 +286,7 @@ public class DiamondEUIFixtureMap : EditorWindow
             _canvas.MarkDirtyRepaint();
         });
 
-        // Wire selection options toggles — all default to true
+        // Wire selection options toggles. All default to true.
         var mainFixtureToggle = rootVisualElement.Q<Toggle>("include-main-fixture-toggle");
         mainFixtureToggle.value = _includeMainFixture;
         mainFixtureToggle.RegisterValueChangedCallback(e => _includeMainFixture = e.newValue);

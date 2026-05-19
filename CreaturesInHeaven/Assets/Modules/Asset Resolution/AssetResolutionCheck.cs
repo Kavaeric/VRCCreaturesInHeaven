@@ -19,7 +19,7 @@ public class AssetResolutionCheck : MonoBehaviour
     [SerializeField] private float customFovH = 108f;
     [SerializeField] private float customFovV = 104f;
 
-    // Density thresholds (px/m) — one ring drawn per entry
+    // Density thresholds (px/m). One ring drawn per entry.
     [SerializeField] private int[] densityThresholds = { 512, 256, 128, 64 };
 
     // A known density/radius pair used as the anchor; all rings are offset so this density lands at this radius

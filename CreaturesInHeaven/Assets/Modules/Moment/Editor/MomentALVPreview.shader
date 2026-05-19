@@ -3,7 +3,7 @@
 // Derived from VRC Light Volumes' own LightVolumesPreview shader, but a
 // kind of horrible mutant version that can evaluate per-voxel L1 SH to shade
 // each sphere with directional lighting.
-Shader "Hidden/ALVPreview" {
+Shader "Hidden/Moment/ALVPreview" {
 
     SubShader {
 
@@ -64,12 +64,12 @@ Shader "Hidden/ALVPreview" {
                 float3 col;
                 if (_SHMode == 1)
                 {
-                    // L0 only — ambient colour, no directionality.
+                    // L0 only: ambient colour, no directionality.
                     col = i.L0;
                 }
                 else if (_SHMode == 2)
                 {
-                    // L1 only — directionality magnitude. abs() prevents negative
+                    // L1 only: directionality magnitude. abs() prevents negative
                     // values clamping to black; the result shows where light comes from.
                     float lr = dot(i.L1r, n);
                     float lg = dot(i.L1g, n);

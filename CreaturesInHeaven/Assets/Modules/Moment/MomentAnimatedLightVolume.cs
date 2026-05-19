@@ -4,11 +4,11 @@ using VRC.SDKBase;
 using VRC.Udon;
 using VRCLightVolumes;
 
-public enum ALVBlendingMode { Replace, Add, Subtract, Multiply }
+public enum MomentALVBlendingMode { Replace, Add, Subtract, Multiply }
 
 // SH fidelity mode. Controls how many values are captured per voxel and how many
 // SH textures are packed per snapshot (Z = depth × numSlots).
-public enum ALVSHMode
+public enum MomentALVSHMode
 {
     [InspectorName("L1")]     L1,
     [InspectorName("MonoL1")] MonoL1,
@@ -16,27 +16,27 @@ public enum ALVSHMode
 }
 
 // Bit depth for the packed SH texture. Applies to whichever SH mode is in use.
-public enum ALVBitDepth
+public enum MomentALVBitDepth
 {
     [InspectorName("8 bits per channel")]  Depth8,
     [InspectorName("16 bits per channel")] Depth16,
 }
 
-public static class ALVFormat
+public static class MomentALVFormat
 {
     // Returns the number of SH texture slots for a given mode.
     // L1 = 3 slots, MonoL1 = 2 slots, MonoL0 = 1 slot.
-    public static int NumSlots(ALVSHMode shMode)
+    public static int NumSlots(MomentALVSHMode shMode)
     {
-        if (shMode == ALVSHMode.L1)     return 3;
-        if (shMode == ALVSHMode.MonoL1) return 2;
+        if (shMode == MomentALVSHMode.L1)     return 3;
+        if (shMode == MomentALVSHMode.MonoL1) return 2;
         return 1;
     }
 
     // Returns true when the packed texture uses UNORM encoding (values remapped to [0,1]).
     // The shader decodes back with value * 2 - 1.
-    public static bool IsUnorm(ALVSHMode shMode, ALVBitDepth bitDepth) =>
-        bitDepth == ALVBitDepth.Depth8 || (shMode == ALVSHMode.MonoL1 && bitDepth == ALVBitDepth.Depth16);
+    public static bool IsUnorm(MomentALVSHMode shMode, MomentALVBitDepth bitDepth) =>
+        bitDepth == MomentALVBitDepth.Depth8 || (shMode == MomentALVSHMode.MonoL1 && bitDepth == MomentALVBitDepth.Depth16);
 
     // Packed texture layout:
     //   X = spatial width  (unchanged)
@@ -44,37 +44,37 @@ public static class ALVFormat
     //   Z = spatial depth  * numSlots      (slot index stacked along Z)
 
     public static int PackedHeight(int spatialH, int numSnapshots) => spatialH * numSnapshots;
-    public static int PackedDepth(int spatialD, ALVSHMode shMode)  => spatialD * NumSlots(shMode);
+    public static int PackedDepth(int spatialD, MomentALVSHMode shMode)  => spatialD * NumSlots(shMode);
 
-    // Bytes per texel for the packed texture format. Mirrors the format selection in ALVTextureWriter.
+    // Bytes per texel for the packed texture format. Mirrors the format selection in MomentTextureWriter.
     // Used for asset size estimation.
     // MonoL1 uses RGB formats (no alpha), all others use RGBA.
-    public static int BytesPerTexel(ALVSHMode shMode, ALVBitDepth bitDepth)
+    public static int BytesPerTexel(MomentALVSHMode shMode, MomentALVBitDepth bitDepth)
     {
-        if (shMode == ALVSHMode.MonoL1 && bitDepth == ALVBitDepth.Depth8) return 3; // RGB24
-        if (shMode == ALVSHMode.MonoL1 && bitDepth == ALVBitDepth.Depth16) return 6; // RGB48
-        if (bitDepth == ALVBitDepth.Depth8) return 4; // RGBA32
+        if (shMode == MomentALVSHMode.MonoL1 && bitDepth == MomentALVBitDepth.Depth8) return 3; // RGB24
+        if (shMode == MomentALVSHMode.MonoL1 && bitDepth == MomentALVBitDepth.Depth16) return 6; // RGB48
+        if (bitDepth == MomentALVBitDepth.Depth8) return 4; // RGBA32
         return 8; // RGBAHalf
     }
 
     // VRAM occupied by a packed texture, in megabytes.
-    public static double VramMB(int w, int h, int d, int numSnapshots, ALVSHMode shMode, ALVBitDepth bitDepth) =>
+    public static double VramMB(int w, int h, int d, int numSnapshots, MomentALVSHMode shMode, MomentALVBitDepth bitDepth) =>
         (long)w * h * d * numSnapshots * (double)NumSlots(shMode) * BytesPerTexel(shMode, bitDepth) / (1024.0 * 1024.0);
 
     // AssetBundle compression ratios relative to uncompressed VRAM size.
     // Derived from noise (high/worst-case) and Gaussian-blob (low/realistic) bundle tests.
     // MonoL0 compresses better at the high end due to its sparser data.
-    // See ALV-BUNDLE-SIZE.md at the repo root for methodology and full data.
+    // See Moment-BUNDLE-SIZE.md at the repo root for methodology and full data.
     public const double BundleRatioLow    = 0.5;
     public const double BundleRatioHigh   = 0.9;
     public const double BundleRatioHighL0 = 0.7;
 
-    public static double BundleHighRatio(ALVSHMode shMode) =>
-        shMode == ALVSHMode.MonoL0 ? BundleRatioHighL0 : BundleRatioHigh;
+    public static double BundleHighRatio(MomentALVSHMode shMode) =>
+        shMode == MomentALVSHMode.MonoL0 ? BundleRatioHighL0 : BundleRatioHigh;
 }
 
 [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
-public class AnimatedLightVolume : UdonSharpBehaviour
+public class MomentAnimatedLightVolume : UdonSharpBehaviour
 {
     [Tooltip("The LightVolumeInstance whose atlas region this component writes into.")]
     public LightVolumeInstance TargetVolume;
@@ -90,10 +90,10 @@ public class AnimatedLightVolume : UdonSharpBehaviour
 
     // SH fidelity mode and bit depth of the packed texture. Set automatically by the
     // editor when AnimatedTexture is assigned via sidecar.
-    [HideInInspector] public ALVSHMode   SHMode   = ALVSHMode.MonoL1;
-    [HideInInspector] public ALVBitDepth BitDepth = ALVBitDepth.Depth8;
+    [HideInInspector] public MomentALVSHMode   SHMode   = MomentALVSHMode.MonoL1;
+    [HideInInspector] public MomentALVBitDepth BitDepth = MomentALVBitDepth.Depth8;
 
-    // Editor-only voxel preview state. Controlled by ALVEditor inspector.
+    // Editor-only voxel preview state. Controlled by MomentEInsAnimatedLightVolume inspector.
     [HideInInspector] public bool PreviewVoxels = false;
     [HideInInspector] public int PreviewSnapshot = 0;
 
@@ -105,13 +105,13 @@ public class AnimatedLightVolume : UdonSharpBehaviour
     [HideInInspector] public int BakeSnapshotCount = 8;
     [HideInInspector] public int BakeStartFrame = 0;
     [HideInInspector] public int BakeEndFrame = -1;
-    [HideInInspector] public ALVSHMode   BakeSHMode   = ALVSHMode.L1;
-    [HideInInspector] public ALVBitDepth BakeBitDepth = ALVBitDepth.Depth8;
+    [HideInInspector] public MomentALVSHMode   BakeSHMode   = MomentALVSHMode.L1;
+    [HideInInspector] public MomentALVBitDepth BakeBitDepth = MomentALVBitDepth.Depth8;
     [HideInInspector] public string BakeOutputName = "ALV_Bake";
     [HideInInspector] public bool BakeSettingsFoldout = false;
 #endif
     [Tooltip("How this volume's SH contribution is composited onto the atlas bake.")]
-    public ALVBlendingMode Blending = ALVBlendingMode.Add;
+    public MomentALVBlendingMode Blending = MomentALVBlendingMode.Add;
 
     [Tooltip("Animator that drives playback.")]
     public Animator AnimatorSource;
@@ -133,7 +133,7 @@ public class AnimatedLightVolume : UdonSharpBehaviour
     private Material _mat;
     private float _prevTime = -1f;
     private float _intensity = -1f;
-    private ALVBlendingMode _blendMode;
+    private MomentALVBlendingMode _blendMode;
     private bool _hasAnimTimeParam;
     private bool _hasIntensityParam;
 
@@ -159,7 +159,7 @@ public class AnimatedLightVolume : UdonSharpBehaviour
         _mat.SetTexture("_PackedTex", AnimatedTexture);
 
         NumSnapshots = AnimatedTexture.height / SnapshotY;
-        int numSlots = ALVFormat.NumSlots(SHMode);
+        int numSlots = MomentALVFormat.NumSlots(SHMode);
         _mat.SetInt("_NumSnapshots", NumSnapshots);
         _mat.SetFloat("_SnapshotScale", 1f / NumSnapshots);
         _mat.SetFloat("_SliceScale", 1f / numSlots);
@@ -167,7 +167,7 @@ public class AnimatedLightVolume : UdonSharpBehaviour
         _mat.SetInt("_SHMode",   (int)SHMode);
         _mat.SetInt("_BitDepth", (int)BitDepth);
 
-        bool isUnorm = ALVFormat.IsUnorm(SHMode, BitDepth);
+        bool isUnorm = MomentALVFormat.IsUnorm(SHMode, BitDepth);
         _mat.SetInt("_IsUnorm", isUnorm ? 1 : 0);
 
         _mat.SetInt("_BlendMode", (int)Blending);

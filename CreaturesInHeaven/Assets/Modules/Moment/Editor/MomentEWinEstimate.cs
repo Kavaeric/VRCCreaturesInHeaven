@@ -3,10 +3,10 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
-public class ALVEstimate : EditorWindow
+public class MomentEWinEstimate : EditorWindow
 {
     [MenuItem("Tools/Lighting/Estimate bake size...")]
-    static void Open() => GetWindow<ALVEstimate>("Estimate bake size");
+    static void Open() => GetWindow<MomentEWinEstimate>("Estimate bake size");
 
     Vector3Int _dimensions = Vector3Int.zero;
     int _snapshots = 80;
@@ -19,11 +19,11 @@ public class ALVEstimate : EditorWindow
 
     public void CreateGUI()
     {
-        string dir = ALVEditorUtils.ScriptDir();
-        var uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>($"{dir}/ALVEstimate.uxml");
+        string dir = MomentAssetPaths.ScriptDir();
+        var uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>($"{dir}/MomentEWinEstimate.uxml");
         if (uxml == null)
         {
-            rootVisualElement.Add(new Label($"ALVEstimate.uxml not found in {dir}."));
+            rootVisualElement.Add(new Label($"MomentEWinEstimate.uxml not found in {dir}."));
             return;
         }
         uxml.CloneTree(rootVisualElement);
@@ -70,10 +70,10 @@ public class ALVEstimate : EditorWindow
 
         for (int s = 0; s < 3; s++)
         {
-            var shMode = (ALVSHMode)s;
+            var shMode = (MomentALVSHMode)s;
             for (int b = 0; b < 2; b++)
             {
-                var bitDepth = (ALVBitDepth)b;
+                var bitDepth = (MomentALVBitDepth)b;
 
                 // VRAM table.
                 var vramCell = _vramCells[s, b];
@@ -82,7 +82,7 @@ public class ALVEstimate : EditorWindow
                     var label = vramCell.Q<Label>();
                     if (label != null)
                         label.text = valid
-                            ? $"{ALVFormat.VramMB(_dimensions.x, _dimensions.y, _dimensions.z, _snapshots, shMode, bitDepth):F1} MB"
+                            ? $"{MomentALVFormat.VramMB(_dimensions.x, _dimensions.y, _dimensions.z, _snapshots, shMode, bitDepth):F1} MB"
                             : "—";
                 }
 
@@ -97,9 +97,9 @@ public class ALVEstimate : EditorWindow
                     continue;
                 }
 
-                double vram = ALVFormat.VramMB(_dimensions.x, _dimensions.y, _dimensions.z, _snapshots, shMode, bitDepth);
-                lo.text = $"{vram * ALVFormat.BundleRatioLow:F1} MB";
-                hi.text = $"{vram * ALVFormat.BundleHighRatio(shMode):F1} MB";
+                double vram = MomentALVFormat.VramMB(_dimensions.x, _dimensions.y, _dimensions.z, _snapshots, shMode, bitDepth);
+                lo.text = $"{vram * MomentALVFormat.BundleRatioLow:F1} MB";
+                hi.text = $"{vram * MomentALVFormat.BundleHighRatio(shMode):F1} MB";
             }
         }
     }

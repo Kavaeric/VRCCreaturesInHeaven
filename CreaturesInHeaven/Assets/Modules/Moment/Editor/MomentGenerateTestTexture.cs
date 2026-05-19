@@ -2,18 +2,18 @@ using UnityEngine;
 using UnityEditor;
 using System;
 
-// Generates a set of packed ALV textures covering all supported format combinations.
+// Generates a set of packed Moment textures covering all supported format combinations.
 // Useful for measuring real AssetBundle compression ratios against the 0.315 estimate.
-public static class ALVGenerateTestTexture
+public static class MomentGenerateTestTexture
 {
     const int W = 4, H = 4, D = 4;
     const int NumSnapshots = 64;
 
-    [MenuItem("Tools/Lighting/Generate ALV format test textures")]
+    [MenuItem("Tools/Lighting/Generate Moment format test textures")]
     static void GenerateAll()
     {
-        string assetDir = ALVEditorUtils.SceneAssetDir() + "/FormatTest";
-        ALVEditorUtils.CreateDirectory(assetDir);
+        string assetDir = MomentAssetPaths.SceneAssetDir() + "/FormatTest";
+        MomentAssetPaths.CreateDirectory(assetDir);
 
         var rng = new System.Random(9);
 
@@ -21,7 +21,7 @@ public static class ALVGenerateTestTexture
         var snapshots = GaussianSnapshots(W, H, D, NumSnapshots, rng);
 
         var report = new System.Text.StringBuilder();
-        report.AppendLine($"ALV format test — {W}x{H}x{D}, {NumSnapshots} snapshots (Gaussian blobs)");
+        report.AppendLine($"Moment format test — {W}x{H}x{D}, {NumSnapshots} snapshots (Gaussian blobs)");
         report.AppendLine($"{DateTime.Now}");
         report.AppendLine();
         report.AppendLine(new string('-', 75));
@@ -29,15 +29,15 @@ public static class ALVGenerateTestTexture
 
         var generated = new System.Collections.Generic.List<(string name, string path, double vram)>();
 
-        foreach (ALVSHMode shMode in System.Enum.GetValues(typeof(ALVSHMode)))
+        foreach (MomentALVSHMode shMode in System.Enum.GetValues(typeof(MomentALVSHMode)))
         {
-            foreach (ALVBitDepth bitDepth in System.Enum.GetValues(typeof(ALVBitDepth)))
+            foreach (MomentALVBitDepth bitDepth in System.Enum.GetValues(typeof(MomentALVBitDepth)))
             {
-                string name = $"ALV_Test_{shMode}_{(bitDepth == ALVBitDepth.Depth8 ? "8bpc" : "16bpc")}";
+                string name = $"Moment_Test_{shMode}_{(bitDepth == MomentALVBitDepth.Depth8 ? "8bpc" : "16bpc")}";
                 string path = $"{assetDir}/{name}.asset";
-                ALVTextureWriter.SavePackedTexture(snapshots, W, H, D, path, shMode, bitDepth);
+                MomentTextureWriter.SavePackedTexture(snapshots, W, H, D, path, shMode, bitDepth);
 
-                double vram = ALVFormat.VramMB(W, H, D, NumSnapshots, shMode, bitDepth);
+                double vram = MomentALVFormat.VramMB(W, H, D, NumSnapshots, shMode, bitDepth);
                 generated.Add((name, path, vram));
             }
         }
@@ -54,7 +54,7 @@ public static class ALVGenerateTestTexture
 
         // Build bundles into a temp directory, then read the sizes back.
         string bundleOutDir = System.IO.Path.Combine(
-            Application.dataPath, "..", "Temp", "ALVFormatTestBundles");
+            Application.dataPath, "..", "Temp", "MomentFormatTestBundles");
         System.IO.Directory.CreateDirectory(bundleOutDir);
 
         // Each asset gets its own bundle by building them individually so sizes are per-format.
@@ -113,13 +113,13 @@ public static class ALVGenerateTestTexture
             Application.dataPath, "..", reportPath).Replace('\\', '/');
         System.IO.File.WriteAllText(absReportPath, report.ToString());
         AssetDatabase.ImportAsset(reportPath);
-        Debug.Log($"[ALVFormatTest] Report written to {reportPath}");
+        Debug.Log($"[Moment] Format test report written to {reportPath}");
     }
 
     // Generates numSnapshots of SH data mixing Gaussian point lights with static dark zones.
     // Lights pulse sinusoidally for temporal variation; dark zones are fixed in space,
     // producing stretches of near-zero values that mimic shadowed or unlit regions.
-    static ALVTextureWriter.SnapshotSH[] GaussianSnapshots(int w, int h, int d, int numSnapshots, System.Random rng)
+    static MomentTextureWriter.SnapshotSH[] GaussianSnapshots(int w, int h, int d, int numSnapshots, System.Random rng)
     {
         const int   numLights        = 8;
         const int   numBlockers      = 3;
@@ -143,7 +143,7 @@ public static class ALVGenerateTestTexture
             lightPhase[i]  = Rand01(rng) * 2 * Mathf.PI;
         }
 
-        // Blockers are wider than lights and static — they carve out spatially coherent
+        // Blockers are wider than lights and static. They carve out spatially coherent
         // dark regions without varying per-snapshot, which is realistic for shadowed areas.
         var blockerPos    = new Vector3[numBlockers];
         var blockerRadius = new float[numBlockers];
@@ -154,7 +154,7 @@ public static class ALVGenerateTestTexture
             blockerRadius[i] = Mathf.Max(2f, maxDim * Mathf.Lerp(blockerRadiusMin, blockerRadiusMax, Rand01(rng)));
         }
 
-        var snapshots = new ALVTextureWriter.SnapshotSH[numSnapshots];
+        var snapshots = new MomentTextureWriter.SnapshotSH[numSnapshots];
         for (int snap = 0; snap < numSnapshots; snap++)
         {
             float t     = numSnapshots > 1 ? (float)snap / numSnapshots : 0f;
@@ -221,7 +221,7 @@ public static class ALVGenerateTestTexture
                 tex2[idx] = new Color(L1r.y, L1g.y, L1b.y, L1b.z);
             }
 
-            snapshots[snap] = new ALVTextureWriter.SnapshotSH { tex0 = tex0, tex1 = tex1, tex2 = tex2 };
+            snapshots[snap] = new MomentTextureWriter.SnapshotSH { tex0 = tex0, tex1 = tex1, tex2 = tex2 };
         }
 
         return snapshots;

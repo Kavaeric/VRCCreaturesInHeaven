@@ -1,9 +1,9 @@
-// AnimatedLightVolume.shader
+// MomentAnimatedLightVolume.shader
 //
-// Internal shader used to sample an animated light volume snapshot texture and
-// apply it to a VRC Light Volumes atlas.
+// Internal shader used by Moment to sample an animated light volume snapshot texture
+// and apply it to a VRC Light Volumes atlas.
 
-Shader "Hidden/AnimatedLightVolume"
+Shader "Hidden/Moment/AnimatedLightVolume"
 {
     Properties
     {
@@ -26,18 +26,18 @@ Shader "Hidden/AnimatedLightVolume"
         // Normalised playback position: 0 = first snapshot, 1 = last snapshot.
         _Time4D ("Time", Range(0, 1)) = 0
 
-        // Blending mode (matches ALVBlendingMode enum):
+        // Blending mode (matches MomentALVBlendingMode enum):
         // 0 = Replace, 1 = Add, 2 = Subtract, 3 = Multiply
         _BlendMode ("Blend Mode", Int) = 1
 
         // Scales the SH contribution before blending.
         _Intensity ("Intensity", Range(0, 1)) = 1
 
-        // SH fidelity mode (matches ALVSHMode enum):
+        // SH fidelity mode (matches MomentALVSHMode enum):
         // 0 = L1 (full, 3 slots), 1 = MonoL1 (2 slots), 2 = MonoL0 (1 slot)
         _SHMode ("SH Mode", Int) = 0
 
-        // Bit depth (matches ALVBitDepth enum):
+        // Bit depth (matches MomentALVBitDepth enum):
         // 0 = Depth8 (RGBA32/RGB24 UNORM), 1 = Depth16 (RGBAHalf float or RGB48 UNORM)
         _BitDepth ("Bit Depth", Int) = 0
 

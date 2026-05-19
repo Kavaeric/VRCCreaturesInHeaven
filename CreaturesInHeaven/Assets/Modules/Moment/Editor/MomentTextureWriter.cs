@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using VRCLightVolumes;
 
-// Texture generation tool for AnimatedLightVolume.
+// Texture generation tool for the Moment module.
 // Produces a packed Texture3D with layout:
 //   X = spatial width
 //   Y = spatial height * numSnapshots  (snapshot 0 at Y=0, snapshot 1 at Y=H, etc.)
@@ -12,18 +12,18 @@ using VRCLightVolumes;
 //   Tex0: (L0.r,  L0.g,  L0.b,  L1r.z)
 //   Tex1: (L1r.x, L1g.x, L1b.x, L1g.z)
 //   Tex2: (L1r.y, L1g.y, L1b.y, L1b.z)
-public static class ALVTextureWriter
+public static class MomentTextureWriter
 {
     // Builds a packed Texture3D from an array of SnapshotSH and saves it at the given asset path.
     // Each SnapshotSH.tex0/1/2 must be a Color[] of length w*h*d in XYZ order (x fastest).
     // If an asset already exists at that path, its pixel data is updated in place so serialised
     // references (GUIDs) remain stable.
     public static void SavePackedTexture(SnapshotSH[] snapshots, int w, int h, int d, string assetPath,
-        ALVSHMode shMode = ALVSHMode.L1, ALVBitDepth bitDepth = ALVBitDepth.Depth8)
+        MomentALVSHMode shMode = MomentALVSHMode.L1, MomentALVBitDepth bitDepth = MomentALVBitDepth.Depth8)
     {
         int numSnapshots = snapshots.Length;
-        int totalHeight  = ALVFormat.PackedHeight(h, numSnapshots);
-        int totalDepth   = ALVFormat.PackedDepth(d, shMode);
+        int totalHeight  = MomentALVFormat.PackedHeight(h, numSnapshots);
+        int totalDepth   = MomentALVFormat.PackedDepth(d, shMode);
 
         Color[] pixels = new Color[w * totalHeight * totalDepth];
 
@@ -32,14 +32,14 @@ public static class ALVTextureWriter
             int yOffset = s * h;
             switch (shMode)
             {
-                case ALVSHMode.L1:
-                    // Full: 3 slots — tex0/1/2 passed through as-is.
+                case MomentALVSHMode.L1:
+                    // Full: 3 slots: tex0/1/2 passed through as-is.
                     CopyBlock(pixels, snapshots[s].tex0, w, totalHeight, h, d, yOffset, 0);
                     CopyBlock(pixels, snapshots[s].tex1, w, totalHeight, h, d, yOffset, d);
                     CopyBlock(pixels, snapshots[s].tex2, w, totalHeight, h, d, yOffset, d * 2);
                     break;
 
-                case ALVSHMode.MonoL1:
+                case MomentALVSHMode.MonoL1:
                 {
                     // 2 slots: Tex0 = (L0.r, L0.g, L0.b, 0), Tex1 = (L1.x, L1.y, L1.z, 0).
                     Color[] t0 = new Color[w * h * d];
@@ -50,7 +50,7 @@ public static class ALVTextureWriter
                     break;
                 }
 
-                case ALVSHMode.MonoL0:
+                case MomentALVSHMode.MonoL0:
                 {
                     // 1 slot: Tex0 = (L0, L1.x, L1.y, L1.z).
                     Color[] t0 = new Color[w * h * d];
@@ -64,7 +64,7 @@ public static class ALVTextureWriter
         // UNORM formats need signed SH values remapped from [-1,1] to [0,1] for storage.
         // The shader decodes back with value * 2 - 1.
         // RGB48 (MonoL1+Depth16) is also UNORM, so it needs the same remap as the Depth8 cases.
-        bool isUnorm = ALVFormat.IsUnorm(shMode, bitDepth);
+        bool isUnorm = MomentALVFormat.IsUnorm(shMode, bitDepth);
         if (isUnorm)
         {
             for (int i = 0; i < pixels.Length; i++)
@@ -79,9 +79,9 @@ public static class ALVTextureWriter
         // All other modes need alpha (L1 stores Lx.z there; MonoL0 stores L1.z in alpha).
         TextureFormat texFormat = (shMode, bitDepth) switch
         {
-            (ALVSHMode.MonoL1, ALVBitDepth.Depth8)  => TextureFormat.RGB24,
-            (ALVSHMode.MonoL1, ALVBitDepth.Depth16) => TextureFormat.RGB48,
-            (_,                ALVBitDepth.Depth8)  => TextureFormat.RGBA32,
+            (MomentALVSHMode.MonoL1, MomentALVBitDepth.Depth8)  => TextureFormat.RGB24,
+            (MomentALVSHMode.MonoL1, MomentALVBitDepth.Depth16) => TextureFormat.RGB48,
+            (_,                MomentALVBitDepth.Depth8)  => TextureFormat.RGBA32,
             _                                       => TextureFormat.RGBAHalf,
         };
 
@@ -110,7 +110,7 @@ public static class ALVTextureWriter
         }
 
         AssetDatabase.SaveAssets();
-        Debug.Log($"[GenerateALVTexture] Saved {assetPath} ({w}x{totalHeight}x{totalDepth}, {numSnapshots} snapshots, {shMode}, {bitDepth})");
+        Debug.Log($"[Moment] Saved {assetPath} ({w}x{totalHeight}x{totalDepth}, {numSnapshots} snapshots, {shMode}, {bitDepth})");
     }
 
     // MonoL1: collapses the three per-channel L1 direction vectors into one shared direction,
@@ -148,9 +148,9 @@ public static class ALVTextureWriter
         return denom > 1e-6f ? (l0r * L1r + l0g * L1g + l0b * L1b) / denom : Vector3.zero;
     }
 
-    // Forwards to ALVFormat.BytesPerTexel; kept here for call-site compatibility.
-    public static int BytesPerTexel(ALVSHMode shMode, ALVBitDepth bitDepth) =>
-        ALVFormat.BytesPerTexel(shMode, bitDepth);
+    // Forwards to MomentALVFormat.BytesPerTexel; kept here for call-site compatibility.
+    public static int BytesPerTexel(MomentALVSHMode shMode, MomentALVBitDepth bitDepth) =>
+        MomentALVFormat.BytesPerTexel(shMode, bitDepth);
 
     // Applies SH dering per voxel to suppress L1 ringing from area lights.
     // Mirrors LVUtils.DeringSingleSH: clamps each channel's L1 magnitude to L0 * 1.13.

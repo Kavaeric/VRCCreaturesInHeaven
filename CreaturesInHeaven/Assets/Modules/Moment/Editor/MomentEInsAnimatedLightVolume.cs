@@ -3,8 +3,8 @@ using UnityEditor;
 using UnityEngine.Rendering;
 using VRCLightVolumes;
 
-[CustomEditor(typeof(AnimatedLightVolume))]
-public class ALVEditor : Editor
+[CustomEditor(typeof(MomentAnimatedLightVolume))]
+public class MomentEInsAnimatedLightVolume : Editor
 {
     Texture3D _prevTexture;
 
@@ -23,8 +23,8 @@ public class ALVEditor : Editor
     bool _prevSliceX, _prevSliceY, _prevSliceZ;
     int _prevSliceXVal, _prevSliceYVal, _prevSliceZVal;
 
-    enum ALVSHDisplayMode { Full, L0Only, L1Only }
-    ALVSHDisplayMode _previewSHDisplay;
+    enum SHDisplayMode { Full, L0Only, L1Only }
+    SHDisplayMode _previewSHDisplay;
 
     void OnDisable()
     {
@@ -44,7 +44,7 @@ public class ALVEditor : Editor
     {
         serializedObject.Update();
 
-        AnimatedLightVolume alv = (AnimatedLightVolume)target;
+        MomentAnimatedLightVolume alv = (MomentAnimatedLightVolume)target;
 
         // --- Setup ---------------------------------------------------
         EditorGUILayout.LabelField("Setup", EditorStyles.boldLabel);
@@ -60,23 +60,13 @@ public class ALVEditor : Editor
         {
             _prevTexture = alv.AnimatedTexture;
             if (alv.AnimatedTexture != null)
-            {
-                string texPath = AssetDatabase.GetAssetPath(alv.AnimatedTexture);
-                ALVTextureInfo info = ALVTextureInfo.Load(texPath);
-                if (info != null)
-                {
-                    alv.SnapshotY = info.snapshotY;
-                    alv.SHMode    = info.shMode;
-                    alv.BitDepth  = info.bitDepth;
-                    EditorUtility.SetDirty(alv);
-                }
-            }
+                MomentTextureInfo.Load(AssetDatabase.GetAssetPath(alv.AnimatedTexture))?.ApplyTo(alv);
         }
 
         EditorGUILayout.Space(4);
 
         if (GUILayout.Button("Set Up CRT", GUILayout.Height(32)))
-            ALVEditorUtils.SetupCRT(alv);
+            MomentCRTSetup.SetupCRT(alv);
 
         if (alv.Crt != null && alv.TargetVolume == null)
             EditorGUILayout.HelpBox("Assign a Target Volume to complete setup.", MessageType.Warning);
@@ -110,25 +100,13 @@ public class ALVEditor : Editor
         }
         else
         {
-            // Read the current value of the parameter from the animator, if it exists.
-            float currentTime = 0f;
-            bool paramFound = false;
-            foreach (var param in animator.parameters)
-            {
-                if (param.name == alv.AnimTimeParameter && param.type == AnimatorControllerParameterType.Float)
-                {
-                    currentTime = animator.GetFloat(alv.AnimTimeParameter);
-                    paramFound = true;
-                    break;
-                }
-            }
-
-            if (!paramFound)
+            float? currentTime = MomentSceneQuery.FindAnimatorFloatParam(animator, alv.AnimTimeParameter);
+            if (currentTime == null)
                 EditorGUILayout.HelpBox($"Parameter \"{alv.AnimTimeParameter}\" not found on the Animator. Make sure it exists and is a Float.", MessageType.Warning);
             else
             {
                 EditorGUI.BeginDisabledGroup(true);
-                EditorGUILayout.Slider(new GUIContent("Current time", "Current value of the Animator parameter. Read-only."), currentTime, 0f, 1f);
+                EditorGUILayout.Slider(new GUIContent("Current time", "Current value of the Animator parameter. Read-only."), currentTime.Value, 0f, 1f);
                 EditorGUI.EndDisabledGroup();
             }
         }
@@ -163,7 +141,7 @@ public class ALVEditor : Editor
                 EditorGUILayout.HelpBox("Assign an Animation texture to preview voxels.", MessageType.Info);
             }
 
-            ALVSHDisplayMode newMode = (ALVSHDisplayMode)EditorGUILayout.EnumPopup("SH display", _previewSHDisplay);
+            SHDisplayMode newMode = (SHDisplayMode)EditorGUILayout.EnumPopup("SH display", _previewSHDisplay);
             if (newMode != _previewSHDisplay)
             {
                 _previewSHDisplay = newMode;
@@ -201,8 +179,8 @@ public class ALVEditor : Editor
             alv.BakeEndFrame   = EditorGUILayout.IntField("End frame (-1 = full)", alv.BakeEndFrame);
             EditorGUILayout.EndHorizontal();
 
-            alv.BakeSHMode   = (ALVSHMode)  EditorGUILayout.EnumPopup("SH mode",   alv.BakeSHMode);
-            alv.BakeBitDepth = (ALVBitDepth)EditorGUILayout.EnumPopup("Bit depth", alv.BakeBitDepth);
+            alv.BakeSHMode   = (MomentALVSHMode)  EditorGUILayout.EnumPopup("SH mode",   alv.BakeSHMode);
+            alv.BakeBitDepth = (MomentALVBitDepth)EditorGUILayout.EnumPopup("Bit depth", alv.BakeBitDepth);
             alv.BakeOutputName = EditorGUILayout.TextField("Output name", alv.BakeOutputName);
 
             if (EditorGUI.EndChangeCheck())
@@ -218,7 +196,7 @@ public class ALVEditor : Editor
         if (alv.AnimatedTexture != null)
         {
             int numSnapshots = alv.AnimatedTexture.height / alv.SnapshotY;
-            int snapshotZ    = alv.AnimatedTexture.depth / ALVFormat.NumSlots(alv.SHMode);
+            int snapshotZ    = alv.AnimatedTexture.depth / MomentALVFormat.NumSlots(alv.SHMode);
             EditorGUILayout.LabelField("Snapshot size", $"{alv.AnimatedTexture.width} x {alv.SnapshotY} x {snapshotZ}");
             EditorGUILayout.LabelField("Snapshots", numSnapshots.ToString());
         }
@@ -247,7 +225,7 @@ public class ALVEditor : Editor
 
     void OnSceneGUI()
     {
-        AnimatedLightVolume alv = (AnimatedLightVolume)target;
+        MomentAnimatedLightVolume alv = (MomentAnimatedLightVolume)target;
         if (!alv.PreviewVoxels) return;
         if (alv.TargetVolume == null) return;
 
@@ -297,7 +275,7 @@ public class ALVEditor : Editor
             {
                 snapshotSize.x  = tex.width;
                 snapshotSize.y  = alv.SnapshotY;
-                snapshotSize.z  = tex.depth / ALVFormat.NumSlots(alv.SHMode);
+                snapshotSize.z  = tex.depth / MomentALVFormat.NumSlots(alv.SHMode);
                 texSize         = new Vector3Int(tex.width, tex.height, tex.depth);
                 int snapshotIdx = Mathf.Clamp(previewSnapshot, 0, texSize.y / snapshotSize.y - 1);
                 snapshotOrigin  = snapshotIdx * snapshotSize.y;
@@ -356,7 +334,7 @@ public class ALVEditor : Editor
             _previewMesh = LVUtils.GenerateIcoSphere(0.5f, 0);
 
         if (_previewMaterial == null)
-            _previewMaterial = new Material(Shader.Find("Hidden/ALVPreview"));
+            _previewMaterial = new Material(Shader.Find("Hidden/Moment/ALVPreview"));
 
         float radius = Mathf.Min(scl.x / res.x, Mathf.Min(scl.y / res.y, scl.z / res.z)) / 4f;
         _previewMaterial.SetBuffer("_Positions", _posBuf);

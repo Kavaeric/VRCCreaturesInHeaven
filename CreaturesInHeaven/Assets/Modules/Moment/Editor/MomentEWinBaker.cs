@@ -77,7 +77,7 @@ public class MomentEWinBaker : EditorWindow
 
     // --- Window lifecycle -----------------------------------------------
 
-    [MenuItem("Tools/Lighting/Bake animated light volume...")]
+    [MenuItem("Tools/Moment ALV/Bake animated light volume...")]
     static void Open() => GetWindow<MomentEWinBaker>("Bake animated light volume");
 
     void OnEnable()
@@ -131,6 +131,12 @@ public class MomentEWinBaker : EditorWindow
     public void CreateGUI()
     {
         string dir = MomentAssetPaths.ScriptDir();
+
+        // Set window icon
+        string iconPath = $"{dir}/Resources/Icon Moment EWin Baker@2x.png";
+        Texture2D windowIcon = AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
+        titleContent = new GUIContent("Bake ALV", windowIcon);
+
         var uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>($"{dir}/MomentEWinBaker.uxml");
         if (uxml == null)
         {

@@ -182,49 +182,48 @@ public class HeartacheEUITransport : EditorWindow
 
     public void CreateGUI()
     {
+        string dir = ScriptDir();
+
         // Set window icon
-        string iconPath = $"{ScriptDir()}/Resources/Icons/Icon EUI HeartacheTransport@2x.png";
+        string iconPath = $"{dir}/Resources/Icons/Icon EUI HeartacheTransport@2x.png";
         Texture2D windowIcon = AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
         titleContent = new GUIContent("Transport", windowIcon);
 
-        var root = rootVisualElement;
-
-        string dir = ScriptDir();
         var uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>($"{dir}/HeartacheEUITransport.uxml");
         if (uxml == null)
         {
-            root.Add(new Label($"HeartacheEUITransport.uxml not found in {dir}. Try reimporting the folder."));
+            rootVisualElement.Add(new Label($"HeartacheEUITransport.uxml not found in {dir}. Try reimporting the folder."));
             return;
         }
-        uxml.CloneTree(root);
+        uxml.CloneTree(rootVisualElement);
 
         // Cache element refs
-        _timestampMeasure = root.Q<Label>("timestamp-measure");
-        _timestampBeat = root.Q<Label>("timestamp-beat");
-        _timestampTick = root.Q<Label>("timestamp-tick");
-        _cueMarker = root.Q<Label>("cue-marker");
-        _cueLyric = root.Q<Label>("cue-lyric");
-        _cueSection = root.Q<Label>("cue-section");
-        _valMeasureIndex = root.Q<TextField>("val-measure-index-numerator");
-        _valMeasureIndexMax = root.Q<Label>("val-measure-index-denominator");
-        _valBeatIndex = root.Q<TextField>("val-beat-index-numerator");
-        _valBeatIndexMax = root.Q<Label>("val-beat-index-denominator");
-        _valTickIndex = root.Q<TextField>("val-tick-index-numerator");
-        _valTickIndexMax = root.Q<Label>("val-tick-index-denominator");
-        _valTimeMs = root.Q<TextField>("val-time-ms");
-        _valTimeS = root.Q<TextField>("val-time-s");
-        _valTimeNorm = root.Q<TextField>("val-time-norm");
-        _statusEngine = root.Q<Label>("status-engine");
-        _animClipName = root.Q<Label>("anim-clip-name");
-        _animClipBeatFrame = root.Q<Label>("anim-clip-beat-frame-numerator");
-        _animClipBeatFrameMax = root.Q<Label>("anim-clip-beat-frame-denominator");
-        _animFrameIndex = root.Q<TextField>("anim-frame-index");
-        _animFrameIndexMax = root.Q<Label>("anim-frame-index-max");
-        _animResolution = root.Q<Label>("anim-resolution");
-        _animResolutionIcon = root.Q<Image>("anim-resolution-icon");
-        _playBtn = root.Q<Button>("play-btn");
-        _markersGrid = root.Q<VisualElement>("markers-grid");
-        _cuesPathLabel = root.Q<Label>("cues-path-label");
+        _timestampMeasure = rootVisualElement.Q<Label>("timestamp-measure");
+        _timestampBeat = rootVisualElement.Q<Label>("timestamp-beat");
+        _timestampTick = rootVisualElement.Q<Label>("timestamp-tick");
+        _cueMarker = rootVisualElement.Q<Label>("cue-marker");
+        _cueLyric = rootVisualElement.Q<Label>("cue-lyric");
+        _cueSection = rootVisualElement.Q<Label>("cue-section");
+        _valMeasureIndex = rootVisualElement.Q<TextField>("val-measure-index-numerator");
+        _valMeasureIndexMax = rootVisualElement.Q<Label>("val-measure-index-denominator");
+        _valBeatIndex = rootVisualElement.Q<TextField>("val-beat-index-numerator");
+        _valBeatIndexMax = rootVisualElement.Q<Label>("val-beat-index-denominator");
+        _valTickIndex = rootVisualElement.Q<TextField>("val-tick-index-numerator");
+        _valTickIndexMax = rootVisualElement.Q<Label>("val-tick-index-denominator");
+        _valTimeMs = rootVisualElement.Q<TextField>("val-time-ms");
+        _valTimeS = rootVisualElement.Q<TextField>("val-time-s");
+        _valTimeNorm = rootVisualElement.Q<TextField>("val-time-norm");
+        _statusEngine = rootVisualElement.Q<Label>("status-engine");
+        _animClipName = rootVisualElement.Q<Label>("anim-clip-name");
+        _animClipBeatFrame = rootVisualElement.Q<Label>("anim-clip-beat-frame-numerator");
+        _animClipBeatFrameMax = rootVisualElement.Q<Label>("anim-clip-beat-frame-denominator");
+        _animFrameIndex = rootVisualElement.Q<TextField>("anim-frame-index");
+        _animFrameIndexMax = rootVisualElement.Q<Label>("anim-frame-index-max");
+        _animResolution = rootVisualElement.Q<Label>("anim-resolution");
+        _animResolutionIcon = rootVisualElement.Q<Image>("anim-resolution-icon");
+        _playBtn = rootVisualElement.Q<Button>("play-btn");
+        _markersGrid = rootVisualElement.Q<VisualElement>("markers-grid");
+        _cuesPathLabel = rootVisualElement.Q<Label>("cues-path-label");
 
         string iconDir = $"{dir}/Resources/Icons";
         _noteIcons = new Dictionary<string, Texture2D>
@@ -274,9 +273,9 @@ public class HeartacheEUITransport : EditorWindow
         });
 
         // Buttons
-        root.Q<Button>("load-cues-btn").clicked += PromptLoadCues;
+        rootVisualElement.Q<Button>("load-cues-btn").clicked += PromptLoadCues;
 
-        root.Q<Button>("refresh-btn").clicked += () =>
+        rootVisualElement.Q<Button>("refresh-btn").clicked += () =>
         {
             FindMusicEngine();
             FindAnimationWindow();
@@ -293,15 +292,15 @@ public class HeartacheEUITransport : EditorWindow
             UpdateReadout();
         };
 
-        root.Q<Button>("stop-btn").clicked += () => { StopPlayback(); SeekToNorm(0f); };
-        root.Q<Button>("step-back-btn").clicked += () => Step(-1);
-        root.Q<Button>("step-fwd-btn").clicked += () => Step(1);
+        rootVisualElement.Q<Button>("stop-btn").clicked += () => { StopPlayback(); SeekToNorm(0f); };
+        rootVisualElement.Q<Button>("step-back-btn").clicked += () => Step(-1);
+        rootVisualElement.Q<Button>("step-fwd-btn").clicked += () => Step(1);
 
-        var stepAmountField = root.Q<IntegerField>("step-amount");
+        var stepAmountField = rootVisualElement.Q<IntegerField>("step-amount");
         stepAmountField.value = _stepAmount;
         stepAmountField.RegisterValueChangedCallback(e => _stepAmount = e.newValue);
 
-        var stepUnitField = root.Q<EnumField>("step-unit");
+        var stepUnitField = rootVisualElement.Q<EnumField>("step-unit");
         stepUnitField.Init(_stepUnit);
         stepUnitField.RegisterValueChangedCallback(e => _stepUnit = (StepUnit)e.newValue);
 

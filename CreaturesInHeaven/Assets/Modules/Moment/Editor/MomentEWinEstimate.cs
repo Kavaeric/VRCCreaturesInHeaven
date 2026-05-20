@@ -5,8 +5,8 @@ using UnityEngine.UIElements;
 
 public class MomentEWinEstimate : EditorWindow
 {
-    [MenuItem("Tools/Lighting/Estimate bake size...")]
-    static void Open() => GetWindow<MomentEWinEstimate>("Estimate bake size");
+    [MenuItem("Tools/Moment ALV/Estimate bake size...")]
+    static void Open() => GetWindow<MomentEWinEstimate>("Estimate ALV size");
 
     Vector3Int _dimensions = Vector3Int.zero;
     int _snapshots = 80;
@@ -20,6 +20,12 @@ public class MomentEWinEstimate : EditorWindow
     public void CreateGUI()
     {
         string dir = MomentAssetPaths.ScriptDir();
+
+        // Set window icon
+        string iconPath = $"{dir}/Resources/Icon Moment EWin Estimate@2x.png";
+        Texture2D windowIcon = AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
+        titleContent = new GUIContent("Estimate ALV size", windowIcon);
+
         var uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>($"{dir}/MomentEWinEstimate.uxml");
         if (uxml == null)
         {

@@ -9,7 +9,7 @@ public static class MomentGenerateTestTexture
     const int W = 4, H = 4, D = 4;
     const int NumSnapshots = 64;
 
-    [MenuItem("Tools/Lighting/Generate Moment format test textures")]
+    // [MenuItem("Tools/Moment ALV/Generate Moment format test textures")]
     static void GenerateAll()
     {
         string assetDir = MomentAssetPaths.SceneAssetDir() + "/FormatTest";

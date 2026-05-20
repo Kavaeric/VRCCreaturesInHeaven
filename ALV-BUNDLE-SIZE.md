@@ -87,7 +87,7 @@ making it easy pickings for compression.
 
 ### The 0.315 ratio is far too optimistic
 
-Even for L1+16bpc, the format it was presumably derived from, the noise worst-case is
+Even for L1 + 16bpc, the format it was presumably derived from, the noise worst-case is
 0.863, and the Gaussian realistic estimate is 0.571. Both are well above 0.315; the
 final bundle size being nearly twice as large as the estimate would lead one to believe.
 

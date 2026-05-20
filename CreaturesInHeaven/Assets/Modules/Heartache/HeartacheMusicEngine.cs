@@ -16,8 +16,8 @@ public class HeartacheMusicEngine : UdonSharpBehaviour
 
     // Hack for starting playback at a specific time. Useful for debugging.
     [Tooltip("Debugging function for starting playback ahead of time. Useful for debugging.\n\n" +
-             "[D1] 0.25" +
-             "[F1] 0.45" +
+             "[D1] 0.25\n" +
+             "[F1] 0.45\n" +
              "[G3] 0.655")]
     public float CustomStartTime = 0f;
 

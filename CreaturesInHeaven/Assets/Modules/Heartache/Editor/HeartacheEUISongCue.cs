@@ -13,7 +13,7 @@ public class HeartacheEUISongCue
 }
 
 [Serializable]
-public class SongCueList
+public class HeartacheEUISongCueList
 {
     public HeartacheEUISongCue[] cues;
 }

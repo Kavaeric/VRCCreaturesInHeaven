@@ -65,7 +65,7 @@ public class HeartacheMusicEngine : UdonSharpBehaviour
     public bool IsOwner => Networking.IsOwner(Networking.LocalPlayer, gameObject);
 
     // --- Inspector references (audience) -----------------------------
-    public HeartacheAudienceManager AudienceManager;
+    [SerializeField] private HeartacheAudienceManager AudienceManager;
 
     // --- Tick event system -------------------------------------------
     // Each Update(), if the tick index has advanced, all TickListeners
@@ -73,15 +73,15 @@ public class HeartacheMusicEngine : UdonSharpBehaviour
     // determine the tick type without needing to do their own modulo math.
     public bool TickIsMeasure { get; private set; }
     public bool TickIsBeat { get; private set; }
-    public UdonBehaviour[] TickListeners;
+    [SerializeField] private UdonBehaviour[] TickListeners;
     private int _lastTickIndex = -1;
 
     // --- Inspector references -----------------------------------------
 
     public AudioSource MusicPlayer;
     public AudioSource MusicPlayerLobby;
-    public Animator[] animators;
-    public UdonBehaviour[] SequenceListeners;
+    [SerializeField] private Animator[] Animators;
+    [SerializeField] private UdonBehaviour[] SequenceListeners;
     public AnchorTeleport StartTeleporter;
     public Button ButtonStart;
     public Button ButtonJoin;
@@ -111,23 +111,24 @@ public class HeartacheMusicEngine : UdonSharpBehaviour
     // all players to the start point via network trigger.
     public void StartButtonPressed()
     {
-        Networking.SetOwner(Networking.LocalPlayer, gameObject);
-        LocalAnimationTime = 0.0f;
-        _syncedAnimationTime = 0.0f;
-        _syncedPlaying = true;
-        PlayFromTime(0.0f);
-        StartTeleporter.TeleportNetwork();
+        StartPlaybackFromTime(0.0f);
     }
 
     // Temporary debug function that starts playback from a given time
     // because I can't use TextField.text in Udon for some reason.
+    // Separate method (not a parameter) because Udon button events can't pass arguments.
     public void StartButtonPressedForward()
     {
+        StartPlaybackFromTime(CustomStartTime);
+    }
+
+    private void StartPlaybackFromTime(float time)
+    {
         Networking.SetOwner(Networking.LocalPlayer, gameObject);
-        LocalAnimationTime = CustomStartTime;
-        _syncedAnimationTime = CustomStartTime;
+        LocalAnimationTime = time;
+        _syncedAnimationTime = time;
         _syncedPlaying = true;
-        PlayFromTime(CustomStartTime);
+        PlayFromTime(time);
         StartTeleporter.TeleportNetwork();
     }
 
@@ -160,11 +161,20 @@ public class HeartacheMusicEngine : UdonSharpBehaviour
     {
         MusicPlayer.Stop();
         MusicPlayerLobby.Stop();
-        for (int i = 0; i < animators.Length; i++)
-            if (animators[i] != null) animators[i].SetFloat("_Time", 0f);
+        for (int i = 0; i < Animators.Length; i++)
+            if (Animators[i] != null) Animators[i].SetFloat("_Time", 0f);
         for (int i = 0; i < SequenceListeners.Length; i++)
             if (SequenceListeners[i] != null)
                 SequenceListeners[i].SendCustomEvent("OnSequenceStop");
+    }
+
+    private void DriveAnimatorsAndSequences(float normTime)
+    {
+        for (int i = 0; i < Animators.Length; i++)
+            if (Animators[i] != null) Animators[i].SetFloat("_Time", normTime);
+        for (int i = 0; i < SequenceListeners.Length; i++)
+            if (SequenceListeners[i] != null)
+                SequenceListeners[i].SendCustomEvent("OnSequenceUpdate");
     }
 
     void Update()
@@ -212,15 +222,11 @@ public class HeartacheMusicEngine : UdonSharpBehaviour
             _lastTickIndex = -1;
         }
 
-        if (Networking.IsOwner(Networking.LocalPlayer, gameObject))
+        if (IsOwner)
         {
             // Owner drives synced time, animators, and sequences from their local audio position.
             _syncedAnimationTime = LocalAnimationTime;
-            for (int i = 0; i < animators.Length; i++)
-                if (animators[i] != null) animators[i].SetFloat("_Time", _syncedAnimationTime);
-            for (int i = 0; i < SequenceListeners.Length; i++)
-                if (SequenceListeners[i] != null)
-                    SequenceListeners[i].SendCustomEvent("OnSequenceUpdate");
+            DriveAnimatorsAndSequences(_syncedAnimationTime);
 
             if (!MusicPlayer.isPlaying && _syncedPlaying)
             {
@@ -245,11 +251,7 @@ public class HeartacheMusicEngine : UdonSharpBehaviour
         else
         {
             // Non-owners run their own audio independently and animate from local time.
-            for (int i = 0; i < animators.Length; i++)
-                if (animators[i] != null) animators[i].SetFloat("_Time", LocalAnimationTime);
-            for (int i = 0; i < SequenceListeners.Length; i++)
-                if (SequenceListeners[i] != null)
-                    SequenceListeners[i].SendCustomEvent("OnSequenceUpdate");
+            DriveAnimatorsAndSequences(LocalAnimationTime);
 
             // Drift correction: compare local position against where the owner is
             // predicted to be now (synced position + time elapsed since last sync).

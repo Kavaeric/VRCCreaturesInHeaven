@@ -14,7 +14,7 @@ public class HeartacheTempoMonitor : UdonSharpBehaviour
     [SerializeField] private HeartacheAudienceManager audienceManager;
 
     // --- Inspector references -----------------------------------------
-    [Header("Metronome")]
+    [Header("Readout")]
     [SerializeField] private TMP_Text ReadoutMetronome;
 
     [Header("Measure index")]
@@ -124,42 +124,46 @@ public class HeartacheTempoMonitor : UdonSharpBehaviour
 
     private void Update()
     {
+        float localTime = musicEngine.LocalAnimationTime;
+        float songSecs = localTime * musicEngine.SongLengthInSeconds;
+
         // Metronome readout
-        ReadoutMetronome.text = DimLeadingZeros(Mathf.Floor((musicEngine.LocalAnimationTime * musicEngine.SongMeasures) + 1).ToString("000"))
+        ReadoutMetronome.text = DimLeadingZeros(Mathf.Floor((localTime * musicEngine.SongMeasures) + 1).ToString("000"))
             + "<color=#FFFFFF10>:</color>"
-            + (Mathf.Floor((musicEngine.LocalAnimationTime * musicEngine.SongBeats)) % musicEngine.BeatsPerMeasure + 1).ToString("0")
+            + (Mathf.Floor((localTime * musicEngine.SongBeats)) % musicEngine.BeatsPerMeasure + 1).ToString("0")
             + "<color=#FFFFFF10>.</color>"
-            + DimLeadingZeros((Mathf.Floor(musicEngine.LocalAnimationTime * musicEngine.SongTicks) % musicEngine.TicksPerBeat + 1).ToString("00"));
+            + DimLeadingZeros((Mathf.Floor(localTime * musicEngine.SongTicks) % musicEngine.TicksPerBeat + 1).ToString("00"));
 
         // Measure index
-        ReadoutMeasureIndex.text = DimLeadingZeros(Mathf.Floor(musicEngine.LocalAnimationTime * musicEngine.SongMeasures).ToString("000"));
+        ReadoutMeasureIndex.text = DimLeadingZeros(Mathf.Floor(localTime * musicEngine.SongMeasures).ToString("000"));
         ReadoutMeasureIndexMax.text = DimLeadingZeros((Mathf.Floor(musicEngine.SongMeasures).ToString("000")));
 
         // Beat index
-        ReadoutBeatIndex.text = DimLeadingZeros(Mathf.Floor(musicEngine.LocalAnimationTime * musicEngine.SongBeats).ToString("000"));
+        ReadoutBeatIndex.text = DimLeadingZeros(Mathf.Floor(localTime * musicEngine.SongBeats).ToString("000"));
         ReadoutBeatIndexMax.text = DimLeadingZeros(Mathf.Floor(musicEngine.SongBeats).ToString("000"));
 
         // Tick index
-        ReadoutTickIndex.text = DimLeadingZeros(Mathf.Floor(musicEngine.LocalAnimationTime * musicEngine.SongTicks).ToString("0 000"));
+        ReadoutTickIndex.text = DimLeadingZeros(Mathf.Floor(localTime * musicEngine.SongTicks).ToString("0 000"));
         ReadoutTickIndexMax.text = DimLeadingZeros(Mathf.Floor(musicEngine.SongTicks).ToString("0 000"));
 
         // Progress bar
-        ProgressBarTimeElapsed.text = TimeSpan.FromSeconds(musicEngine.LocalAnimationTime * musicEngine.SongLengthInSeconds).ToString(@"m\:ss");
-        ProgressBarTimeRemaining.text = "-" + TimeSpan.FromSeconds(musicEngine.SongLengthInSeconds - musicEngine.LocalAnimationTime * musicEngine.SongLengthInSeconds).ToString(@"m\:ss");
+        ProgressBarTimeElapsed.text = TimeSpan.FromSeconds(songSecs).ToString(@"m\:ss");
+        ProgressBarTimeRemaining.text = "-" + TimeSpan.FromSeconds(musicEngine.SongLengthInSeconds - songSecs).ToString(@"m\:ss");
         ProgressBarTimeTotal.text = TimeSpan.FromSeconds(musicEngine.SongLengthInSeconds).ToString(@"m\:ss");
-        ProgressBarTransform.transform.localScale = new Vector3(musicEngine.LocalAnimationTime, 1f, 1f);
+        ProgressBarTransform.transform.localScale = new Vector3(localTime, 1f, 1f);
 
         // Highlight seconds elapsed panels depending on ownership
         PanelSecondsElapsedInstance.enabled = musicEngine.IsOwner;
         PanelSecondsElapsedLocal.enabled = !musicEngine.IsOwner;
 
-        ReadoutSecondsElapsedInstance.text = DimLeadingZeros((musicEngine.SyncedAnimationTime * musicEngine.SongLengthInSeconds).ToString("000.000"));
+        float syncedSecs = musicEngine.SyncedAnimationTime * musicEngine.SongLengthInSeconds;
+        ReadoutSecondsElapsedInstance.text = DimLeadingZeros(syncedSecs.ToString("000.000"));
         ReadoutSecondsElapsedInstanceMax.text = DimLeadingZeros((musicEngine.SongLengthInSeconds).ToString("000.000"));
 
-        ReadoutSecondsElapsedLocal.text = DimLeadingZeros((musicEngine.LocalAnimationTime * musicEngine.SongLengthInSeconds).ToString("000.000"));
+        ReadoutSecondsElapsedLocal.text = DimLeadingZeros(songSecs.ToString("000.000"));
         ReadoutSecondsElapsedLocalMax.text = DimLeadingZeros((musicEngine.SongLengthInSeconds).ToString("000.000"));
 
-        ReadoutSecondsElapsedDelta.text = Mathf.Abs((musicEngine.LocalAnimationTime * musicEngine.SongLengthInSeconds) - (musicEngine.SyncedAnimationTime * musicEngine.SongLengthInSeconds)).ToString("0.000");
+        ReadoutSecondsElapsedDelta.text = Mathf.Abs(songSecs - syncedSecs).ToString("0.000");
 
         // Highlight audio sample panels depending on player location
         PanelAudioSampleMain.enabled = audienceManager.WatchingAnimation;

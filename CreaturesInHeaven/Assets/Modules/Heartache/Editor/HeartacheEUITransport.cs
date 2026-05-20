@@ -293,8 +293,7 @@ public class HeartacheEUITransport : EditorWindow
             UpdateReadout();
         };
 
-        root.Q<Button>("stop-btn").clicked += () => StopPlayback();
-        root.Q<Button>("stop-btn").clicked += () => SeekToNorm(0f);
+        root.Q<Button>("stop-btn").clicked += () => { StopPlayback(); SeekToNorm(0f); };
         root.Q<Button>("step-back-btn").clicked += () => Step(-1);
         root.Q<Button>("step-fwd-btn").clicked += () => Step(1);
 
@@ -708,7 +707,7 @@ public class HeartacheEUITransport : EditorWindow
         try
         {
             string json = File.ReadAllText(absolutePath);
-            var list = JsonUtility.FromJson<SongCueList>(json);
+            var list = JsonUtility.FromJson<HeartacheEUISongCueList>(json);
             _cues = list?.cues ?? new HeartacheEUISongCue[0];
             _cuesPath = absolutePath;
             EditorPrefs.SetString("HeartacheEUITransport.cuesPath", absolutePath);

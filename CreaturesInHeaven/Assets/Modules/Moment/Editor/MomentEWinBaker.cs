@@ -133,7 +133,7 @@ public class MomentEWinBaker : EditorWindow
         string dir = MomentAssetPaths.ScriptDir();
 
         // Set window icon
-        string iconPath = $"{dir}/Resources/Icon Moment EWin Baker@2x.png";
+        string iconPath = $"{dir}/Resources/Icons/Icon Moment EWin Baker@2x.png";
         Texture2D windowIcon = AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
         titleContent = new GUIContent("Bake ALV", windowIcon);
 

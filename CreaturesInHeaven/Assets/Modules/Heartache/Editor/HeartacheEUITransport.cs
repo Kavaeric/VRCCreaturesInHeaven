@@ -582,28 +582,30 @@ public class HeartacheEUITransport : EditorWindow
         string active = lyric[(open + 1)..close];
         string after = lyric[(close + 1)..];
 
-        string result = "";
-        if (before.Length > 0) result += $"<alpha=#77>{before}<alpha=#ff>";
-        result += active;
-        if (after.Length > 0) result += $"<alpha=#77>{after}<alpha=#ff>";
-        return result;
+        string dimBefore = before.Length > 0 ? $"<alpha=#77>{before}<alpha=#ff>" : "";
+        string dimAfter  = after.Length  > 0 ? $"<alpha=#77>{after}<alpha=#ff>"  : "";
+        return dimBefore + active + dimAfter;
     }
 
     // --- Cue lookup --------------------------------------------------
-    // _cues is sorted by tick ascending. Both methods do a linear scan
-    // and keep the last entry whose tick <= current position.
+    // _cues is sorted by tick ascending.
+    // Returns the index of the last cue whose tick <= tickIndex, or -1 if none.
+    private int CueIndexAt(int tickIndex)
+    {
+        int result = -1;
+        for (int i = 0; i < _cues.Length; i++)
+        {
+            if (_cues[i].tick <= tickIndex) result = i;
+            else break;
+        }
+        return result;
+    }
 
     // Returns the active cue at the given time (the most recent cue whose tick has passed).
     private HeartacheEUISongCue CueAt(float songSeconds)
     {
-        int tickIndex = Mathf.FloorToInt(songSeconds / SecondsPerTick);
-        HeartacheEUISongCue current = null;
-        foreach (var cue in _cues)
-        {
-            if (cue.tick <= tickIndex) current = cue;
-            else break;
-        }
-        return current;
+        int i = CueIndexAt(Mathf.FloorToInt(songSeconds / SecondsPerTick));
+        return i >= 0 ? _cues[i] : null;
     }
 
     // Returns the active section name at the given time (most recent cue with a non-null section).
@@ -611,10 +613,9 @@ public class HeartacheEUITransport : EditorWindow
     {
         int tickIndex = Mathf.FloorToInt(songSeconds / SecondsPerTick);
         string current = null;
-        foreach (var cue in _cues)
+        for (int i = CueIndexAt(tickIndex); i >= 0; i--)
         {
-            if (cue.tick > tickIndex) break;
-            if (!string.IsNullOrEmpty(cue.section)) current = cue.section;
+            if (!string.IsNullOrEmpty(_cues[i].section)) { current = _cues[i].section; break; }
         }
         return current;
     }
@@ -692,7 +693,7 @@ public class HeartacheEUITransport : EditorWindow
 
     private void PromptLoadCues()
     {
-        string dir  = string.IsNullOrEmpty(_cuesPath) ? "Assets" : Path.GetDirectoryName(_cuesPath);
+        string dir = string.IsNullOrEmpty(_cuesPath) ? "Assets" : Path.GetDirectoryName(_cuesPath);
         string path = EditorUtility.OpenFilePanel("Open Song Cues", dir, "json");
         if (string.IsNullOrEmpty(path)) return;
         LoadCues(path);

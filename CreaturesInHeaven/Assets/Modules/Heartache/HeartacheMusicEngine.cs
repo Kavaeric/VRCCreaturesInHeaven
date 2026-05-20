@@ -78,13 +78,13 @@ public class HeartacheMusicEngine : UdonSharpBehaviour
 
     // --- Inspector references -----------------------------------------
 
-    public AudioSource MusicPlayer;
-    public AudioSource MusicPlayerLobby;
+    [SerializeField] public AudioSource MusicPlayer;
+    [SerializeField] public AudioSource MusicPlayerLobby;
     [SerializeField] private Animator[] Animators;
     [SerializeField] private UdonBehaviour[] SequenceListeners;
-    public AnchorTeleport StartTeleporter;
-    public Button ButtonStart;
-    public Button ButtonJoin;
+    [SerializeField] private AnchorTeleport StartTeleporter;
+    [SerializeField] private Button ButtonStart;
+    [SerializeField] private Button ButtonJoin;
 
     // Records the time of each deserialization so non-owners can extrapolate
     // the owner's position forward from the (potentially stale) synced value.
@@ -139,21 +139,22 @@ public class HeartacheMusicEngine : UdonSharpBehaviour
     }
 
     // Seeks both audio sources to a normalised time [0, 1].
-    // timeSamples is assigned both before and after Play() because Unity
-    // resets the sample position when Play() is called.
     private void PlayFromTime(float normalisedTime)
     {
         int targetSample = (int)(normalisedTime * SongSampleCount);
+        SeekAudioSource(MusicPlayer, targetSample);
+        SeekAudioSource(MusicPlayerLobby, targetSample);
+    }
 
-        MusicPlayer.Stop();
-        MusicPlayer.timeSamples = targetSample;
-        MusicPlayer.Play();
-        MusicPlayer.timeSamples = targetSample;
-
-        MusicPlayerLobby.Stop();
-        MusicPlayerLobby.timeSamples = targetSample;
-        MusicPlayerLobby.Play();
-        MusicPlayerLobby.timeSamples = targetSample;
+    // Stops, seeks, and plays an AudioSource.
+    // timeSamples is assigned both before and after Play() because Unity
+    // resets the sample position when Play() is called.
+    private static void SeekAudioSource(AudioSource source, int targetSample)
+    {
+        source.Stop();
+        source.timeSamples = targetSample;
+        source.Play();
+        source.timeSamples = targetSample;
     }
 
     // Stops all audio sources and resets animators and sequences to time zero.

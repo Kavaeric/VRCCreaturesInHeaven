@@ -1,5 +1,4 @@
 using System;
-using System.Media;
 using TMPro;
 using UdonSharp;
 using UnityEngine;
@@ -10,8 +9,8 @@ using VRC.Udon;
 [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
 public class HeartacheTempoMonitor : UdonSharpBehaviour
 {
-    [SerializeField] private HeartacheMusicEngine musicEngine;
-    [SerializeField] private HeartacheAudienceManager audienceManager;
+    [SerializeField] private HeartacheMusicEngine MusicEngine;
+    [SerializeField] private HeartacheAudienceManager AudienceManager;
 
     // --- Inspector references -----------------------------------------
     [Header("Readout")]
@@ -86,11 +85,11 @@ public class HeartacheTempoMonitor : UdonSharpBehaviour
     public void OnTick()
     {
         if (!_metronomeEnabled) return;
-        if (musicEngine.TickIsMeasure)
+        if (MusicEngine.TickIsMeasure)
         {
             MetronomeSpeaker.PlayOneShot(MetronomeClickMeasure);
         }
-        else if (musicEngine.TickIsBeat)
+        else if (MusicEngine.TickIsBeat)
         {
             MetronomeSpeaker.PlayOneShot(MetronomeClickBeat);
         }
@@ -124,59 +123,59 @@ public class HeartacheTempoMonitor : UdonSharpBehaviour
 
     private void Update()
     {
-        float localTime = musicEngine.LocalAnimationTime;
-        float songSecs = localTime * musicEngine.SongLengthInSeconds;
+        float localTime = MusicEngine.LocalAnimationTime;
+        float songSecs = localTime * MusicEngine.SongLengthInSeconds;
 
         // Metronome readout
-        ReadoutMetronome.text = DimLeadingZeros(Mathf.Floor((localTime * musicEngine.SongMeasures) + 1).ToString("000"))
+        ReadoutMetronome.text = DimLeadingZeros(Mathf.Floor((localTime * MusicEngine.SongMeasures) + 1).ToString("000"))
             + "<color=#FFFFFF10>:</color>"
-            + (Mathf.Floor((localTime * musicEngine.SongBeats)) % musicEngine.BeatsPerMeasure + 1).ToString("0")
+            + (Mathf.Floor((localTime * MusicEngine.SongBeats)) % MusicEngine.BeatsPerMeasure + 1).ToString("0")
             + "<color=#FFFFFF10>.</color>"
-            + DimLeadingZeros((Mathf.Floor(localTime * musicEngine.SongTicks) % musicEngine.TicksPerBeat + 1).ToString("00"));
+            + DimLeadingZeros((Mathf.Floor(localTime * MusicEngine.SongTicks) % MusicEngine.TicksPerBeat + 1).ToString("00"));
 
         // Measure index
-        ReadoutMeasureIndex.text = DimLeadingZeros(Mathf.Floor(localTime * musicEngine.SongMeasures).ToString("000"));
-        ReadoutMeasureIndexMax.text = DimLeadingZeros((Mathf.Floor(musicEngine.SongMeasures).ToString("000")));
+        ReadoutMeasureIndex.text = DimLeadingZeros(Mathf.Floor(localTime * MusicEngine.SongMeasures).ToString("000"));
+        ReadoutMeasureIndexMax.text = DimLeadingZeros((Mathf.Floor(MusicEngine.SongMeasures).ToString("000")));
 
         // Beat index
-        ReadoutBeatIndex.text = DimLeadingZeros(Mathf.Floor(localTime * musicEngine.SongBeats).ToString("000"));
-        ReadoutBeatIndexMax.text = DimLeadingZeros(Mathf.Floor(musicEngine.SongBeats).ToString("000"));
+        ReadoutBeatIndex.text = DimLeadingZeros(Mathf.Floor(localTime * MusicEngine.SongBeats).ToString("000"));
+        ReadoutBeatIndexMax.text = DimLeadingZeros(Mathf.Floor(MusicEngine.SongBeats).ToString("000"));
 
         // Tick index
-        ReadoutTickIndex.text = DimLeadingZeros(Mathf.Floor(localTime * musicEngine.SongTicks).ToString("0 000"));
-        ReadoutTickIndexMax.text = DimLeadingZeros(Mathf.Floor(musicEngine.SongTicks).ToString("0 000"));
+        ReadoutTickIndex.text = DimLeadingZeros(Mathf.Floor(localTime * MusicEngine.SongTicks).ToString("0 000"));
+        ReadoutTickIndexMax.text = DimLeadingZeros(Mathf.Floor(MusicEngine.SongTicks).ToString("0 000"));
 
         // Progress bar
         ProgressBarTimeElapsed.text = TimeSpan.FromSeconds(songSecs).ToString(@"m\:ss");
-        ProgressBarTimeRemaining.text = "-" + TimeSpan.FromSeconds(musicEngine.SongLengthInSeconds - songSecs).ToString(@"m\:ss");
-        ProgressBarTimeTotal.text = TimeSpan.FromSeconds(musicEngine.SongLengthInSeconds).ToString(@"m\:ss");
+        ProgressBarTimeRemaining.text = "-" + TimeSpan.FromSeconds(MusicEngine.SongLengthInSeconds - songSecs).ToString(@"m\:ss");
+        ProgressBarTimeTotal.text = TimeSpan.FromSeconds(MusicEngine.SongLengthInSeconds).ToString(@"m\:ss");
         ProgressBarTransform.transform.localScale = new Vector3(localTime, 1f, 1f);
 
         // Highlight seconds elapsed panels depending on ownership
-        PanelSecondsElapsedInstance.enabled = musicEngine.IsOwner;
-        PanelSecondsElapsedLocal.enabled = !musicEngine.IsOwner;
+        PanelSecondsElapsedInstance.enabled = MusicEngine.IsOwner;
+        PanelSecondsElapsedLocal.enabled = !MusicEngine.IsOwner;
 
-        float syncedSecs = musicEngine.SyncedAnimationTime * musicEngine.SongLengthInSeconds;
+        float syncedSecs = MusicEngine.SyncedAnimationTime * MusicEngine.SongLengthInSeconds;
         ReadoutSecondsElapsedInstance.text = DimLeadingZeros(syncedSecs.ToString("000.000"));
-        ReadoutSecondsElapsedInstanceMax.text = DimLeadingZeros((musicEngine.SongLengthInSeconds).ToString("000.000"));
+        ReadoutSecondsElapsedInstanceMax.text = DimLeadingZeros(MusicEngine.SongLengthInSeconds.ToString("000.000"));
 
         ReadoutSecondsElapsedLocal.text = DimLeadingZeros(songSecs.ToString("000.000"));
-        ReadoutSecondsElapsedLocalMax.text = DimLeadingZeros((musicEngine.SongLengthInSeconds).ToString("000.000"));
+        ReadoutSecondsElapsedLocalMax.text = DimLeadingZeros(MusicEngine.SongLengthInSeconds.ToString("000.000"));
 
         ReadoutSecondsElapsedDelta.text = Mathf.Abs(songSecs - syncedSecs).ToString("0.000");
 
         // Highlight audio sample panels depending on player location
-        PanelAudioSampleMain.enabled = audienceManager.WatchingAnimation;
-        PanelAudioSampleLobby.enabled = !audienceManager.WatchingAnimation;
+        PanelAudioSampleMain.enabled = AudienceManager.WatchingAnimation;
+        PanelAudioSampleLobby.enabled = !AudienceManager.WatchingAnimation;
 
-        ReadoutAudioSampleMain.text = DimLeadingZeros(musicEngine.MusicPlayer.timeSamples.ToString("00 000 000"));
-        ReadoutAudioSampleLobby.text = DimLeadingZeros(musicEngine.MusicPlayerLobby.timeSamples.ToString("00 000 000"));
-        ReadoutAudioSampleDelta.text = (musicEngine.MusicPlayer.timeSamples - musicEngine.MusicPlayerLobby.timeSamples).ToString();
+        ReadoutAudioSampleMain.text = DimLeadingZeros(MusicEngine.MusicPlayer.timeSamples.ToString("00 000 000"));
+        ReadoutAudioSampleLobby.text = DimLeadingZeros(MusicEngine.MusicPlayerLobby.timeSamples.ToString("00 000 000"));
+        ReadoutAudioSampleDelta.text = (MusicEngine.MusicPlayer.timeSamples - MusicEngine.MusicPlayerLobby.timeSamples).ToString();
 
         // Turn on metronome indicator light depending on metronome state
         IndicatorIsMetronomeOn.SetActive(_metronomeEnabled);
 
         // Turn on ownership indicator light depending on IsOwner
-        IndicatorIsOwner.SetActive(musicEngine.IsOwner);
+        IndicatorIsOwner.SetActive(MusicEngine.IsOwner);
     }
 }

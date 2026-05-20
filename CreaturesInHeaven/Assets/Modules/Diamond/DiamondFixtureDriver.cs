@@ -46,7 +46,7 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
     {
         if (HeadRenderer == null || PropsTransform == null)
         {
-            Debug.Log("  [FixtureDriver] No HeadRenderer or PropsTransform.");
+            Debug.LogWarning("[Diamond] No HeadRenderer or PropsTransform.");
             return;
         }
 

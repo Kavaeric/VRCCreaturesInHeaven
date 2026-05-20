@@ -22,7 +22,7 @@ public class MomentEWinEstimate : EditorWindow
         string dir = MomentAssetPaths.ScriptDir();
 
         // Set window icon
-        string iconPath = $"{dir}/Resources/Icon Moment EWin Estimate@2x.png";
+        string iconPath = $"{dir}/Resources/Icons/Icon Moment EWin Estimate@2x.png";
         Texture2D windowIcon = AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
         titleContent = new GUIContent("Estimate ALV size", windowIcon);
 

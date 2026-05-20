@@ -4,14 +4,13 @@ using UnityEngine;
 //
 //   1. Holds fixture metadata (DisplayName, FixtureProfile) for the fixture map tool.
 //
-//   2. Mirrors FixtureDriver's material application in edit mode so brightness and
-//      spread changes on PropsTransform are visible in the scene.
+//   2. In edit mode, DiamondFixtureMapPreview (editor library) drives material preview
+//      so brightness and spread changes on PropsTransform are visible in the scene.
 //
 //   3. Exposes friendly controls in the inspector that alias to PropsTransform.localScale
 //      and Head.localEulerAngles. Which controls appear is determined by the FixtureProfile.
 //      When animated, those underlying properties are what gets keyframed.
 
-[ExecuteAlways]
 public class DiamondFixtureDefinition : MonoBehaviour
 {
     // --- Metadata ----------------------------------------------------
@@ -34,55 +33,19 @@ public class DiamondFixtureDefinition : MonoBehaviour
     // the resulting RGB is written to EmissionColor and synced to FixtureDriver.
     public float ColourTemperature = 6500f;
 
-    private DiamondFixtureDriver _driver;
-#if UNITY_EDITOR
-    private MaterialPropertyBlock _propBlock;
-#endif
-
     private void OnEnable()
     {
-        _driver = GetComponent<DiamondFixtureDriver>();
+        var driver = GetComponent<DiamondFixtureDriver>();
 
         // Resolve emission colour: blackbody overrides the RGB picker.
-        Color emission = EmissionColor;
-        if (Colour == ColourMode.Blackbody)
-            emission = BlackbodyToRGB(ColourTemperature);
+        Color emission = Colour == ColourMode.Blackbody
+            ? BlackbodyToRGB(ColourTemperature)
+            : EmissionColor;
 
         // Keep FixtureDriver in sync so values are correct at runtime.
-        if (_driver != null)
-            _driver.EmissionColor = emission;
-
-#if UNITY_EDITOR
-        _propBlock = new MaterialPropertyBlock();
-#endif
+        if (driver != null)
+            driver.EmissionColor = emission;
     }
-
-#if UNITY_EDITOR
-    private void Update()
-    {
-        if (Application.isPlaying) return;
-        if (_driver == null || _driver.PropsTransform == null || _driver.HeadRenderer == null) return;
-
-        // Resolve emission colour: blackbody overrides the RGB picker.
-        Color emission = EmissionColor;
-        if (Colour == ColourMode.Blackbody)
-            emission = BlackbodyToRGB(ColourTemperature);
-
-        if (!_driver.PropsTransform.gameObject.activeSelf)
-        {
-            _propBlock.SetColor("_EmissionColor", Color.black);
-            _driver.HeadRenderer.SetPropertyBlock(_propBlock);
-            return;
-        }
-
-        float linearBrightness = _driver.PropsTransform.localScale.x;
-        float spread           = _driver.PropsTransform.localScale.y;
-
-        _propBlock.SetColor("_EmissionColor", emission * linearBrightness);
-        _propBlock.SetFloat("_Spread", spread);
-        _driver.HeadRenderer.SetPropertyBlock(_propBlock);
-    }
-#endif
 
     // Converts a colour temperature in Kelvin to a linear RGB approximation.
     // Based on Tanner Helland's algorithm, valid over roughly 1000K–40000K.

@@ -9,18 +9,18 @@ using UnityEngine.UIElements;
 // Editor window: displays the current animation cursor position in musical time
 // (measure, beat, tick) and provides transport controls for navigating by musical units.
 // Reads timing config from a MusicEngine component in the scene; reads cues from SongCues.json.
-public class HeartacheEUITransport : EditorWindow
+public class HeartacheEWinTransport : EditorWindow
 {
     // --- Menu --------------------------------------------------------
 
     [MenuItem("Tools/Heartache/Transport")]
-    public static void Open() => GetWindow<HeartacheEUITransport>("Transport");
+    public static void Open() => GetWindow<HeartacheEWinTransport>("Transport");
 
     // --- Config ------------------------------------------------------
 
     private HeartacheMusicEngine _musicEngine;
     private AudioClip _audioClip;
-    private HeartacheEUISongCue[] _cues = new HeartacheEUISongCue[0];
+    private HeartacheSongCue[] _cues = new HeartacheSongCue[0];
     private string _cuesPath = "";  // absolute path, persisted via EditorPrefs
 
     // --- Timing parameters (read from MusicEngine) -------------------
@@ -153,7 +153,7 @@ public class HeartacheEUITransport : EditorWindow
 
     private void OnEnable()
     {
-        string saved = EditorPrefs.GetString("HeartacheEUITransport.cuesPath", "");
+        string saved = EditorPrefs.GetString("HeartacheEWinTransport.cuesPath", "");
         if (!string.IsNullOrEmpty(saved) && File.Exists(saved))
             LoadCues(saved);
         FindAnimationWindow();
@@ -171,10 +171,10 @@ public class HeartacheEUITransport : EditorWindow
     // Used to load sibling assets (UXML, USS, icons) without hardcoding folder paths.
     private static string ScriptDir()
     {
-        foreach (var guid in AssetDatabase.FindAssets($"t:MonoScript {nameof(HeartacheEUITransport)}"))
+        foreach (var guid in AssetDatabase.FindAssets($"t:MonoScript {nameof(HeartacheEWinTransport)}"))
         {
             string path = AssetDatabase.GUIDToAssetPath(guid);
-            if (path.EndsWith($"{nameof(HeartacheEUITransport)}.cs"))
+            if (path.EndsWith($"{nameof(HeartacheEWinTransport)}.cs"))
                 return Path.GetDirectoryName(path).Replace('\\', '/');
         }
         return "Assets/Modules/Heartache/Editor";
@@ -189,10 +189,10 @@ public class HeartacheEUITransport : EditorWindow
         Texture2D windowIcon = AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
         titleContent = new GUIContent("Transport", windowIcon);
 
-        var uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>($"{dir}/HeartacheEUITransport.uxml");
+        var uxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>($"{dir}/HeartacheEWinTransport.uxml");
         if (uxml == null)
         {
-            rootVisualElement.Add(new Label($"HeartacheEUITransport.uxml not found in {dir}. Try reimporting the folder."));
+            rootVisualElement.Add(new Label($"HeartacheEWinTransport.uxml not found in {dir}. Try reimporting the folder."));
             return;
         }
         uxml.CloneTree(rootVisualElement);
@@ -355,7 +355,7 @@ public class HeartacheEUITransport : EditorWindow
         _timestampTick.text = $"{tick:00}";
 
         // Cue labels: active marker, lyric, and current section name.
-        HeartacheEUISongCue cue = CueAt(songSecs);
+        HeartacheSongCue cue = CueAt(songSecs);
         _cueMarker.text = cue != null && !string.IsNullOrEmpty(cue.marker) ? cue.marker : "-";
         _cueLyric.text = cue != null && !string.IsNullOrEmpty(cue.lyric) ? FormatLyric(cue.lyric) : "-";
         _cueSection.text = SectionAt(songSecs) is string s && !string.IsNullOrEmpty(s) ? s : "-";
@@ -602,7 +602,7 @@ public class HeartacheEUITransport : EditorWindow
     }
 
     // Returns the active cue at the given time (the most recent cue whose tick has passed).
-    private HeartacheEUISongCue CueAt(float songSeconds)
+    private HeartacheSongCue CueAt(float songSeconds)
     {
         int i = CueIndexAt(Mathf.FloorToInt(songSeconds / SecondsPerTick));
         return i >= 0 ? _cues[i] : null;
@@ -707,15 +707,15 @@ public class HeartacheEUITransport : EditorWindow
         try
         {
             string json = File.ReadAllText(absolutePath);
-            var list = JsonUtility.FromJson<HeartacheEUISongCueList>(json);
-            _cues = list?.cues ?? new HeartacheEUISongCue[0];
+            var list = JsonUtility.FromJson<HeartacheSongCueList>(json);
+            _cues = list?.cues ?? new HeartacheSongCue[0];
             _cuesPath = absolutePath;
-            EditorPrefs.SetString("HeartacheEUITransport.cuesPath", absolutePath);
+            EditorPrefs.SetString("HeartacheEWinTransport.cuesPath", absolutePath);
             UpdateCuesPathLabel();
         }
         catch (Exception ex)
         {
-            Debug.LogWarning($"[HeartacheEUITransport] Failed to load cues from {absolutePath}: {ex.Message}");
+            Debug.LogWarning($"[HeartacheEWinTransport] Failed to load cues from {absolutePath}: {ex.Message}");
         }
     }
 

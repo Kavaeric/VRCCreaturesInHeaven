@@ -65,7 +65,7 @@ public class HeartacheMusicEngine : UdonSharpBehaviour
     public bool IsOwner => Networking.IsOwner(Networking.LocalPlayer, gameObject);
 
     // --- Inspector references (audience) -----------------------------
-    [SerializeField] private HeartacheAudienceManager AudienceManager;
+    [SerializeField] private HeartacheAudienceManager _audienceManager;
 
     // --- Tick event system -------------------------------------------
     // Each Update(), if the tick index has advanced, all TickListeners
@@ -73,18 +73,18 @@ public class HeartacheMusicEngine : UdonSharpBehaviour
     // determine the tick type without needing to do their own modulo math.
     public bool TickIsMeasure { get; private set; }
     public bool TickIsBeat { get; private set; }
-    [SerializeField] private UdonBehaviour[] TickListeners;
+    [SerializeField] private UdonBehaviour[] _tickListeners;
     private int _lastTickIndex = -1;
 
     // --- Inspector references -----------------------------------------
 
     [SerializeField] public AudioSource MusicPlayer;
     [SerializeField] public AudioSource MusicPlayerLobby;
-    [SerializeField] private Animator[] Animators;
-    [SerializeField] private UdonBehaviour[] SequenceListeners;
-    [SerializeField] private AnchorTeleport StartTeleporter;
-    [SerializeField] private Button ButtonStart;
-    [SerializeField] private Button ButtonJoin;
+    [SerializeField] private Animator[] _animators;
+    [SerializeField] private UdonBehaviour[] _sequenceListeners;
+    [SerializeField] private AnchorTeleport _startTeleporter;
+    [SerializeField] private Button _buttonStart;
+    [SerializeField] private Button _buttonJoin;
 
     // Records the time of each deserialization so non-owners can extrapolate
     // the owner's position forward from the (potentially stale) synced value.
@@ -129,13 +129,13 @@ public class HeartacheMusicEngine : UdonSharpBehaviour
         _syncedAnimationTime = time;
         _syncedPlaying = true;
         PlayFromTime(time);
-        StartTeleporter.TeleportNetwork();
+        _startTeleporter.TeleportNetwork();
     }
 
     // Teleports the local player to the start point to join ongoing playback.
     public void JoinButtonPressed()
     {
-        StartTeleporter.TeleportLocal();
+        _startTeleporter.TeleportLocal();
     }
 
     // Seeks both audio sources to a normalised time [0, 1].
@@ -162,30 +162,30 @@ public class HeartacheMusicEngine : UdonSharpBehaviour
     {
         MusicPlayer.Stop();
         MusicPlayerLobby.Stop();
-        for (int i = 0; i < Animators.Length; i++)
-            if (Animators[i] != null) Animators[i].SetFloat("_Time", 0f);
-        for (int i = 0; i < SequenceListeners.Length; i++)
-            if (SequenceListeners[i] != null)
-                SequenceListeners[i].SendCustomEvent("OnSequenceStop");
+        for (int i = 0; i < _animators.Length; i++)
+            if (_animators[i] != null) _animators[i].SetFloat("_Time", 0f);
+        for (int i = 0; i < _sequenceListeners.Length; i++)
+            if (_sequenceListeners[i] != null)
+                _sequenceListeners[i].SendCustomEvent("OnSequenceStop");
     }
 
     private void DriveAnimatorsAndSequences(float normTime)
     {
-        for (int i = 0; i < Animators.Length; i++)
-            if (Animators[i] != null) Animators[i].SetFloat("_Time", normTime);
-        for (int i = 0; i < SequenceListeners.Length; i++)
-            if (SequenceListeners[i] != null)
-                SequenceListeners[i].SendCustomEvent("OnSequenceUpdate");
+        for (int i = 0; i < _animators.Length; i++)
+            if (_animators[i] != null) _animators[i].SetFloat("_Time", normTime);
+        for (int i = 0; i < _sequenceListeners.Length; i++)
+            if (_sequenceListeners[i] != null)
+                _sequenceListeners[i].SendCustomEvent("OnSequenceUpdate");
     }
 
     void Update()
     {
-        MusicPlayerLobby.volume = AudienceManager.WatchingAnimation ? 0f : 0.6f;
-        MusicPlayer.volume = AudienceManager.WatchingAnimation ? 0.8f : 0f;
+        MusicPlayerLobby.volume = _audienceManager.WatchingAnimation ? 0f : 0.6f;
+        MusicPlayer.volume = _audienceManager.WatchingAnimation ? 0.8f : 0f;
 
         // Start is only available before playback; Join is only available during.
-        ButtonStart.interactable = !_syncedPlaying;
-        ButtonJoin.interactable = _syncedPlaying;
+        _buttonStart.interactable = !_syncedPlaying;
+        _buttonJoin.interactable = _syncedPlaying;
 
         // Derive normalised local time directly from the audio sample position.
         // More accurate than tracking elapsed time manually.
@@ -207,9 +207,9 @@ public class HeartacheMusicEngine : UdonSharpBehaviour
                 TickIsMeasure = currentTickIndex % (TicksPerBeat * BeatsPerMeasure) == 0;
                 TickIsBeat = currentTickIndex % TicksPerBeat == 0;
 
-                for (int i = 0; i < TickListeners.Length; i++)
-                    if (TickListeners[i] != null)
-                        TickListeners[i].SendCustomEvent("OnTick");
+                for (int i = 0; i < _tickListeners.Length; i++)
+                    if (_tickListeners[i] != null)
+                        _tickListeners[i].SendCustomEvent("OnTick");
             }
 
             // Update on any change, including backward seeks and resync jumps,

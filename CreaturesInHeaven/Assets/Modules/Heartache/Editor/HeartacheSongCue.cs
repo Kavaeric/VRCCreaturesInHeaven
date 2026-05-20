@@ -1,7 +1,7 @@
 using System;
 
 [Serializable]
-public class HeartacheEUISongCue
+public class HeartacheSongCue
 {
     public int measure;
     public int beat;
@@ -13,7 +13,7 @@ public class HeartacheEUISongCue
 }
 
 [Serializable]
-public class HeartacheEUISongCueList
+public class HeartacheSongCueList
 {
-    public HeartacheEUISongCue[] cues;
+    public HeartacheSongCue[] cues;
 }

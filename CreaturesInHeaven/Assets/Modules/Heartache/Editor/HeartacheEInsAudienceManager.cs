@@ -2,12 +2,12 @@ using UnityEditor;
 using UnityEngine;
 
 [CustomEditor(typeof(HeartacheAudienceManager))]
-public class HeartacheEUIAudienceManager : Editor
+public class HeartacheEInsAudienceManager : Editor
 {
     private void OnSceneGUI()
     {
-        float yMin = serializedObject.FindProperty("lobbyYMin").floatValue;
-        float yMax = serializedObject.FindProperty("lobbyYMax").floatValue;
+        float yMin = serializedObject.FindProperty("_lobbyYMin").floatValue;
+        float yMax = serializedObject.FindProperty("_lobbyYMax").floatValue;
 
         float size = 20f;
 

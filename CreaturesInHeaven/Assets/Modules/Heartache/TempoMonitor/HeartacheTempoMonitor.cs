@@ -13,6 +13,12 @@ public class HeartacheTempoMonitor : UdonSharpBehaviour
     [SerializeField] private HeartacheAudienceManager _audienceManager;
 
     // --- Inspector references -----------------------------------------
+    // You know there's probably a better way to do all of this
+    //
+    //
+    //
+    // buuuuuuuuut
+    //
     [Header("Readout")]
     [SerializeField] private TMP_Text _readoutMetronome;
 
@@ -135,7 +141,7 @@ public class HeartacheTempoMonitor : UdonSharpBehaviour
 
         // Measure index
         _readoutMeasureIndex.text = DimLeadingZeros(Mathf.Floor(localTime * _musicEngine.SongMeasures).ToString("000"));
-        _readoutMeasureIndexMax.text = DimLeadingZeros((Mathf.Floor(_musicEngine.SongMeasures).ToString("000")));
+        _readoutMeasureIndexMax.text = DimLeadingZeros(Mathf.Floor(_musicEngine.SongMeasures).ToString("000"));
 
         // Beat index
         _readoutBeatIndex.text = DimLeadingZeros(Mathf.Floor(localTime * _musicEngine.SongBeats).ToString("000"));

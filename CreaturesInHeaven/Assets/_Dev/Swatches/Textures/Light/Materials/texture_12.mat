@@ -18,7 +18,7 @@ Material:
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 1
-  m_DoubleSidedGI: 0
+  m_DoubleSidedGI: 1
   m_CustomRenderQueue: 2000
   stringTagMap:
     RenderType: Opaque
@@ -138,7 +138,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 2800000, guid: 7c822f64dae340a40902a3b10ea255aa, type: 3}
-        m_Scale: {x: 2, y: 2}
+        m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
         m_Texture: {fileID: 0}
@@ -233,7 +233,7 @@ Material:
     - _BAKERY_SHNONLINEAR: 0
     - _Bakery: 0
     - _BakeryLMSpecStrength: 1
-    - _BakeryMode: 0
+    - _BakeryMode: 3
     - _BakeryVertexLM: 0
     - _BicubicSampling: 1
     - _BlendMode: 0
@@ -367,7 +367,7 @@ Material:
     - _RippleSpeed: 18
     - _RippleStrength: 1
     - _RoughnessChannel: 1
-    - _RoughnessStrength: 0.5
+    - _RoughnessStrength: 0.6
     - _SSREdgeFade: 0.1
     - _SSRHeight: 0.2
     - _SSRStrength: 1

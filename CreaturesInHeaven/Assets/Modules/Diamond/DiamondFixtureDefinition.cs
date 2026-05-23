@@ -33,18 +33,18 @@ public class DiamondFixtureDefinition : MonoBehaviour
     // the resulting RGB is written to EmissionColor and synced to FixtureDriver.
     public float ColourTemperature = 6500f;
 
-    private void OnEnable()
+    private void OnEnable() => SyncDriverColour();
+    private void OnValidate() => SyncDriverColour();
+
+    public void SyncDriverColour()
     {
         var driver = GetComponent<DiamondFixtureDriver>();
+        if (driver == null) return;
 
         // Resolve emission colour: blackbody overrides the RGB picker.
-        Color emission = Colour == ColourMode.Blackbody
+        driver.EmissionColor = Colour == ColourMode.Blackbody
             ? BlackbodyToRGB(ColourTemperature)
             : EmissionColor;
-
-        // Keep FixtureDriver in sync so values are correct at runtime.
-        if (driver != null)
-            driver.EmissionColor = emission;
     }
 
     // Converts a colour temperature in Kelvin to a linear RGB approximation.

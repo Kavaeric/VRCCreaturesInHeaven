@@ -39,4 +39,15 @@ public class DiamondFixtureProfile : ScriptableObject
     public float BrightnessMax;
 
     public bool HasSpread;
+
+    // --- Bakery light ---------------------------------------------------
+
+#if BAKERY_INCLUDED
+    public DiamondBakeryLightType BakeryLightType;
+    public float                  BakeryBrightnessScale;
+    public Vector3                BakeryLightOffset;
+
+    // Mesh lights only.
+    public Vector3 BakeryMeshLightSize;
+#endif
 }

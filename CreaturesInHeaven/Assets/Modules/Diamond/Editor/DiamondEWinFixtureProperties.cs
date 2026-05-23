@@ -152,6 +152,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
             {
                 Undo.RecordObject(def, "Fixture Colour Mode");
                 def.Colour = mode;
+                def.SyncDriverColour();
             }
             RefreshColourUI();
         });
@@ -162,6 +163,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
             {
                 Undo.RecordObject(def, "Fixture Colour Temperature");
                 def.ColourTemperature = e.newValue;
+                def.SyncDriverColour();
             }
             RefreshColourUI();
         });
@@ -172,6 +174,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
             {
                 Undo.RecordObject(def, "Fixture Emission Colour");
                 def.EmissionColor = e.newValue;
+                def.SyncDriverColour();
             }
         });
 
@@ -327,6 +330,9 @@ public class DiamondEWinFixtureProperties : EditorWindow
     private void OnEditorUpdate()
     {
         if (_selection.Count == 0) return;
+
+        // Update colour
+        RefreshColourUI();
 
         // Update brightness
         var brightnessValues = _selection.Select(s => s.driver.PropsTransform.localScale.x).Distinct().ToList();

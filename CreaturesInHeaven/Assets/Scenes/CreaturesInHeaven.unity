@@ -155,51 +155,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 549930592}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &13541592
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA19
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 7
-  sortingID: 20
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &15102721 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3290039363019875665, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -406,51 +361,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 549930592}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &89499394
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA7
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 19
-  sortingID: 8
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &89915405 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3545407362874779970, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -507,51 +417,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 8540628123787896002}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &108354503
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA12
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 27
-  sortingID: 13
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &111878555
 GameObject:
   m_ObjectHideFlags: 0
@@ -668,6 +533,51 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 8540628123787896002}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &140220510
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
+  m_Name: CreaturesInHeaven_LMA2
+  m_EditorClassIdentifier: 
+  resolution: 4096
+  bitmask: 1
+  id: 2
+  sortingID: 3
+  isImplicit: 1
+  area: 0
+  totalVertexCount: 0
+  vertexCounter: 0
+  sceneLodLevel: -1
+  autoResolution: 0
+  sceneName: 
+  tag: -1
+  containsTerrains: 0
+  probes: 0
+  mode: 1
+  renderMode: 1000
+  renderDirMode: 1000
+  atlasPacker: 1000
+  holeFilling: 0
+  vertexSamplingDensity: 0
+  computeSSS: 0
+  sssSamples: 16
+  sssDensity: 10
+  sssColor: {r: 1, g: 1, b: 1, a: 1}
+  sssScale: 1
+  fakeShadowBias: 0
+  transparentSelfShadow: 0
+  flipNormal: 0
+  parentName: 
+  overridePath: 
+  fixPos3D: 0
+  voxelSize: {x: 1, y: 1, z: 1}
+  passedFilter: 0
 --- !u!1 &141251243 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 399281197256174303, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -915,51 +825,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1527355329}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
---- !u!114 &157029078
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA6
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 20
-  sortingID: 7
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &158572372 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4503136727528714225, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -1319,51 +1184,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 8540628123787896002}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &208036122
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA2
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 24
-  sortingID: 3
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &213470724 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4252050563041098226, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -3139,51 +2959,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 8540628123787896002}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &425796893
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA25
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 1
-  sortingID: 26
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &426524736 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1540045597616901329, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -3403,6 +3178,96 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 439069714}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &440046674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
+  m_Name: CreaturesInHeaven_LMA4
+  m_EditorClassIdentifier: 
+  resolution: 4096
+  bitmask: 1
+  id: 4
+  sortingID: 5
+  isImplicit: 1
+  area: 0
+  totalVertexCount: 0
+  vertexCounter: 0
+  sceneLodLevel: -1
+  autoResolution: 0
+  sceneName: 
+  tag: -1
+  containsTerrains: 0
+  probes: 0
+  mode: 1
+  renderMode: 1000
+  renderDirMode: 1000
+  atlasPacker: 1000
+  holeFilling: 0
+  vertexSamplingDensity: 0
+  computeSSS: 0
+  sssSamples: 16
+  sssDensity: 10
+  sssColor: {r: 1, g: 1, b: 1, a: 1}
+  sssScale: 1
+  fakeShadowBias: 0
+  transparentSelfShadow: 0
+  flipNormal: 0
+  parentName: 
+  overridePath: 
+  fixPos3D: 0
+  voxelSize: {x: 1, y: 1, z: 1}
+  passedFilter: 0
+--- !u!114 &443897618
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
+  m_Name: CreaturesInHeaven_LMA3
+  m_EditorClassIdentifier: 
+  resolution: 4096
+  bitmask: 1
+  id: 3
+  sortingID: 4
+  isImplicit: 1
+  area: 0
+  totalVertexCount: 0
+  vertexCounter: 0
+  sceneLodLevel: -1
+  autoResolution: 0
+  sceneName: 
+  tag: -1
+  containsTerrains: 0
+  probes: 0
+  mode: 1
+  renderMode: 1000
+  renderDirMode: 1000
+  atlasPacker: 1000
+  holeFilling: 0
+  vertexSamplingDensity: 0
+  computeSSS: 0
+  sssSamples: 16
+  sssDensity: 10
+  sssColor: {r: 1, g: 1, b: 1, a: 1}
+  sssScale: 1
+  fakeShadowBias: 0
+  transparentSelfShadow: 0
+  flipNormal: 0
+  parentName: 
+  overridePath: 
+  fixPos3D: 0
+  voxelSize: {x: 1, y: 1, z: 1}
+  passedFilter: 0
 --- !u!1 &444395587 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 270061563361313012, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -3445,51 +3310,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 8540628123787896002}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &475769168
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA22
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 4
-  sortingID: 23
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &480508303 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6848139476761956436, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -4114,39 +3934,18 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 8540628123787896002}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &545783739 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2118095829012593134, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
-    type: 3}
-  m_PrefabInstance: {fileID: 8540628123787896002}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &545783740 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8470050063308764015, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
     type: 3}
   m_PrefabInstance: {fileID: 8540628123787896002}
   m_PrefabAsset: {fileID: 0}
---- !u!95 &545783741
+--- !u!95 &545783741 stripped
 Animator:
-  serializedVersion: 5
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 7641700976014617243, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
+    type: 3}
+  m_PrefabInstance: {fileID: 8540628123787896002}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 545783739}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 6506da423ff120a458030396c188cf02, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &547944004 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8377107645009971960, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -6263,51 +6062,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 607002327}
   m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &611132083
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA8
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 18
-  sortingID: 9
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &611438390 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 415308744701677593, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -6577,51 +6331,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 549930592}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &649128346
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA15
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 11
-  sortingID: 16
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &650649849 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5678288836806494689, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -7158,51 +6867,6 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 966375990}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &730080176
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA24
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 2
-  sortingID: 25
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &730424958
 GameObject:
   m_ObjectHideFlags: 0
@@ -7466,7 +7130,7 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 8540628123787896002}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &755227671
+--- !u!114 &755944602
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -7476,14 +7140,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA11
+  m_Name: CreaturesInHeaven_LM0
   m_EditorClassIdentifier: 
   resolution: 4096
   bitmask: 1
-  id: 15
-  sortingID: 12
+  id: 0
+  sortingID: 1
   isImplicit: 1
-  area: 0
+  area: 21669890
   totalVertexCount: 0
   vertexCounter: 0
   sceneLodLevel: -1
@@ -7860,51 +7524,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 549930592}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &812395055
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA5
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 21
-  sortingID: 6
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &813055786 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7679034896189726776, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -8651,51 +8270,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 8540628123787896002}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &895937301
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA23
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 3
-  sortingID: 24
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &897576031 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6379241948761852704, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -11897,51 +11471,6 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 985181907}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &985612661
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA4
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 22
-  sortingID: 5
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1001 &988291552
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -12190,51 +11719,6 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1865272810}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1014050743
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA10
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 16
-  sortingID: 11
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &1015667099
 GameObject:
   m_ObjectHideFlags: 0
@@ -12558,51 +12042,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 8540628123787896002}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1089877811
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA3
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 23
-  sortingID: 4
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &1104201044 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2809953442492758360, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -13093,51 +12532,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 549930592}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1202027338
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA16
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 10
-  sortingID: 17
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &1202437793
 GameObject:
   m_ObjectHideFlags: 0
@@ -14125,51 +13519,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 549930592}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1305367422
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA9
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 17
-  sortingID: 10
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &1309058806 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7064841207834777259, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -14272,51 +13621,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 8540628123787896002}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1328622455
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA18
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 8
-  sortingID: 19
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &1329914481 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2976859182089141354, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -14619,51 +13923,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 549930592}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1345305062
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA13
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 0
-  sortingID: 14
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &1349360974
 GameObject:
   m_ObjectHideFlags: 0
@@ -15198,51 +14457,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 8540628123787896002}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1377029874
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA17
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 9
-  sortingID: 18
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &1378249691 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8069504874369507595, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -15382,6 +14596,51 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 549930592}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1411631114
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
+  m_Name: CreaturesInHeaven_LMA1
+  m_EditorClassIdentifier: 
+  resolution: 4096
+  bitmask: 1
+  id: 1
+  sortingID: 2
+  isImplicit: 1
+  area: 0
+  totalVertexCount: 0
+  vertexCounter: 0
+  sceneLodLevel: -1
+  autoResolution: 0
+  sceneName: 
+  tag: -1
+  containsTerrains: 0
+  probes: 0
+  mode: 1
+  renderMode: 1000
+  renderDirMode: 1000
+  atlasPacker: 1000
+  holeFilling: 0
+  vertexSamplingDensity: 0
+  computeSSS: 0
+  sssSamples: 16
+  sssDensity: 10
+  sssColor: {r: 1, g: 1, b: 1, a: 1}
+  sssScale: 1
+  fakeShadowBias: 0
+  transparentSelfShadow: 0
+  flipNormal: 0
+  parentName: 
+  overridePath: 
+  fixPos3D: 0
+  voxelSize: {x: 1, y: 1, z: 1}
+  passedFilter: 0
 --- !u!1 &1418628334 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4221195549176964318, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -16553,51 +15812,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 549930592}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1456497358
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA14
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 12
-  sortingID: 15
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &1457948025
 GameObject:
   m_ObjectHideFlags: 0
@@ -16912,51 +16126,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 8540628123787896002}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1509270602
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA27
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 14
-  sortingID: 28
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &1515148645 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5984823649941583162, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -19005,51 +18174,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 8540628123787896002}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1638656654
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LM0
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 26
-  sortingID: 1
-  isImplicit: 1
-  area: 7377159.5
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1001 &1638757377
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -19425,7 +18549,7 @@ MonoBehaviour:
   renderSettingsBeepOnFinish: 0
   renderSettingsExportTerrainAsHeightmap: 1
   renderSettingsRTXMode: 1
-  renderSettingsLightProbeMode: 2
+  renderSettingsLightProbeMode: 1
   renderSettingsClientMode: 0
   renderSettingsServerAddress: 127.0.0.1
   renderSettingsUnwrapper: 0
@@ -19451,189 +18575,139 @@ MonoBehaviour:
   enlightenWarningShown2: 0
   uniqueLights: []
   implicitGroups:
-  - {fileID: 1997177899}
-  - {fileID: 985612661}
-  - {fileID: 985612661}
-  - {fileID: 985612661}
-  - {fileID: 89499394}
-  - {fileID: 985612661}
-  - {fileID: 89499394}
-  - {fileID: 985612661}
-  - {fileID: 89499394}
-  - {fileID: 812395055}
-  - {fileID: 89499394}
-  - {fileID: 812395055}
-  - {fileID: 89499394}
-  - {fileID: 812395055}
-  - {fileID: 611132083}
-  - {fileID: 1305367422}
-  - {fileID: 1305367422}
-  - {fileID: 1014050743}
-  - {fileID: 611132083}
-  - {fileID: 611132083}
-  - {fileID: 812395055}
-  - {fileID: 812395055}
-  - {fileID: 812395055}
-  - {fileID: 985612661}
-  - {fileID: 2052966680}
-  - {fileID: 157029078}
-  - {fileID: 985612661}
-  - {fileID: 985612661}
-  - {fileID: 985612661}
-  - {fileID: 2086778338}
-  - {fileID: 1328622455}
-  - {fileID: 1911574621}
-  - {fileID: 13541592}
-  - {fileID: 611132083}
-  - {fileID: 1305367422}
-  - {fileID: 985612661}
-  - {fileID: 89499394}
-  - {fileID: 812395055}
-  - {fileID: 755227671}
-  - {fileID: 1014050743}
-  - {fileID: 157029078}
-  - {fileID: 1638656654}
-  - {fileID: 985612661}
-  - {fileID: 157029078}
-  - {fileID: 89499394}
-  - {fileID: 611132083}
-  - {fileID: 812395055}
-  - {fileID: 755227671}
-  - {fileID: 1305367422}
-  - {fileID: 1305367422}
-  - {fileID: 157029078}
-  - {fileID: 89499394}
-  - {fileID: 611132083}
-  - {fileID: 985612661}
-  - {fileID: 1089877811}
-  - {fileID: 157029078}
-  - {fileID: 985612661}
-  - {fileID: 812395055}
-  - {fileID: 157029078}
-  - {fileID: 1345305062}
-  - {fileID: 157029078}
-  - {fileID: 1377029874}
-  - {fileID: 649128346}
-  - {fileID: 1014050743}
-  - {fileID: 425796893}
-  - {fileID: 895937301}
-  - {fileID: 1509270602}
-  - {fileID: 985612661}
-  - {fileID: 157029078}
-  - {fileID: 89499394}
-  - {fileID: 157029078}
-  - {fileID: 755227671}
-  - {fileID: 1305367422}
-  - {fileID: 1014050743}
-  - {fileID: 157029078}
-  - {fileID: 89499394}
-  - {fileID: 89499394}
-  - {fileID: 985612661}
-  - {fileID: 208036122}
-  - {fileID: 157029078}
-  - {fileID: 985612661}
-  - {fileID: 812395055}
-  - {fileID: 812395055}
-  - {fileID: 108354503}
-  - {fileID: 812395055}
-  - {fileID: 1202027338}
-  - {fileID: 1456497358}
-  - {fileID: 755227671}
-  - {fileID: 730080176}
-  - {fileID: 475769168}
-  - {fileID: 2082320185}
+  - {fileID: 1411631114}
+  - {fileID: 443897618}
+  - {fileID: 140220510}
+  - {fileID: 443897618}
+  - {fileID: 140220510}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 443897618}
+  - {fileID: 140220510}
+  - {fileID: 443897618}
+  - {fileID: 140220510}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 755944602}
+  - {fileID: 440046674}
+  - {fileID: 440046674}
+  - {fileID: 440046674}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
+  - {fileID: 1411631114}
   implicitGroupedObjects:
-  - {fileID: 0}
-  - {fileID: 1976026954}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 2072055759}
-  - {fileID: 0}
-  - {fileID: 2072055757}
-  - {fileID: 2072055756}
-  - {fileID: 2072055755}
-  - {fileID: 2072055754}
-  - {fileID: 2072055753}
-  - {fileID: 2072055752}
-  - {fileID: 2072055751}
-  - {fileID: 2072055750}
-  - {fileID: 2072055749}
-  - {fileID: 2072055748}
-  - {fileID: 2072055747}
-  - {fileID: 2072055746}
-  - {fileID: 2072055745}
-  - {fileID: 2072055744}
-  - {fileID: 2072055743}
-  - {fileID: 2072055742}
-  - {fileID: 2072055741}
-  - {fileID: 2072055740}
-  - {fileID: 2072055739}
-  - {fileID: 2072055738}
-  - {fileID: 2072055737}
-  - {fileID: 1205378897}
-  - {fileID: 1205378896}
-  - {fileID: 1205378895}
-  - {fileID: 1205378894}
-  - {fileID: 1205378893}
-  - {fileID: 1205378892}
-  - {fileID: 1205378891}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 676691743}
-  - {fileID: 676691742}
-  - {fileID: 676691741}
-  - {fileID: 676691740}
-  - {fileID: 676691739}
-  - {fileID: 676691738}
-  - {fileID: 676691737}
-  - {fileID: 676691736}
-  - {fileID: 676691735}
-  - {fileID: 676691734}
-  - {fileID: 676691733}
-  - {fileID: 676691732}
-  - {fileID: 676691731}
   - {fileID: 377920982}
-  - {fileID: 983518653}
-  - {fileID: 0}
-  - {fileID: 983518651}
-  - {fileID: 983518650}
-  - {fileID: 983518649}
-  - {fileID: 983518648}
-  - {fileID: 983518647}
-  - {fileID: 983518646}
-  - {fileID: 983518645}
-  - {fileID: 983518644}
-  - {fileID: 983518643}
-  - {fileID: 983518642}
-  - {fileID: 983518641}
-  - {fileID: 983518640}
-  - {fileID: 983518639}
-  - {fileID: 983518638}
-  - {fileID: 983518637}
-  - {fileID: 983518636}
-  - {fileID: 983518635}
-  - {fileID: 983518634}
-  - {fileID: 983518633}
-  - {fileID: 983518632}
+  - {fileID: 676691731}
+  - {fileID: 676691732}
+  - {fileID: 676691733}
+  - {fileID: 676691734}
+  - {fileID: 676691735}
+  - {fileID: 676691736}
+  - {fileID: 676691737}
+  - {fileID: 676691738}
+  - {fileID: 676691739}
+  - {fileID: 676691740}
+  - {fileID: 676691741}
+  - {fileID: 676691742}
+  - {fileID: 676691743}
   - {fileID: 983518631}
+  - {fileID: 983518632}
+  - {fileID: 983518633}
+  - {fileID: 983518634}
+  - {fileID: 983518635}
+  - {fileID: 983518636}
+  - {fileID: 983518637}
+  - {fileID: 983518638}
+  - {fileID: 983518639}
+  - {fileID: 983518640}
+  - {fileID: 983518641}
+  - {fileID: 983518642}
+  - {fileID: 983518643}
+  - {fileID: 983518644}
+  - {fileID: 983518645}
+  - {fileID: 983518646}
+  - {fileID: 983518647}
+  - {fileID: 983518648}
+  - {fileID: 983518649}
+  - {fileID: 983518650}
+  - {fileID: 983518651}
+  - {fileID: 983518653}
+  - {fileID: 1205378891}
+  - {fileID: 1205378892}
+  - {fileID: 1205378893}
+  - {fileID: 1205378894}
+  - {fileID: 1205378895}
+  - {fileID: 1205378896}
+  - {fileID: 1205378897}
+  - {fileID: 1976026954}
+  - {fileID: 2072055737}
+  - {fileID: 2072055738}
+  - {fileID: 2072055739}
+  - {fileID: 2072055740}
+  - {fileID: 2072055741}
+  - {fileID: 2072055742}
+  - {fileID: 2072055743}
+  - {fileID: 2072055744}
+  - {fileID: 2072055745}
+  - {fileID: 2072055746}
+  - {fileID: 2072055747}
+  - {fileID: 2072055748}
+  - {fileID: 2072055749}
+  - {fileID: 2072055750}
+  - {fileID: 2072055751}
+  - {fileID: 2072055752}
+  - {fileID: 2072055753}
+  - {fileID: 2072055754}
+  - {fileID: 2072055755}
+  - {fileID: 2072055756}
+  - {fileID: 2072055757}
+  - {fileID: 2072055759}
   bounds:
   - m_Center: {x: -10.414998, y: -794.5, z: 216.00002}
     m_Extent: {x: 10.415045, y: 5.5, z: 40.00001}
@@ -21250,51 +20324,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 549930592}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1911574621
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA20
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 6
-  sortingID: 21
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &1912664246 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3181322987407917225, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -21870,51 +20899,6 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 532765455}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1997177899
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: probes
-  m_EditorClassIdentifier: 
-  resolution: 16
-  bitmask: 1
-  id: 28
-  sortingID: 0
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 8
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 1
-  mode: 2
-  renderMode: 1000
-  renderDirMode: 7
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &1999755962
 GameObject:
   m_ObjectHideFlags: 0
@@ -22384,51 +21368,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 549930592}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &2052966680
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA1
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 25
-  sortingID: 2
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &2054890418
 GameObject:
   m_ObjectHideFlags: 0
@@ -22972,51 +21911,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2079640560}
   m_Mesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &2082320185
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA26
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 13
-  sortingID: 27
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &2082925446
 GameObject:
   m_ObjectHideFlags: 0
@@ -23076,51 +21970,6 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 549930592}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &2086778338
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: CreaturesInHeaven_LMA21
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 5
-  sortingID: 22
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &2090180329
 GameObject:
   m_ObjectHideFlags: 0
@@ -28117,6 +26966,21 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1055936944440269299, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
         type: 3}
+      propertyPath: EmissionColor.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1055936944440269299, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
+        type: 3}
+      propertyPath: EmissionColor.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1055936944440269299, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
+        type: 3}
+      propertyPath: EmissionColor.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1055936944440269299, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
+        type: 3}
       propertyPath: serializationData.Prefab
       value: 
       objectReference: {fileID: 1055936944440269299, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -29370,6 +28234,11 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 8210713725843786057, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
         type: 3}
+    - target: {fileID: 8315907398176108949, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8330582819381517509, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
         type: 3}
       propertyPath: serializationData.Prefab
@@ -29584,11 +28453,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 2118095829012593134, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 545783741}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 29a0eec2eda4d6841bdd1c2b89f45514, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

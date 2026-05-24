@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine.UIElements;
 
-// Transient overlay state — layered on top of the baked flag.
+// Transient overlay state. layered on top of the baked flag.
 public enum FlipbookCellOverlay { None, Queued, Active }
 
 // A single snapshot cell in the flipbook timeline.

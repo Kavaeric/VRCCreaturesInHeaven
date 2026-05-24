@@ -5961,7 +5961,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &348846616
 Transform:
   m_ObjectHideFlags: 0
@@ -9487,7 +9487,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &605243246
 Transform:
   m_ObjectHideFlags: 0
@@ -14100,7 +14100,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UID: 766242767
   color: {r: 1, g: 1, b: 1, a: 1}
-  intensity: 2.3034074
+  intensity: 16
   texture: {fileID: 0}
   cutoff: 100
   samples: 128
@@ -14182,7 +14182,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &938288488
 Transform:
   m_ObjectHideFlags: 0
@@ -15113,51 +15113,6 @@ MonoBehaviour:
   Light: {fileID: 580051108}
   PropsTransform: {fileID: 1419414845}
   BrightnessScale: 8
---- !u!114 &1017939458
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: Lighting Seq 02 Concourse Animated LV_VLM
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 1
-  sortingID: 1
-  isImplicit: 1
-  area: 148361.94
-  totalVertexCount: 1037222
-  vertexCounter: 1037222
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 2
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 1
 --- !u!1 &1020746571
 GameObject:
   m_ObjectHideFlags: 0
@@ -17481,51 +17436,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1153946092}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &1156730118
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: volumes
-  m_EditorClassIdentifier: 
-  resolution: 16
-  bitmask: 1
-  id: 0
-  sortingID: 0
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 32000
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 1
-  mode: 2
-  renderMode: 1000
-  renderDirMode: 5
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 1
-  voxelSize: {x: 1.0125, y: 0.9750918, z: 1.00625}
-  passedFilter: 0
 --- !u!114 &1160627028
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18512,6 +18422,51 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1243545156}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1245358444
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
+  m_Name: Lighting Seq 02 Concourse Animated LV_VLM
+  m_EditorClassIdentifier: 
+  resolution: 4096
+  bitmask: 1
+  id: 1
+  sortingID: 1
+  isImplicit: 1
+  area: 148358.4
+  totalVertexCount: 1037174
+  vertexCounter: 1037174
+  sceneLodLevel: -1
+  autoResolution: 0
+  sceneName: 
+  tag: -1
+  containsTerrains: 0
+  probes: 0
+  mode: 2
+  renderMode: 1000
+  renderDirMode: 1000
+  atlasPacker: 1000
+  holeFilling: 0
+  vertexSamplingDensity: 0
+  computeSSS: 0
+  sssSamples: 16
+  sssDensity: 10
+  sssColor: {r: 1, g: 1, b: 1, a: 1}
+  sssScale: 1
+  fakeShadowBias: 0
+  transparentSelfShadow: 0
+  flipNormal: 0
+  parentName: 
+  overridePath: 
+  fixPos3D: 0
+  voxelSize: {x: 1, y: 1, z: 1}
+  passedFilter: 7
 --- !u!1 &1246901236
 GameObject:
   m_ObjectHideFlags: 0
@@ -19890,7 +19845,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1356043011
 Transform:
   m_ObjectHideFlags: 0
@@ -29928,7 +29883,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1481456032
 Transform:
   m_ObjectHideFlags: 0
@@ -31800,7 +31755,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1636468232
 Transform:
   m_ObjectHideFlags: 0
@@ -31830,7 +31785,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UID: -791768917
   color: {r: 1, g: 1, b: 1, a: 1}
-  intensity: 4
+  intensity: 16
   texture: {fileID: 0}
   cutoff: 100
   samples: 128
@@ -31843,7 +31798,7 @@ MonoBehaviour:
   indirectIntensity: 1
   shadowmaskFalloff: 0
   maskChannel: 0
-  lmid: -2
+  lmid: -3
 --- !u!23 &1636468234
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -32377,41 +32332,35 @@ MonoBehaviour:
   renderSettingsRTPVHeight: 600
   renderSettingsRTPVExposure: 0.99999994
   renderSettingsRemoveDuplicateLightmaps: 0
-  lastBakeTime: 6
+  lastBakeTime: 4
   enlightenWarningShown: 0
   enlightenWarningShown2: 0
-  uniqueLights:
-  - {fileID: 1636468231}
-  - {fileID: 1763825707}
+  uniqueLights: []
   implicitGroups:
-  - {fileID: 1156730118}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
-  - {fileID: 1017939458}
+  - {fileID: 1727676309}
+  - {fileID: 1245358444}
+  - {fileID: 1245358444}
+  - {fileID: 1245358444}
+  - {fileID: 1245358444}
+  - {fileID: 1245358444}
+  - {fileID: 1245358444}
+  - {fileID: 1245358444}
+  - {fileID: 1245358444}
+  - {fileID: 1245358444}
+  - {fileID: 1245358444}
+  - {fileID: 1245358444}
+  - {fileID: 1245358444}
+  - {fileID: 1245358444}
+  - {fileID: 1245358444}
+  - {fileID: 1245358444}
+  - {fileID: 1245358444}
+  - {fileID: 1245358444}
+  - {fileID: 1245358444}
+  - {fileID: 1245358444}
+  - {fileID: 1245358444}
+  - {fileID: 1245358444}
   implicitGroupedObjects:
   - {fileID: 0}
-  - {fileID: 1636468231}
-  - {fileID: 1763825707}
   - {fileID: 168230363169365504}
   - {fileID: 391849643112896286}
   - {fileID: 792900601858938821}
@@ -32454,75 +32403,11 @@ MonoBehaviour:
   lightmapHasMask: 0000000000000000
   lightmapHasDir: 0000
   lightmapHasRNM: 0100
-  lights:
-  - tform:
-      e00: 4
-      e01: 0
-      e02: 0
-      e03: -16.01
-      e10: 0
-      e11: -0.01
-      e12: -0.00000007152557
-      e13: 9.80006
-      e20: 0
-      e21: 0.0000000071525568
-      e22: -0.1
-      e23: 31.649998
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    color: {r: 1, g: 1, b: 1, a: 1}
-    intensity: 4
-    range: 100
-    radius: 0
-    samples: 128
-    samples2: 32
-    bitmask: 0
-    bakeToIndirect: 1
-    selfShadow: 1
-    realisticFalloff: 0
-    projMode: 0
-    cookie: {fileID: 0}
-    angle: 30
-    UID: 1
-  - tform:
-      e00: 4
-      e01: 0
-      e02: 0
-      e03: -12
-      e10: 0
-      e11: -0.01
-      e12: -0.00000007152557
-      e13: 9.80006
-      e20: 0
-      e21: 0.0000000071525568
-      e22: -0.1
-      e23: 31.649998
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    color: {r: 1, g: 1, b: 1, a: 1}
-    intensity: 16
-    range: 100
-    radius: 0
-    samples: 128
-    samples2: 32
-    bitmask: 0
-    bakeToIndirect: 1
-    selfShadow: 1
-    realisticFalloff: 0
-    projMode: 0
-    cookie: {fileID: 0}
-    angle: 30
-    UID: 2
+  lights: []
   modifiedAssetPathList: []
   modifiedAssets: []
   bakedRenderers: []
   nonBakedRenderers:
-  - {fileID: 1636468234}
-  - {fileID: 1763825710}
   - {fileID: 1825454213737136085}
   - {fileID: 2193496408583321291}
   - {fileID: 1152937539016947216}
@@ -32912,7 +32797,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1717252631
 Transform:
   m_ObjectHideFlags: 0
@@ -33021,6 +32906,51 @@ MonoBehaviour:
   Light: {fileID: 553235611}
   PropsTransform: {fileID: 1419414896}
   BrightnessScale: 8
+--- !u!114 &1727676309
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
+  m_Name: volumes
+  m_EditorClassIdentifier: 
+  resolution: 16
+  bitmask: 1
+  id: 0
+  sortingID: 0
+  isImplicit: 1
+  area: 0
+  totalVertexCount: 32000
+  vertexCounter: 0
+  sceneLodLevel: -1
+  autoResolution: 0
+  sceneName: 
+  tag: -1
+  containsTerrains: 0
+  probes: 1
+  mode: 2
+  renderMode: 1000
+  renderDirMode: 5
+  atlasPacker: 1000
+  holeFilling: 0
+  vertexSamplingDensity: 0
+  computeSSS: 0
+  sssSamples: 16
+  sssDensity: 10
+  sssColor: {r: 1, g: 1, b: 1, a: 1}
+  sssScale: 1
+  fakeShadowBias: 0
+  transparentSelfShadow: 0
+  flipNormal: 0
+  parentName: 
+  overridePath: 
+  fixPos3D: 1
+  voxelSize: {x: 1.0125, y: 0.9750918, z: 1.00625}
+  passedFilter: 0
 --- !u!1 &1731815968
 GameObject:
   m_ObjectHideFlags: 0
@@ -33211,7 +33141,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1763825708
 Transform:
   m_ObjectHideFlags: 0
@@ -33254,7 +33184,7 @@ MonoBehaviour:
   indirectIntensity: 1
   shadowmaskFalloff: 0
   maskChannel: 0
-  lmid: -3
+  lmid: -4
 --- !u!23 &1763825710
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -40650,13 +40580,18 @@ PrefabInstance:
     - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
       propertyPath: PreviewVoxels
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
       propertyPath: AnimatorSource
       value: 
       objectReference: {fileID: 1419414199}
+    - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
+        type: 3}
+      propertyPath: PreviewSnapshot
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
       propertyPath: serializationData.Prefab

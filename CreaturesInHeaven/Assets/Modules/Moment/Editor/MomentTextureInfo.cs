@@ -22,8 +22,9 @@ public class MomentTextureInfo
     [System.Serializable]
     public struct SnapshotEntry
     {
-        public bool baked;      // True once this snapshot's slice has been written to the atlas
-        public int  animFrame;  // Animation window frame index this snapshot was sampled from
+        public bool  baked;          // True once this snapshot's slice has been written to the atlas
+        public int   animFrame;      // Animation window frame index this snapshot was sampled from
+        public float renderSeconds;  // Wall-clock seconds the Bakery render took; -1 if not recorded
     }
 
     // Returns true if the given params match this sidecar's texture layout.

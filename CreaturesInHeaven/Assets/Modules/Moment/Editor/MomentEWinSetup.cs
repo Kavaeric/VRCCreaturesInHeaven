@@ -13,7 +13,7 @@ using VRCLightVolumes;
 //   5. Assigns the new atlas to the ALV component so the runtime can play it back.
 //
 // The MomentEWinBaker (bake window) reads these params and the sidecar but never modifies them.
-// If the user wants to change setup later, they reopen this window and re-run setup — which wipes
+// If the user wants to change setup later, they reopen this window and re-run setup, which wipes
 // the existing atlas. This is deliberate, and replaces the silent atlas re-init the old baker did.
 //
 // Open via Tools > Moment ALV > Set up animated light volume...

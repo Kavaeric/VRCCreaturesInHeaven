@@ -83,6 +83,8 @@
                     <ui:Label name="flipbook-status-focus" text="" />
                 </ui:VisualElement>
 
+                <ui:VisualElement class="h-0p5" />
+
                 <ui:VisualElement class="h-1" />
 
                 <ui:VisualElement class="row">
@@ -100,9 +102,24 @@
             <ui:VisualElement name="bake-action-block">
                 <ui:HelpBox name="bake-progress-box" message-type="Info" />
 
-                <ui:VisualElement class="h-1" />
-                <ui:Label name="flipbook-status-queued" text="0 snapshot(s) selected for baking." />
-                <ui:VisualElement class="h-1" />
+                <ui:VisualElement name="flipbook-bake-estimates" class="col">
+                    <ui:VisualElement class="row">
+                        <ui:Label text="Snapshots marked for baking" class="font-bold grow" />
+                        <ui:Label name="flipbook-status-queued" text="—" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="h-0p5" />
+                    <ui:VisualElement class="row">
+                        <ui:Label text="Average snapshot bake time" class="font-bold grow" />
+                        <ui:Label name="flipbook-average-snapshot-bake-time" text="—" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="h-0p5" />
+                    <ui:VisualElement class="row">
+                        <ui:Label text="Estimated total bake time" class="font-bold grow" />
+                        <ui:Label name="flipbook-estimated-total-bake-time" text="—" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:VisualElement class="h-2" />
 
                 <ui:Button name="bake-btn" text="Bake animated light volume" />
                 <ui:VisualElement class="h-1" />

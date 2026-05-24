@@ -326,7 +326,7 @@ public static class MomentTextureWriter
     //   sh1 = (L1r.x, L1g.x, L1b.x, L1g.z)
     //   sh2 = (L1r.y, L1g.y, L1b.y, L1b.z)
     // This is the same layout the preview shader and the atlas itself use, so callers don't
-    // need to know which SH mode was baked — they always get full L1 data back.
+    // need to know which SH mode was baked. They always get full L1 data back.
     //
     // pixels:       flat array from Texture3D.GetPixels(), XYZ order (x fastest)
     // texSize:      full packed texture dimensions (width, height, depth)

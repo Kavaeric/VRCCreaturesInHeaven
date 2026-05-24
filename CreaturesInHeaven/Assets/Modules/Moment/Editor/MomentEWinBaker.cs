@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using UnityEditor;
@@ -7,10 +6,14 @@ using UnityEngine.UIElements;
 using VRCLightVolumes;
 
 // Bakes a Moment texture by:
-//   1. Force-evaluating an Animator to N evenly-spaced times across an AnimationClip.
-//   2. Triggering a Bakery bake for each snapshot.
-//   3. Reading BakeryVolume.bakedTexture0/1/2 after each bake.
-//   4. Packing all snapshots into a Texture3D via MomentTextureWriter.SavePackedTexture.
+//   1. Initialising a blank atlas Texture3D asset and sidecar at bake start.
+//   2. Force-evaluating an Animator to N evenly-spaced times across an AnimationClip.
+//   3. Triggering a Bakery bake for each snapshot.
+//   4. Reading BakeryVolume.bakedTexture0/1/2 after each bake and writing the slice
+//      directly into the atlas, then updating the sidecar's per-snapshot baked flag.
+//
+// This means partial bakes are usable at runtime (unbaked slices remain black) and
+// the bake can be resumed or selectively overwritten in a future session.
 //
 // Open via Tools > Lighting > Bake animated light volume...
 #if BAKERY_INCLUDED
@@ -29,7 +32,10 @@ public class MomentEWinBaker : EditorWindow
 
     bool _baking = false;
     int _currentSnapshot = 0;
-    readonly List<MomentTextureWriter.SnapshotSH> _collectedSnapshots = new();
+
+    // Asset path and sidecar resolved at bake start; used by OnBakeFinished to write each slice.
+    string _assetPath;
+    MomentTextureInfo _activeSidecar;
 
     // Hierarchy paths resolved at bake start, used to re-find objects across
     // snapshots in case Bakery's scene management destroys the live references mid-bake.
@@ -464,11 +470,49 @@ public class MomentEWinBaker : EditorWindow
         _baking = true;
         _currentSnapshot = 0;
         _secsPerSnapshotBake = -1;
-        _collectedSnapshots.Clear();
 
         // Cache hierarchy paths now while references are guaranteed live.
         _animatorPath     = MomentSceneQuery.GetHierarchyPath(_animator.gameObject);
         _targetVolumePath = MomentSceneQuery.GetHierarchyPath(_targetVolume.gameObject);
+
+        // Resolve dimensions from the volume's voxel grid — always available, unlike
+        // BakeryVolume.bakedTexture0 which is only populated after the first Bakery bake.
+        Vector3Int res = _targetVolume.Resolution;
+        int w = res.x;
+        int h = res.y;
+        int d = res.z;
+
+        string assetDir = MomentAssetPaths.SceneAssetDir();
+        MomentAssetPaths.CreateDirectory(assetDir);
+        _assetPath = $"{assetDir}/{_outputName}.asset";
+
+        // If an existing atlas and sidecar are compatible with the current params, reuse them
+        // so only the snapshots being baked this session get overwritten.
+        // Otherwise, start fresh with a blank atlas.
+        MomentTextureInfo existingSidecar = MomentTextureInfo.Load(_assetPath);
+        bool reusing = existingSidecar != null
+            && existingSidecar.MatchesParams(w, h, d, _params.SnapshotCount, _shMode, _bitDepth);
+
+        if (reusing)
+        {
+            _activeSidecar = existingSidecar;
+            Debug.Log($"[Moment] Resuming existing bake at {_assetPath}");
+        }
+        else
+        {
+            MomentTextureWriter.InitialiseTexture(w, h, d, _params.SnapshotCount, _shMode, _bitDepth, _assetPath);
+            _activeSidecar = new MomentTextureInfo
+            {
+                snapshotX    = w,
+                snapshotY    = h,
+                snapshotZ    = d,
+                numSnapshots = _params.SnapshotCount,
+                shMode       = _shMode,
+                bitDepth     = _bitDepth,
+                snapshots    = new MomentTextureInfo.SnapshotEntry[_params.SnapshotCount],
+            };
+            _activeSidecar.Save(_assetPath);
+        }
 
         UpdateUI();
         BakeNextSnapshot();
@@ -535,10 +579,22 @@ public class MomentEWinBaker : EditorWindow
             return;
         }
 
-        _collectedSnapshots.Add(MomentTextureWriter.DeringSnapshot(
+        MomentTextureWriter.SnapshotSH snapshot = MomentTextureWriter.DeringSnapshot(
             bv.bakedTexture0.GetPixels(),
             bv.bakedTexture1.GetPixels(),
-            bv.bakedTexture2.GetPixels()));
+            bv.bakedTexture2.GetPixels());
+
+        MomentTextureWriter.WriteSnapshotSlice(
+            _assetPath, snapshot, _currentSnapshot,
+            bv.bakedTexture0.width, bv.bakedTexture0.height, bv.bakedTexture0.depth,
+            _shMode, _bitDepth);
+
+        _activeSidecar.snapshots[_currentSnapshot] = new MomentTextureInfo.SnapshotEntry
+        {
+            baked     = true,
+            animFrame = _params.SnapshotToAnimFrame(_currentSnapshot),
+        };
+        _activeSidecar.Save(_assetPath);
 
         _currentSnapshot++;
 
@@ -555,23 +611,10 @@ public class MomentEWinBaker : EditorWindow
         _baking = false;
         if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
 
-        BakeryVolume bv = _targetVolume.BakeryVolume;
-        int w = bv.bakedTexture0.width;
-        int h = bv.bakedTexture0.height;
-        int d = bv.bakedTexture0.depth;
-
-        string assetDir = MomentAssetPaths.SceneAssetDir();
-        MomentAssetPaths.CreateDirectory(assetDir);
-
-        string assetPath = $"{assetDir}/{_outputName}.asset";
-        MomentTextureWriter.SavePackedTexture(_collectedSnapshots.ToArray(), w, h, d, assetPath, _shMode, _bitDepth);
-
-        new MomentTextureInfo { snapshotX = w, snapshotY = h, snapshotZ = d, numSnapshots = _params.SnapshotCount, shMode = _shMode, bitDepth = _bitDepth }.Save(assetPath);
-
         // Reload references to make it faster to re-bake a sequence if needed.
         RefreshReferences();
 
-        Debug.Log($"  [Moment] Done. {_params.SnapshotCount} snapshots baked into {assetPath} (snapshotX={w} snapshotY={h} snapshotZ={d})");
+        Debug.Log($"[Moment] Done. {_params.SnapshotCount} snapshots baked into {_assetPath}");
         UpdateUI();
     }
 

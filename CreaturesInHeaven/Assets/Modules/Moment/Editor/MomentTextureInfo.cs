@@ -16,6 +16,22 @@ public class MomentTextureInfo
     public MomentALVSHMode   shMode;            // SH fidelity mode (L1 / MonoL1 / MonoL0)
     public MomentALVBitDepth bitDepth;          // Bit depth (Depth8 / Depth16)
 
+    // Per-snapshot bake state. Length == numSnapshots when fully initialised.
+    public SnapshotEntry[] snapshots;
+
+    [System.Serializable]
+    public struct SnapshotEntry
+    {
+        public bool baked;      // True once this snapshot's slice has been written to the atlas
+        public int  animFrame;  // Animation window frame index this snapshot was sampled from
+    }
+
+    // Returns true if the given params match this sidecar's texture layout.
+    // When false, the existing atlas cannot be reused and a full re-bake is needed.
+    public bool MatchesParams(int x, int y, int z, int count, MomentALVSHMode mode, MomentALVBitDepth depth) =>
+        snapshotX == x && snapshotY == y && snapshotZ == z &&
+        numSnapshots == count && shMode == mode && bitDepth == depth;
+
     // Derives the sidecar path from a texture asset path.
     public static string SidecarPath(string assetPath) =>
         Path.ChangeExtension(assetPath, null) + ".alv.json";

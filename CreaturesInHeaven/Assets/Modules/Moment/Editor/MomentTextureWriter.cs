@@ -64,6 +64,9 @@ public static class MomentTextureWriter
         // UNORM formats need signed SH values remapped from [-1,1] to [0,1] for storage.
         // The shader decodes back with value * 2 - 1.
         // RGB48 (MonoL1+Depth16) is also UNORM, so it needs the same remap as the Depth8 cases.
+        // TODO (8bpc): L0 channels are always non-negative so the uniform remap wastes half their
+        // precision on the negative half they never use. Investigate storing L0 raw and only
+        // remapping L1 channels, with matching per-channel decode in the shader.
         bool isUnorm = MomentALVFormat.IsUnorm(shMode, bitDepth);
         if (isUnorm)
         {
@@ -111,6 +114,109 @@ public static class MomentTextureWriter
 
         AssetDatabase.SaveAssets();
         Debug.Log($"[Moment] Saved {assetPath} ({w}x{totalHeight}x{totalDepth}, {numSnapshots} snapshots, {shMode}, {bitDepth})");
+    }
+
+    // Creates or replaces a blank (zeroed) Texture3D atlas at assetPath with the correct packed dimensions.
+    // Called at bake start so the asset exists immediately and partial results are playable at runtime.
+    public static Texture3D InitialiseTexture(int w, int h, int d, int numSnapshots,
+        MomentALVSHMode shMode, MomentALVBitDepth bitDepth, string assetPath)
+    {
+        int totalHeight = MomentALVFormat.PackedHeight(h, numSnapshots);
+        int totalDepth  = MomentALVFormat.PackedDepth(d, shMode);
+
+        TextureFormat texFormat = (shMode, bitDepth) switch
+        {
+            (MomentALVSHMode.MonoL1, MomentALVBitDepth.Depth8)  => TextureFormat.RGB24,
+            (MomentALVSHMode.MonoL1, MomentALVBitDepth.Depth16) => TextureFormat.RGB48,
+            (_,                MomentALVBitDepth.Depth8)  => TextureFormat.RGBA32,
+            _                                       => TextureFormat.RGBAHalf,
+        };
+
+        Texture3D existing = AssetDatabase.LoadAssetAtPath<Texture3D>(assetPath);
+        if (existing != null)
+            AssetDatabase.DeleteAsset(assetPath);
+
+        Texture3D tex = new Texture3D(w, totalHeight, totalDepth, texFormat, false);
+        tex.wrapMode   = TextureWrapMode.Clamp;
+        tex.filterMode = FilterMode.Bilinear;
+
+        // UNORM formats store SH values remapped to [0,1]; zero storage decodes as -1 in the shader.
+        // Fill with 0.5 so unbaked slices decode to 0 (no light contribution) rather than -1.
+        if (MomentALVFormat.IsUnorm(shMode, bitDepth))
+        {
+            Color blank = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+            Color[] pixels = new Color[w * totalHeight * totalDepth];
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = blank;
+            tex.SetPixels(pixels);
+        }
+
+        tex.Apply();
+        AssetDatabase.CreateAsset(tex, assetPath);
+        AssetDatabase.SaveAssets();
+        return tex;
+    }
+
+    // Writes a single snapshot's SH data into the correct Y-slice of an existing packed atlas asset.
+    // snapshotIndex is 0-based; the atlas must already exist with the correct packed dimensions.
+    public static void WriteSnapshotSlice(string assetPath, SnapshotSH snapshot, int snapshotIndex,
+        int w, int h, int d, MomentALVSHMode shMode, MomentALVBitDepth bitDepth)
+    {
+        Texture3D tex = AssetDatabase.LoadAssetAtPath<Texture3D>(assetPath);
+        if (tex == null)
+        {
+            Debug.LogError($"[Moment] WriteSnapshotSlice: asset not found at {assetPath}");
+            return;
+        }
+
+        int totalHeight = tex.height;
+        int yOffset     = snapshotIndex * h;
+        bool isUnorm    = MomentALVFormat.IsUnorm(shMode, bitDepth);
+
+        Color[] pixels = tex.GetPixels();
+
+        void PasteBlock(Color[] src, int zOffset)
+        {
+            for (int z = 0; z < d; z++)
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
+                    {
+                        Color c = src[x + y * w + z * w * h];
+                        if (isUnorm) c = new Color(c.r * 0.5f + 0.5f, c.g * 0.5f + 0.5f, c.b * 0.5f + 0.5f, c.a * 0.5f + 0.5f);
+                        pixels[x + (y + yOffset) * w + (z + zOffset) * w * totalHeight] = c;
+                    }
+        }
+
+        switch (shMode)
+        {
+            case MomentALVSHMode.L1:
+                PasteBlock(snapshot.tex0, 0);
+                PasteBlock(snapshot.tex1, d);
+                PasteBlock(snapshot.tex2, d * 2);
+                break;
+
+            case MomentALVSHMode.MonoL1:
+            {
+                Color[] t0 = new Color[w * h * d];
+                Color[] t1 = new Color[w * h * d];
+                DownsampleMonoL1(snapshot, w * h * d, t0, t1);
+                PasteBlock(t0, 0);
+                PasteBlock(t1, d);
+                break;
+            }
+
+            case MomentALVSHMode.MonoL0:
+            {
+                Color[] t0 = new Color[w * h * d];
+                DownsampleMonoL0(snapshot, w * h * d, t0);
+                PasteBlock(t0, 0);
+                break;
+            }
+        }
+
+        tex.SetPixels(pixels);
+        tex.Apply();
+        EditorUtility.SetDirty(tex);
+        AssetDatabase.SaveAssets();
     }
 
     // MonoL1: collapses the three per-channel L1 direction vectors into one shared direction,

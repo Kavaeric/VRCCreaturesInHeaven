@@ -251,51 +251,6 @@ MonoBehaviour:
   Light: {fileID: 34024566}
   PropsTransform: {fileID: 1419414683}
   BrightnessScale: 2.2
---- !u!114 &9731005
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: volumes
-  m_EditorClassIdentifier: 
-  resolution: 16
-  bitmask: 1
-  id: 0
-  sortingID: 0
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 32000
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 1
-  mode: 2
-  renderMode: 1000
-  renderDirMode: 5
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 1
-  voxelSize: {x: 1.0125, y: 0.9750918, z: 1.00625}
-  passedFilter: 0
 --- !u!1 &14241697
 GameObject:
   m_ObjectHideFlags: 0
@@ -2486,7 +2441,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &158207760
 Transform:
   m_ObjectHideFlags: 0
@@ -2516,7 +2471,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UID: 702865828
   color: {r: 1, g: 1, b: 1, a: 1}
-  intensity: 4.4
+  intensity: 0.37684256
   texture: {fileID: 0}
   cutoff: 100
   samples: 256
@@ -3907,7 +3862,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &237585640
 Transform:
   m_ObjectHideFlags: 0
@@ -8725,7 +8680,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &548380482
 Transform:
   m_ObjectHideFlags: 0
@@ -8755,7 +8710,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UID: 1424872289
   color: {r: 0.995, g: 0.995, b: 0.995, a: 1}
-  intensity: 1.2201748
+  intensity: 4.4
   texture: {fileID: 0}
   cutoff: 100
   samples: 256
@@ -8946,6 +8901,51 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 559731313}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &561609229
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
+  m_Name: volumes
+  m_EditorClassIdentifier: 
+  resolution: 16
+  bitmask: 1
+  id: 0
+  sortingID: 0
+  isImplicit: 1
+  area: 0
+  totalVertexCount: 32000
+  vertexCounter: 0
+  sceneLodLevel: -1
+  autoResolution: 0
+  sceneName: 
+  tag: -1
+  containsTerrains: 0
+  probes: 1
+  mode: 2
+  renderMode: 1000
+  renderDirMode: 5
+  atlasPacker: 1000
+  holeFilling: 0
+  vertexSamplingDensity: 0
+  computeSSS: 0
+  sssSamples: 16
+  sssDensity: 10
+  sssColor: {r: 1, g: 1, b: 1, a: 1}
+  sssScale: 1
+  fakeShadowBias: 0
+  transparentSelfShadow: 0
+  flipNormal: 0
+  parentName: 
+  overridePath: 
+  fixPos3D: 1
+  voxelSize: {x: 1.0125, y: 0.9750918, z: 1.00625}
+  passedFilter: 0
 --- !u!1 &564128627
 GameObject:
   m_ObjectHideFlags: 0
@@ -8964,7 +8964,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &564128628
 Transform:
   m_ObjectHideFlags: 0
@@ -9007,7 +9007,7 @@ MonoBehaviour:
   indirectIntensity: 1
   shadowmaskFalloff: 0
   maskChannel: 0
-  lmid: -5
+  lmid: -4
 --- !u!23 &564128630
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -9935,7 +9935,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &621817465
 Transform:
   m_ObjectHideFlags: 0
@@ -9965,7 +9965,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UID: 890786128
   color: {r: 1, g: 1, b: 1, a: 1}
-  intensity: 1.2201748
+  intensity: 4.4
   texture: {fileID: 0}
   cutoff: 100
   samples: 256
@@ -9978,7 +9978,7 @@ MonoBehaviour:
   indirectIntensity: 1
   shadowmaskFalloff: 0
   maskChannel: 0
-  lmid: -5
+  lmid: -4
 --- !u!23 &621817467
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -10186,6 +10186,51 @@ MonoBehaviour:
   Light: {fileID: 158207761}
   PropsTransform: {fileID: 1419414647}
   BrightnessScale: 2.2
+--- !u!114 &647582005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
+  m_Name: Lighting Seq 02 Concourse Animated LV_VLM
+  m_EditorClassIdentifier: 
+  resolution: 4096
+  bitmask: 1
+  id: 1
+  sortingID: 1
+  isImplicit: 1
+  area: 148365.45
+  totalVertexCount: 1037270
+  vertexCounter: 1037270
+  sceneLodLevel: -1
+  autoResolution: 0
+  sceneName: 
+  tag: -1
+  containsTerrains: 0
+  probes: 0
+  mode: 2
+  renderMode: 1000
+  renderDirMode: 1000
+  atlasPacker: 1000
+  holeFilling: 0
+  vertexSamplingDensity: 0
+  computeSSS: 0
+  sssSamples: 16
+  sssDensity: 10
+  sssColor: {r: 1, g: 1, b: 1, a: 1}
+  sssScale: 1
+  fakeShadowBias: 0
+  transparentSelfShadow: 0
+  flipNormal: 0
+  parentName: 
+  overridePath: 
+  fixPos3D: 0
+  voxelSize: {x: 1, y: 1, z: 1}
+  passedFilter: 38
 --- !u!114 &647870743
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11646,7 +11691,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UID: 1804119420
   color: {r: 1, g: 1, b: 1, a: 1}
-  intensity: 4.4
+  intensity: 3.877703
   texture: {fileID: 0}
   cutoff: 100
   samples: 256
@@ -28128,7 +28173,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1440588381
 Transform:
   m_ObjectHideFlags: 0
@@ -28171,7 +28216,7 @@ MonoBehaviour:
   indirectIntensity: 1
   shadowmaskFalloff: 0
   maskChannel: 0
-  lmid: -8
+  lmid: -7
 --- !u!23 &1440588383
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -30466,7 +30511,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1562512496
 Transform:
   m_ObjectHideFlags: 0
@@ -30509,7 +30554,7 @@ MonoBehaviour:
   indirectIntensity: 1
   shadowmaskFalloff: 0
   maskChannel: 0
-  lmid: -9
+  lmid: -7
 --- !u!23 &1562512498
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -32439,51 +32484,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1655156051}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!114 &1655213927
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: Lighting Seq 02 Concourse Animated LV_VLM
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 1
-  sortingID: 1
-  isImplicit: 1
-  area: 148379.56
-  totalVertexCount: 1037462
-  vertexCounter: 1037462
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 2
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 336
 --- !u!1 &1657946804
 GameObject:
   m_ObjectHideFlags: 0
@@ -32952,71 +32952,47 @@ MonoBehaviour:
   renderSettingsRTPVHeight: 600
   renderSettingsRTPVExposure: 0.99999994
   renderSettingsRemoveDuplicateLightmaps: 0
-  lastBakeTime: 27
+  lastBakeTime: 10
   enlightenWarningShown: 0
   enlightenWarningShown2: 0
   uniqueLights:
-  - {fileID: 194230665}
-  - {fileID: 404825113}
-  - {fileID: 444811052}
-  - {fileID: 504011181}
-  - {fileID: 529668302}
-  - {fileID: 903223368}
-  - {fileID: 920435765}
-  - {fileID: 921057253}
-  - {fileID: 965187491}
-  - {fileID: 1387008321}
-  - {fileID: 1478404251}
-  - {fileID: 1492295722}
+  - {fileID: 158207759}
+  - {fileID: 548380481}
+  - {fileID: 621817464}
+  - {fileID: 1987974139}
   implicitGroups:
-  - {fileID: 9731005}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
-  - {fileID: 1655213927}
+  - {fileID: 561609229}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
+  - {fileID: 647582005}
   implicitGroupedObjects:
   - {fileID: 0}
-  - {fileID: 194230665}
-  - {fileID: 404825113}
-  - {fileID: 444811052}
-  - {fileID: 504011181}
-  - {fileID: 529668302}
-  - {fileID: 903223368}
-  - {fileID: 920435765}
-  - {fileID: 921057253}
-  - {fileID: 965187491}
-  - {fileID: 1387008321}
-  - {fileID: 1478404251}
-  - {fileID: 1492295722}
+  - {fileID: 158207759}
+  - {fileID: 548380481}
+  - {fileID: 621817464}
+  - {fileID: 1987974139}
   - {fileID: 168230363169365504}
   - {fileID: 391849643112896286}
   - {fileID: 792900601858938821}
@@ -33064,7 +33040,7 @@ MonoBehaviour:
       e00: 4
       e01: 0
       e02: 0
-      e03: 7.99
+      e03: -16.01
       e10: 0
       e11: -0.01
       e12: -0.00000007152557
@@ -33072,13 +33048,13 @@ MonoBehaviour:
       e20: 0
       e21: 0.0000000071525568
       e22: -0.1
-      e23: 39.649998
+      e23: 31.649998
       e30: 0
       e31: 0
       e32: 0
       e33: 1
     color: {r: 1, g: 1, b: 1, a: 1}
-    intensity: 4.4
+    intensity: 0.37684256
     range: 100
     radius: 0
     samples: 256
@@ -33095,20 +33071,20 @@ MonoBehaviour:
       e00: 4
       e01: 0
       e02: 0
-      e03: -12
+      e03: -7.99
       e10: 0
       e11: -0.01
       e12: -0.00000007152557
-      e13: 9.80006
+      e13: 9.800061
       e20: 0
       e21: 0.0000000071525568
       e22: -0.1
-      e23: 39.649998
+      e23: 32.35
       e30: 0
       e31: 0
       e32: 0
       e33: 1
-    color: {r: 1, g: 1, b: 1, a: 1}
+    color: {r: 0.995, g: 0.995, b: 0.995, a: 1}
     intensity: 4.4
     range: 100
     radius: 0
@@ -33126,15 +33102,15 @@ MonoBehaviour:
       e00: 4
       e01: 0
       e02: 0
-      e03: 12
+      e03: -12
       e10: 0
       e11: -0.01
       e12: -0.00000007152557
-      e13: 9.80006
+      e13: 9.800061
       e20: 0
       e21: 0.0000000071525568
       e22: -0.1
-      e23: 39.649998
+      e23: 32.35
       e30: 0
       e31: 0
       e32: 0
@@ -33157,7 +33133,7 @@ MonoBehaviour:
       e00: 4
       e01: 0
       e02: 0
-      e03: -12
+      e03: -16.01
       e10: 0
       e11: -0.01
       e12: -0.00000007152557
@@ -33165,7 +33141,7 @@ MonoBehaviour:
       e20: 0
       e21: 0.0000000071525568
       e22: -0.1
-      e23: 40.35
+      e23: 32.35
       e30: 0
       e31: 0
       e32: 0
@@ -33184,270 +33160,14 @@ MonoBehaviour:
     cookie: {fileID: 0}
     angle: 30
     UID: 4
-  - tform:
-      e00: 4
-      e01: 0
-      e02: 0
-      e03: 16.01
-      e10: 0
-      e11: -0.01
-      e12: -0.00000007152557
-      e13: 9.80006
-      e20: 0
-      e21: 0.0000000071525568
-      e22: -0.1
-      e23: 39.649998
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    color: {r: 1, g: 1, b: 1, a: 1}
-    intensity: 4.4
-    range: 100
-    radius: 0
-    samples: 256
-    samples2: 16
-    bitmask: 0
-    bakeToIndirect: 1
-    selfShadow: 1
-    realisticFalloff: 0
-    projMode: 0
-    cookie: {fileID: 0}
-    angle: 30
-    UID: 5
-  - tform:
-      e00: 4
-      e01: 0
-      e02: 0
-      e03: -7.99
-      e10: 0
-      e11: -0.01
-      e12: -0.00000007152557
-      e13: 9.80006
-      e20: 0
-      e21: 0.0000000071525568
-      e22: -0.1
-      e23: 39.649998
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    color: {r: 1, g: 1, b: 1, a: 1}
-    intensity: 4.4
-    range: 100
-    radius: 0
-    samples: 256
-    samples2: 16
-    bitmask: 0
-    bakeToIndirect: 1
-    selfShadow: 1
-    realisticFalloff: 0
-    projMode: 0
-    cookie: {fileID: 0}
-    angle: 30
-    UID: 6
-  - tform:
-      e00: 4
-      e01: 0
-      e02: 0
-      e03: 12
-      e10: 0
-      e11: -0.01
-      e12: -0.00000007152557
-      e13: 9.800061
-      e20: 0
-      e21: 0.0000000071525568
-      e22: -0.1
-      e23: 40.35
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    color: {r: 1, g: 1, b: 1, a: 1}
-    intensity: 4.4
-    range: 100
-    radius: 0
-    samples: 256
-    samples2: 16
-    bitmask: 0
-    bakeToIndirect: 1
-    selfShadow: 1
-    realisticFalloff: 0
-    projMode: 0
-    cookie: {fileID: 0}
-    angle: 30
-    UID: 7
-  - tform:
-      e00: 4
-      e01: 0
-      e02: 0
-      e03: 7.99
-      e10: 0
-      e11: -0.01
-      e12: -0.00000007152557
-      e13: 9.800061
-      e20: 0
-      e21: 0.0000000071525568
-      e22: -0.1
-      e23: 40.35
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    color: {r: 1, g: 1, b: 1, a: 1}
-    intensity: 4.4
-    range: 100
-    radius: 0
-    samples: 256
-    samples2: 16
-    bitmask: 0
-    bakeToIndirect: 1
-    selfShadow: 1
-    realisticFalloff: 0
-    projMode: 0
-    cookie: {fileID: 0}
-    angle: 30
-    UID: 8
-  - tform:
-      e00: 4
-      e01: 0
-      e02: 0
-      e03: 16.01
-      e10: 0
-      e11: -0.01
-      e12: -0.00000007152557
-      e13: 9.800061
-      e20: 0
-      e21: 0.0000000071525568
-      e22: -0.1
-      e23: 40.35
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    color: {r: 1, g: 1, b: 1, a: 1}
-    intensity: 4.4
-    range: 100
-    radius: 0
-    samples: 256
-    samples2: 16
-    bitmask: 0
-    bakeToIndirect: 1
-    selfShadow: 1
-    realisticFalloff: 0
-    projMode: 0
-    cookie: {fileID: 0}
-    angle: 30
-    UID: 9
-  - tform:
-      e00: 4
-      e01: 0
-      e02: 0
-      e03: -16.01
-      e10: 0
-      e11: -0.01
-      e12: -0.00000007152557
-      e13: 9.80006
-      e20: 0
-      e21: 0.0000000071525568
-      e22: -0.1
-      e23: 39.649998
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    color: {r: 1, g: 1, b: 1, a: 1}
-    intensity: 4.4
-    range: 100
-    radius: 0
-    samples: 256
-    samples2: 16
-    bitmask: 0
-    bakeToIndirect: 1
-    selfShadow: 1
-    realisticFalloff: 0
-    projMode: 0
-    cookie: {fileID: 0}
-    angle: 30
-    UID: 10
-  - tform:
-      e00: 4
-      e01: 0
-      e02: 0
-      e03: -7.99
-      e10: 0
-      e11: -0.01
-      e12: -0.00000007152557
-      e13: 9.800061
-      e20: 0
-      e21: 0.0000000071525568
-      e22: -0.1
-      e23: 40.35
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    color: {r: 1, g: 1, b: 1, a: 1}
-    intensity: 4.4
-    range: 100
-    radius: 0
-    samples: 256
-    samples2: 16
-    bitmask: 0
-    bakeToIndirect: 1
-    selfShadow: 1
-    realisticFalloff: 0
-    projMode: 0
-    cookie: {fileID: 0}
-    angle: 30
-    UID: 11
-  - tform:
-      e00: 4
-      e01: 0
-      e02: 0
-      e03: -16.01
-      e10: 0
-      e11: -0.01
-      e12: -0.00000007152557
-      e13: 9.800061
-      e20: 0
-      e21: 0.0000000071525568
-      e22: -0.1
-      e23: 40.35
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    color: {r: 1, g: 0.9920799, b: 0.9563367, a: 1}
-    intensity: 4.4
-    range: 100
-    radius: 0
-    samples: 256
-    samples2: 16
-    bitmask: 0
-    bakeToIndirect: 1
-    selfShadow: 1
-    realisticFalloff: 0
-    projMode: 0
-    cookie: {fileID: 0}
-    angle: 30
-    UID: 12
   modifiedAssetPathList: []
   modifiedAssets: []
   bakedRenderers: []
   nonBakedRenderers:
-  - {fileID: 194230668}
-  - {fileID: 404825116}
-  - {fileID: 444811055}
-  - {fileID: 504011184}
-  - {fileID: 529668305}
-  - {fileID: 903223371}
-  - {fileID: 920435768}
-  - {fileID: 921057256}
-  - {fileID: 965187494}
-  - {fileID: 1387008324}
-  - {fileID: 1478404254}
-  - {fileID: 1492295725}
+  - {fileID: 158207762}
+  - {fileID: 548380484}
+  - {fileID: 621817467}
+  - {fileID: 1987974142}
   - {fileID: 1825454213737136085}
   - {fileID: 2193496408583321291}
   - {fileID: 1152937539016947216}
@@ -33509,18 +33229,15 @@ MonoBehaviour:
     bakedIDsTerrain: 
     bakedScaleOffsetTerrain: []
     nonBakedRenderers:
-    - {fileID: 194230668}
-    - {fileID: 404825116}
-    - {fileID: 444811055}
-    - {fileID: 504011184}
-    - {fileID: 529668305}
-    - {fileID: 903223371}
-    - {fileID: 920435768}
-    - {fileID: 921057256}
-    - {fileID: 965187494}
-    - {fileID: 1387008324}
-    - {fileID: 1478404254}
-    - {fileID: 1492295725}
+    - {fileID: 158207762}
+    - {fileID: 237585642}
+    - {fileID: 548380484}
+    - {fileID: 621817467}
+    - {fileID: 757700415}
+    - {fileID: 1440588383}
+    - {fileID: 1897941969}
+    - {fileID: 1987974142}
+    - {fileID: 2058348743}
     - {fileID: 1825454213737136085}
     - {fileID: 2193496408583321291}
     - {fileID: 1152937539016947216}
@@ -33719,7 +33436,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1700105692
 Transform:
   m_ObjectHideFlags: 0
@@ -33762,7 +33479,7 @@ MonoBehaviour:
   indirectIntensity: 1
   shadowmaskFalloff: 0
   maskChannel: 0
-  lmid: -10
+  lmid: -8
 --- !u!23 &1700105694
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -36376,7 +36093,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UID: -883829601
   color: {r: 1, g: 1, b: 1, a: 1}
-  intensity: 4.4
+  intensity: 2.756193
   texture: {fileID: 0}
   cutoff: 100
   samples: 256
@@ -37347,7 +37064,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1987974140
 Transform:
   m_ObjectHideFlags: 0
@@ -37377,7 +37094,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UID: -27266703
   color: {r: 1, g: 1, b: 1, a: 1}
-  intensity: 1.2201748
+  intensity: 4.4
   texture: {fileID: 0}
   cutoff: 100
   samples: 256
@@ -37390,7 +37107,7 @@ MonoBehaviour:
   indirectIntensity: 1
   shadowmaskFalloff: 0
   maskChannel: 0
-  lmid: -9
+  lmid: -5
 --- !u!23 &1987974142
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -38363,7 +38080,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2058348741
 Transform:
   m_ObjectHideFlags: 0
@@ -38406,7 +38123,7 @@ MonoBehaviour:
   indirectIntensity: 1
   shadowmaskFalloff: 0
   maskChannel: 0
-  lmid: -13
+  lmid: -10
 --- !u!23 &2058348743
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -40947,13 +40664,28 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4871042718802741614, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
+      propertyPath: Time
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4871042718802741614, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
+        type: 3}
+      propertyPath: SHMode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4871042718802741614, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
+        type: 3}
       propertyPath: BakeClip
       value: 
       objectReference: {fileID: 7400000, guid: 9f918e1f7cf1ce34ab3053cc882b484f, type: 2}
     - target: {fileID: 4871042718802741614, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
+      propertyPath: Blending
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4871042718802741614, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
+        type: 3}
       propertyPath: BakeSHMode
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4871042718802741614, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
@@ -40968,12 +40700,12 @@ PrefabInstance:
     - target: {fileID: 4871042718802741614, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
       propertyPath: BakeEndFrame
-      value: 1296
+      value: 648
       objectReference: {fileID: 0}
     - target: {fileID: 4871042718802741614, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
       propertyPath: PreviewVoxels
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4871042718802741614, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
@@ -40987,13 +40719,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4871042718802741614, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
+      propertyPath: AnimatedTexture
+      value: 
+      objectReference: {fileID: 11700000, guid: 303e0eaa74772ef4386ecfbf05481b2b,
+        type: 2}
+    - target: {fileID: 4871042718802741614, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
+        type: 3}
       propertyPath: PreviewSnapshot
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4871042718802741614, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
       propertyPath: BakeSnapshotCount
-      value: 324
+      value: 162
       objectReference: {fileID: 0}
     - target: {fileID: 4871042718802741614, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}

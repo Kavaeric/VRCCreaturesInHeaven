@@ -78,7 +78,7 @@
                 </ui:VisualElement>
             </ui:VisualElement>
 
-            <ui:VisualElement class="h-1" />
+            <ui:VisualElement class="h-2" />
 
             <ui:VisualElement class="panel-frame col">
                 <ui:Label text="Lighting" class="font-bold" />
@@ -162,6 +162,7 @@
             <ui:VisualElement class="h-1" />
 
             <ui:Button name="bake-btn" text="Bake animated light volume" />
+            <ui:Button name="bake-debug-btn" text="Bake last 4 snapshots" />
             <ui:VisualElement class="h-1" />
             <ui:Button name="cancel-btn" text="Cancel" class="btn-danger" />
             <ui:VisualElement class="h-0p5" />

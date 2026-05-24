@@ -1,82 +1,137 @@
 .flipbook-cell {
-    cursor: link;
     width: 16px;
     height: 24px;
     min-height: 0;  /* override Button global reset */
     margin: 0;
     padding: 0;
-    background-color: transparent;
     border-width: 0;
-}
-
-/* --- Inner visual element -------------------- */
-
-.flipbook-cell__inner {
-    flex-grow: 1;
-    margin: 1px;
-    background-color: rgba(255, 255, 255, .02);
-    border-width: 1px;
-    border-color: rgba(255, 255, 255, .1);
-    border-radius: 2px;
+    background-color: transparent;
     cursor: link;
 }
 
-/* --- Unbaked --------------------------------- */
+.flipbook-cell__inner {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    margin: 1px;
+    padding: 0;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, .1);
+    border-radius: 2px;
+    background-color: rgba(255, 255, 255, .02);
+    font-size: 8px;
+    -unity-text-align: middle-center;
+    cursor: link;
+}
+
+.flipbook-cell__label {
+    margin: 0;
+    padding: 0;
+    /* prevent the label from intercepting hit-testing away from the Button */
+    picking-mode: ignore;
+    cursor: link;
+}
+
+/* ==============================================
+   Unbaked
+   ============================================== */
 
 .flipbook-cell:hover > .flipbook-cell__inner {
     border-color: rgba(255, 255, 255, .3);
 }
-
 .flipbook-cell:active > .flipbook-cell__inner {
     border-color: rgba(255, 255, 255, .5);
 }
-
-.flipbook-cell__inner--selected {
-    border-color: rgba(255, 100, 0, 1);
-}
-
-.flipbook-cell:hover > .flipbook-cell__inner--selected,
-.flipbook-cell:active > .flipbook-cell__inner--selected {
-    border-color: rgba(255, 100, 0, 1);
-}
-
-/* --- Baked ----------------------------------- */
-
-.flipbook-cell__inner--baked {
-    background-color: rgba(255, 255, 255, .2);
-    border-color: rgba(255, 255, 255, .2);
-}
-
-.flipbook-cell:hover > .flipbook-cell__inner--baked {
-    border-color: rgba(255, 255, 255, .4);
-}
-
-.flipbook-cell:active > .flipbook-cell__inner--baked {
-    border-color: rgba(255, 255, 255, .6);
-}
-
-.flipbook-cell__inner--baked.flipbook-cell__inner--selected {
-    border-color: rgba(255, 100, 0, 1);
-}
-
-.flipbook-cell:hover > .flipbook-cell__inner--baked.flipbook-cell__inner--selected,
-.flipbook-cell:active > .flipbook-cell__inner--baked.flipbook-cell__inner--selected {
-    border-color: rgba(255, 100, 0, 1);
-}
-
-/* --- Queued / Active ------------------------- */
-
-.flipbook-cell__inner--queued { background-color: rgb(77, 140, 230); }
-.flipbook-cell__inner--active { background-color: rgb(242, 191, 51); }
-
-/* --- Focus ----------------------------------- */
-
 .flipbook-cell:focus > .flipbook-cell__inner {
     border-width: 2px;
     border-color: rgba(255, 255, 255, .7);
 }
 
-.flipbook-cell:focus > .flipbook-cell__inner--selected {
+/* Selected ------------------------------------- */
+
+.flipbook-cell__inner--selected {
+    border-color: rgba(255, 100, 0, 0.8);
+}
+
+.flipbook-cell:hover > .flipbook-cell__inner--selected,
+.flipbook-cell:active > .flipbook-cell__inner--selected {
+    border-color: rgba(255, 100, 50, 1);
+}
+
+/* ==============================================
+   Baked
+   ============================================== */
+
+.flipbook-cell__inner--baked {
+    background-color: rgba(255, 255, 255, .2);
+    border-color: rgba(255, 255, 255, .3);
+}
+.flipbook-cell:hover > .flipbook-cell__inner--baked {
+    border-color: rgba(255, 255, 255, .5);
+}
+.flipbook-cell:active > .flipbook-cell__inner--baked {
+    border-color: rgba(255, 255, 255, .7);
+}
+
+/* Selected ------------------------------------- */
+
+.flipbook-cell__inner--baked.flipbook-cell__inner--selected {
+    background-color: rgba(255, 100, 0, 0.8);
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
+.flipbook-cell:hover > .flipbook-cell__inner--baked.flipbook-cell__inner--selected,
+.flipbook-cell:active > .flipbook-cell__inner--baked.flipbook-cell__inner--selected {
+    border-color: white;
+}
+
+/* ==============================================
+   Queue circle indicator
+   ============================================== */
+
+.flipbook-cell__label {
+    color: rgba(255, 255, 255, .5);
+}
+
+.flipbook-cell__label--baked {
+    color: rgba(255, 255, 255, .8);
+}
+
+.flipbook-cell__label--queued {
+    color: white;
+}
+
+.flipbook-cell__label--active {
+    color: #2a2a2a;
+}
+
+/* ==============================================
+   Focus ring
+   ============================================== */
+
+.flipbook-cell:focus > .flipbook-cell__inner {
     border-width: 2px;
-    border-color: rgba(255, 120, 20, 1);
+    border-color: white;
+}
+
+/* ==============================================
+   Active
+   ============================================== */
+
+.flipbook-cell__inner--active,
+.flipbook-cell__inner--active.flipbook-cell__inner--selected {
+    border-color: transparent;
+    background-color: rgb(255, 201, 61);
+}
+
+.flipbook-cell:hover > .flipbook-cell__inner--active,
+.flipbook-cell:hover > .flipbook-cell__inner--active.flipbook-cell__inner--selected, {
+    border-color: rgba(255, 255, 255, 0.5);
+    background-color: rgb(255, 222, 190)
+}
+
+.flipbook-cell:active > .flipbook-cell__inner--active,
+.flipbook-cell:active > .flipbook-cell__inner--active.flipbook-cell__inner--selected, {
+    border-color: white;
+    background-color: rgb(255, 222, 190)
 }

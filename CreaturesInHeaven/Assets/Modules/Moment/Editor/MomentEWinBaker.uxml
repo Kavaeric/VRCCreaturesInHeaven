@@ -134,8 +134,19 @@
 
                 <MomentFlipbookTimeline name="flipbook-timeline" />
 
-                <ui:Button text="Add selected to queue" />
-                <ui:Button text="Remove selected from queue" />
+                <ui:VisualElement class="h-1" />
+
+                <ui:VisualElement class="row">
+                    <ui:Button name="snapshot-queue-add-btn" text="Mark selected for baking" class="w-1f2" />
+                    <ui:VisualElement class="w-0p5" />
+                    <ui:Button name="snapshot-queue-remove-btn" text="Unmark selected for baking" class="w-1f2" />
+                </ui:VisualElement>
+
+                <ui:VisualElement class="h-1" />
+
+                <ui:VisualElement class="row">
+                    <ui:Button name="snapshot-clear-bake-btn" text="Clear selected snapshots" class="btn-danger" />
+                </ui:VisualElement>
             </ui:VisualElement>
 
             <ui:VisualElement class="h-2" />

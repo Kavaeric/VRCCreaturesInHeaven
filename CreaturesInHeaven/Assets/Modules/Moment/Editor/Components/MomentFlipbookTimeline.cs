@@ -33,23 +33,32 @@ public class MomentFlipbookTimeline : VisualElement
         {
             if (e.target == this) ClearSelection();
         });
+
+    }
+
+    public struct CellState
+    {
+        public bool Baked;
+        public FlipbookCellOverlay Overlay;
     }
 
     // Updates cell states without rebuilding the grid (preserves selection).
     // Falls back to Populate if the cell count has changed.
-    public void UpdateStates(int count, FlipbookCellState[] states)
+    public void UpdateStates(int count, CellState[] states)
     {
         if (childCount != count) { Populate(count, states); return; }
 
         for (int i = 0; i < count; i++)
         {
-            var state = states != null && i < states.Length ? states[i] : FlipbookCellState.Unbaked;
-            (ElementAt(i) as MomentFlipbookCell)?.SetState(state);
+            var state = states != null && i < states.Length ? states[i] : default;
+            var cell = ElementAt(i) as MomentFlipbookCell;
+            cell?.SetBaked(state.Baked);
+            cell?.SetOverlay(state.Overlay);
         }
     }
 
     // Rebuilds the grid and clears selection. Use only when cell count changes.
-    public void Populate(int count, FlipbookCellState[] states)
+    public void Populate(int count, CellState[] states)
     {
         Clear();
         _selectedIndices.Clear();
@@ -57,9 +66,10 @@ public class MomentFlipbookTimeline : VisualElement
 
         for (int i = 0; i < count; i++)
         {
-            var state = states != null && i < states.Length ? states[i] : FlipbookCellState.Unbaked;
+            var state = states != null && i < states.Length ? states[i] : default;
             var cell = new MomentFlipbookCell();
-            cell.SetState(state);
+            cell.SetBaked(state.Baked);
+            cell.SetOverlay(state.Overlay);
 
                 int index = i; // capture for closure
             cell.RegisterCallback<ClickEvent>(e => OnCellClicked(e, cell, index));

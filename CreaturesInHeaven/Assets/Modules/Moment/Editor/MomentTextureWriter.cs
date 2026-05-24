@@ -286,6 +286,41 @@ public static class MomentTextureWriter
         new Vector3(t1.b, t2.b, t2.a)
     );
 
+    // Zeroes a single snapshot's Y-slice in an existing packed atlas asset.
+    // For UNORM formats, fills with 0.5 so the slice decodes to zero in the shader (matching InitialiseTexture).
+    public static void ClearSnapshotSlice(string assetPath, int snapshotIndex,
+        int w, int h, int d, MomentALVSHMode shMode, MomentALVBitDepth bitDepth)
+    {
+        Texture3D tex = AssetDatabase.LoadAssetAtPath<Texture3D>(assetPath);
+        if (tex == null)
+        {
+            Debug.LogError($"[Moment] ClearSnapshotSlice: asset not found at {assetPath}");
+            return;
+        }
+
+        int totalHeight = tex.height;
+        int yOffset     = snapshotIndex * h;
+        int numSlots    = MomentALVFormat.NumSlots(shMode);
+        bool isUnorm    = MomentALVFormat.IsUnorm(shMode, bitDepth);
+        Color blank     = isUnorm ? new Color(0.5f, 0.5f, 0.5f, 0.5f) : Color.clear;
+
+        Color[] pixels = tex.GetPixels();
+
+        for (int slot = 0; slot < numSlots; slot++)
+        {
+            int zOffset = slot * d;
+            for (int z = 0; z < d; z++)
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
+                        pixels[x + (y + yOffset) * w + (z + zOffset) * w * totalHeight] = blank;
+        }
+
+        tex.SetPixels(pixels);
+        tex.Apply();
+        EditorUtility.SetDirty(tex);
+        AssetDatabase.SaveAssets();
+    }
+
     // Reads one voxel from the packed pixel array and returns it in the full L1 atlas layout:
     //   sh0 = (L0.r, L0.g, L0.b, L1r.z)
     //   sh1 = (L1r.x, L1g.x, L1b.x, L1g.z)

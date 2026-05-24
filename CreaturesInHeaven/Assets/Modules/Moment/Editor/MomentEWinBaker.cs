@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEditor;
@@ -47,6 +49,10 @@ public class MomentEWinBaker : EditorWindow
 
     // Set whenever flipbook state or bake progress changes; cleared after UpdateFlipbookTimeline runs.
     bool _timelineDirty = true;
+
+    // Snapshot indices staged for the next bake. Mutated by the queue add/remove buttons;
+    // consumed (and cleared) when StartBake fires. Independent of timeline selection.
+    readonly HashSet<int> _stagedQueue = new();
 
     // Hierarchy paths resolved at bake start, used to re-find objects across
     // snapshots in case Bakery's scene management destroys the live references mid-bake.
@@ -142,6 +148,9 @@ public class MomentEWinBaker : EditorWindow
     VisualElement _showWithVolume;
     VisualElement _hideWithVolume;
     MomentFlipbookTimeline _flipbookTimeline;
+    Button _snapshotQueueAddBtn;
+    Button _snapshotQueueRemoveBtn;
+    Button _snapshotClearBakeBtn;
 
     public void CreateGUI()
     {
@@ -230,6 +239,8 @@ public class MomentEWinBaker : EditorWindow
             _params.SnapshotCount = Mathf.Max(_snapshotCountField.value, 2);
             _snapshotCountField.SetValueWithoutNotify(_params.SnapshotCount);
             _previewSnapshot = Mathf.Clamp(_previewSnapshot, 0, _params.SnapshotCount - 1);
+            _stagedQueue.RemoveWhere(i => i >= _params.SnapshotCount);
+            _timelineDirty = true;
             UpdatePreviewReadout();
             SaveToALV();
             UpdateUI();
@@ -319,7 +330,7 @@ public class MomentEWinBaker : EditorWindow
         _bakeBtn         = rootVisualElement.Q<Button>("bake-btn");
         _cancelBtn       = rootVisualElement.Q<Button>("cancel-btn");
 
-        _bakeBtn.clicked   += () => StartBake(AllSnapshotIndices());
+        _bakeBtn.clicked   += () => StartBake(_stagedQueue.OrderBy(i => i).ToArray());
         _cancelBtn.clicked += () => AbortBake("Cancelled by user");
 
 
@@ -327,6 +338,28 @@ public class MomentEWinBaker : EditorWindow
         _showWithVolume    = rootVisualElement.Q<VisualElement>("show-with-volume");
         _hideWithVolume    = rootVisualElement.Q<VisualElement>("hide-with-volume");
         _flipbookTimeline  = rootVisualElement.Q<MomentFlipbookTimeline>("flipbook-timeline");
+        _flipbookTimeline.OnSelectionChanged += _ => UpdateQueueButtons();
+
+        // --- Queue add/remove ---
+        _snapshotQueueAddBtn    = rootVisualElement.Q<Button>("snapshot-queue-add-btn");
+        _snapshotQueueRemoveBtn = rootVisualElement.Q<Button>("snapshot-queue-remove-btn");
+
+        _snapshotQueueAddBtn.clicked += () =>
+        {
+            foreach (int i in _flipbookTimeline.SelectedIndices) _stagedQueue.Add(i);
+            _timelineDirty = true;
+            UpdateUI();
+        };
+
+        _snapshotQueueRemoveBtn.clicked += () =>
+        {
+            foreach (int i in _flipbookTimeline.SelectedIndices) _stagedQueue.Remove(i);
+            _timelineDirty = true;
+            UpdateUI();
+        };
+
+        _snapshotClearBakeBtn = rootVisualElement.Q<Button>("snapshot-clear-bake-btn");
+        _snapshotClearBakeBtn.clicked += ClearSelectedSnapshots;
 
         // --- Output estimate labels ---
         _animFrameInterval = rootVisualElement.Q<Label>("anim-frame-interval");
@@ -429,11 +462,12 @@ public class MomentEWinBaker : EditorWindow
 
         _bakeBtn.style.display   = _baking ? DisplayStyle.None : DisplayStyle.Flex;
         _cancelBtn.style.display = _baking ? DisplayStyle.Flex : DisplayStyle.None;
-        _bakeBtn.SetEnabled(error == null);
+        _bakeBtn.SetEnabled(error == null && _stagedQueue.Count > 0);
 
         UpdateOutputAnimationEstimates();
         UpdateOutputTextureEstimates();
         UpdateFlipbookTimeline();
+        UpdateQueueButtons();
     }
 
     void UpdateOutputAnimationEstimates()
@@ -488,26 +522,28 @@ public class MomentEWinBaker : EditorWindow
         _timelineDirty = false;
 
         int count = _params.SnapshotCount;
-        var states = new FlipbookCellState[count];
+        var states = new MomentFlipbookTimeline.CellState[count];
 
         for (int i = 0; i < count; i++)
         {
-            if (_baking && _snapshotQueue != null)
-            {
-                int qi = System.Array.IndexOf(_snapshotQueue, i);
-                if (qi >= 0)
-                {
-                    states[i] = qi == _queuePosition ? FlipbookCellState.Active : FlipbookCellState.Queued;
-                    continue;
-                }
-            }
-
             bool baked = _flipbookState != null
                 && _flipbookState.snapshots != null
                 && i < _flipbookState.snapshots.Length
                 && _flipbookState.snapshots[i].baked;
 
-            states[i] = baked ? FlipbookCellState.Baked : FlipbookCellState.Unbaked;
+            FlipbookCellOverlay overlay = FlipbookCellOverlay.None;
+            if (_baking && _snapshotQueue != null)
+            {
+                int qi = System.Array.IndexOf(_snapshotQueue, i);
+                if (qi >= 0)
+                    overlay = qi == _queuePosition ? FlipbookCellOverlay.Active : FlipbookCellOverlay.Queued;
+            }
+            else if (_stagedQueue.Contains(i))
+            {
+                overlay = FlipbookCellOverlay.Queued;
+            }
+
+            states[i] = new MomentFlipbookTimeline.CellState { Baked = baked, Overlay = overlay };
         }
 
         _flipbookTimeline.UpdateStates(count, states);
@@ -525,12 +561,60 @@ public class MomentEWinBaker : EditorWindow
         _timelineDirty = true;
     }
 
-    // Returns an ordered array of all snapshot indices for a full bake.
-    int[] AllSnapshotIndices()
+    // Enables/disables the add/remove queue buttons based on whether the timeline
+    // has a selection. Safe to call before CreateGUI completes.
+    void UpdateQueueButtons()
     {
-        int[] indices = new int[_params.SnapshotCount];
-        for (int i = 0; i < indices.Length; i++) indices[i] = i;
-        return indices;
+        if (_snapshotQueueAddBtn == null) return;
+        bool hasSelection = _flipbookTimeline != null && _flipbookTimeline.SelectedIndices.Count > 0;
+        _snapshotQueueAddBtn.SetEnabled(hasSelection);
+        _snapshotQueueRemoveBtn.SetEnabled(hasSelection);
+        _snapshotClearBakeBtn.SetEnabled(hasSelection && !_baking);
+    }
+
+    void ClearSelectedSnapshots()
+    {
+        if (_flipbookState == null || _flipbookState.snapshots == null) return;
+
+        var indices = _flipbookTimeline.SelectedIndices;
+        if (indices.Count == 0) return;
+
+        // Only include snapshots that are actually baked (nothing to clear otherwise).
+        var bakedSelected = new List<int>();
+        foreach (int i in indices)
+        {
+            if (i < _flipbookState.snapshots.Length && _flipbookState.snapshots[i].baked)
+                bakedSelected.Add(i);
+        }
+
+        if (bakedSelected.Count == 0) return;
+
+        string list = string.Join(", ", bakedSelected.ConvertAll(i => $"#{i + 1}"));
+        bool confirmed = EditorUtility.DisplayDialog(
+            "Clear snapshots",
+            $"Zero the baked data for snapshot{(bakedSelected.Count == 1 ? "" : "s")} {list}?\n\nThis cannot be undone.",
+            "Clear", "Cancel");
+
+        if (!confirmed) return;
+
+        string assetDir  = MomentAssetPaths.SceneAssetDir();
+        string assetPath = $"{assetDir}/{_outputName}.asset";
+
+        foreach (int i in bakedSelected)
+        {
+            MomentTextureWriter.ClearSnapshotSlice(
+                assetPath, i,
+                _flipbookState.snapshotX, _flipbookState.snapshotY, _flipbookState.snapshotZ,
+                _flipbookState.shMode, _flipbookState.bitDepth);
+
+            _flipbookState.snapshots[i] = new MomentTextureInfo.SnapshotEntry { baked = false };
+        }
+
+        _flipbookState.Save(assetPath);
+        _timelineDirty = true;
+        UpdateUI();
+
+        Debug.Log($"[Moment] Cleared snapshot{(bakedSelected.Count == 1 ? "" : "s")} {list} in {assetPath}");
     }
 
     // Starts a bake session for the given snapshot indices (0-based, in order).
@@ -632,7 +716,7 @@ public class MomentEWinBaker : EditorWindow
             if (!_baking) return;
             GetWindow<ftRenderLightmap>().RenderButton(showMsgWindows: false);
         }
-        
+
         UpdateUI();
     }
 
@@ -685,6 +769,8 @@ public class MomentEWinBaker : EditorWindow
     void FinishBake()
     {
         _baking = false;
+        _stagedQueue.Clear();
+        _timelineDirty = true;
         if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
 
         // Reload references to make it faster to re-bake a sequence if needed.

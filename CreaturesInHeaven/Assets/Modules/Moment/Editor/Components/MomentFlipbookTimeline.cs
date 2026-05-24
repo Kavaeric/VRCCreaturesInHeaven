@@ -16,10 +16,34 @@ public class MomentFlipbookTimeline : VisualElement
     // Fired whenever the selection changes. Passed list is sorted ascending.
     public event Action<IReadOnlyList<int>> OnSelectionChanged;
 
+    // Fired when the hovered cell index changes (-1 = none).
+    public event Action<int> OnHoverChanged;
+
+    // Fired when the focused cell index changes (-1 = none).
+    public event Action<int> OnFocusChanged;
+
     readonly List<int> _selectedIndices = new();
     int _anchorIndex = -1; // last non-shift click; range selections extend from here
 
     public IReadOnlyList<int> SelectedIndices => _selectedIndices;
+
+    // When true, clicks are ignored and selection is cleared. Hover and focus still work normally.
+    public bool Locked
+    {
+        get => _locked;
+        set { _locked = value; if (_locked) ClearSelection(); }
+    }
+    bool _locked;
+
+    // Index of the cell that was most recently clicked (including the range endpoint on shift-click).
+    // -1 when nothing is selected. Use this to determine which cell to scrub the animation to.
+    public int LastClickedIndex { get; private set; } = -1;
+
+    // Index of the cell currently under the mouse cursor. -1 when none.
+    public int HoveredIndex { get; private set; } = -1;
+
+    // Index of the cell that currently holds keyboard focus. -1 when none.
+    public int FocusedIndex { get; private set; } = -1;
 
     public MomentFlipbookTimeline()
     {
@@ -31,7 +55,7 @@ public class MomentFlipbookTimeline : VisualElement
         // Clicking the timeline background (not a cell) clears selection.
         RegisterCallback<ClickEvent>(e =>
         {
-            if (e.target == this) ClearSelection();
+            if (!_locked && e.target == this) ClearSelection();
         });
 
     }
@@ -63,6 +87,8 @@ public class MomentFlipbookTimeline : VisualElement
         Clear();
         _selectedIndices.Clear();
         _anchorIndex = -1;
+        HoveredIndex = -1;
+        FocusedIndex = -1;
 
         for (int i = 0; i < count; i++)
         {
@@ -71,8 +97,34 @@ public class MomentFlipbookTimeline : VisualElement
             cell.SetBaked(state.Baked);
             cell.SetOverlay(state.Overlay);
 
-                int index = i; // capture for closure
+            int index = i; // capture for closure
             cell.RegisterCallback<ClickEvent>(e => OnCellClicked(e, cell, index));
+            cell.RegisterCallback<MouseEnterEvent>(_ =>
+            {
+                HoveredIndex = index;
+                OnHoverChanged?.Invoke(HoveredIndex);
+            });
+            cell.RegisterCallback<MouseLeaveEvent>(_ =>
+            {
+                if (HoveredIndex == index)
+                {
+                    HoveredIndex = -1;
+                    OnHoverChanged?.Invoke(HoveredIndex);
+                }
+            });
+            cell.RegisterCallback<FocusInEvent>(_ =>
+            {
+                FocusedIndex = index;
+                OnFocusChanged?.Invoke(FocusedIndex);
+            });
+            cell.RegisterCallback<FocusOutEvent>(_ =>
+            {
+                if (FocusedIndex == index)
+                {
+                    FocusedIndex = -1;
+                    OnFocusChanged?.Invoke(FocusedIndex);
+                }
+            });
 
             Add(cell);
         }
@@ -80,9 +132,12 @@ public class MomentFlipbookTimeline : VisualElement
 
     void OnCellClicked(ClickEvent e, MomentFlipbookCell cell, int index)
     {
+        if (_locked) return;
+
         bool shift = (e.modifiers & EventModifiers.Shift)   != 0;
         bool ctrl  = (e.modifiers & (EventModifiers.Control | EventModifiers.Command)) != 0;
 
+        // Shift-click selects the range between the clicked cell and the previously selected cell.
         if (shift && _anchorIndex >= 0)
         {
             int anchor = _anchorIndex;
@@ -111,7 +166,9 @@ public class MomentFlipbookTimeline : VisualElement
                     (ElementAt(i) as MomentFlipbookCell)?.SetSelected(true);
                 }
             }
+            LastClickedIndex = index;
         }
+        // Ctrl-click or cmd-click: doesn't clear existing selection and toggles the clicked cell.
         else if (ctrl)
         {
             // Toggle this cell without touching others; update anchor.
@@ -126,21 +183,32 @@ public class MomentFlipbookTimeline : VisualElement
                 cell.SetSelected(true);
             }
             _anchorIndex = index;
+            LastClickedIndex = index;
         }
         else
         {
-            // Single click: clear all, select only this one (or deselect if already sole selection).
-            bool wasOnlySelection = _selectedIndices.Count == 1 && _selectedIndices.Contains(index);
+            // Single click: clear all, then select the clicked cell.
             ClearSelection();
-            if (!wasOnlySelection)
-            {
-                _selectedIndices.Add(index);
-                cell.SetSelected(true);
-            }
-            _anchorIndex = wasOnlySelection ? -1 : index;
+            _selectedIndices.Add(index);
+            cell.SetSelected(true);
+
+            _anchorIndex = index;
+            LastClickedIndex = index;
         }
 
-        FireSelectionChanged();
+        UpdateSelection();
+    }
+
+    // Moves keyboard focus to the cell at index without changing the selection.
+    // Pass -1 to remove focus from all cells.
+    public void FocusCell(int index)
+    {
+        for (int i = 0; i < childCount; i++)
+        {
+            var cell = ElementAt(i) as MomentFlipbookCell;
+            if (cell == null) continue;
+            if (i == index) cell.Focus();
+        }
     }
 
     void ClearSelection()
@@ -148,10 +216,11 @@ public class MomentFlipbookTimeline : VisualElement
         foreach (int i in _selectedIndices)
             (ElementAt(i) as MomentFlipbookCell)?.SetSelected(false);
         _selectedIndices.Clear();
-        _anchorIndex = -1;
+        _anchorIndex     = -1;
+        LastClickedIndex = -1;
     }
 
-    void FireSelectionChanged()
+    void UpdateSelection()
     {
         _selectedIndices.Sort();
         OnSelectionChanged?.Invoke(_selectedIndices);

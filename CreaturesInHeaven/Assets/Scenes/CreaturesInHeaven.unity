@@ -19284,6 +19284,27 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 5001852114736887328, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
+    - target: {fileID: 6155198580120909534, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
+        type: 3}
+      propertyPath: _syncMethod
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
+        type: 3}
+      propertyPath: PreviewVoxels
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
+        type: 3}
+      propertyPath: PreviewSnapshot
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
+        type: 3}
+      propertyPath: serializationData.Prefab
+      value: 
+      objectReference: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
+        type: 3}
     - target: {fileID: 7592580023519544999, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
       propertyPath: m_Name
@@ -21663,11 +21684,11 @@ MonoBehaviour:
     PrefabModifications: []
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 2054890420}
-  LightVolumeAtlas: {fileID: 8600000, guid: 20852310da762f544bcf40922446be48, type: 2}
+  LightVolumeAtlas: {fileID: 8600000, guid: 4e400e4e27bb9d947a73afde3f7bd12e, type: 2}
   LightVolumeAtlasBase: {fileID: 11700000, guid: 9face3fe89558674289bad9296b1faed,
     type: 2}
   AtlasPostProcessors:
-  - {fileID: 8600000, guid: 20852310da762f544bcf40922446be48, type: 2}
+  - {fileID: 8600000, guid: 4e400e4e27bb9d947a73afde3f7bd12e, type: 2}
   LightProbesBlending: 1
   SharpBounds: 1
   AutoUpdateVolumes: 0

@@ -7,75 +7,83 @@ using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 using VRCLightVolumes;
 
-// Bakes a Moment texture by:
-//   1. Initialising a blank atlas Texture3D asset and sidecar at bake start.
-//   2. Force-evaluating an Animator to N evenly-spaced times across an AnimationClip.
-//   3. Triggering a Bakery bake for each snapshot.
-//   4. Reading BakeryVolume.bakedTexture0/1/2 after each bake and writing the slice
-//      directly into the atlas, then updating the sidecar's per-snapshot baked flag.
+// Bakes snapshots into an ALV atlas that was previously created by MomentEWinSetup.
 //
-// This means partial bakes are usable at runtime (unbaked slices remain black) and
-// the bake can be resumed or selectively overwritten in a future session.
+// This window does NOT initialise atlases or create sidecars — that is solely the Setup window's job.
+// It reads the bake params off the MomentAnimatedLightVolume component and the sidecar JSON, then:
+//   1. Force-evaluates the Animator to each queued snapshot's time via AnimationMode.SampleAnimationClip.
+//   2. Triggers a Bakery bake.
+//   3. Reads BakeryVolume.bakedTexture0/1/2 and writes the slice into the existing atlas.
+//   4. Updates the sidecar's per-snapshot baked flag.
 //
-// Open via Tools > Lighting > Bake animated light volume...
+// If the current ALV setup params don't match the atlas/sidecar on disk, the bake controls are hidden
+// and a banner directs the user to (re-)open the Setup window. Setup is the only place that wipes data.
+//
+// Open via Tools > Moment ALV > Bake animated light volume...
 #if BAKERY_INCLUDED
 public class MomentEWinBaker : EditorWindow
 {
-    // --- Fields serialised in the window --------------------------------
+    // --- Window state ---------------------------------------------------
 
     LightVolume _targetVolume;
-    Animator _animator;
-    MomentBakeParams _params = new MomentBakeParams { EndFrame = -1, SnapshotCount = 8 };
-    MomentALVSHMode   _shMode   = MomentALVSHMode.MonoL1;
-    MomentALVBitDepth _bitDepth = MomentALVBitDepth.Depth8;
-    string _outputName = "ALV_Bake";
 
-    // --- Internal bake state --------------------------------------------
+    // Bake params read from the ALV component on volume select. Read-only here; Setup window owns writes.
+    MomentBakeParams _params;
+    MomentALVSHMode   _shMode;
+    MomentALVBitDepth _bitDepth;
+    string _outputName;
+
+    // True when the current ALV is set up and ready to accept bakes.
+    // When false, the bake/queue UI is hidden and the mismatch banner is shown instead.
+    bool _readyToBake;
+
+    // --- Bake session state ---------------------------------------------
 
     bool _baking = false;
 
     // Ordered list of snapshot indices (0-based) to bake in the current session.
-    // Resolved in StartBake and consumed one entry at a time.
     int[] _snapshotQueue;
-    int   _queuePosition;   // index into _snapshotQueue for the currently-baking snapshot
+    int   _queuePosition;
 
     // Asset path and sidecar resolved at bake start; used by OnBakeFinished to write each slice.
     string _assetPath;
     MomentTextureInfo _activeSidecar;
 
-    // Last-known flipbook state loaded from disk. Updated at bake start and after each completed bake.
-    // All UI and logic that wants to know "what has been baked so far" reads from this.
+    // Last-known flipbook state loaded from disk. Updated when the volume changes and after each completed bake.
     MomentTextureInfo _flipbookState;
 
     // Set whenever flipbook state or bake progress changes; cleared after UpdateFlipbookTimeline runs.
     bool _timelineDirty = true;
 
     // Snapshot indices staged for the next bake. Mutated by the queue add/remove buttons;
-    // consumed (and cleared) when StartBake fires. Independent of timeline selection.
+    // consumed (and cleared) when StartBake fires.
     readonly HashSet<int> _stagedQueue = new();
 
-    // Hierarchy paths resolved at bake start, used to re-find objects across
-    // snapshots in case Bakery's scene management destroys the live references mid-bake.
+    // Hierarchy paths resolved at bake start, used to re-find objects across snapshots in case
+    // Bakery's scene management destroys the live references mid-bake.
     string _animatorPath;
     string _targetVolumePath;
+    Animator _animator;
 
-    // Stopwatch runs for each snapshot bake; first completed bake sets
-    // _secsPerSnapshotBake for the time estimate.
-    readonly System.Diagnostics.Stopwatch _snapshotStopwatch = new();
-    double _secsPerSnapshotBake = -1;
+    // Cached before bake starts; used in place of live scene-object references while Bakery's temp scene is active.
+    string _cachedAnimatorName;
 
-    // 0-based index of the currently previewed snapshot.
-    int _previewSnapshot = 0;
+    // Last anim-window frame seen during polling; used to detect external scrub changes.
+    int _lastAnimWindowFrame = -1;
 
     // --- Animation window (reflection) ----------------------------------
-    // The Animation window has no public API for setting the current frame,
-    // so it's accessed via reflection.
+    // The Animation window has no public API for setting the current frame, so it's accessed via reflection.
 
     EditorWindow _animationWindow;
     PropertyInfo _animWindowFrameProp;
 
     int AnimationWindowFrame
     {
+        get
+        {
+            if (_animationWindow == null || _animWindowFrameProp == null) FindAnimationWindow();
+            return _animWindowFrameProp?.GetValue(_animationWindow) is int f ? f : -1;
+        }
         set
         {
             if (_animationWindow == null || _animWindowFrameProp == null) FindAnimationWindow();
@@ -117,37 +125,31 @@ public class MomentEWinBaker : EditorWindow
 
     // Fires at ~10Hz; catches externally-nulled references (deleted object, scene change)
     // that don't trigger the field's value-changed callback.
-    void OnInspectorUpdate() => UpdateUI();
+    void OnInspectorUpdate()
+    {
+        UpdateUI();
+        PollAnimWindowForFocus();
+    }
 
     // --- UI -------------------------------------------------------------
 
-    // Cached element refs, written to by CreateGUI and read/updated by bake logic.
     ObjectField _volumeField;
-    ObjectField _animatorField;
-    ObjectField _clipField;
-    IntegerField _startFrameField;
-    IntegerField _endFrameField;
-    IntegerField _snapshotCountField;
-    TextField _outputNameField;
-    EnumField _shModeField;
-    [SerializeField] AtelierHelpPage _shModeHelpPage;
-    EnumField _bitDepthField;
-    [SerializeField] AtelierHelpPage _bitDepthHelpPage;
+    VisualElement _showWithVolume;
+    VisualElement _hideWithVolume;
+    VisualElement _mismatchBlock;
+    HelpBox _mismatchBox;
+    Button _openSetupBtn;
+    Label _summaryAnimator, _summaryClip, _summarySnapshots, _summaryRange, _summaryLighting, _summaryOutput;
+    VisualElement _bakeBlock;
+    VisualElement _bakeActionBlock;
     HelpBox _validationBox;
     HelpBox _bakeProgressBox;
     Button _bakeBtn;
     Button _cancelBtn;
-    IntegerField _previewSnapshotField;
-    Label _previewSnapshotMax;
-    Label _animFrameCounter;
-    Label _animFrameInterval;
-    VisualElement _previewControls;
-    Label _outputResLabel;
-    Label _vramSizeLabel;
-    Label _bundleSizeLabel;
-    VisualElement _showWithVolume;
-    VisualElement _hideWithVolume;
     MomentFlipbookTimeline _flipbookTimeline;
+    Label _flipbookStatusSelected;
+    Label _flipbookStatusFocus;
+    Label _flipbookStatusQueued;
     Button _snapshotQueueAddBtn;
     Button _snapshotQueueRemoveBtn;
     Button _snapshotClearBakeBtn;
@@ -156,7 +158,6 @@ public class MomentEWinBaker : EditorWindow
     {
         string dir = MomentAssetPaths.ScriptDir();
 
-        // Set window icon
         string iconPath = $"{dir}/Resources/Icons/Icon Moment EWin Baker@2x.png";
         Texture2D windowIcon = AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
         titleContent = new GUIContent("Bake ALV", windowIcon);
@@ -169,178 +170,48 @@ public class MomentEWinBaker : EditorWindow
         }
         uxml.CloneTree(rootVisualElement);
 
-        // --- Volume field (top) ---
-
+        // --- Target volume ---
         _volumeField = rootVisualElement.Q<ObjectField>("volume-field");
         _volumeField.objectType = typeof(LightVolume);
         _volumeField.value = _targetVolume;
         _volumeField.RegisterValueChangedCallback(e =>
         {
             _targetVolume = e.newValue as LightVolume;
-            if (_targetVolume != null) LoadFromALV();
+            LoadParamsFromALV();
             LoadFlipbookState();
-            UpdateRangeFields();
-            UpdatePreviewReadout();
             UpdateUI();
         });
 
-        // --- Setup fields ---
+        // --- Mismatch / setup-link block ---
+        _mismatchBlock = rootVisualElement.Q<VisualElement>("mismatch-block");
+        _mismatchBox   = rootVisualElement.Q<HelpBox>("mismatch-box");
+        _openSetupBtn  = rootVisualElement.Q<Button>("open-setup-btn");
+        _openSetupBtn.clicked += () => MomentEWinSetup.OpenWithVolume(_targetVolume);
 
-        _animatorField = rootVisualElement.Q<ObjectField>("animator-field");
-        _animatorField.objectType = typeof(Animator);
-        _animatorField.value = _animator;
-        _animatorField.RegisterValueChangedCallback(e =>
+        // --- Setup summary labels ---
+        _summaryAnimator  = rootVisualElement.Q<Label>("summary-animator");
+        _summaryClip      = rootVisualElement.Q<Label>("summary-clip");
+        _summarySnapshots = rootVisualElement.Q<Label>("summary-snapshots");
+        _summaryRange     = rootVisualElement.Q<Label>("summary-range");
+        _summaryLighting  = rootVisualElement.Q<Label>("summary-lighting");
+        _summaryOutput    = rootVisualElement.Q<Label>("summary-output");
+
+        // --- Flipbook + queue ---
+        _bakeBlock = rootVisualElement.Q<VisualElement>("bake-block");
+        _flipbookTimeline = rootVisualElement.Q<MomentFlipbookTimeline>("flipbook-timeline");
+        _flipbookStatusSelected = rootVisualElement.Q<Label>("flipbook-status-selected");
+        _flipbookStatusFocus    = rootVisualElement.Q<Label>("flipbook-status-focus");
+        _flipbookStatusQueued   = rootVisualElement.Q<Label>("flipbook-status-queued");
+
+        _flipbookTimeline.OnSelectionChanged += _ =>
         {
-            _animator = e.newValue as Animator;
-            SaveToALV();
-            UpdateUI();
-        });
-
-        _clipField = rootVisualElement.Q<ObjectField>("clip-field");
-        _clipField.objectType = typeof(AnimationClip);
-        _clipField.value = _params.Clip;
-        _clipField.RegisterValueChangedCallback(e =>
-        {
-            _params.Clip = e.newValue as AnimationClip;
-            _params.StartFrame = 0;
-            _params.EndFrame = -1;
-            _previewSnapshot = 0;
-            UpdateRangeFields();
-            UpdatePreviewReadout();
-            SaveToALV();
-            UpdateUI();
-        });
-
-        _startFrameField = rootVisualElement.Q<IntegerField>("start-time-field");
-        _startFrameField.value = _params.StartFrame;
-        _startFrameField.RegisterCallback<FocusOutEvent>(_ =>
-        {
-            _params.StartFrame = Mathf.Max(_startFrameField.value, 0);
-            _startFrameField.SetValueWithoutNotify(_params.StartFrame);
-            SaveToALV();
-            UpdateUI();
-        });
-
-        _endFrameField = rootVisualElement.Q<IntegerField>("end-time-field");
-        _endFrameField.value = _params.EndFrame;
-        _endFrameField.RegisterCallback<FocusOutEvent>(_ =>
-        {
-            _params.EndFrame = _endFrameField.value;
-            SaveToALV();
-            UpdateUI();
-        });
-
-        // --- Bake fields ---
-
-        _snapshotCountField = rootVisualElement.Q<IntegerField>("snapshot-count-field");
-        _snapshotCountField.value = _params.SnapshotCount;
-        _snapshotCountField.RegisterCallback<FocusOutEvent>(_ =>
-        {
-            _params.SnapshotCount = Mathf.Max(_snapshotCountField.value, 2);
-            _snapshotCountField.SetValueWithoutNotify(_params.SnapshotCount);
-            _previewSnapshot = Mathf.Clamp(_previewSnapshot, 0, _params.SnapshotCount - 1);
-            _stagedQueue.RemoveWhere(i => i >= _params.SnapshotCount);
-            _timelineDirty = true;
-            UpdatePreviewReadout();
-            SaveToALV();
-            UpdateUI();
-        });
-
-        _outputNameField = rootVisualElement.Q<TextField>("output-name-field");
-        _outputNameField.value = _outputName;
-        _outputNameField.RegisterValueChangedCallback(e =>
-        {
-            _outputName = e.newValue;
-            SaveToALV();
-            LoadFlipbookState();
-        });
-
-        _shModeField = rootVisualElement.Q<EnumField>("sh-mode-field");
-        _shModeField.Init(_shMode);
-
-        rootVisualElement.Q<Button>("help-btn-sh-mode").clicked += () => AtelierHelpWindow.Open(_shModeHelpPage);
-        _shModeField.RegisterValueChangedCallback(e =>
-        {
-            _shMode = (MomentALVSHMode)e.newValue;
-            SaveToALV();
-            UpdateOutputTextureEstimates();
-        });
-
-        _bitDepthField = rootVisualElement.Q<EnumField>("bit-depth-field");
-        _bitDepthField.Init(_bitDepth);
-
-        rootVisualElement.Q<Button>("help-btn-bit-depth").clicked += () => AtelierHelpWindow.Open(_bitDepthHelpPage);
-        _bitDepthField.RegisterValueChangedCallback(e =>
-        {
-            _bitDepth = (MomentALVBitDepth)e.newValue;
-            SaveToALV();
-            UpdateOutputTextureEstimates();
-        });
-
-        // --- Preview controls ---
-
-        _previewControls      = rootVisualElement.Q<VisualElement>("preview-controls");
-        _previewSnapshotField = rootVisualElement.Q<IntegerField>("preview-snapshot-field");
-        _previewSnapshotMax   = rootVisualElement.Q<Label>("preview-snapshot-max");
-        _animFrameCounter     = rootVisualElement.Q<Label>("anim-frame-counter");
-
-        _previewSnapshotField.RegisterValueChangedCallback(e =>
-        {
-            // Field is 1-indexed; clamp to valid range then push back if corrected.
-            _previewSnapshot = Mathf.Clamp(e.newValue - 1, 0, _params.SnapshotCount - 1);
-            _previewSnapshotField.SetValueWithoutNotify(_previewSnapshot + 1);
-            UpdatePreviewReadout();
-        });
-
-        rootVisualElement.Q<Button>("start-btn").clicked += () =>
-        {
-            _previewSnapshot = 0;
-            UpdatePreviewReadout();
-            AnimationWindowFrame = _params.SnapshotToAnimFrame(_previewSnapshot);
+            UpdateQueueButtons();
+            UpdateFlipbookStatusLabels();
+            ScrubToLastClickedCell();
         };
+        _flipbookTimeline.OnHoverChanged  += _ => UpdateFlipbookStatusLabels();
+        _flipbookTimeline.OnFocusChanged  += _ => UpdateFlipbookStatusLabels();
 
-        rootVisualElement.Q<Button>("prev-btn").clicked += () =>
-        {
-            if (_previewSnapshot > 0) _previewSnapshot--;
-            UpdatePreviewReadout();
-            AnimationWindowFrame = _params.SnapshotToAnimFrame(_previewSnapshot);
-        };
-
-        rootVisualElement.Q<Button>("next-btn").clicked += () =>
-        {
-            if (_previewSnapshot < _params.SnapshotCount - 1) _previewSnapshot++;
-            UpdatePreviewReadout();
-            AnimationWindowFrame = _params.SnapshotToAnimFrame(_previewSnapshot);
-        };
-
-        rootVisualElement.Q<Button>("end-btn").clicked += () =>
-        {
-            _previewSnapshot = _params.SnapshotCount - 1;
-            UpdatePreviewReadout();
-            AnimationWindowFrame = _params.SnapshotToAnimFrame(_previewSnapshot);
-        };
-
-        _previewSnapshotField.RegisterCallback<FocusOutEvent>(_ =>
-            AnimationWindowFrame = _params.SnapshotToAnimFrame(_previewSnapshot));
-
-        // --- Status / bake buttons ---
-
-        _validationBox   = rootVisualElement.Q<HelpBox>("validation-box");
-        _bakeProgressBox = rootVisualElement.Q<HelpBox>("bake-progress-box");
-        _bakeBtn         = rootVisualElement.Q<Button>("bake-btn");
-        _cancelBtn       = rootVisualElement.Q<Button>("cancel-btn");
-
-        _bakeBtn.clicked   += () => StartBake(_stagedQueue.OrderBy(i => i).ToArray());
-        _cancelBtn.clicked += () => AbortBake("Cancelled by user");
-
-
-        // --- Volume-dependant section ---
-        _showWithVolume    = rootVisualElement.Q<VisualElement>("show-with-volume");
-        _hideWithVolume    = rootVisualElement.Q<VisualElement>("hide-with-volume");
-        _flipbookTimeline  = rootVisualElement.Q<MomentFlipbookTimeline>("flipbook-timeline");
-        _flipbookTimeline.OnSelectionChanged += _ => UpdateQueueButtons();
-
-        // --- Queue add/remove ---
         _snapshotQueueAddBtn    = rootVisualElement.Q<Button>("snapshot-queue-add-btn");
         _snapshotQueueRemoveBtn = rootVisualElement.Q<Button>("snapshot-queue-remove-btn");
 
@@ -361,21 +232,37 @@ public class MomentEWinBaker : EditorWindow
         _snapshotClearBakeBtn = rootVisualElement.Q<Button>("snapshot-clear-bake-btn");
         _snapshotClearBakeBtn.clicked += ClearSelectedSnapshots;
 
-        // --- Output estimate labels ---
-        _animFrameInterval = rootVisualElement.Q<Label>("anim-frame-interval");
-        _outputResLabel    = rootVisualElement.Q<Label>("output-res");
-        _vramSizeLabel     = rootVisualElement.Q<Label>("vram-size");
-        _bundleSizeLabel   = rootVisualElement.Q<Label>("estimated-bundle-size");
+        // --- Bake action block ---
+        _bakeActionBlock = rootVisualElement.Q<VisualElement>("bake-action-block");
+        _validationBox   = rootVisualElement.Q<HelpBox>("validation-box");
+        _bakeProgressBox = rootVisualElement.Q<HelpBox>("bake-progress-box");
+        _bakeBtn         = rootVisualElement.Q<Button>("bake-btn");
+        _cancelBtn       = rootVisualElement.Q<Button>("cancel-btn");
 
-        UpdatePreviewReadout();
+        _bakeBtn.clicked   += () => StartBake(_stagedQueue.OrderBy(i => i).ToArray());
+        _cancelBtn.clicked += () => AbortBake("Cancelled by user");
+
+        // --- Volume-dependant section ---
+        _showWithVolume = rootVisualElement.Q<VisualElement>("show-with-volume");
+        _hideWithVolume = rootVisualElement.Q<VisualElement>("hide-with-volume");
+
         UpdateUI();
     }
 
-    // Copies bake settings from the Moment component on the target volume's GameObject, if present.
-    void LoadFromALV()
+    // Copies bake params from the Moment component into the window's local state for use by the bake loop.
+    // Does NOT write anything back — that's the Setup window's job.
+    void LoadParamsFromALV()
     {
         MomentAnimatedLightVolume alv = MomentOnVolume;
-        if (alv == null) return;
+        if (alv == null)
+        {
+            _params = default;
+            _shMode = MomentALVSHMode.MonoL1;
+            _bitDepth = MomentALVBitDepth.Depth8;
+            _outputName = "";
+            _animator = null;
+            return;
+        }
         _animator             = alv.BakeAnimator;
         _params.Clip          = alv.BakeClip;
         _params.SnapshotCount = alv.BakeSnapshotCount;
@@ -384,136 +271,113 @@ public class MomentEWinBaker : EditorWindow
         _shMode               = alv.BakeSHMode;
         _bitDepth             = alv.BakeBitDepth;
         _outputName           = alv.BakeOutputName;
-
-        _animatorField?.SetValueWithoutNotify(_animator);
-        _clipField?.SetValueWithoutNotify(_params.Clip);
-        _snapshotCountField?.SetValueWithoutNotify(_params.SnapshotCount);
-        _outputNameField?.SetValueWithoutNotify(_outputName);
-        _shModeField?.SetValueWithoutNotify(_shMode);
-        _bitDepthField?.SetValueWithoutNotify(_bitDepth);
     }
 
-    // Writes current window fields back to the Moment component on the target volume's GameObject, if present.
-    void SaveToALV()
+    // Loads the flipbook state from the sidecar for the current ALV's output name into _flipbookState.
+    void LoadFlipbookState()
     {
+        if (_targetVolume == null || string.IsNullOrEmpty(_outputName))
+        {
+            _flipbookState = null;
+            _stagedQueue.Clear();
+            _timelineDirty = true;
+            return;
+        }
+        string assetDir = MomentAssetPaths.SceneAssetDir();
+        string assetPath = $"{assetDir}/{_outputName}.asset";
+        _flipbookState = MomentTextureInfo.Load(assetPath);
+        _stagedQueue.RemoveWhere(i => i >= _params.SnapshotCount);
+        _timelineDirty = true;
+    }
+
+    // Re-checks whether the ALV is in a runnable state. Sets _readyToBake and a user-facing reason.
+    string EvaluateReadiness()
+    {
+        if (_targetVolume == null) return null; // The "Assign a Light Volume" branch handles this.
+
         MomentAnimatedLightVolume alv = MomentOnVolume;
-        if (alv == null) return;
-        alv.BakeAnimator      = _animator;
-        alv.BakeClip          = _params.Clip;
-        alv.BakeSnapshotCount = _params.SnapshotCount;
-        alv.BakeStartFrame    = _params.StartFrame;
-        alv.BakeEndFrame      = _params.EndFrame;
-        alv.BakeSHMode        = _shMode;
-        alv.BakeBitDepth      = _bitDepth;
-        alv.BakeOutputName    = _outputName;
-        EditorUtility.SetDirty(alv);
+        if (alv == null)
+            return "This Light Volume has no MomentAnimatedLightVolume component. Open the Setup window to create one.";
+
+        if (alv.AnimatedTexture == null)
+            return "This ALV has no atlas yet. Open the Setup window to initialise it.";
+
+        if (_flipbookState == null)
+            return "Sidecar metadata is missing for this ALV. Open the Setup window to re-initialise.";
+
+        Vector3Int res = _targetVolume.Resolution;
+        if (!_flipbookState.MatchesParams(res.x, res.y, res.z, _params.SnapshotCount, _shMode, _bitDepth))
+            return "Setup parameters have changed since the last bake. Open the Setup window to re-initialise the atlas.";
+
+        // Bakery-side prerequisites (animator, clip, BakeryVolume). Same checks as before.
+        string paramError = _params.Validate(_animator, _targetVolume);
+        if (paramError != null) return paramError;
+
+        return null;
     }
 
-    // Resets start/end frame fields to match current params.
-    void UpdateRangeFields()
-    {
-        _startFrameField?.SetValueWithoutNotify(_params.StartFrame);
-        _endFrameField?.SetValueWithoutNotify(_params.EndFrame);
-    }
-
-    // Refreshes the preview snapshot field and anim-frame-counter label.
-    void UpdatePreviewReadout()
-    {
-        if (_previewSnapshotField == null) return;
-
-        bool canPreview = _params.Clip != null && _params.SnapshotCount >= 2;
-        _previewControls?.SetEnabled(canPreview);
-
-        _previewSnapshotField.SetValueWithoutNotify(_previewSnapshot + 1);
-        _previewSnapshotMax.text = $"/ {_params.SnapshotCount}";
-        _animFrameCounter.text   = canPreview ? $"f{_params.SnapshotToAnimFrame(_previewSnapshot)}" : "—";
-    }
-
-    // Refreshes validation message and bake/cancel button visibility.
     void UpdateUI()
     {
         if (_bakeBtn == null) return;
 
-        // Re-read the field in case the referenced object was deleted or the scene changed,
-        // since the callback won't fire in those cases.
-        _targetVolume = _volumeField?.value as LightVolume;
+        // During an active bake, Bakery moves the scene into a temp scene — the LightVolume object
+        // ceases to exist and the ObjectField returns null. Skip the re-read so we keep the cached
+        // state; during baking, _baking itself serves as the "volume is present" signal.
+        if (!_baking)
+            _targetVolume = _volumeField?.value as LightVolume;
 
-        _showWithVolume.style.display = _targetVolume != null ? DisplayStyle.Flex : DisplayStyle.None;
-        _hideWithVolume.style.display = _targetVolume != null ? DisplayStyle.None : DisplayStyle.Flex;
+        bool hasVolume = _baking || _targetVolume != null;
+        _showWithVolume.style.display = hasVolume ? DisplayStyle.Flex : DisplayStyle.None;
+        _hideWithVolume.style.display = hasVolume ? DisplayStyle.None : DisplayStyle.Flex;
 
-        string error = _params.Validate(_animator, _targetVolume);
+        string notReadyReason = EvaluateReadiness();
+        _readyToBake = notReadyReason == null;
 
-        // Validation box: only shown when there's an error and not currently baking
-        bool showError = error != null && !_baking;
-        _validationBox.text = error ?? "";
-        _validationBox.style.display = showError ? DisplayStyle.Flex : DisplayStyle.None;
+        // Show the mismatch banner only when there's a Light Volume but it isn't bake-ready,
+        // and we aren't mid-bake (in which case we trust the existing session to finish).
+        bool showMismatch = hasVolume && !_readyToBake && !_baking;
+        _mismatchBlock.style.display   = showMismatch ? DisplayStyle.Flex : DisplayStyle.None;
+        if (showMismatch) _mismatchBox.text = notReadyReason;
 
-        // Progress box: only shown while baking
+        // Setup summary is always visible — it shares the Light Volume panel and shows placeholder
+        // values ("—") when no volume is selected or no ALV component is present.
+        UpdateSummary();
+
+        // Hide the bake/queue/action UI when not ready. Still show it during an in-progress bake so progress is visible.
+        bool showBakeUi = hasVolume && (_readyToBake || _baking);
+        _bakeBlock.style.display       = showBakeUi ? DisplayStyle.Flex : DisplayStyle.None;
+        _bakeActionBlock.style.display = showBakeUi ? DisplayStyle.Flex : DisplayStyle.None;
+
+        // Validation box (separate from the mismatch banner) only used for transient errors during a session.
+        _validationBox.style.display = DisplayStyle.None;
+
+        // Progress box: only shown while baking.
         _bakeProgressBox.style.display = _baking ? DisplayStyle.Flex : DisplayStyle.None;
         if (_baking)
         {
             int snapshotIndex = _snapshotQueue[_queuePosition];
-            int remaining     = _snapshotQueue.Length - _queuePosition;
-            string etr = _secsPerSnapshotBake >= 0
-                ? $"\n(~{System.TimeSpan.FromSeconds(_secsPerSnapshotBake * (remaining + 2)):m\\:ss} remaining)"
-                : "";
-            _bakeProgressBox.text = $"Baking snapshot {snapshotIndex + 1} ({_queuePosition + 1} / {_snapshotQueue.Length} in queue)…{etr}";
+            _bakeProgressBox.text = $"Baking snapshot {snapshotIndex + 1} ({_queuePosition + 1} / {_snapshotQueue.Length} in queue)…";
         }
 
         _bakeBtn.style.display   = _baking ? DisplayStyle.None : DisplayStyle.Flex;
         _cancelBtn.style.display = _baking ? DisplayStyle.Flex : DisplayStyle.None;
-        _bakeBtn.SetEnabled(error == null && _stagedQueue.Count > 0);
+        _bakeBtn.SetEnabled(_readyToBake && _stagedQueue.Count > 0);
 
-        UpdateOutputAnimationEstimates();
-        UpdateOutputTextureEstimates();
         UpdateFlipbookTimeline();
         UpdateQueueButtons();
+        UpdateFlipbookStatusLabels();
     }
 
-    void UpdateOutputAnimationEstimates()
+    void UpdateSummary()
     {
-        if (_animator == null || _params.Clip == null)
-        {
-            _animFrameInterval.text = "—";
-            return;
-        }
-
-        // Display number of animation frames in between snapshots.
-        // Subtract one from SnapshotCount since we capture both the first and last frame.
-        float frameInterval = Mathf.Round(_params.BakeDuration * _params.Clip.frameRate) / (_params.SnapshotCount - 1);
-        _animFrameInterval.text = $"f{frameInterval:0.###}";
-    }
-
-    void UpdateOutputTextureEstimates()
-    {
-        if (_outputResLabel == null) return;
-
-        if (_targetVolume == null)
-        {
-            _outputResLabel.text  = "—";
-            _vramSizeLabel.text   = "—";
-            _bundleSizeLabel.text = "—";
-            return;
-        }
-
-        // Resolution uses the volume's voxel grid.
-        Vector3Int res = _targetVolume.Resolution;
-        int w = res.x;
-        int h = res.y;
-        int d = res.z;
-
-        int packedH = MomentALVFormat.PackedHeight(h, _params.SnapshotCount);
-        int packedD = MomentALVFormat.PackedDepth(d, _shMode);
-        _outputResLabel.text = $"{w} × {packedH} × {packedD}";
-
-        double vram = MomentALVFormat.VramMB(w, h, d, _params.SnapshotCount, _shMode, _bitDepth);
-
-        // Per-format bundle size range. See MomentALVFormat for ratio constants and methodology.
-        double bundleLow  = vram * MomentALVFormat.BundleRatioLow;
-        double bundleHigh = vram * MomentALVFormat.BundleHighRatio(_shMode);
-
-        _vramSizeLabel.text   = $"{vram:0.00} MB";
-        _bundleSizeLabel.text = $"{bundleLow:0.00} – {bundleHigh:0.00} MB";
+        // _animator is a scene object and may be null during Bakery's temp-scene bake; use the cached name.
+        _summaryAnimator.text  = _baking ? _cachedAnimatorName
+            : (_animator != null ? _animator.gameObject.name : "—");
+        _summaryClip.text      = _params.Clip != null ? _params.Clip.name : "—";
+        _summarySnapshots.text = _params.SnapshotCount.ToString();
+        _summaryRange.text     = $"{_params.StartFrame} – {(_params.EndFrame < 0 ? "end" : _params.EndFrame.ToString())}";
+        _summaryLighting.text  = $"{_shMode}, {_bitDepth}";
+        _summaryOutput.text    = string.IsNullOrEmpty(_outputName) ? "—" : _outputName;
     }
 
     void UpdateFlipbookTimeline()
@@ -522,6 +386,12 @@ public class MomentEWinBaker : EditorWindow
         _timelineDirty = false;
 
         int count = _params.SnapshotCount;
+        if (count <= 0)
+        {
+            _flipbookTimeline.UpdateStates(0, System.Array.Empty<MomentFlipbookTimeline.CellState>());
+            return;
+        }
+
         var states = new MomentFlipbookTimeline.CellState[count];
 
         for (int i = 0; i < count; i++)
@@ -549,27 +419,79 @@ public class MomentEWinBaker : EditorWindow
         _flipbookTimeline.UpdateStates(count, states);
     }
 
-    // --- Bake loop ------------------------------------------------------
-
-    // Loads the flipbook state from the sidecar for the current output name into _flipbookState.
-    // Called whenever the volume or output name changes, and after each bake completes.
-    void LoadFlipbookState()
+    void UpdateFlipbookStatusLabels()
     {
-        string assetDir = MomentAssetPaths.SceneAssetDir();
-        string assetPath = $"{assetDir}/{_outputName}.asset";
-        _flipbookState = MomentTextureInfo.Load(assetPath);
-        _timelineDirty = true;
+        if (_flipbookStatusSelected == null) return;
+
+        int selCount = _flipbookTimeline?.SelectedIndices.Count ?? 0;
+        _flipbookStatusSelected.text = selCount == 1 ? "1 snapshot selected."
+            : $"{selCount} snapshots selected.";
+
+        // Focus label: prefer hovered cell, fall back to focused cell, blank if neither.
+        int displayIdx = _flipbookTimeline != null && _flipbookTimeline.HoveredIndex >= 0
+            ? _flipbookTimeline.HoveredIndex
+            : _flipbookTimeline?.FocusedIndex ?? -1;
+
+        if (displayIdx >= 0 && _params.Clip != null)
+        {
+            int frame = _params.SnapshotToAnimFrame(displayIdx);
+            _flipbookStatusFocus.text = $"Snapshot {displayIdx + 1}  ·  f{frame}";
+        }
+        else
+        {
+            _flipbookStatusFocus.text = "";
+        }
+
+        int queueCount = _stagedQueue.Count;
+        _flipbookStatusQueued.text = queueCount == 1 ? "1 snapshot marked for baking."
+            : $"{queueCount} snapshots marked for baking.";
     }
 
-    // Enables/disables the add/remove queue buttons based on whether the timeline
-    // has a selection. Safe to call before CreateGUI completes.
+    // Enables/disables the add/remove queue buttons based on whether the timeline has a selection.
     void UpdateQueueButtons()
     {
         if (_snapshotQueueAddBtn == null) return;
         bool hasSelection = _flipbookTimeline != null && _flipbookTimeline.SelectedIndices.Count > 0;
-        _snapshotQueueAddBtn.SetEnabled(hasSelection);
+        _snapshotQueueAddBtn.SetEnabled(hasSelection && _readyToBake);
         _snapshotQueueRemoveBtn.SetEnabled(hasSelection);
-        _snapshotClearBakeBtn.SetEnabled(hasSelection && !_baking);
+        _snapshotClearBakeBtn.SetEnabled(hasSelection && !_baking && _readyToBake);
+    }
+
+    // Scrubs the animation window to the frame corresponding to the last-clicked timeline cell.
+    void ScrubToLastClickedCell()
+    {
+        if (_flipbookTimeline == null || _params.Clip == null) return;
+        int idx = _flipbookTimeline.LastClickedIndex;
+        if (idx < 0) return;
+        AnimationWindowFrame = _params.SnapshotToAnimFrame(idx);
+        _lastAnimWindowFrame = AnimationWindowFrame;
+    }
+
+    // Called at ~10Hz. Detects when the animation window has been scrubbed externally
+    // and moves keyboard focus to the nearest snapshot cell, if one maps to that frame.
+    void PollAnimWindowForFocus()
+    {
+        if (_flipbookTimeline == null || _params.Clip == null) return;
+
+        int frame = AnimationWindowFrame;
+        if (frame == _lastAnimWindowFrame) return;
+        _lastAnimWindowFrame = frame;
+
+        int best = -1;
+        int bestDist = int.MaxValue;
+        for (int i = 0; i < _params.SnapshotCount; i++)
+        {
+            int dist = Mathf.Abs(_params.SnapshotToAnimFrame(i) - frame);
+            if (dist < bestDist) { bestDist = dist; best = i; }
+        }
+
+        // Only focus if the frame is within half a snapshot interval of the nearest cell.
+        float halfInterval = _params.SnapshotCount > 1
+            ? Mathf.Round(_params.BakeDuration * _params.Clip.frameRate) / (_params.SnapshotCount - 1) * 0.5f
+            : float.MaxValue;
+
+        if (best >= 0 && bestDist <= halfInterval)
+            _flipbookTimeline.FocusCell(best);
     }
 
     void ClearSelectedSnapshots()
@@ -579,7 +501,6 @@ public class MomentEWinBaker : EditorWindow
         var indices = _flipbookTimeline.SelectedIndices;
         if (indices.Count == 0) return;
 
-        // Only include snapshots that are actually baked (nothing to clear otherwise).
         var bakedSelected = new List<int>();
         foreach (int i in indices)
         {
@@ -617,56 +538,42 @@ public class MomentEWinBaker : EditorWindow
         Debug.Log($"[Moment] Cleared snapshot{(bakedSelected.Count == 1 ? "" : "s")} {list} in {assetPath}");
     }
 
+    // --- Bake loop ------------------------------------------------------
+
     // Starts a bake session for the given snapshot indices (0-based, in order).
-    // Initialises or reuses the atlas depending on whether the existing sidecar matches current params.
+    // The atlas and sidecar must already exist and match current params — Setup window enforces that.
     void StartBake(int[] snapshotIndices)
     {
+        if (!_readyToBake)
+        {
+            Debug.LogError("[Moment] Bake refused: ALV is not set up. Open the Setup window first.");
+            return;
+        }
+        if (snapshotIndices.Length == 0) return;
+
         _baking        = true;
         _snapshotQueue = snapshotIndices;
         _queuePosition = 0;
         _timelineDirty = true;
-        _secsPerSnapshotBake = -1;
+
+        // Disable interaction with the flipbook timeline and the Light Volume field.
+        _volumeField?.SetEnabled(false);
+        if (_flipbookTimeline != null) _flipbookTimeline.Locked = true;
+
+        // Cache everything we need to display the bake UI while the live scene objects are gone.
+        _cachedAnimatorName = _animator != null ? _animator.gameObject.name : "—";
 
         // Cache hierarchy paths now while references are guaranteed live.
         _animatorPath     = MomentSceneQuery.GetHierarchyPath(_animator.gameObject);
         _targetVolumePath = MomentSceneQuery.GetHierarchyPath(_targetVolume.gameObject);
 
-        // Resolve dimensions from the volume's voxel grid — always available, unlike
-        // BakeryVolume.bakedTexture0 which is only populated after the first Bakery bake.
-        Vector3Int res = _targetVolume.Resolution;
-        int w = res.x;
-        int h = res.y;
-        int d = res.z;
-
         string assetDir = MomentAssetPaths.SceneAssetDir();
-        MomentAssetPaths.CreateDirectory(assetDir);
         _assetPath = $"{assetDir}/{_outputName}.asset";
 
-        // If an existing atlas and sidecar are compatible with the current params, reuse them
-        // so only the queued snapshots get overwritten. Otherwise, start fresh with a blank atlas.
-        bool reusing = _flipbookState != null
-            && _flipbookState.MatchesParams(w, h, d, _params.SnapshotCount, _shMode, _bitDepth);
+        // Reuse the on-disk sidecar — setup guarantees it matches.
+        _activeSidecar = _flipbookState;
 
-        if (reusing)
-        {
-            _activeSidecar = _flipbookState;
-            Debug.Log($"[Moment] Resuming existing bake at {_assetPath} ({snapshotIndices.Length} snapshots queued)");
-        }
-        else
-        {
-            MomentTextureWriter.InitialiseTexture(w, h, d, _params.SnapshotCount, _shMode, _bitDepth, _assetPath);
-            _activeSidecar = new MomentTextureInfo
-            {
-                snapshotX    = w,
-                snapshotY    = h,
-                snapshotZ    = d,
-                numSnapshots = _params.SnapshotCount,
-                shMode       = _shMode,
-                bitDepth     = _bitDepth,
-                snapshots    = new MomentTextureInfo.SnapshotEntry[_params.SnapshotCount],
-            };
-            _activeSidecar.Save(_assetPath);
-        }
+        Debug.Log($"[Moment] Baking {snapshotIndices.Length} snapshot{(snapshotIndices.Length == 1 ? "" : "s")} into {_assetPath}");
 
         UpdateUI();
         BakeNextSnapshot();
@@ -683,8 +590,6 @@ public class MomentEWinBaker : EditorWindow
         _animator     = animator;
         _targetVolume = volume;
 
-        // Keep the UI fields in sync so they don't show "Missing" after Bakery's scene reload.
-        _animatorField?.SetValueWithoutNotify(_animator);
         _volumeField?.SetValueWithoutNotify(_targetVolume);
         return true;
     }
@@ -707,8 +612,6 @@ public class MomentEWinBaker : EditorWindow
 
         // Defer RenderButton by one editor update tick so Unity flushes the sampled
         // transforms to the scene graph before Bakery reads geometry.
-        // EditorApplication.update fires regardless of window focus, unlike delayCall.
-        _snapshotStopwatch.Restart();
         EditorApplication.update += RenderOnNextTick;
         void RenderOnNextTick()
         {
@@ -723,10 +626,6 @@ public class MomentEWinBaker : EditorWindow
     void OnBakeFinished(object sender, System.EventArgs e)
     {
         if (!_baking) return;
-
-        _snapshotStopwatch.Stop();
-        if (_secsPerSnapshotBake < 0)
-            _secsPerSnapshotBake = _snapshotStopwatch.Elapsed.TotalSeconds;
 
         int snapshotIndex = _snapshotQueue[_queuePosition];
 
@@ -768,7 +667,9 @@ public class MomentEWinBaker : EditorWindow
 
     void FinishBake()
     {
-        _baking = false;
+        _baking              = false;
+        if (_flipbookTimeline != null) _flipbookTimeline.Locked = false;
+        _volumeField?.SetEnabled(true);
         _stagedQueue.Clear();
         _timelineDirty = true;
         if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
@@ -776,13 +677,15 @@ public class MomentEWinBaker : EditorWindow
         // Reload references to make it faster to re-bake a sequence if needed.
         RefreshReferences();
 
-        Debug.Log($"[Moment] Done. {_params.SnapshotCount} snapshots baked into {_assetPath}");
+        Debug.Log($"[Moment] Done. {_snapshotQueue.Length} snapshot{(_snapshotQueue.Length == 1 ? "" : "s")} baked into {_assetPath}");
         UpdateUI();
     }
 
     void AbortBake(string reason)
     {
-        _baking        = false;
+        _baking              = false;
+        if (_flipbookTimeline != null) _flipbookTimeline.Locked = false;
+        _volumeField?.SetEnabled(true);
         _timelineDirty = true;
         if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
         Debug.LogError($"  [Moment] Bake aborted: {reason}");

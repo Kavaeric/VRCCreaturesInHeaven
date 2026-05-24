@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <Style src="project://database/Assets/Modules/Atelier/AtelierUI.uss" />
+
+    <ui:ScrollView class="p-2">
+
+        <!-- Target volume -->
+        <ui:VisualElement class="panel-frame col">
+            <ui:Label text="Light Volume" for="volume-field" class="font-bold" />
+            <ui:VisualElement class="h-1" />
+            <uie:ObjectField name="volume-field" allow-scene-objects="true" />
+        </ui:VisualElement>
+
+        <ui:VisualElement name="hide-with-volume">
+            <ui:VisualElement class="h-1" />
+            <ui:HelpBox text="Assign a Light Volume to begin." message-type="info" />
+        </ui:VisualElement>
+
+        <ui:VisualElement class="h-2" />
+
+        <ui:VisualElement name="show-with-volume">
+
+            <!-- Lighting -->
+            <ui:VisualElement class="panel-frame col">
+                <ui:Label text="Lighting" class="font-bold" />
+                <ui:VisualElement class="h-1" />
+                <ui:VisualElement class="col">
+                    <ui:Label text="Lighting data mode" for="sh-mode-field" />
+                    <ui:VisualElement class="h-0p5" />
+                    <ui:VisualElement class="row">
+                        <ui:EnumField name="sh-mode-field" class="grow" />
+                        <ui:Button name="help-btn-sh-mode" text="?" class="btn-tertiary btn-icon-sm" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:VisualElement class="h-1" />
+
+                <ui:VisualElement class="col">
+                    <ui:Label text="Bit depth" for="bit-depth-field" />
+                    <ui:VisualElement class="h-0p5" />
+                    <ui:VisualElement class="row">
+                        <ui:EnumField name="bit-depth-field" class="grow" />
+                        <ui:Button name="help-btn-bit-depth" text="?" class="btn-tertiary btn-icon-sm" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="h-2" />
+
+            <!-- Animation -->
+            <ui:VisualElement class="panel-frame col">
+                <ui:Label text="Animation" class="font-bold" />
+
+                <ui:VisualElement class="h-1" />
+
+                <ui:VisualElement class="col">
+                    <ui:Label text="Animator" for="animator-field" />
+                    <ui:VisualElement class="h-0p5" />
+                    <uie:ObjectField name="animator-field" type="UnityEngine.Animator, UnityEngine" allow-scene-objects="true" />
+                </ui:VisualElement>
+
+                <ui:VisualElement class="h-1" />
+
+                <ui:VisualElement class="col">
+                    <ui:Label text="Animation clip" for="clip-field" />
+                    <ui:VisualElement class="h-0p5" />
+                    <uie:ObjectField name="clip-field" type="UnityEngine.AnimationClip, UnityEngine" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="h-2" />
+
+            <!-- Flipbook output -->
+            <ui:VisualElement class="panel-frame col">
+                <ui:Label text="Flipbook output" class="font-bold" />
+                <ui:VisualElement class="h-1" />
+
+                <ui:VisualElement class="col">
+                    <ui:Label text="No. of snapshots" for="snapshot-count-field" />
+                    <ui:VisualElement class="h-0p5" />
+                    <uie:IntegerField name="snapshot-count-field" value="8" />
+                </ui:VisualElement>
+
+                <ui:VisualElement class="h-1" />
+
+                <ui:VisualElement class="row">
+                    <ui:VisualElement class="col grow w-1f2">
+                        <ui:Label text="Start frame" for="start-time-field" />
+                        <ui:VisualElement class="h-0p5" />
+                        <uie:IntegerField name="start-time-field" value="0" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="w-1" />
+                    <ui:VisualElement class="col grow w-1f2">
+                        <ui:Label text="End frame (-1 = full)" for="end-time-field" />
+                        <ui:VisualElement class="h-0p5" />
+                        <uie:IntegerField name="end-time-field" value="-1" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:VisualElement class="h-1" />
+
+                <ui:VisualElement class="col">
+                    <ui:Label text="Output texture name" for="output-name-field" />
+                    <ui:VisualElement class="h-0p5" />
+                    <ui:TextField name="output-name-field" value="ALV_Bake" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="h-2" />
+
+            <!-- Output estimates -->
+            <ui:VisualElement class="row items-center">
+                <ui:Label text="Snapshot frame interval" for="anim-frame-interval" class="grow font-bold" />
+                <ui:Label name="anim-frame-interval" text="—" />
+            </ui:VisualElement>
+            <ui:VisualElement class="h-0p5" />
+            <ui:VisualElement class="row items-center">
+                <ui:Label text="Output resolution" for="output-res" class="grow font-bold" />
+                <ui:Label name="output-res" text="—" />
+            </ui:VisualElement>
+            <ui:VisualElement class="h-0p5" />
+            <ui:VisualElement class="row items-center">
+                <ui:Label text="VRAM size" for="vram-size" class="grow font-bold" />
+                <ui:Label name="vram-size" text="—" />
+            </ui:VisualElement>
+            <ui:VisualElement class="h-0p5" />
+            <ui:VisualElement class="row items-center">
+                <ui:Label text="Estimated bundle size" for="estimated-bundle-size" class="grow font-bold" />
+                <ui:Label name="estimated-bundle-size" text="—" />
+            </ui:VisualElement>
+
+            <ui:VisualElement class="h-2" />
+
+            <!-- Existing-bake info -->
+            <ui:HelpBox name="existing-bake-box" message-type="Warning" />
+            <ui:VisualElement class="h-1" />
+
+            <!-- Action -->
+            <ui:Button name="setup-btn" text="Set up ALV" />
+            <ui:VisualElement class="h-0p5" />
+            <ui:HelpBox name="validation-box" message-type="Warning" />
+
+        </ui:VisualElement> <!-- show-with-volume -->
+
+    </ui:ScrollView>
+</ui:UXML>

@@ -50,7 +50,8 @@
 /* Selected ------------------------------------- */
 
 .flipbook-cell__inner--selected {
-    border-color: rgba(255, 100, 0, 0.8);
+    background-color: rgba(255, 255, 255, .1);
+    border-color: rgba(255, 100, 0, .8);
 }
 
 .flipbook-cell:hover > .flipbook-cell__inner--selected,

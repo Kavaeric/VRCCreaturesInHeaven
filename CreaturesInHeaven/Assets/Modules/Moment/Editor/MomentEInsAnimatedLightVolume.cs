@@ -63,11 +63,6 @@ public class MomentEInsAnimatedLightVolume : Editor
                 MomentTextureInfo.Load(AssetDatabase.GetAssetPath(alv.AnimatedTexture))?.ApplyTo(alv);
         }
 
-        EditorGUILayout.Space(4);
-
-        if (GUILayout.Button("Set Up CRT", GUILayout.Height(32)))
-            MomentCRTSetup.SetupCRT(alv);
-
         if (alv.Crt != null && alv.TargetVolume == null)
             EditorGUILayout.HelpBox("Assign a Target Volume to complete setup.", MessageType.Warning);
 
@@ -163,29 +158,28 @@ public class MomentEInsAnimatedLightVolume : Editor
         }
 
         // --- Bake settings -------------------------------------------
+        // Read-only summary of what the Setup window has saved. To change these, open Tools > Moment ALV > Set up animated light volume.
         EditorGUILayout.Space(8);
         alv.BakeSettingsFoldout = EditorGUILayout.Foldout(alv.BakeSettingsFoldout, "Saved bake settings", true, EditorStyles.foldoutHeader);
         if (alv.BakeSettingsFoldout)
         {
             EditorGUI.indentLevel++;
-            EditorGUI.BeginChangeCheck();
+            EditorGUI.BeginDisabledGroup(true);
 
-            alv.BakeAnimator  = (Animator)EditorGUILayout.ObjectField("Animator", alv.BakeAnimator, typeof(Animator), allowSceneObjects: true);
-            alv.BakeClip      = (AnimationClip)EditorGUILayout.ObjectField("Animation clip", alv.BakeClip, typeof(AnimationClip), allowSceneObjects: false);
-            alv.BakeSnapshotCount = Mathf.Max(2, EditorGUILayout.IntField("No. of snapshots", alv.BakeSnapshotCount));
+            EditorGUILayout.ObjectField("Animator", alv.BakeAnimator, typeof(Animator), allowSceneObjects: true);
+            EditorGUILayout.ObjectField("Animation clip", alv.BakeClip, typeof(AnimationClip), allowSceneObjects: false);
+            EditorGUILayout.IntField("No. of snapshots", alv.BakeSnapshotCount);
 
             EditorGUILayout.BeginHorizontal();
-            alv.BakeStartFrame = Mathf.Max(0, EditorGUILayout.IntField("Start frame", alv.BakeStartFrame));
-            alv.BakeEndFrame   = EditorGUILayout.IntField("End frame (-1 = full)", alv.BakeEndFrame);
+            EditorGUILayout.IntField("Start frame", alv.BakeStartFrame);
+            EditorGUILayout.IntField("End frame (-1 = full)", alv.BakeEndFrame);
             EditorGUILayout.EndHorizontal();
 
-            alv.BakeSHMode   = (MomentALVSHMode)  EditorGUILayout.EnumPopup("SH mode",   alv.BakeSHMode);
-            alv.BakeBitDepth = (MomentALVBitDepth)EditorGUILayout.EnumPopup("Bit depth", alv.BakeBitDepth);
-            alv.BakeOutputName = EditorGUILayout.TextField("Output name", alv.BakeOutputName);
+            EditorGUILayout.EnumPopup("SH mode",   alv.BakeSHMode);
+            EditorGUILayout.EnumPopup("Bit depth", alv.BakeBitDepth);
+            EditorGUILayout.TextField("Output name", alv.BakeOutputName);
 
-            if (EditorGUI.EndChangeCheck())
-                EditorUtility.SetDirty(alv);
-
+            EditorGUI.EndDisabledGroup();
             EditorGUI.indentLevel--;
         }
 

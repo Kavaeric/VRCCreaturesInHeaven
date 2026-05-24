@@ -28,6 +28,7 @@ public struct MomentBakeParams
     {
         if (animator == null) return "Assign an Animator to bake.";
         if (Clip == null)     return "Assign an Animation Clip to bake.";
+        if (volume == null)   return "Assign a Light Volume to bake.";
         if (volume.BakeryVolume == null)
             return "Target Light Volume has no BakeryVolume child. Run a regular Bakery bake on it first to generate one.";
         return null;

@@ -1,0 +1,80 @@
+.flipbook-cell {
+    cursor: link;
+    width: 16px;
+    height: 24px;
+    min-height: 0;  /* override Button global reset */
+    margin: 0;
+    padding: 0;
+    background-color: transparent;
+    border-width: 0;
+}
+
+/* --- Inner visual element -------------------- */
+
+.flipbook-cell__inner {
+    flex-grow: 1;
+    margin: 1px;
+    background-color: rgba(255, 255, 255, .02);
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, .1);
+    border-radius: 2px;
+    cursor: link;
+}
+
+/* --- Unbaked --------------------------------- */
+
+.flipbook-cell:hover > .flipbook-cell__inner {
+    border-color: rgba(255, 255, 255, .3);
+}
+
+.flipbook-cell:active > .flipbook-cell__inner {
+    border-color: rgba(255, 255, 255, .5);
+}
+
+/* --- Selected -------------------------------- */
+
+.flipbook-cell__inner--selected {
+    border-color: rgba(255, 100, 0, 1);
+}
+
+.flipbook-cell:hover > .flipbook-cell__inner--selected,
+.flipbook-cell:active > .flipbook-cell__inner--selected {
+    border-color: rgba(255, 100, 0, 1);
+}
+
+/* --- Baked ----------------------------------- */
+
+.flipbook-cell__inner--baked {
+    background-color: rgba(255, 255, 255, .2);
+    border-color: rgba(255, 255, 255, .2);
+}
+
+.flipbook-cell:hover > .flipbook-cell__inner--baked {
+    border-color: rgba(255, 255, 255, .4);
+}
+
+.flipbook-cell:active > .flipbook-cell__inner--baked {
+    border-color: rgba(255, 255, 255, .6);
+}
+
+.flipbook-cell:hover > .flipbook-cell__inner--baked.flipbook-cell__inner--selected,
+.flipbook-cell:active > .flipbook-cell__inner--baked.flipbook-cell__inner--selected {
+    border-color: rgba(255, 100, 0, 1);
+}
+
+/* --- Queued / Active ------------------------- */
+
+.flipbook-cell__inner--queued { background-color: rgb(77, 140, 230); }
+.flipbook-cell__inner--active { background-color: rgb(242, 191, 51); }
+
+/* --- Focus ----------------------------------- */
+
+.flipbook-cell:focus > .flipbook-cell__inner {
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, .7);
+}
+
+.flipbook-cell:focus > .flipbook-cell__inner--selected {
+    border-width: 2px;
+    border-color: rgba(255, 120, 20, 1);
+}

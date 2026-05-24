@@ -31,11 +31,22 @@ public class MomentEWinBaker : EditorWindow
     // --- Internal bake state --------------------------------------------
 
     bool _baking = false;
-    int _currentSnapshot = 0;
+
+    // Ordered list of snapshot indices (0-based) to bake in the current session.
+    // Resolved in StartBake and consumed one entry at a time.
+    int[] _snapshotQueue;
+    int   _queuePosition;   // index into _snapshotQueue for the currently-baking snapshot
 
     // Asset path and sidecar resolved at bake start; used by OnBakeFinished to write each slice.
     string _assetPath;
     MomentTextureInfo _activeSidecar;
+
+    // Last-known flipbook state loaded from disk. Updated at bake start and after each completed bake.
+    // All UI and logic that wants to know "what has been baked so far" reads from this.
+    MomentTextureInfo _flipbookState;
+
+    // Set whenever flipbook state or bake progress changes; cleared after UpdateFlipbookTimeline runs.
+    bool _timelineDirty = true;
 
     // Hierarchy paths resolved at bake start, used to re-find objects across
     // snapshots in case Bakery's scene management destroys the live references mid-bake.
@@ -130,6 +141,7 @@ public class MomentEWinBaker : EditorWindow
     Label _bundleSizeLabel;
     VisualElement _showWithVolume;
     VisualElement _hideWithVolume;
+    MomentFlipbookTimeline _flipbookTimeline;
 
     public void CreateGUI()
     {
@@ -157,6 +169,7 @@ public class MomentEWinBaker : EditorWindow
         {
             _targetVolume = e.newValue as LightVolume;
             if (_targetVolume != null) LoadFromALV();
+            LoadFlipbookState();
             UpdateRangeFields();
             UpdatePreviewReadout();
             UpdateUI();
@@ -228,6 +241,7 @@ public class MomentEWinBaker : EditorWindow
         {
             _outputName = e.newValue;
             SaveToALV();
+            LoadFlipbookState();
         });
 
         _shModeField = rootVisualElement.Q<EnumField>("sh-mode-field");
@@ -305,12 +319,14 @@ public class MomentEWinBaker : EditorWindow
         _bakeBtn         = rootVisualElement.Q<Button>("bake-btn");
         _cancelBtn       = rootVisualElement.Q<Button>("cancel-btn");
 
-        _bakeBtn.clicked   += StartBake;
+        _bakeBtn.clicked   += () => StartBake(AllSnapshotIndices());
         _cancelBtn.clicked += () => AbortBake("Cancelled by user");
 
+
         // --- Volume-dependant section ---
-        _showWithVolume = rootVisualElement.Q<VisualElement>("show-with-volume");
-        _hideWithVolume = rootVisualElement.Q<VisualElement>("hide-with-volume");
+        _showWithVolume    = rootVisualElement.Q<VisualElement>("show-with-volume");
+        _hideWithVolume    = rootVisualElement.Q<VisualElement>("hide-with-volume");
+        _flipbookTimeline  = rootVisualElement.Q<MomentFlipbookTimeline>("flipbook-timeline");
 
         // --- Output estimate labels ---
         _animFrameInterval = rootVisualElement.Q<Label>("anim-frame-interval");
@@ -403,11 +419,12 @@ public class MomentEWinBaker : EditorWindow
         _bakeProgressBox.style.display = _baking ? DisplayStyle.Flex : DisplayStyle.None;
         if (_baking)
         {
-            int remaining = _params.SnapshotCount - _currentSnapshot;
+            int snapshotIndex = _snapshotQueue[_queuePosition];
+            int remaining     = _snapshotQueue.Length - _queuePosition;
             string etr = _secsPerSnapshotBake >= 0
                 ? $"\n(~{System.TimeSpan.FromSeconds(_secsPerSnapshotBake * (remaining + 2)):m\\:ss} remaining)"
                 : "";
-            _bakeProgressBox.text = $"Baking snapshot {_currentSnapshot + 1} / {_params.SnapshotCount}…{etr}";
+            _bakeProgressBox.text = $"Baking snapshot {snapshotIndex + 1} ({_queuePosition + 1} / {_snapshotQueue.Length} in queue)…{etr}";
         }
 
         _bakeBtn.style.display   = _baking ? DisplayStyle.None : DisplayStyle.Flex;
@@ -416,6 +433,7 @@ public class MomentEWinBaker : EditorWindow
 
         UpdateOutputAnimationEstimates();
         UpdateOutputTextureEstimates();
+        UpdateFlipbookTimeline();
     }
 
     void UpdateOutputAnimationEstimates()
@@ -429,7 +447,7 @@ public class MomentEWinBaker : EditorWindow
         // Display number of animation frames in between snapshots.
         // Subtract one from SnapshotCount since we capture both the first and last frame.
         float frameInterval = Mathf.Round(_params.BakeDuration * _params.Clip.frameRate) / (_params.SnapshotCount - 1);
-        _animFrameInterval.text = $"f{frameInterval:0.#}";
+        _animFrameInterval.text = $"f{frameInterval:0.###}";
     }
 
     void UpdateOutputTextureEstimates()
@@ -464,11 +482,65 @@ public class MomentEWinBaker : EditorWindow
         _bundleSizeLabel.text = $"{bundleLow:0.00} – {bundleHigh:0.00} MB";
     }
 
-    // --- Bake loop ------------------------------------------------------
-    void StartBake()
+    void UpdateFlipbookTimeline()
     {
-        _baking = true;
-        _currentSnapshot = 0;
+        if (_flipbookTimeline == null || !_timelineDirty) return;
+        _timelineDirty = false;
+
+        int count = _params.SnapshotCount;
+        var states = new FlipbookCellState[count];
+
+        for (int i = 0; i < count; i++)
+        {
+            if (_baking && _snapshotQueue != null)
+            {
+                int qi = System.Array.IndexOf(_snapshotQueue, i);
+                if (qi >= 0)
+                {
+                    states[i] = qi == _queuePosition ? FlipbookCellState.Active : FlipbookCellState.Queued;
+                    continue;
+                }
+            }
+
+            bool baked = _flipbookState != null
+                && _flipbookState.snapshots != null
+                && i < _flipbookState.snapshots.Length
+                && _flipbookState.snapshots[i].baked;
+
+            states[i] = baked ? FlipbookCellState.Baked : FlipbookCellState.Unbaked;
+        }
+
+        _flipbookTimeline.UpdateStates(count, states);
+    }
+
+    // --- Bake loop ------------------------------------------------------
+
+    // Loads the flipbook state from the sidecar for the current output name into _flipbookState.
+    // Called whenever the volume or output name changes, and after each bake completes.
+    void LoadFlipbookState()
+    {
+        string assetDir = MomentAssetPaths.SceneAssetDir();
+        string assetPath = $"{assetDir}/{_outputName}.asset";
+        _flipbookState = MomentTextureInfo.Load(assetPath);
+        _timelineDirty = true;
+    }
+
+    // Returns an ordered array of all snapshot indices for a full bake.
+    int[] AllSnapshotIndices()
+    {
+        int[] indices = new int[_params.SnapshotCount];
+        for (int i = 0; i < indices.Length; i++) indices[i] = i;
+        return indices;
+    }
+
+    // Starts a bake session for the given snapshot indices (0-based, in order).
+    // Initialises or reuses the atlas depending on whether the existing sidecar matches current params.
+    void StartBake(int[] snapshotIndices)
+    {
+        _baking        = true;
+        _snapshotQueue = snapshotIndices;
+        _queuePosition = 0;
+        _timelineDirty = true;
         _secsPerSnapshotBake = -1;
 
         // Cache hierarchy paths now while references are guaranteed live.
@@ -487,16 +559,14 @@ public class MomentEWinBaker : EditorWindow
         _assetPath = $"{assetDir}/{_outputName}.asset";
 
         // If an existing atlas and sidecar are compatible with the current params, reuse them
-        // so only the snapshots being baked this session get overwritten.
-        // Otherwise, start fresh with a blank atlas.
-        MomentTextureInfo existingSidecar = MomentTextureInfo.Load(_assetPath);
-        bool reusing = existingSidecar != null
-            && existingSidecar.MatchesParams(w, h, d, _params.SnapshotCount, _shMode, _bitDepth);
+        // so only the queued snapshots get overwritten. Otherwise, start fresh with a blank atlas.
+        bool reusing = _flipbookState != null
+            && _flipbookState.MatchesParams(w, h, d, _params.SnapshotCount, _shMode, _bitDepth);
 
         if (reusing)
         {
-            _activeSidecar = existingSidecar;
-            Debug.Log($"[Moment] Resuming existing bake at {_assetPath}");
+            _activeSidecar = _flipbookState;
+            Debug.Log($"[Moment] Resuming existing bake at {_assetPath} ({snapshotIndices.Length} snapshots queued)");
         }
         else
         {
@@ -539,9 +609,11 @@ public class MomentEWinBaker : EditorWindow
     {
         if (!RefreshReferences()) return;
 
+        int snapshotIndex = _snapshotQueue[_queuePosition];
+
         // Snapshot 0 = BakeStart, snapshot N-1 = BakeEnd (last snapshot inclusive).
         float t = _params.BakeStart + (_params.SnapshotCount > 1
-            ? _params.BakeDuration * _currentSnapshot / (_params.SnapshotCount - 1) : 0f);
+            ? _params.BakeDuration * snapshotIndex / (_params.SnapshotCount - 1) : 0f);
 
         // Sample the clip directly via AnimationMode so the pose is written to the scene
         // regardless of whether the clip uses motion time or a standard playhead.
@@ -572,10 +644,12 @@ public class MomentEWinBaker : EditorWindow
         if (_secsPerSnapshotBake < 0)
             _secsPerSnapshotBake = _snapshotStopwatch.Elapsed.TotalSeconds;
 
+        int snapshotIndex = _snapshotQueue[_queuePosition];
+
         BakeryVolume bv = _targetVolume.BakeryVolume;
         if (bv.bakedTexture0 == null || bv.bakedTexture1 == null || bv.bakedTexture2 == null)
         {
-            AbortBake($"BakeryVolume textures are null after bake on snapshot {_currentSnapshot}. Check Bakery output.");
+            AbortBake($"BakeryVolume textures are null after bake on snapshot {snapshotIndex}. Check Bakery output.");
             return;
         }
 
@@ -585,20 +659,22 @@ public class MomentEWinBaker : EditorWindow
             bv.bakedTexture2.GetPixels());
 
         MomentTextureWriter.WriteSnapshotSlice(
-            _assetPath, snapshot, _currentSnapshot,
+            _assetPath, snapshot, snapshotIndex,
             bv.bakedTexture0.width, bv.bakedTexture0.height, bv.bakedTexture0.depth,
             _shMode, _bitDepth);
 
-        _activeSidecar.snapshots[_currentSnapshot] = new MomentTextureInfo.SnapshotEntry
+        _activeSidecar.snapshots[snapshotIndex] = new MomentTextureInfo.SnapshotEntry
         {
             baked     = true,
-            animFrame = _params.SnapshotToAnimFrame(_currentSnapshot),
+            animFrame = _params.SnapshotToAnimFrame(snapshotIndex),
         };
         _activeSidecar.Save(_assetPath);
+        _flipbookState = _activeSidecar;
+        _timelineDirty = true;
 
-        _currentSnapshot++;
+        _queuePosition++;
 
-        if (_currentSnapshot < _params.SnapshotCount)
+        if (_queuePosition < _snapshotQueue.Length)
             BakeNextSnapshot();
         else
             FinishBake();
@@ -620,7 +696,8 @@ public class MomentEWinBaker : EditorWindow
 
     void AbortBake(string reason)
     {
-        _baking = false;
+        _baking        = false;
+        _timelineDirty = true;
         if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
         Debug.LogError($"  [Moment] Bake aborted: {reason}");
         UpdateUI();

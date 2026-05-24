@@ -31,8 +31,6 @@
     border-color: rgba(255, 255, 255, .5);
 }
 
-/* --- Selected -------------------------------- */
-
 .flipbook-cell__inner--selected {
     border-color: rgba(255, 100, 0, 1);
 }
@@ -55,6 +53,10 @@
 
 .flipbook-cell:active > .flipbook-cell__inner--baked {
     border-color: rgba(255, 255, 255, .6);
+}
+
+.flipbook-cell__inner--baked.flipbook-cell__inner--selected {
+    border-color: rgba(255, 100, 0, 1);
 }
 
 .flipbook-cell:hover > .flipbook-cell__inner--baked.flipbook-cell__inner--selected,

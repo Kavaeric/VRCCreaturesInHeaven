@@ -17,6 +17,7 @@ public class MomentFlipbookTimeline : VisualElement
     public event Action<IReadOnlyList<int>> OnSelectionChanged;
 
     readonly List<int> _selectedIndices = new();
+    int _anchorIndex = -1; // last non-shift click; range selections extend from here
 
     public IReadOnlyList<int> SelectedIndices => _selectedIndices;
 
@@ -52,6 +53,7 @@ public class MomentFlipbookTimeline : VisualElement
     {
         Clear();
         _selectedIndices.Clear();
+        _anchorIndex = -1;
 
         for (int i = 0; i < count; i++)
         {
@@ -68,11 +70,41 @@ public class MomentFlipbookTimeline : VisualElement
 
     void OnCellClicked(ClickEvent e, MomentFlipbookCell cell, int index)
     {
-        bool multiSelect = (e.modifiers & (EventModifiers.Control | EventModifiers.Command)) != 0;
+        bool shift = (e.modifiers & EventModifiers.Shift)   != 0;
+        bool ctrl  = (e.modifiers & (EventModifiers.Control | EventModifiers.Command)) != 0;
 
-        if (multiSelect)
+        if (shift && _anchorIndex >= 0)
         {
-            // Toggle this cell without touching others.
+            int anchor = _anchorIndex;
+            int lo = Mathf.Min(anchor, index);
+            int hi = Mathf.Max(anchor, index);
+
+            if (ctrl)
+            {
+                // Ctrl+Shift: add range to existing selection without clearing it.
+                for (int i = lo; i <= hi; i++)
+                {
+                    if (_selectedIndices.Contains(i)) continue;
+                    _selectedIndices.Add(i);
+                    (ElementAt(i) as MomentFlipbookCell)?.SetSelected(true);
+                }
+            }
+            else
+            {
+                // Shift only: replace selection with range from anchor to here.
+                // Anchor stays put so subsequent shift-clicks extend from the same origin.
+                ClearSelection();
+                _anchorIndex = anchor;
+                for (int i = lo; i <= hi; i++)
+                {
+                    _selectedIndices.Add(i);
+                    (ElementAt(i) as MomentFlipbookCell)?.SetSelected(true);
+                }
+            }
+        }
+        else if (ctrl)
+        {
+            // Toggle this cell without touching others; update anchor.
             if (_selectedIndices.Contains(index))
             {
                 _selectedIndices.Remove(index);
@@ -83,6 +115,7 @@ public class MomentFlipbookTimeline : VisualElement
                 _selectedIndices.Add(index);
                 cell.SetSelected(true);
             }
+            _anchorIndex = index;
         }
         else
         {
@@ -94,6 +127,7 @@ public class MomentFlipbookTimeline : VisualElement
                 _selectedIndices.Add(index);
                 cell.SetSelected(true);
             }
+            _anchorIndex = wasOnlySelection ? -1 : index;
         }
 
         FireSelectionChanged();
@@ -104,6 +138,7 @@ public class MomentFlipbookTimeline : VisualElement
         foreach (int i in _selectedIndices)
             (ElementAt(i) as MomentFlipbookCell)?.SetSelected(false);
         _selectedIndices.Clear();
+        _anchorIndex = -1;
     }
 
     void FireSelectionChanged()

@@ -147,12 +147,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b7fa80e7116296f4eb4f49ec1544ee22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  renderSettingsBounces: 5
+  renderSettingsBounces: 4
   renderSettingsGISamples: 16
   renderSettingsGIBackFaceWeight: 0
-  renderSettingsTileSize: 512
+  renderSettingsTileSize: 1024
   renderSettingsPriority: 2
-  renderSettingsTexelsPerUnit: 20
+  renderSettingsTexelsPerUnit: 40
   renderSettingsForceRefresh: 1
   renderSettingsForceRebuildGeometry: 1
   renderSettingsPerformRendering: 1
@@ -166,7 +166,7 @@ MonoBehaviour:
   renderSettingsEncodeMode: 0
   renderSettingsOverwriteWarning: 0
   renderSettingsAutoAtlas: 1
-  renderSettingsUnwrapUVs: 1
+  renderSettingsUnwrapUVs: 0
   renderSettingsForceDisableUnwrapUVs: 0
   renderSettingsMaxAutoResolution: 4096
   renderSettingsMinAutoResolution: 16
@@ -181,7 +181,7 @@ MonoBehaviour:
   renderSettingsUseScenePath: 1
   renderSettingsHackAOIntensity: 0.2
   renderSettingsHackAOSamples: 16
-  renderSettingsHackAOSofter: 0
+  renderSettingsHackAOSofter: 1
   renderSettingsHackAORadius: 1
   renderSettingsShowAOSettings: 1
   renderSettingsShowTasks: 1
@@ -195,9 +195,9 @@ MonoBehaviour:
   renderSettingsTexelsPerMap: 0
   renderSettingsTexelsColor: 1
   renderSettingsTexelsMask: 1
-  renderSettingsTexelsDir: 1
+  renderSettingsTexelsDir: 0.7604167
   renderSettingsShowDirWarning: 1
-  renderSettingsRenderDirMode: 1
+  renderSettingsRenderDirMode: 6
   renderSettingsShowCheckerSettings: 0
   renderSettingsSamplesWarning: 1
   renderSettingsSuppressPopups: 0
@@ -214,14 +214,14 @@ MonoBehaviour:
   renderSettingsBeepOnFinish: 0
   renderSettingsExportTerrainAsHeightmap: 1
   renderSettingsRTXMode: 1
-  renderSettingsLightProbeMode: 2
+  renderSettingsLightProbeMode: 1
   renderSettingsClientMode: 0
   renderSettingsServerAddress: 127.0.0.1
   renderSettingsUnwrapper: 0
   renderSettingsDenoiserType: 101
   renderSettingsExportTerrainTrees: 0
   renderSettingsShowPerf: 1
-  renderSettingsSampleDiv: 2
+  renderSettingsSampleDiv: 4
   renderSettingsAtlasPacker: 0
   renderSettingsBatchPoints: 1
   renderSettingsCompressVolumes: 0
@@ -230,9 +230,9 @@ MonoBehaviour:
   renderSettingsAsset: {fileID: 0}
   renderSettingsRTPVExport: 1
   renderSettingsRTPVSceneView: 0
-  renderSettingsRTPVHDR: 0
-  renderSettingsRTPVWidth: 640
-  renderSettingsRTPVHeight: 360
+  renderSettingsRTPVHDR: 1
+  renderSettingsRTPVWidth: 800
+  renderSettingsRTPVHeight: 600
   renderSettingsRTPVExposure: 0.99999994
   renderSettingsRemoveDuplicateLightmaps: 0
   lastBakeTime: 0
@@ -288,18 +288,18 @@ MonoBehaviour:
   bakedLights: []
   bakedRenderersTerrain: []
   maps:
-  - {fileID: 2800000, guid: ef06f0e26ab79564f8b59014a7670b12, type: 3}
-  - {fileID: 2800000, guid: 0fb0edcd737e0a242be09a793b4e2066, type: 3}
-  - {fileID: 2800000, guid: 302cc5a2fc80e3b45ac65ac9c08d3d4b, type: 3}
-  - {fileID: 2800000, guid: d6f0f844a269fd5469a7130233ae370c, type: 3}
-  - {fileID: 2800000, guid: 81aa9a9bfe06fc14fa18339d505ada01, type: 3}
+  - {fileID: 2800000, guid: 70a64f98a74b5c14a82e602d62e706bb, type: 3}
+  - {fileID: 2800000, guid: 3a47c25f627dab245be5bd427eeabbce, type: 3}
+  - {fileID: 2800000, guid: f12fd3f23c1cc1c44af4e3299a96738d, type: 3}
+  - {fileID: 2800000, guid: 546ad4dd776ddd440aed1901f085e05d, type: 3}
+  - {fileID: 2800000, guid: 759fd749b4511c6459106246e139d204, type: 3}
   masks: []
   dirMaps:
-  - {fileID: 2800000, guid: 214686c429b9df74fa838ff88da9ba22, type: 3}
-  - {fileID: 2800000, guid: a8a6740508b986d498aaabd088941392, type: 3}
-  - {fileID: 2800000, guid: 9966a582a8bac0644bfdd03e557a571a, type: 3}
-  - {fileID: 2800000, guid: 990180655af879a48b3cf19d0de6954e, type: 3}
-  - {fileID: 2800000, guid: 300e9ac136b44c8448eb2c3d945363c9, type: 3}
+  - {fileID: 2800000, guid: 98dd34edee3422347b0965d6b17855e6, type: 3}
+  - {fileID: 2800000, guid: 02573717ed585ee42b7dc3c0d3094a02, type: 3}
+  - {fileID: 2800000, guid: 71f54a3c01ea3b74f9959bc4e82f3498, type: 3}
+  - {fileID: 2800000, guid: e8f7be51f885d2843a2f810c6907090c, type: 3}
+  - {fileID: 2800000, guid: 2977a2542ceca6f428b5c606c301d955, type: 3}
   rnmMaps0: []
   rnmMaps1: []
   rnmMaps2: []
@@ -357,7 +357,7 @@ MonoBehaviour:
   bakedScaleOffsetTerrain: []
   assetList: []
   uvOverlapAssetList: 
-  idremap: 0000000000000000000000000000000000000000
+  idremap: 0000000001000000020000000300000004000000
   usesRealtimeGI: 0
   emptyDirectionTex: {fileID: 2800000, guid: 04afea73344b7d049b5b7ac5ae315dd5, type: 3}
   anyVolumes: 0

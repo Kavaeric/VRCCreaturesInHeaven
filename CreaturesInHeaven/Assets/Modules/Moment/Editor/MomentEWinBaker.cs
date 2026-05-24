@@ -107,12 +107,9 @@ public class MomentEWinBaker : EditorWindow
     IntegerField _snapshotCountField;
     TextField _outputNameField;
     EnumField _shModeField;
+    [SerializeField] AtelierHelpPage _shModeHelpPage;
     EnumField _bitDepthField;
-    HelpBox _modeHintL1;
-    HelpBox _modeHintMonoL1;
-    HelpBox _modeHintMonoL0;
-    HelpBox _formatHint16BPC;
-    HelpBox _formatHint8BPC;
+    [SerializeField] AtelierHelpPage _bitDepthHelpPage;
     HelpBox _validationBox;
     HelpBox _bakeProgressBox;
     Button _bakeBtn;
@@ -154,8 +151,6 @@ public class MomentEWinBaker : EditorWindow
         {
             _targetVolume = e.newValue as LightVolume;
             if (_targetVolume != null) LoadFromALV();
-            UpdateModeHint();
-            UpdateFormatHint();
             UpdateRangeFields();
             UpdatePreviewReadout();
             UpdateUI();
@@ -230,32 +225,26 @@ public class MomentEWinBaker : EditorWindow
         });
 
         _shModeField = rootVisualElement.Q<EnumField>("sh-mode-field");
-        _modeHintL1     = rootVisualElement.Q<HelpBox>("mode-hint-L1");
-        _modeHintMonoL1 = rootVisualElement.Q<HelpBox>("mode-hint-MonoL1");
-        _modeHintMonoL0 = rootVisualElement.Q<HelpBox>("mode-hint-MonoL0");
         _shModeField.Init(_shMode);
+
+        rootVisualElement.Q<Button>("help-btn-sh-mode").clicked += () => AtelierHelpWindow.Open(_shModeHelpPage);
         _shModeField.RegisterValueChangedCallback(e =>
         {
             _shMode = (MomentALVSHMode)e.newValue;
             SaveToALV();
-            UpdateModeHint();
             UpdateOutputTextureEstimates();
         });
 
         _bitDepthField = rootVisualElement.Q<EnumField>("bit-depth-field");
-        _formatHint8BPC  = rootVisualElement.Q<HelpBox>("format-hint-8bpc");
-        _formatHint16BPC = rootVisualElement.Q<HelpBox>("format-hint-16bpc");
         _bitDepthField.Init(_bitDepth);
+
+        rootVisualElement.Q<Button>("help-btn-bit-depth").clicked += () => AtelierHelpWindow.Open(_bitDepthHelpPage);
         _bitDepthField.RegisterValueChangedCallback(e =>
         {
             _bitDepth = (MomentALVBitDepth)e.newValue;
             SaveToALV();
-            UpdateFormatHint();
             UpdateOutputTextureEstimates();
         });
-
-        UpdateModeHint();
-        UpdateFormatHint();
 
         // --- Preview controls ---
 
@@ -363,33 +352,6 @@ public class MomentEWinBaker : EditorWindow
         alv.BakeBitDepth      = _bitDepth;
         alv.BakeOutputName    = _outputName;
         EditorUtility.SetDirty(alv);
-    }
-
-    void ShowOnlyModeHint(HelpBox toShow)
-    {
-        _modeHintL1.style.display     = DisplayStyle.None;
-        _modeHintMonoL1.style.display = DisplayStyle.None;
-        _modeHintMonoL0.style.display = DisplayStyle.None;
-        toShow.style.display          = DisplayStyle.Flex;
-    }
-
-    void UpdateModeHint()
-    {
-        if (_modeHintL1 == null || _modeHintMonoL1 == null || _modeHintMonoL0 == null) return;
-        switch (_shMode)
-        {
-            case MomentALVSHMode.MonoL1:  ShowOnlyModeHint(_modeHintMonoL1); break;
-            case MomentALVSHMode.MonoL0:  ShowOnlyModeHint(_modeHintMonoL0); break;
-            default:                ShowOnlyModeHint(_modeHintL1);     break;
-        }
-    }
-
-    void UpdateFormatHint()
-    {
-        if (_formatHint16BPC == null) return;
-        bool is8bit = _bitDepth == MomentALVBitDepth.Depth8;
-        _formatHint8BPC.style.display  = is8bit ? DisplayStyle.Flex : DisplayStyle.None;
-        _formatHint16BPC.style.display = is8bit ? DisplayStyle.None : DisplayStyle.Flex;
     }
 
     // Resets start/end frame fields to match current params.
@@ -537,14 +499,24 @@ public class MomentEWinBaker : EditorWindow
         float t = _params.BakeStart + (_params.SnapshotCount > 1
             ? _params.BakeDuration * _currentSnapshot / (_params.SnapshotCount - 1) : 0f);
 
-        // Force-evaluate the animator to the target time.
-        _animator.Play(_params.Clip.name, 0, t / _params.Clip.length);
-        _animator.Update(0f);
+        // Sample the clip directly via AnimationMode so the pose is written to the scene
+        // regardless of whether the clip uses motion time or a standard playhead.
+        if (!AnimationMode.InAnimationMode())
+            AnimationMode.StartAnimationMode();
+        AnimationMode.SampleAnimationClip(_animator.gameObject, _params.Clip, t);
 
-        // Trigger a full Bakery bake. OnBakeFinished fires when it completes.
+        // Defer RenderButton by one editor update tick so Unity flushes the sampled
+        // transforms to the scene graph before Bakery reads geometry.
+        // EditorApplication.update fires regardless of window focus, unlike delayCall.
         _snapshotStopwatch.Restart();
-        EditorWindow.GetWindow<ftRenderLightmap>().RenderButton(showMsgWindows: false);
-
+        EditorApplication.update += RenderOnNextTick;
+        void RenderOnNextTick()
+        {
+            EditorApplication.update -= RenderOnNextTick;
+            if (!_baking) return;
+            GetWindow<ftRenderLightmap>().RenderButton(showMsgWindows: false);
+        }
+        
         UpdateUI();
     }
 
@@ -581,6 +553,7 @@ public class MomentEWinBaker : EditorWindow
     void FinishBake()
     {
         _baking = false;
+        if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
 
         BakeryVolume bv = _targetVolume.BakeryVolume;
         int w = bv.bakedTexture0.width;
@@ -605,6 +578,7 @@ public class MomentEWinBaker : EditorWindow
     void AbortBake(string reason)
     {
         _baking = false;
+        if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
         Debug.LogError($"  [Moment] Bake aborted: {reason}");
         UpdateUI();
     }

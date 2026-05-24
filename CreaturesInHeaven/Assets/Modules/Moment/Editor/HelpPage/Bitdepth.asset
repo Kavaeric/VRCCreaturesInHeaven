@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eef041081aed1064791c1fe85b5ec65e, type: 3}
+  m_Name: Bitdepth
+  m_EditorClassIdentifier: 
+  Title: Bit depth mode
+  Body: '<b>8 bits per channel (8bpc)</b>
+
+
+    8-bit colour and directional values.
+    Good enough for most scenarios, especially additive Light Volumes.\n\nIn this
+    format, the direction components for light bakes get just 256 steps across the
+    full range instead of thousands, which can cause subtle banding or stair-stepping
+    artefacts in light directionality. These artefacts can be noticeable on non-additive
+    Light Volumes.
+
+
+    -
+
+
+    <b>16 bits per channel (16bpc)</b>
+
+
+    16 bits
+    per channel preserves subtle variations in colour and light direction, at the
+    cost of being double the size of 8-bit depth.\n\nBest non-additive Light Volumes,
+    and limited to small and short bakes. On additive Light Volumes the quality difference
+    between this and 16bpc is pretty much imperceptible.'
+  Images: []

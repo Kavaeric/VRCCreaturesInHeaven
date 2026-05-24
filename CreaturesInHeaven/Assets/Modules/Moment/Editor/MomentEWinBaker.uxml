@@ -44,7 +44,7 @@
 
             <!-- Bake -->
             <ui:VisualElement class="panel-frame col">
-                <ui:Label text="Bake output" class="font-bold" />
+                <ui:Label text="Animation output" class="font-bold" />
                 <ui:VisualElement class="h-1" />
 
                 <ui:VisualElement class="col">
@@ -76,38 +76,31 @@
                     <ui:VisualElement class="h-0p5" />
                     <ui:TextField name="output-name-field" value="ALV_Bake" />
                 </ui:VisualElement>
+            </ui:VisualElement>
 
-                <ui:VisualElement class="h-2" />
-                <ui:VisualElement class="separator" />
-                <ui:VisualElement class="h-2" />
-                
+            <ui:VisualElement class="h-1" />
 
+            <ui:VisualElement class="panel-frame col">
+                <ui:Label text="Lighting" class="font-bold" />
+                <ui:VisualElement class="h-1" />
                 <ui:VisualElement class="col">
                     <ui:Label text="Lighting data mode" for="sh-mode-field" />
                     <ui:VisualElement class="h-0p5" />
-                    <ui:EnumField name="sh-mode-field" />
-                    <ui:VisualElement class="h-0p5" />
-
-                    <ui:HelpBox name="mode-hint-L1" text="Full RGB light colour as well as individual X, Y, and Z direction components for each colour channel for a total of 12 channels per each voxel.\n\nMost lifelike, and will capture multicolour light shining on the same spot in different directions, but will also generate the largest file size." />
-
-                    <ui:HelpBox name="mode-hint-MonoL1" text="Full RGB light colour, but unlike full L1, uses just a single set of X, Y, and Z components rather than a set per colour channel for 6 total channels per voxel.\n\nIsn't able to represent different colours shining from different directions on one voxel as accurately, but baked texture size is ~33% smaller versus full L1 at 16bpc, or ~50% smaller at 8bpc since the unused alpha channel can be dropped entirely. Good enough for the majority of scenarios." />
-
-                    <ui:HelpBox name="mode-hint-MonoL0" text="Monochromatic light intensity and X, Y, and Z direction components for 4 channels per voxel.\n\nLosing the ability to vary colour across a single snapshot makes this the smallest baking format available, ~67% smaller than full L1." />
+                    <ui:VisualElement class="row">
+                        <ui:EnumField name="sh-mode-field" class="grow" />
+                        <ui:Button name="help-btn-sh-mode" text="?" class="btn-tertiary btn-icon-sm" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
 
-                <ui:VisualElement class="h-2" />
-                <ui:VisualElement class="separator" />
-                <ui:VisualElement class="h-2" />
+                <ui:VisualElement class="h-1" />
 
                 <ui:VisualElement class="col">
                     <ui:Label text="Bit depth" for="bit-depth-field" />
                     <ui:VisualElement class="h-0p5" />
-                    <ui:EnumField name="bit-depth-field" />
-                    <ui:VisualElement class="h-0p5" />
-
-                    <ui:HelpBox name="format-hint-8bpc" text="8-bit colour and directional values. Good enough for most scenarios, especially additive Light Volumes.\n\nIn this format, the direction components for light bakes get just 256 steps across the full range instead of thousands, which can cause subtle banding or stair-stepping artefacts in light directionality. These artefacts can be noticeable on non-additive Light Volumes." />
-
-                    <ui:HelpBox name="format-hint-16bpc" text="16 bits per channel preserves subtle variations in colour and light direction, at the cost of being double the size of 8-bit depth.\n\nBest non-additive Light Volumes, and limited to small and short bakes. On additive Light Volumes the quality difference between this and 16bpc is pretty much imperceptible." />
+                    <ui:VisualElement class="row">
+                        <ui:EnumField name="bit-depth-field" class="grow" />
+                        <ui:Button name="help-btn-bit-depth" text="?" class="btn-tertiary btn-icon-sm" />
+                    </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
 

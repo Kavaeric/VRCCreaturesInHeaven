@@ -180,6 +180,79 @@ public static class MomentTextureWriter
         new Vector3(t1.b, t2.b, t2.a)
     );
 
+    // Reads one voxel from the packed pixel array and returns it in the full L1 atlas layout:
+    //   sh0 = (L0.r, L0.g, L0.b, L1r.z)
+    //   sh1 = (L1r.x, L1g.x, L1b.x, L1g.z)
+    //   sh2 = (L1r.y, L1g.y, L1b.y, L1b.z)
+    // This is the same layout the preview shader and the atlas itself use, so callers don't
+    // need to know which SH mode was baked — they always get full L1 data back.
+    //
+    // pixels:       flat array from Texture3D.GetPixels(), XYZ order (x fastest)
+    // texSize:      full packed texture dimensions (width, height, depth)
+    // snapshotSize: spatial dimensions of one snapshot (x, y, z/depth per slot)
+    // snapshotOrigin: Y offset in pixels of the target snapshot (= snapshotIndex * snapshotSize.y)
+    // voxelX/Y/Z:   spatial voxel coordinates within the snapshot
+    // shMode:       the mode the texture was baked in
+    // bitDepth:     the bit depth the texture was baked in (used for UNORM decode)
+    public static void DecodeVoxel(
+        Color[] pixels, Vector3Int texSize, Vector3Int snapshotSize, int snapshotOrigin,
+        int voxelX, int voxelY, int voxelZ,
+        MomentALVSHMode shMode, MomentALVBitDepth bitDepth,
+        out Vector4 sh0, out Vector4 sh1, out Vector4 sh2)
+    {
+        // Read the raw slots that exist for this mode.
+        Color s0 = ReadTexel(pixels, texSize, voxelX, voxelY + snapshotOrigin, voxelZ);
+        Color s1 = MomentALVFormat.NumSlots(shMode) >= 2
+            ? ReadTexel(pixels, texSize, voxelX, voxelY + snapshotOrigin, voxelZ + snapshotSize.z)
+            : new Color(0, 0, 0, 0);
+        Color s2 = MomentALVFormat.NumSlots(shMode) >= 3
+            ? ReadTexel(pixels, texSize, voxelX, voxelY + snapshotOrigin, voxelZ + snapshotSize.z * 2)
+            : new Color(0, 0, 0, 0);
+
+        // UNORM decode: values were remapped [−1,1]→[0,1] at bake time; invert that here.
+        if (MomentALVFormat.IsUnorm(shMode, bitDepth))
+        {
+            s0 = new Color(s0.r * 2 - 1, s0.g * 2 - 1, s0.b * 2 - 1, s0.a * 2 - 1);
+            s1 = new Color(s1.r * 2 - 1, s1.g * 2 - 1, s1.b * 2 - 1, s1.a * 2 - 1);
+            s2 = new Color(s2.r * 2 - 1, s2.g * 2 - 1, s2.b * 2 - 1, s2.a * 2 - 1);
+        }
+
+        // Expand into the full L1 atlas layout the preview shader expects.
+        switch (shMode)
+        {
+            case MomentALVSHMode.L1:
+                // Slots are already in atlas layout; pass through directly.
+                sh0 = new Vector4(s0.r, s0.g, s0.b, s0.a);
+                sh1 = new Vector4(s1.r, s1.g, s1.b, s1.a);
+                sh2 = new Vector4(s2.r, s2.g, s2.b, s2.a);
+                break;
+
+            case MomentALVSHMode.MonoL1:
+            {
+                // s0 = (L0.r, L0.g, L0.b, 0),  s1 = (L1.x, L1.y, L1.z, 0)
+                float l1x = s1.r, l1y = s1.g, l1z = s1.b;
+                sh0 = new Vector4(s0.r, s0.g, s0.b, l1z);
+                sh1 = new Vector4(l1x,  l1x,  l1x,  l1z);
+                sh2 = new Vector4(l1y,  l1y,  l1y,  l1z);
+                break;
+            }
+
+            default: // MonoL0
+            {
+                // s0 = (L0, L1.x, L1.y, L1.z)
+                float l0 = s0.r, l1x = s0.g, l1y = s0.b, l1z = s0.a;
+                sh0 = new Vector4(l0,  l0,  l0,  l1z);
+                sh1 = new Vector4(l1x, l1x, l1x, l1z);
+                sh2 = new Vector4(l1y, l1y, l1y, l1z);
+                break;
+            }
+        }
+    }
+
+    // Reads one texel from a flat Texture3D pixel array (XYZ order, x fastest).
+    static Color ReadTexel(Color[] pixels, Vector3Int texSize, int x, int y, int z) =>
+        pixels[x + y * texSize.x + z * texSize.x * texSize.y];
+
     // Copies a w*h*d source block (XYZ order, x fastest) into the packed pixel array
     // at the given yOffset and zOffset within the atlas layout.
     static void CopyBlock(Color[] dst, Color[] src, int w, int totalHeight, int blockH, int blockD, int yOffset, int zOffset)

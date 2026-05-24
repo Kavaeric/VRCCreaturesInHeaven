@@ -15,17 +15,26 @@ public class DiamondBakeryDriver : MonoBehaviour
     {
         if (Light == null || PropsTransform == null) return;
 
-        if (!PropsTransform.gameObject.activeSelf)
+        float intensity = PropsTransform.localScale.x * BrightnessScale;
+        var   fixture   = GetComponent<DiamondFixtureDriver>();
+        Color colour    = fixture != null ? fixture.EmissionColor : Color.white;
+
+        UpdateLightState(intensity, colour);
+    }
+
+    public void UpdateLightState(float intensity, Color colour)
+    {
+        bool lightIsOff = !PropsTransform.gameObject.activeSelf
+                       || intensity <= 0f
+                       || (colour.r <= 0f && colour.g <= 0f && colour.b <= 0f);
+
+        if (lightIsOff)
         {
             Light.gameObject.SetActive(false);
             return;
         }
 
         Light.gameObject.SetActive(true);
-
-        float intensity = PropsTransform.localScale.x * BrightnessScale;
-        var   fixture   = GetComponent<DiamondFixtureDriver>();
-        Color colour    = fixture != null ? fixture.EmissionColor : Color.white;
 
         if (Light is BakeryPointLight point)
         {

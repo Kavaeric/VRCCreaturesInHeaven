@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eef041081aed1064791c1fe85b5ec65e, type: 3}
+  m_Name: SHMode
+  m_EditorClassIdentifier: 
+  Title: Lighting data mode
+  Body: '<b>L1</b>
+
+
+    Full RGB light colour as well as individual X, Y, and Z
+    direction components for each colour channel for a total of 12 channels per each
+    voxel.
+
+
+    Most lifelike, and will capture multicolour light shining on the
+    same spot in different directions, but will also generate the largest file size.
+
+
+    -
+
+
+    <b>MonoL1</b>
+
+
+    Full
+    RGB light colour, but unlike full L1, uses just a single set of X, Y, and Z components
+    rather than a set per colour channel for 6 total channels per voxel.
+
+
+    Isn''t
+    able to represent different colours shining from different directions on one
+    voxel as accurately, but baked texture size is ~33% smaller versus full L1 at
+    16bpc, or ~50% smaller at 8bpc since the unused alpha channel can be dropped
+    entirely. Good enough for the majority of scenarios.
+
+
+    -
+
+
+    <b>MonoL0</b>
+
+
+    Monochromatic
+    light intensity and X, Y, and Z direction components for 4 channels per voxel.
+
+
+    Losing
+    the ability to vary colour across a single snapshot makes this the smallest baking
+    format available, ~67% smaller than full L1.
+
+'
+  Images: []

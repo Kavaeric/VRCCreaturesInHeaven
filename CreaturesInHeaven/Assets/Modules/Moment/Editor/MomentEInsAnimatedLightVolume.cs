@@ -299,15 +299,14 @@ public class MomentEInsAnimatedLightVolume : Editor
 
                 if (pixels != null)
                 {
-                    // Packed layout: x + (y + snapshotOrigin) * texSize.x + z * texSize.x * texSize.y
-                    // SH slot 0 at z=voxelZ, slot 1 at z=voxelZ+snapshotSize.z, slot 2 at z=voxelZ+snapshotSize.z*2
-                    int p0 = voxelX + (voxelY + snapshotOrigin) * texSize.x + voxelZ                          * texSize.x * texSize.y;
-                    int p1 = voxelX + (voxelY + snapshotOrigin) * texSize.x + (voxelZ + snapshotSize.z)       * texSize.x * texSize.y;
-                    int p2 = voxelX + (voxelY + snapshotOrigin) * texSize.x + (voxelZ + snapshotSize.z * 2)   * texSize.x * texSize.y;
-                    Color c0 = pixels[p0], c1 = pixels[p1], c2 = pixels[p2];
-                    sh0.Add(new Vector4(c0.r, c0.g, c0.b, c0.a));
-                    sh1.Add(new Vector4(c1.r, c1.g, c1.b, c1.a));
-                    sh2.Add(new Vector4(c2.r, c2.g, c2.b, c2.a));
+                    MomentTextureWriter.DecodeVoxel(
+                        pixels, texSize, snapshotSize, snapshotOrigin,
+                        voxelX, voxelY, voxelZ,
+                        alv.SHMode, alv.BitDepth,
+                        out Vector4 s0, out Vector4 s1, out Vector4 s2);
+                    sh0.Add(s0);
+                    sh1.Add(s1);
+                    sh2.Add(s2);
                 }
                 else
                 {

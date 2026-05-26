@@ -67,6 +67,73 @@ MonoBehaviour:
   rotateAroundY: 0
   _rotateAroundXYZ: 1
   multiVolumePriority: 0
+--- !u!1 &2434372488145011654
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 503235687955157971}
+  - component: {fileID: 5113468771923155946}
+  m_Layer: 0
+  m_Name: Bakery Volume - LV Concourse Lightshow 1
+  m_TagString: EditorOnly
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &503235687955157971
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2434372488145011654}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3416835475807202542}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5113468771923155946
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2434372488145011654}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17ce3c1d3490b7143a67ebdc73cab6c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableBaking: 1
+  bounds:
+    m_Center: {x: 0, y: 4.875122, z: 0}
+    m_Extent: {x: 20.25, y: 5.000337, z: 40.25}
+  adaptiveRes: 0
+  voxelsPerUnit: 0.5
+  resolutionX: 20
+  resolutionY: 5
+  resolutionZ: 40
+  encoding: 0
+  shadowmaskEncoding: 0
+  firstLightIsAlwaysAlpha: 0
+  denoise: 1
+  isGlobal: 0
+  bakedTexture0: {fileID: 11700000, guid: 23fa680b1e94d7b4c9e8fe50e40a803e, type: 2}
+  bakedTexture1: {fileID: 11700000, guid: 944728c8bb130444187d1127c48cfc62, type: 2}
+  bakedTexture2: {fileID: 11700000, guid: 27cd52582757c304fac198be9d207880, type: 2}
+  bakedTexture3: {fileID: 0}
+  bakedMask: {fileID: 0}
+  supportRotationAfterBake: 0
+  rotateAroundY: 0
+  _rotateAroundXYZ: 1
+  multiVolumePriority: 0
 --- !u!1 &7592580023519544999
 GameObject:
   m_ObjectHideFlags: 0
@@ -96,11 +163,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7592580023519544999}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 5, z: 0}
-  m_LocalScale: {x: 40.5, y: 9.750918, z: 80.5}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 4.875122, z: 0}
+  m_LocalScale: {x: 40.5, y: 10.000674, z: 80.5}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 503235687955157971}
   - {fileID: 2240753484741952693}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -128,15 +196,15 @@ MonoBehaviour:
   Exposure: 0
   Shadows: 0
   Highlights: 0
-  Bake: 1
+  Bake: 0
   PointLightShadows: 1
   ShadowsScale: 1
   BlurShadows: 1
   AdaptiveResolution: 1
-  VoxelsPerUnit: 1
-  Resolution: {x: 40, y: 10, z: 80}
+  VoxelsPerUnit: 0.5
+  Resolution: {x: 20, y: 5, z: 40}
   PreviewVoxels: 0
-  BakeryVolume: {fileID: 8647026147043591411}
+  BakeryVolume: {fileID: 0}
   LightVolumeInstance: {fileID: 5001852114736887328}
   LightVolumeSetup: {fileID: 0}
 --- !u!114 &5001852114736887328
@@ -250,7 +318,11 @@ MonoBehaviour:
   TargetVolume: {fileID: 5001852114736887328}
   Crt: {fileID: 8600000, guid: 4e400e4e27bb9d947a73afde3f7bd12e, type: 2}
   AnimatedTexture: {fileID: 11700000, guid: 089424fc77ac1204bbb60385fa2d91b7, type: 2}
+  SnapshotX: 0
   SnapshotY: 10
+  SnapshotsPerColumn: 1
+  NumColumnsBaked: 1
+  NumSnapshotsBaked: 0
   SHMode: 1
   BitDepth: 0
   PreviewVoxels: 0

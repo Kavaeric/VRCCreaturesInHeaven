@@ -35,18 +35,21 @@ Material:
     m_Floats:
     - _BitDepth: 0
     - _BlendMode: 1
-    - _Intensity: 1
+    - _ColumnScale: 0.5
+    - _Intensity: 2
     - _IsUnorm: 1
-    - _NumSnapshots: 163
+    - _NumColumns: 2
+    - _NumSnapshots: 801
     - _SHMode: 1
     - _SliceScale: 0.5
-    - _SnapshotScale: 0.006134969
-    - _Time4D: 0
+    - _SnapshotScale: 0.002444988
+    - _SnapshotsPerColumn: 409
+    - _Time4D: 0.85046285
     m_Colors:
-    - _UvwMax0: {r: 0.6721311, g: 0.9166667, b: 0.42139176, a: 0}
-    - _UvwMax1: {r: 0.6721311, g: 0.9166667, b: 0.42139176, a: 0}
-    - _UvwMax2: {r: 0.6721311, g: 0.9166667, b: 0.42139176, a: 0}
-    - _UvwMin0: {r: 0.016393442, g: 0.083333336, b: 0.31829897, a: 0.6557377}
-    - _UvwMin1: {r: 0.016393442, g: 0.083333336, b: 0.31829897, a: 0.8333334}
-    - _UvwMin2: {r: 0.016393442, g: 0.083333336, b: 0.31829897, a: 0.10309279}
+    - _UvwMax0: {r: 0.984375, g: 0.5, b: 0.05907781, a: 0}
+    - _UvwMax1: {r: 0.984375, g: 0.5, b: 0.05907781, a: 0}
+    - _UvwMax2: {r: 0.984375, g: 0.5, b: 0.05907781, a: 0}
+    - _UvwMin0: {r: 0.671875, g: 0.083333336, b: 0.0014409221, a: 0.3125}
+    - _UvwMin1: {r: 0.671875, g: 0.083333336, b: 0.0014409221, a: 0.41666666}
+    - _UvwMin2: {r: 0.671875, g: 0.083333336, b: 0.0014409221, a: 0.057636887}
   m_BuildTextureStacks: []

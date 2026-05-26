@@ -302,9 +302,12 @@ public class MomentEWinSetup : EditorWindow
         Vector3Int res = _targetVolume.Resolution;
         int w = res.x, h = res.y, d = res.z;
 
-        int packedH = MomentALVFormat.PackedHeight(h, _params.SnapshotCount);
-        int packedD = MomentALVFormat.PackedDepth(d, _shMode);
-        _outputResLabel.text = $"{w} × {packedH} × {packedD}";
+        int snapshotsPerColumn = MomentALVFormat.SnapshotsPerColumn(h);
+        int numColumns         = MomentALVFormat.NumColumns(_params.SnapshotCount, snapshotsPerColumn);
+        int packedW = MomentALVFormat.PackedWidth (w, numColumns);
+        int packedH = MomentALVFormat.PackedHeight(h, snapshotsPerColumn);
+        int packedD = MomentALVFormat.PackedDepth (d, _shMode);
+        _outputResLabel.text = $"{packedW} × {packedH} × {packedD}";
 
         double vram = MomentALVFormat.VramMB(w, h, d, _params.SnapshotCount, _shMode, _bitDepth);
         double bundleLow  = vram * MomentALVFormat.BundleRatioLow;
@@ -379,16 +382,22 @@ public class MomentEWinSetup : EditorWindow
 
         Texture3D tex = MomentTextureWriter.InitialiseTexture(w, h, d, _params.SnapshotCount, _shMode, _bitDepth, assetPath);
 
+        int snapshotsPerColumn = MomentALVFormat.SnapshotsPerColumn(h);
+        int numColumns         = MomentALVFormat.NumColumns(_params.SnapshotCount, snapshotsPerColumn);
+
         // 4. Write a fresh sidecar with all snapshots marked unbaked.
         MomentTextureInfo sidecar = new MomentTextureInfo
         {
-            snapshotX    = w,
-            snapshotY    = h,
-            snapshotZ    = d,
-            numSnapshots = _params.SnapshotCount,
-            shMode       = _shMode,
-            bitDepth     = _bitDepth,
-            snapshots    = new MomentTextureInfo.SnapshotEntry[_params.SnapshotCount],
+            schemaVersion      = MomentTextureInfo.CurrentSchemaVersion,
+            snapshotX          = w,
+            snapshotY          = h,
+            snapshotZ          = d,
+            numSnapshots       = _params.SnapshotCount,
+            snapshotsPerColumn = snapshotsPerColumn,
+            numColumns         = numColumns,
+            shMode             = _shMode,
+            bitDepth           = _bitDepth,
+            snapshots          = new MomentTextureInfo.SnapshotEntry[_params.SnapshotCount],
         };
         sidecar.Save(assetPath);
 
@@ -399,7 +408,9 @@ public class MomentEWinSetup : EditorWindow
         EditorUtility.SetDirty(alv);
         AssetDatabase.SaveAssets();
 
-        Debug.Log($"[Moment] Set up '{alv.gameObject.name}' → atlas at {assetPath} ({w}×{MomentALVFormat.PackedHeight(h, _params.SnapshotCount)}×{MomentALVFormat.PackedDepth(d, _shMode)}, {_params.SnapshotCount} snapshots, {_shMode}, {_bitDepth}).");
+        Debug.Log($"[Moment] Set up '{alv.gameObject.name}' → atlas at {assetPath} " +
+            $"({MomentALVFormat.PackedWidth(w, numColumns)}×{MomentALVFormat.PackedHeight(h, snapshotsPerColumn)}×{MomentALVFormat.PackedDepth(d, _shMode)}, " +
+            $"{_params.SnapshotCount} snapshots in a {numColumns}×{snapshotsPerColumn} grid, {_shMode}, {_bitDepth}).");
 
         UpdateUI();
     }

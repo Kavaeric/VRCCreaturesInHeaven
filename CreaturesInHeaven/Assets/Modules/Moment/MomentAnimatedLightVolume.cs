@@ -24,6 +24,10 @@ public enum MomentALVBitDepth
 
 public static class MomentALVFormat
 {
+    // Unity's hard cap on any single Texture3D dimension on the platforms we target.
+    // Used to decide when to wrap snapshots across columns instead of stacking them all on Y.
+    public const int MaxTexture3DDimension = 2048;
+
     // Returns the number of SH texture slots for a given mode.
     // L1 = 3 slots, MonoL1 = 2 slots, MonoL0 = 1 slot.
     public static int NumSlots(MomentALVSHMode shMode)
@@ -38,12 +42,34 @@ public static class MomentALVFormat
     public static bool IsUnorm(MomentALVSHMode shMode, MomentALVBitDepth bitDepth) =>
         bitDepth == MomentALVBitDepth.Depth8 || (shMode == MomentALVSHMode.MonoL1 && bitDepth == MomentALVBitDepth.Depth16);
 
-    // Packed texture layout:
-    //   X = spatial width  (unchanged)
-    //   Y = spatial height * numSnapshots  (snapshot index stacked along Y)
-    //   Z = spatial depth  * numSlots      (slot index stacked along Z)
+    // Packed texture layout (column-wrapped 2D flipbook):
+    //   X = spatialW * numColumns         (snapshots tile horizontally once the Y stack is full)
+    //   Y = spatialH * snapshotsPerColumn (snapshots fill a column before wrapping to the next)
+    //   Z = spatialD * numSlots           (SH slots stacked along Z)
+    //
+    // snapshotsPerColumn is the maximum number of vertically-stacked snapshots that fit under the
+    // 2048px cap; numColumns is the count needed to hold numSnapshots given that stack height.
+    // Snapshot i lives at column c = i / snapshotsPerColumn, row r = i % snapshotsPerColumn,
+    // i.e. column-major. Pixel origin: (c * spatialW, r * spatialH, 0).
 
-    public static int PackedHeight(int spatialH, int numSnapshots) => spatialH * numSnapshots;
+    // How many snapshots of height spatialH fit in one column under the texture-size cap.
+    // Result is at least 1 (we never split a single snapshot across columns).
+    public static int SnapshotsPerColumn(int spatialH)
+    {
+        if (spatialH <= 0) return 1;
+        return Mathf.Max(1, MaxTexture3DDimension / spatialH);
+    }
+
+    // How many columns are needed to fit numSnapshots given a per-column capacity.
+    public static int NumColumns(int numSnapshots, int snapshotsPerColumn)
+    {
+        if (snapshotsPerColumn <= 0) return numSnapshots;
+        return (numSnapshots + snapshotsPerColumn - 1) / snapshotsPerColumn;
+    }
+
+    // Convenience: total packed dimensions for a given spatial size and snapshot count.
+    public static int PackedWidth(int spatialW, int numColumns) => spatialW * numColumns;
+    public static int PackedHeight(int spatialH, int snapshotsPerColumn) => spatialH * snapshotsPerColumn;
     public static int PackedDepth(int spatialD, MomentALVSHMode shMode)  => spatialD * NumSlots(shMode);
 
     // Bytes per texel for the packed texture format. Mirrors the format selection in MomentTextureWriter.
@@ -85,8 +111,19 @@ public class MomentAnimatedLightVolume : UdonSharpBehaviour
     [Tooltip("Packed 4D SH texture produced by the baking tool.")]
     public Texture3D AnimatedTexture;
 
-    // Y size of one snapshot slice in the packed texture. Set from the sidecar by the editor.
+    // Spatial size of one snapshot slice in the packed texture. Set from the sidecar by the editor.
+    // SnapshotX is needed at runtime to compute the column-wrap UV offset; older sidecars that lack
+    // it leave SnapshotX = 0, in which case the runtime falls back to single-column behaviour.
+    [HideInInspector] public int SnapshotX;
     [HideInInspector] public int SnapshotY;
+
+    // Column-wrap layout. NumColumnsBaked == 1 collapses to the original single-column layout,
+    // so legacy sidecars (which set this to 1 on migration) behave identically to before.
+    // NumSnapshotsBaked is the true snapshot count from the sidecar — it can be less than
+    // SnapshotsPerColumn * NumColumnsBaked when the last column is only partially filled.
+    [HideInInspector] public int SnapshotsPerColumn  = 1;
+    [HideInInspector] public int NumColumnsBaked     = 1;
+    [HideInInspector] public int NumSnapshotsBaked   = 0;
 
     // SH fidelity mode and bit depth of the packed texture. Set automatically by the
     // editor when AnimatedTexture is assigned via sidecar.
@@ -158,11 +195,28 @@ public class MomentAnimatedLightVolume : UdonSharpBehaviour
 
         _mat.SetTexture("_PackedTex", AnimatedTexture);
 
-        NumSnapshots = AnimatedTexture.height / SnapshotY;
+        // Resolve layout. Sidecar populates SnapshotsPerColumn / NumColumnsBaked / NumSnapshotsBaked
+        // at setup; older sidecars (or in-Editor assignment before ApplyTo runs) leave them at the
+        // defaults, in which case we fall back to deriving from the texture's Y stack.
+        int snapsPerCol = SnapshotsPerColumn > 0 ? SnapshotsPerColumn : 1;
+        int numCols     = NumColumnsBaked    > 0 ? NumColumnsBaked    : 1;
+        // Total snapshot count: trust the sidecar value when present. The grid (snapsPerCol * numCols)
+        // is an upper bound, not the actual count — the last column can be partial. The texture-height
+        // fallback only fires for legacy single-column atlases where the height divides exactly.
+        if (NumSnapshotsBaked > 0)
+            NumSnapshots = NumSnapshotsBaked;
+        else
+            NumSnapshots = SnapshotY > 0 ? (AnimatedTexture.height / SnapshotY) * numCols : snapsPerCol * numCols;
         int numSlots = MomentALVFormat.NumSlots(SHMode);
-        _mat.SetInt("_NumSnapshots", NumSnapshots);
-        _mat.SetFloat("_SnapshotScale", 1f / NumSnapshots);
-        _mat.SetFloat("_SliceScale", 1f / numSlots);
+        _mat.SetInt  ("_NumSnapshots",       NumSnapshots);
+        _mat.SetInt  ("_SnapshotsPerColumn", snapsPerCol);
+        _mat.SetInt  ("_NumColumns",         numCols);
+        // _SnapshotScale now means "1 / snapsPerCol" (V stride per snapshot within a column),
+        // not "1 / numSnapshots" as before. The shader uses _ColumnScale for the U stride between
+        // adjacent columns. Keeping the name avoids churning the shader property table.
+        _mat.SetFloat("_SnapshotScale", 1f / snapsPerCol);
+        _mat.SetFloat("_ColumnScale",   1f / numCols);
+        _mat.SetFloat("_SliceScale",    1f / numSlots);
 
         _mat.SetInt("_SHMode",   (int)SHMode);
         _mat.SetInt("_BitDepth", (int)BitDepth);

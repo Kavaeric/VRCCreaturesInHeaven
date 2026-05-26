@@ -122,7 +122,12 @@ public class MomentEInsAnimatedLightVolume : Editor
         {
             if (alv.AnimatedTexture != null)
             {
-                int numSnapshots  = alv.AnimatedTexture.height / alv.SnapshotY;
+                // Prefer the sidecar-derived true count over the grid product, since the last
+                // column can be partial. Fallback to grid math only for unmigrated legacy data.
+                int rowsPerColumn = alv.SnapshotY > 0 ? alv.AnimatedTexture.height / alv.SnapshotY : 1;
+                int numSnapshots  = alv.NumSnapshotsBaked > 0
+                    ? alv.NumSnapshotsBaked
+                    : rowsPerColumn * Mathf.Max(1, alv.NumColumnsBaked);
                 int newSnapshot   = EditorGUILayout.IntSlider("Snapshot", alv.PreviewSnapshot, 0, numSnapshots - 1);
                 if (newSnapshot != alv.PreviewSnapshot)
                 {
@@ -189,10 +194,14 @@ public class MomentEInsAnimatedLightVolume : Editor
 
         if (alv.AnimatedTexture != null)
         {
-            int numSnapshots = alv.AnimatedTexture.height / alv.SnapshotY;
-            int snapshotZ    = alv.AnimatedTexture.depth / MomentALVFormat.NumSlots(alv.SHMode);
-            EditorGUILayout.LabelField("Snapshot size", $"{alv.AnimatedTexture.width} x {alv.SnapshotY} x {snapshotZ}");
-            EditorGUILayout.LabelField("Snapshots", numSnapshots.ToString());
+            int numColumns        = Mathf.Max(1, alv.NumColumnsBaked);
+            int rowsPerColumn     = alv.SnapshotY > 0 ? alv.AnimatedTexture.height / alv.SnapshotY : 1;
+            int numSnapshots      = alv.NumSnapshotsBaked > 0 ? alv.NumSnapshotsBaked : rowsPerColumn * numColumns;
+            int snapshotSpatialX  = alv.AnimatedTexture.width / numColumns;
+            int snapshotSpatialZ  = alv.AnimatedTexture.depth / MomentALVFormat.NumSlots(alv.SHMode);
+            EditorGUILayout.LabelField("Snapshot size", $"{snapshotSpatialX} x {alv.SnapshotY} x {snapshotSpatialZ}");
+            string gridSuffix = numColumns > 1 ? $"  ({numColumns} cols × {rowsPerColumn} rows)" : "";
+            EditorGUILayout.LabelField("Snapshots", $"{numSnapshots}{gridSuffix}");
         }
         else
         {
@@ -264,15 +273,22 @@ public class MomentEInsAnimatedLightVolume : Editor
             Color[] pixels = null;
             Vector3Int texSize = Vector3Int.zero;
             Vector3Int snapshotSize = Vector3Int.zero;
-            int snapshotOrigin = 0;
+            Vector2Int snapshotOrigin = Vector2Int.zero;
             if (tex != null)
             {
-                snapshotSize.x  = tex.width;
+                // snapshotSize.x is the spatial X of one snapshot cell (atlas width / numColumns).
+                // For legacy single-column atlases NumColumnsBaked == 1 so this matches tex.width.
+                int numColumns          = Mathf.Max(1, alv.NumColumnsBaked);
+                int snapshotsPerColumn  = alv.SnapshotY > 0 ? tex.height / alv.SnapshotY : 1;
+                snapshotSize.x  = tex.width / numColumns;
                 snapshotSize.y  = alv.SnapshotY;
                 snapshotSize.z  = tex.depth / MomentALVFormat.NumSlots(alv.SHMode);
                 texSize         = new Vector3Int(tex.width, tex.height, tex.depth);
-                int snapshotIdx = Mathf.Clamp(previewSnapshot, 0, texSize.y / snapshotSize.y - 1);
-                snapshotOrigin  = snapshotIdx * snapshotSize.y;
+                int totalSnaps  = snapshotsPerColumn * numColumns;
+                int snapshotIdx = Mathf.Clamp(previewSnapshot, 0, totalSnaps - 1);
+                int col         = snapshotIdx / snapshotsPerColumn;
+                int row         = snapshotIdx - col * snapshotsPerColumn;
+                snapshotOrigin  = new Vector2Int(col * snapshotSize.x, row * snapshotSize.y);
                 pixels          = tex.GetPixels();
             }
 

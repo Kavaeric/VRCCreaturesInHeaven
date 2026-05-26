@@ -15,11 +15,11 @@ public class DiamondBakeryDriver : MonoBehaviour
     {
         if (Light == null || PropsTransform == null) return;
 
-        float intensity = PropsTransform.localScale.x * BrightnessScale;
+        float brightness = PropsTransform.localScale.x * BrightnessScale;
         var   fixture   = GetComponent<DiamondFixtureDriver>();
         Color colour    = fixture != null ? fixture.EmissionColor : Color.white;
 
-        UpdateLightState(intensity, colour);
+        UpdateLightState(brightness, colour);
     }
 
     public void UpdateLightState(float intensity, Color colour)

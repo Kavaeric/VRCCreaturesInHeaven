@@ -4,9 +4,15 @@ using VRCLightVolumes;
 
 // Texture generation tool for the Moment module.
 // Produces a packed Texture3D with layout:
-//   X = spatial width
-//   Y = spatial height * numSnapshots  (snapshot 0 at Y=0, snapshot 1 at Y=H, etc.)
-//   Z = spatial depth * numSlots       (numSlots = 3 for L1, 2 for MonoL1, 1 for MonoL0)
+//   X = spatial width  * numColumns          (snapshots wrap into columns once the Y stack is full)
+//   Y = spatial height * snapshotsPerColumn  (column-major fill: snapshots stack down a column first)
+//   Z = spatial depth  * numSlots            (numSlots = 3 for L1, 2 for MonoL1, 1 for MonoL0)
+//
+// snapshotsPerColumn is the maximum that fit under Unity's 2048 cap on a single Texture3D axis;
+// numColumns is the count needed for numSnapshots given that stack height. Snapshot i lives at
+// column c = i / snapshotsPerColumn, row r = i % snapshotsPerColumn — i.e. pixel origin
+// (c * spatialW, r * spatialH, 0). When numColumns == 1 the layout is identical to the legacy
+// vertical-stack flipbook, so old data and the single-column case both round-trip unchanged.
 //
 // SH packing per voxel:
 //   Tex0: (L0.r,  L0.g,  L0.b,  L1r.z)
@@ -21,22 +27,29 @@ public static class MomentTextureWriter
     public static void SavePackedTexture(SnapshotSH[] snapshots, int w, int h, int d, string assetPath,
         MomentALVSHMode shMode = MomentALVSHMode.L1, MomentALVBitDepth bitDepth = MomentALVBitDepth.Depth8)
     {
-        int numSnapshots = snapshots.Length;
-        int totalHeight  = MomentALVFormat.PackedHeight(h, numSnapshots);
-        int totalDepth   = MomentALVFormat.PackedDepth(d, shMode);
+        int numSnapshots       = snapshots.Length;
+        int snapshotsPerColumn = MomentALVFormat.SnapshotsPerColumn(h);
+        int numColumns         = MomentALVFormat.NumColumns(numSnapshots, snapshotsPerColumn);
+        int totalWidth         = MomentALVFormat.PackedWidth (w, numColumns);
+        int totalHeight        = MomentALVFormat.PackedHeight(h, snapshotsPerColumn);
+        int totalDepth         = MomentALVFormat.PackedDepth (d, shMode);
 
-        Color[] pixels = new Color[w * totalHeight * totalDepth];
+        Color[] pixels = new Color[totalWidth * totalHeight * totalDepth];
 
         for (int s = 0; s < numSnapshots; s++)
         {
-            int yOffset = s * h;
+            // Column-major fill: snapshots stack down a column before wrapping to the next column.
+            int col     = s / snapshotsPerColumn;
+            int row     = s - col * snapshotsPerColumn;
+            int xOffset = col * w;
+            int yOffset = row * h;
             switch (shMode)
             {
                 case MomentALVSHMode.L1:
                     // Full: 3 slots: tex0/1/2 passed through as-is.
-                    CopyBlock(pixels, snapshots[s].tex0, w, totalHeight, h, d, yOffset, 0);
-                    CopyBlock(pixels, snapshots[s].tex1, w, totalHeight, h, d, yOffset, d);
-                    CopyBlock(pixels, snapshots[s].tex2, w, totalHeight, h, d, yOffset, d * 2);
+                    CopyBlock(pixels, snapshots[s].tex0, totalWidth, totalHeight, w, h, d, xOffset, yOffset, 0);
+                    CopyBlock(pixels, snapshots[s].tex1, totalWidth, totalHeight, w, h, d, xOffset, yOffset, d);
+                    CopyBlock(pixels, snapshots[s].tex2, totalWidth, totalHeight, w, h, d, xOffset, yOffset, d * 2);
                     break;
 
                 case MomentALVSHMode.MonoL1:
@@ -45,8 +58,8 @@ public static class MomentTextureWriter
                     Color[] t0 = new Color[w * h * d];
                     Color[] t1 = new Color[w * h * d];
                     DownsampleMonoL1(snapshots[s], w * h * d, t0, t1);
-                    CopyBlock(pixels, t0, w, totalHeight, h, d, yOffset, 0);
-                    CopyBlock(pixels, t1, w, totalHeight, h, d, yOffset, d);
+                    CopyBlock(pixels, t0, totalWidth, totalHeight, w, h, d, xOffset, yOffset, 0);
+                    CopyBlock(pixels, t1, totalWidth, totalHeight, w, h, d, xOffset, yOffset, d);
                     break;
                 }
 
@@ -55,7 +68,7 @@ public static class MomentTextureWriter
                     // 1 slot: Tex0 = (L0, L1.x, L1.y, L1.z).
                     Color[] t0 = new Color[w * h * d];
                     DownsampleMonoL0(snapshots[s], w * h * d, t0);
-                    CopyBlock(pixels, t0, w, totalHeight, h, d, yOffset, 0);
+                    CopyBlock(pixels, t0, totalWidth, totalHeight, w, h, d, xOffset, yOffset, 0);
                     break;
                 }
             }
@@ -91,7 +104,7 @@ public static class MomentTextureWriter
         // Reuse existing asset to preserve GUID.
         // Prevents serialised field linkage breaking whenever the texture gets updated.
         Texture3D existing = AssetDatabase.LoadAssetAtPath<Texture3D>(assetPath);
-        if (existing != null && existing.width == w && existing.height == totalHeight
+        if (existing != null && existing.width == totalWidth && existing.height == totalHeight
             && existing.depth == totalDepth && existing.format == texFormat)
         {
             existing.SetPixels(pixels);
@@ -100,7 +113,7 @@ public static class MomentTextureWriter
         }
         else
         {
-            Texture3D tex = new Texture3D(w, totalHeight, totalDepth, texFormat, false);
+            Texture3D tex = new Texture3D(totalWidth, totalHeight, totalDepth, texFormat, false);
             tex.wrapMode   = TextureWrapMode.Clamp;
             tex.filterMode = FilterMode.Bilinear;
             tex.SetPixels(pixels);
@@ -113,7 +126,7 @@ public static class MomentTextureWriter
         }
 
         AssetDatabase.SaveAssets();
-        Debug.Log($"[Moment] Saved {assetPath} ({w}x{totalHeight}x{totalDepth}, {numSnapshots} snapshots, {shMode}, {bitDepth})");
+        Debug.Log($"[Moment] Saved {assetPath} ({totalWidth}x{totalHeight}x{totalDepth}, {numSnapshots} snapshots in a {numColumns}×{snapshotsPerColumn} grid, {shMode}, {bitDepth})");
     }
 
     // Creates or replaces a blank (zeroed) Texture3D atlas at assetPath with the correct packed dimensions.
@@ -121,8 +134,11 @@ public static class MomentTextureWriter
     public static Texture3D InitialiseTexture(int w, int h, int d, int numSnapshots,
         MomentALVSHMode shMode, MomentALVBitDepth bitDepth, string assetPath)
     {
-        int totalHeight = MomentALVFormat.PackedHeight(h, numSnapshots);
-        int totalDepth  = MomentALVFormat.PackedDepth(d, shMode);
+        int snapshotsPerColumn = MomentALVFormat.SnapshotsPerColumn(h);
+        int numColumns         = MomentALVFormat.NumColumns(numSnapshots, snapshotsPerColumn);
+        int totalWidth         = MomentALVFormat.PackedWidth (w, numColumns);
+        int totalHeight        = MomentALVFormat.PackedHeight(h, snapshotsPerColumn);
+        int totalDepth         = MomentALVFormat.PackedDepth (d, shMode);
 
         TextureFormat texFormat = (shMode, bitDepth) switch
         {
@@ -136,7 +152,7 @@ public static class MomentTextureWriter
         if (existing != null)
             AssetDatabase.DeleteAsset(assetPath);
 
-        Texture3D tex = new Texture3D(w, totalHeight, totalDepth, texFormat, false);
+        Texture3D tex = new Texture3D(totalWidth, totalHeight, totalDepth, texFormat, false);
         tex.wrapMode   = TextureWrapMode.Clamp;
         tex.filterMode = FilterMode.Bilinear;
 
@@ -145,7 +161,7 @@ public static class MomentTextureWriter
         if (MomentALVFormat.IsUnorm(shMode, bitDepth))
         {
             Color blank = new Color(0.5f, 0.5f, 0.5f, 0.5f);
-            Color[] pixels = new Color[w * totalHeight * totalDepth];
+            Color[] pixels = new Color[totalWidth * totalHeight * totalDepth];
             for (int i = 0; i < pixels.Length; i++) pixels[i] = blank;
             tex.SetPixels(pixels);
         }
@@ -156,8 +172,10 @@ public static class MomentTextureWriter
         return tex;
     }
 
-    // Writes a single snapshot's SH data into the correct Y-slice of an existing packed atlas asset.
-    // snapshotIndex is 0-based; the atlas must already exist with the correct packed dimensions.
+    // Writes a single snapshot's SH data into the correct cell of an existing packed atlas asset.
+    // snapshotIndex is 0-based. The on-disk texture dimensions determine the column/row stride —
+    // snapshotsPerColumn is recovered as tex.height / h, and the snapshot's (col, row) is derived
+    // from snapshotIndex. Callers don't need to know about the wrap layout.
     public static void WriteSnapshotSlice(string assetPath, SnapshotSH snapshot, int snapshotIndex,
         int w, int h, int d, MomentALVSHMode shMode, MomentALVBitDepth bitDepth)
     {
@@ -168,9 +186,14 @@ public static class MomentTextureWriter
             return;
         }
 
-        int totalHeight = tex.height;
-        int yOffset     = snapshotIndex * h;
-        bool isUnorm    = MomentALVFormat.IsUnorm(shMode, bitDepth);
+        int totalWidth         = tex.width;
+        int totalHeight        = tex.height;
+        int snapshotsPerColumn = Mathf.Max(1, totalHeight / h);
+        int col                = snapshotIndex / snapshotsPerColumn;
+        int row                = snapshotIndex - col * snapshotsPerColumn;
+        int xOffset            = col * w;
+        int yOffset            = row * h;
+        bool isUnorm           = MomentALVFormat.IsUnorm(shMode, bitDepth);
 
         Color[] pixels = tex.GetPixels();
 
@@ -182,7 +205,7 @@ public static class MomentTextureWriter
                     {
                         Color c = src[x + y * w + z * w * h];
                         if (isUnorm) c = new Color(c.r * 0.5f + 0.5f, c.g * 0.5f + 0.5f, c.b * 0.5f + 0.5f, c.a * 0.5f + 0.5f);
-                        pixels[x + (y + yOffset) * w + (z + zOffset) * w * totalHeight] = c;
+                        pixels[(x + xOffset) + (y + yOffset) * totalWidth + (z + zOffset) * totalWidth * totalHeight] = c;
                     }
         }
 
@@ -298,11 +321,16 @@ public static class MomentTextureWriter
             return;
         }
 
-        int totalHeight = tex.height;
-        int yOffset     = snapshotIndex * h;
-        int numSlots    = MomentALVFormat.NumSlots(shMode);
-        bool isUnorm    = MomentALVFormat.IsUnorm(shMode, bitDepth);
-        Color blank     = isUnorm ? new Color(0.5f, 0.5f, 0.5f, 0.5f) : Color.clear;
+        int totalWidth         = tex.width;
+        int totalHeight        = tex.height;
+        int snapshotsPerColumn = Mathf.Max(1, totalHeight / h);
+        int col                = snapshotIndex / snapshotsPerColumn;
+        int row                = snapshotIndex - col * snapshotsPerColumn;
+        int xOffset            = col * w;
+        int yOffset            = row * h;
+        int numSlots           = MomentALVFormat.NumSlots(shMode);
+        bool isUnorm           = MomentALVFormat.IsUnorm(shMode, bitDepth);
+        Color blank            = isUnorm ? new Color(0.5f, 0.5f, 0.5f, 0.5f) : Color.clear;
 
         Color[] pixels = tex.GetPixels();
 
@@ -312,7 +340,7 @@ public static class MomentTextureWriter
             for (int z = 0; z < d; z++)
                 for (int y = 0; y < h; y++)
                     for (int x = 0; x < w; x++)
-                        pixels[x + (y + yOffset) * w + (z + zOffset) * w * totalHeight] = blank;
+                        pixels[(x + xOffset) + (y + yOffset) * totalWidth + (z + zOffset) * totalWidth * totalHeight] = blank;
         }
 
         tex.SetPixels(pixels);
@@ -331,23 +359,28 @@ public static class MomentTextureWriter
     // pixels:       flat array from Texture3D.GetPixels(), XYZ order (x fastest)
     // texSize:      full packed texture dimensions (width, height, depth)
     // snapshotSize: spatial dimensions of one snapshot (x, y, z/depth per slot)
-    // snapshotOrigin: Y offset in pixels of the target snapshot (= snapshotIndex * snapshotSize.y)
+    // snapshotOrigin: (x, y) pixel origin of the target snapshot's cell in the atlas.
+    //                 For column-wrapped layouts this encodes both column-X and row-Y; legacy
+    //                 single-column layouts use (0, snapshotIndex * snapshotSize.y) and behave
+    //                 identically.
     // voxelX/Y/Z:   spatial voxel coordinates within the snapshot
     // shMode:       the mode the texture was baked in
     // bitDepth:     the bit depth the texture was baked in (used for UNORM decode)
     public static void DecodeVoxel(
-        Color[] pixels, Vector3Int texSize, Vector3Int snapshotSize, int snapshotOrigin,
+        Color[] pixels, Vector3Int texSize, Vector3Int snapshotSize, Vector2Int snapshotOrigin,
         int voxelX, int voxelY, int voxelZ,
         MomentALVSHMode shMode, MomentALVBitDepth bitDepth,
         out Vector4 sh0, out Vector4 sh1, out Vector4 sh2)
     {
+        int gx = voxelX + snapshotOrigin.x;
+        int gy = voxelY + snapshotOrigin.y;
         // Read the raw slots that exist for this mode.
-        Color s0 = ReadTexel(pixels, texSize, voxelX, voxelY + snapshotOrigin, voxelZ);
+        Color s0 = ReadTexel(pixels, texSize, gx, gy, voxelZ);
         Color s1 = MomentALVFormat.NumSlots(shMode) >= 2
-            ? ReadTexel(pixels, texSize, voxelX, voxelY + snapshotOrigin, voxelZ + snapshotSize.z)
+            ? ReadTexel(pixels, texSize, gx, gy, voxelZ + snapshotSize.z)
             : new Color(0, 0, 0, 0);
         Color s2 = MomentALVFormat.NumSlots(shMode) >= 3
-            ? ReadTexel(pixels, texSize, voxelX, voxelY + snapshotOrigin, voxelZ + snapshotSize.z * 2)
+            ? ReadTexel(pixels, texSize, gx, gy, voxelZ + snapshotSize.z * 2)
             : new Color(0, 0, 0, 0);
 
         // UNORM decode: values were remapped [−1,1]→[0,1] at bake time; invert that here.
@@ -394,14 +427,18 @@ public static class MomentTextureWriter
     static Color ReadTexel(Color[] pixels, Vector3Int texSize, int x, int y, int z) =>
         pixels[x + y * texSize.x + z * texSize.x * texSize.y];
 
-    // Copies a w*h*d source block (XYZ order, x fastest) into the packed pixel array
-    // at the given yOffset and zOffset within the atlas layout.
-    static void CopyBlock(Color[] dst, Color[] src, int w, int totalHeight, int blockH, int blockD, int yOffset, int zOffset)
+    // Copies a blockW*blockH*blockD source block (XYZ order, x fastest) into the packed pixel
+    // array at the given (xOffset, yOffset, zOffset) within a totalWidth*totalHeight*_ atlas.
+    // Atlas row stride is totalWidth (not blockW), so wrapped columns and a single-column stack
+    // both use this same routine — only the xOffset differs.
+    static void CopyBlock(Color[] dst, Color[] src, int totalWidth, int totalHeight,
+        int blockW, int blockH, int blockD, int xOffset, int yOffset, int zOffset)
     {
         for (int z = 0; z < blockD; z++)
             for (int y = 0; y < blockH; y++)
-                for (int x = 0; x < w; x++)
-                    dst[x + (y + yOffset) * w + (z + zOffset) * w * totalHeight] = src[x + y * w + z * w * blockH];
+                for (int x = 0; x < blockW; x++)
+                    dst[(x + xOffset) + (y + yOffset) * totalWidth + (z + zOffset) * totalWidth * totalHeight]
+                        = src[x + y * blockW + z * blockW * blockH];
     }
 
     // One baked snapshot: three SH textures as flat Color arrays, length w*h*d, XYZ order (x fastest).

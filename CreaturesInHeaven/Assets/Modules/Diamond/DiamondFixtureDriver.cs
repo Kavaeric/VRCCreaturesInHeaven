@@ -1,3 +1,4 @@
+using System;
 using UdonSharp;
 using UnityEngine;
 
@@ -57,7 +58,7 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
             return;
         }
 
-        float brightness   = PropsTransform.localScale.x;
+        float brightness = PropsTransform.localScale.x;
         float spread  = PropsTransform.localScale.y;
 
         _propBlock.SetColor("_EmissionColor", EmissionColor * brightness);

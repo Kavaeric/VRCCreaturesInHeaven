@@ -19,9 +19,15 @@ Shader "Hidden/Moment/AnimatedLightVolume"
         _UvwMax2 ("UVW Max 2", Vector) = (1, 1, 1, 0)
 
         // Packed texture layout parameters, derived from texture dimensions at setup time.
-        _NumSnapshots  ("Num Snapshots",  Int) = 2
-        _SnapshotScale ("Snapshot scale", Float) = 0.5   // = 1 / numSnapshots
-        _SliceScale    ("Slice scale",    Float) = 0.333 // = 1 / numSlots
+        // The atlas is a 2D flipbook: snapshots fill a column (V stride per snapshot, _SnapshotScale)
+        // before wrapping to the next column (U stride per column, _ColumnScale). Column-major.
+        // _NumSnapshots stays as the total count, used only for the modulo wrap in SampleLerped.
+        _NumSnapshots       ("Num Snapshots",        Int)   = 2
+        _SnapshotsPerColumn ("Snapshots Per Column", Int)   = 2
+        _NumColumns         ("Num Columns",          Int)   = 1
+        _SnapshotScale      ("Snapshot scale (V)",   Float) = 0.5   // = 1 / snapshotsPerColumn
+        _ColumnScale        ("Column scale (U)",     Float) = 1.0   // = 1 / numColumns
+        _SliceScale         ("Slice scale",          Float) = 0.333 // = 1 / numSlots
 
         // Normalised playback position: 0 = first snapshot, 1 = last snapshot.
         _Time4D ("Time", Range(0, 1)) = 0
@@ -62,7 +68,10 @@ Shader "Hidden/Moment/AnimatedLightVolume"
             float3 _UvwMin2, _UvwMax2;
 
             int   _NumSnapshots;
+            int   _SnapshotsPerColumn;
+            int   _NumColumns;
             float _SnapshotScale;
+            float _ColumnScale;
             float _SliceScale;
             float _Time4D;
             float _Intensity;
@@ -72,11 +81,16 @@ Shader "Hidden/Moment/AnimatedLightVolume"
             int   _IsUnorm;
 
             // Sample one slot from the packed texture for a given snapshot index and slot index.
+            // The atlas tiles snapshots column-major: snapshot s lives at (col = s / spc, row = s % spc)
+            // where spc = _SnapshotsPerColumn. The column-1 / spc-equals-numSnapshots case collapses
+            // back to the legacy single-stack layout (col always 0, _ColumnScale = 1).
             float4 SamplePacked(float3 local, int snapshot, int slot)
             {
-                float u = local.x;
-                float v = (local.y + snapshot) * _SnapshotScale;
-                float w = (local.z + slot)     * _SliceScale;
+                int col = snapshot / _SnapshotsPerColumn;
+                int row = snapshot - col * _SnapshotsPerColumn;
+                float u = (local.x + col)  * _ColumnScale;
+                float v = (local.y + row)  * _SnapshotScale;
+                float w = (local.z + slot) * _SliceScale;
                 float4 s = tex3D(_PackedTex, float3(u, v, w));
                 // UNORM formats store values remapped to [0,1]; decode back to [-1,1].
                 if (_IsUnorm)

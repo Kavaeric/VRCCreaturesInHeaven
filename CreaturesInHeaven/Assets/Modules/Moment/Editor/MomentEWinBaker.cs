@@ -371,7 +371,7 @@ public class MomentEWinBaker : EditorWindow
             int snapshotsLeft = _snapshotQueue.Length - _queuePosition;
             float etaSeconds = _bakeEstimator.EstimateRemaining(snapshotsLeft);
             string etaLine = etaSeconds >= 0f
-                ? $"\nEstimated time remaining: {FormatSeconds(etaSeconds)} ({_bakeEstimator.AverageSeconds:0.0}s average)"
+                ? $"\nApprox. {FormatSeconds(etaSeconds)} left ({_bakeEstimator.AverageSeconds:0.0}s average)"
                 : "\nEstimating time remaining...";
             _bakeProgressBox.text = $"Baking snapshot {snapshotIndex + 1}\n{_queuePosition + 1} / {_snapshotQueue.Length} in queue{etaLine}";
         }
@@ -493,15 +493,15 @@ public class MomentEWinBaker : EditorWindow
             _flipbookEstimatedTotalBakeTime.text = avgSeconds >= 0f ? FormatSeconds(avgSeconds * _stagedQueue.Count) : "—";
     }
 
-    // Formats a duration in seconds as "#h #m 0.0s", omitting hours/minutes when zero.
-    // e.g. 7383.0s → "2h 3m 3.0s", 65.0s → "1m 5.0s", 4.5s → "4.5s"
+    // Formats a duration in seconds as "#h #m 0s", omitting hours/minutes when zero.
+    // e.g. 7383.0s → "2h 3m 3s", 65.0s → "1m 5s", 4.1s → "4s"
     static string FormatSeconds(float totalSeconds)
     {
         int h = (int)(totalSeconds / 3600f);
         int m = (int)((totalSeconds % 3600f) / 60f);
         float s = totalSeconds % 60f;
-        if (h > 0) return $"{h}h {m}m {s:0.0}s";
-        if (m > 0) return $"{m}m {s:0.0}s";
+        if (h > 0) return $"{h}h {m}m {s:0}s";
+        if (m > 0) return $"{m}m {s:0}s";
         return $"{s:0.0}s";
     }
 

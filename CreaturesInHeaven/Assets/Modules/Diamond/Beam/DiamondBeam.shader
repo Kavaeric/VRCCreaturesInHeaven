@@ -33,12 +33,12 @@ Shader "Diamond/Beam"
         // falloff, the fixture's flux, and _BeamIntensity. A small threshold
         // means longer-looking beams (more shading work); a larger one cuts
         // them off sooner.
-        _BeamCutoffThreshold ("Beam Cutoff Threshold", Float) = 0.0001
+        _BeamCutoffThreshold ("Beam Cutoff Threshold", Float) = 0.00001
 
         // Hard ceiling on the auto-derived beam length, in metres. Prevents
         // pathologically long beams from a very high _BeamIntensity or a
         // very low _BeamCutoffThreshold.
-        _BeamLengthMax ("Beam Length Max (metres)", Float) = 100
+        _BeamLengthMax ("Beam Length Max (metres)", Float) = 50
 
         // Counter-scale: set this to the GameObject's localScale to make the
         // shader render at true world size regardless of the cube's transform
@@ -73,6 +73,16 @@ Shader "Diamond/Beam"
         //   ~0.15  - heavy fog machine
         //   ~0.5+  - thick smoke
         _HazeDensity ("Haze Density (1/m)", Float) = 0.05
+
+        // Edge softness: how much the beam's sides blur with distance and haze.
+        // 0 = razor-sharp edges (the original look). Higher values blur the
+        // beam's lateral edges more, simulating multiple scattering and the
+        // finite size of real-world emitters. The blur grows with distance
+        // from the emitter and with haze density, so close-up the beam stays
+        // crisp and far away it softens naturally.
+        //
+        // Reasonable values: 0.0 - 2.0. Default 1.0 = subtle.
+        _EdgeSoftness ("Edge Softness", Float) = 1.0
     }
 
     SubShader
@@ -103,6 +113,7 @@ Shader "Diamond/Beam"
             float  _BeamLengthMax;
             float  _HazeDensity;
             float  _BeamIntensityMultiplier;
+            float  _EdgeSoftness;
 
             // Per-instance properties: pushed by DiamondFixtureDriver via a
             // MaterialPropertyBlock so each fixture can vary independently.
@@ -214,10 +225,19 @@ Shader "Diamond/Beam"
                 float yT = unitVertex.y + 0.5;        // 0..1 along beam length
                 float beamY = yT * beamLength;
 
+                // Inflate the cube laterally by the soft-edge halo at the
+                // far end of the beam (where it's widest). Matches the
+                // softness formula in the frag shader so blurred pixels
+                // don't get clipped at the bounding cube walls.
+                //
+                // Near cap stays un-inflated since softness = 0 at d = 0.
+                float diffusionRate = _EdgeSoftness * (0.02 + _HazeDensity);
+                float maxSoftness   = diffusionRate * beamLength;
+
                 float halfWidthNear  = emitterWidth  * 0.5;
                 float halfHeightNear = emitterHeight * 0.5;
-                float halfWidthFar   = halfWidthNear  + (spreadX + abs(_ShearX)) * beamLength;
-                float halfHeightFar  = halfHeightNear + (spreadZ + abs(_ShearZ)) * beamLength;
+                float halfWidthFar   = halfWidthNear  + (spreadX + abs(_ShearX)) * beamLength + maxSoftness;
+                float halfHeightFar  = halfHeightNear + (spreadZ + abs(_ShearZ)) * beamLength + maxSoftness;
 
                 // Correct interpolation: half-extent grows linearly with yT.
                 float halfWidthAtY  = lerp(halfWidthNear,  halfWidthFar,  yT);
@@ -338,16 +358,25 @@ Shader "Diamond/Beam"
                 float tEntry = -1e20;
                 float tExit  =  1e20;
 
+                // Add the diffusion rate to the spread used for the intersection
+                // walls. This widens the cone linearly with distance from the
+                // emitter, exactly tracking the smoothstep softness in the
+                // falloff math below. At d=0 the walls coincide with the
+                // geometric cone (crisp emitter face); past that they grow.
+                float diffusionRateWall = _EdgeSoftness * (0.02 + _HazeDensity);
+                float spreadXSoft = spreadX + diffusionRateWall;
+                float spreadZSoft = spreadZ + diffusionRateWall;
+
                 // Four slanted side walls. Outward-pointing normals.
                 // The wall tilts outward as y grows, expressed as -spreadX/Z in the y component.
                 FoldPlaneIntoInterval(rayOrigin, rayDirection,
-                    float3( 1, -spreadX - _ShearX,  0), -emitterWidth  / 2, tEntry, tExit);
+                    float3( 1, -spreadXSoft - _ShearX,  0), -emitterWidth  / 2, tEntry, tExit);
                 FoldPlaneIntoInterval(rayOrigin, rayDirection,
-                    float3(-1, -spreadX + _ShearX,  0), -emitterWidth  / 2, tEntry, tExit);
+                    float3(-1, -spreadXSoft + _ShearX,  0), -emitterWidth  / 2, tEntry, tExit);
                 FoldPlaneIntoInterval(rayOrigin, rayDirection,
-                    float3( 0, -spreadZ - _ShearZ,  1), -emitterHeight / 2, tEntry, tExit);
+                    float3( 0, -spreadZSoft - _ShearZ,  1), -emitterHeight / 2, tEntry, tExit);
                 FoldPlaneIntoInterval(rayOrigin, rayDirection,
-                    float3( 0, -spreadZ + _ShearZ, -1), -emitterHeight / 2, tEntry, tExit);
+                    float3( 0, -spreadZSoft + _ShearZ, -1), -emitterHeight / 2, tEntry, tExit);
 
                 // Near cap (y = 0, outward normal -Y) and far cap (y = beamLength, outward normal +Y).
                 FoldPlaneIntoInterval(rayOrigin, rayDirection,
@@ -412,14 +441,50 @@ Shader "Diamond/Beam"
                 float3 beamMidpoint = rayOrigin + rayDirection * tMid;
                 float distance      = beamMidpoint.y;                       // metres from emitter
 
+                // Softness grows linearly with distance from the emitter.
+                // No baseline -- right at the emitter face the beam is crisp,
+                // and the halo expands as you go down the beam. The growth
+                // rate is set by _EdgeSoftness directly (1.0 -> 1 metre of
+                // halo per metre of throw). Haze multiplies because thicker
+                // air diffuses faster, but the relationship is gentle so a
+                // beam in vacuum (haze ~ 0) still has a tiny intrinsic spread
+                // from the emitter not being a point.
+                float diffusionRate = _EdgeSoftness * (0.02 + _HazeDensity);
+                float softness      = diffusionRate * distance;
+
                 // Cone cross-section dimensions at this distance. spreadX/Z are
                 // tan(half-angle), so the full width grows by 2*spread*d per metre.
-                float crossWidth    = emitterWidth  + 2.0 * spreadX * distance;
-                float crossHeight   = emitterHeight + 2.0 * spreadZ * distance;
+                // Add softness to the effective cone width so the halo's lateral
+                // extent dilutes the brightness too -- conservation of energy:
+                // smearing the light over a wider apparent cross-section means
+                // each unit area gets less.
+                float crossWidth    = emitterWidth  + 2.0 * spreadX * distance + 2.0 * softness;
+                float crossHeight   = emitterHeight + 2.0 * spreadZ * distance + 2.0 * softness;
                 float crossArea     = crossWidth * crossHeight;
                 float emitterArea   = emitterWidth * emitterHeight;
 
                 float geometricFalloff = emitterArea / max(crossArea, 1e-6);
+
+                // Soft edges. A point near the centre of the cone gets full
+                // brightness; one near the cone wall fades smoothly to zero.
+                // distFromWall measures lateral distance to the nearest of the
+                // four side walls of the GEOMETRIC cone at this point (i.e.
+                // ignoring the softness inflation -- we want the smoothstep
+                // centred on the geometric wall, not the inflated one).
+                float geomHalfWidth  = 0.5 * (emitterWidth  + 2.0 * spreadX * distance);
+                float geomHalfHeight = 0.5 * (emitterHeight + 2.0 * spreadZ * distance);
+                float lateralX       = abs(beamMidpoint.x);
+                float lateralZ       = abs(beamMidpoint.z);
+                float distFromX      = geomHalfWidth  - lateralX;
+                float distFromZ      = geomHalfHeight - lateralZ;
+                float distFromWall   = min(distFromX, distFromZ);
+
+                // Centred smoothstep: 0 brightness one softness *outside* the
+                // cone wall, 1 brightness one softness *inside*. Crosses 0.5 at
+                // the geometric cone wall itself. This produces a halo that
+                // extends past the hard frustum boundary, which is why we
+                // inflate the bounds in vert AND inflate the FoldPlane walls.
+                float edgeFactor   = smoothstep(-max(softness, 1e-4), max(softness, 1e-4), distFromWall);
 
                 // Haze-driven scattering and extinction. The same _HazeDensity
                 // value plays two roles, because they're physically coupled:
@@ -433,7 +498,7 @@ Shader "Diamond/Beam"
                 float haze = max(_HazeDensity, 0);
                 float extinction = exp(-haze * distance);
 
-                float lightFalloff = geometricFalloff * haze * extinction;
+                float lightFalloff = geometricFalloff * edgeFactor * haze * extinction;
 
                 // Volumetric integration: brightness contributed by the ray
                 // equals (light density) x (ray traversal length). lightFalloff

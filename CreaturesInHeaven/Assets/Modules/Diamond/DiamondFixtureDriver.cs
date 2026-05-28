@@ -143,8 +143,8 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
             BeamRenderer.gameObject.SetActive(true);
             _beamPropBlock.SetColor("_Color", drivenColour);
             _beamPropBlock.SetFloat("_BeamIntensity", beamIntensity);
-            _beamPropBlock.SetFloat("_SpreadX", spread);
-            _beamPropBlock.SetFloat("_SpreadZ", spread);
+            _beamPropBlock.SetFloat("_SpreadX", 0.02f);
+            _beamPropBlock.SetFloat("_SpreadZ", 0.02f);
             BeamRenderer.SetPropertyBlock(_beamPropBlock);
         }
     }

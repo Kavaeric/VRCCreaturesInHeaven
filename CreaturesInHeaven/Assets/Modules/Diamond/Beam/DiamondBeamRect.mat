@@ -62,16 +62,17 @@ Material:
     m_Ints: []
     m_Floats:
     - _AtmosphericScale: 10
-    - _BeamCutoffThreshold: 0.0001
+    - _BeamCutoffThreshold: 0.00001
     - _BeamIntensity: 1
     - _BeamLength: 15
-    - _BeamLengthMax: 100
+    - _BeamLengthMax: 50
     - _BeamStart: 0
     - _Brightness: 5
     - _BumpScale: 1
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
+    - _EdgeSoftness: 2
     - _EmitterHeight: 1
     - _EmitterWidth: 1
     - _FarZ: 2
@@ -88,13 +89,15 @@ Material:
     - _OcclusionStrength: 1
     - _Pan: 0
     - _Parallax: 0.02
+    - _ScatteringFactor: 0.05
+    - _ScatteringStrength: 0.5
     - _ShearX: 0
     - _ShearZ: 0
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
-    - _SpreadX: 1
+    - _SpreadX: 0
     - _SpreadY: 1
-    - _SpreadZ: 1
+    - _SpreadZ: 0
     - _SrcBlend: 1
     - _Tilt: 0
     - _UVSec: 0

@@ -144,8 +144,8 @@ public class DiamondEWinFixtureProperties : EditorWindow
         {
             foreach (var (_, driver, _) in _selection)
             {
-                Undo.RecordObject(driver.PropsTransform.gameObject, "Fixture On/Off");
-                driver.PropsTransform.gameObject.SetActive(e.newValue);
+                Undo.RecordObject(driver.LampProps.gameObject, "Fixture On/Off");
+                driver.LampProps.gameObject.SetActive(e.newValue);
             }
         });
 
@@ -187,10 +187,10 @@ public class DiamondEWinFixtureProperties : EditorWindow
             _brightnessSlider.SetValueWithoutNotify(e.newValue);
             foreach (var (_, driver, _) in _selection)
             {
-                Undo.RecordObject(driver.PropsTransform, "Fixture Brightness");
-                var scale = driver.PropsTransform.localScale;
+                Undo.RecordObject(driver.LampProps, "Fixture Brightness");
+                var scale = driver.LampProps.localScale;
                 scale.x = e.newValue;
-                driver.PropsTransform.localScale = scale;
+                driver.LampProps.localScale = scale;
             }
         });
 
@@ -199,14 +199,16 @@ public class DiamondEWinFixtureProperties : EditorWindow
             _brightnessFloatField.SetValueWithoutNotify(e.newValue);
             foreach (var (_, driver, _) in _selection)
             {
-                Undo.RecordObject(driver.PropsTransform, "Fixture Brightness");
-                var scale = driver.PropsTransform.localScale;
+                Undo.RecordObject(driver.LampProps, "Fixture Brightness");
+                var scale = driver.LampProps.localScale;
                 scale.x = e.newValue;
-                driver.PropsTransform.localScale = scale;
+                driver.LampProps.localScale = scale;
             }
         });
 
-        // Spread UI is in degrees (full cone); storage is tan(half-angle).
+        // Spread UI is in degrees (full cone); storage is tan(half-angle) on
+        // BeamProps.localEulerAngles.x (rotation, not scale, so it doesn't
+        // bundle with beam intensity in the animator).
         _spreadFloatField.RegisterValueChangedCallback(e =>
         {
             _spreadSlider.SetValueWithoutNotify(e.newValue);
@@ -214,10 +216,10 @@ public class DiamondEWinFixtureProperties : EditorWindow
             foreach (var (_, driver, profile) in _selection)
             {
                 if (!profile.HasSpread) continue;
-                Undo.RecordObject(driver.PropsTransform, "Fixture Spread");
-                var scale = driver.PropsTransform.localScale;
-                scale.y = tan;
-                driver.PropsTransform.localScale = scale;
+                Undo.RecordObject(driver.BeamProps, "Fixture Spread");
+                var euler = driver.BeamProps.localEulerAngles;
+                euler.x = tan;
+                driver.BeamProps.localEulerAngles = euler;
             }
         });
 
@@ -228,10 +230,10 @@ public class DiamondEWinFixtureProperties : EditorWindow
             foreach (var (_, driver, profile) in _selection)
             {
                 if (!profile.HasSpread) continue;
-                Undo.RecordObject(driver.PropsTransform, "Fixture Spread");
-                var scale = driver.PropsTransform.localScale;
-                scale.y = tan;
-                driver.PropsTransform.localScale = scale;
+                Undo.RecordObject(driver.BeamProps, "Fixture Spread");
+                var euler = driver.BeamProps.localEulerAngles;
+                euler.x = tan;
+                driver.BeamProps.localEulerAngles = euler;
             }
         });
 
@@ -240,10 +242,10 @@ public class DiamondEWinFixtureProperties : EditorWindow
             foreach (var (_, driver, profile) in _selection)
             {
                 if (!profile.HasBeam) continue;
-                Undo.RecordObject(driver.PropsTransform, "Fixture Beam Intensity");
-                var scale = driver.PropsTransform.localScale;
-                scale.z = e.newValue;
-                driver.PropsTransform.localScale = scale;
+                Undo.RecordObject(driver.BeamProps, "Fixture Beam Intensity");
+                var scale = driver.BeamProps.localScale;
+                scale.y = e.newValue;
+                driver.BeamProps.localScale = scale;
             }
         });
 
@@ -353,8 +355,8 @@ public class DiamondEWinFixtureProperties : EditorWindow
         // Update colour
         RefreshColourUI();
 
-        // Update brightness
-        var brightnessValues = _selection.Select(s => s.driver.PropsTransform.localScale.x).Distinct().ToList();
+        // Update brightness (LampProps.localScale.x)
+        var brightnessValues = _selection.Select(s => s.driver.LampProps.localScale.x).Distinct().ToList();
         if (brightnessValues.Count == 1)
         {
             if (!Mathf.Approximately(_brightnessSlider.value, brightnessValues[0]))
@@ -364,12 +366,13 @@ public class DiamondEWinFixtureProperties : EditorWindow
             }
         }
 
-        // Update spread (storage is tan(half-angle); UI is full cone degrees).
+        // Update spread (storage is tan(half-angle) on BeamProps.localEulerAngles.x;
+        // UI is full cone degrees).
         bool anyHasSpread = _selection.Any(s => s.profile.HasSpread);
         if (anyHasSpread)
         {
             var spreadCapable = _selection.Where(s => s.profile.HasSpread).ToList();
-            var spreadValues = spreadCapable.Select(s => s.driver.PropsTransform.localScale.y).Distinct().ToList();
+            var spreadValues = spreadCapable.Select(s => s.driver.BeamProps.localEulerAngles.x).Distinct().ToList();
             if (spreadValues.Count == 1)
             {
                 float degrees = DiamondFixtureDefinition.SpreadTanToDegrees(spreadValues[0]);
@@ -381,12 +384,12 @@ public class DiamondEWinFixtureProperties : EditorWindow
             }
         }
 
-        // Update beam intensity
+        // Update beam intensity (BeamProps.localScale.y)
         bool anyHasBeam = _selection.Any(s => s.profile.HasBeam);
         if (anyHasBeam)
         {
             var beamCapable = _selection.Where(s => s.profile.HasBeam).ToList();
-            var beamValues = beamCapable.Select(s => s.driver.PropsTransform.localScale.z).Distinct().ToList();
+            var beamValues = beamCapable.Select(s => s.driver.BeamProps.localScale.y).Distinct().ToList();
             if (beamValues.Count == 1)
             {
                 if (!Mathf.Approximately(_beamIntensityField.value, beamValues[0]))
@@ -536,7 +539,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
         }
 
         // Update on toggle - show blank if mixed
-        var onStates = _selection.Select(s => s.driver.PropsTransform.gameObject.activeSelf).Distinct().ToList();
+        var onStates = _selection.Select(s => s.driver.LampProps.gameObject.activeSelf).Distinct().ToList();
         if (onStates.Count == 1)
         {
             _onToggle.SetValueWithoutNotify(onStates[0]);
@@ -565,7 +568,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
         _brightnessSlider.lowValue = minBrightness;
         _brightnessSlider.highValue = maxBrightness;
 
-        var brightnessValues = _selection.Select(s => s.driver.PropsTransform.localScale.x).Distinct().ToList();
+        var brightnessValues = _selection.Select(s => s.driver.LampProps.localScale.x).Distinct().ToList();
         if (brightnessValues.Count == 1)
         {
             _brightnessSlider.SetValueWithoutNotify(brightnessValues[0]);
@@ -586,7 +589,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
             _spreadSlider.style.display = DisplayStyle.Flex;
 
             var spreadCapable = _selection.Where(s => s.profile.HasSpread).ToList();
-            var spreadValues = spreadCapable.Select(s => s.driver.PropsTransform.localScale.y).Distinct().ToList();
+            var spreadValues = spreadCapable.Select(s => s.driver.BeamProps.localEulerAngles.x).Distinct().ToList();
             if (spreadValues.Count == 1)
             {
                 float degrees = DiamondFixtureDefinition.SpreadTanToDegrees(spreadValues[0]);
@@ -614,7 +617,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
             _beamIntensityField.style.display = DisplayStyle.Flex;
 
             var beamCapable = _selection.Where(s => s.profile.HasBeam).ToList();
-            var beamValues = beamCapable.Select(s => s.driver.PropsTransform.localScale.z).Distinct().ToList();
+            var beamValues = beamCapable.Select(s => s.driver.BeamProps.localScale.y).Distinct().ToList();
             if (beamValues.Count == 1)
             {
                 _beamIntensityField.SetValueWithoutNotify(beamValues[0]);

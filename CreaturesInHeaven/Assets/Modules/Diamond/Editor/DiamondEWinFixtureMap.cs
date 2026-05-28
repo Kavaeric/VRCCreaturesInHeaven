@@ -112,7 +112,7 @@ public class DiamondEWinFixtureMap : EditorWindow
     // Selection options state
     private bool _includeMainFixture = true;
     private bool _includeFixtureHead = true;
-    private bool _includePropsTransform = true;
+    private bool _includeLampProps = true;
 
     // Selection groups state
     private List<SelectionGroup> _selectionGroups    = new();
@@ -254,9 +254,9 @@ public class DiamondEWinFixtureMap : EditorWindow
         fixtureHeadToggle.value = _includeFixtureHead;
         fixtureHeadToggle.RegisterValueChangedCallback(e => _includeFixtureHead = e.newValue);
 
-        var propsTransformToggle = rootVisualElement.Q<Toggle>("include-props-transform-toggle");
-        propsTransformToggle.value = _includePropsTransform;
-        propsTransformToggle.RegisterValueChangedCallback(e => _includePropsTransform = e.newValue);
+        var lampPropsToggle = rootVisualElement.Q<Toggle>("include-props-transform-toggle");
+        lampPropsToggle.value = _includeLampProps;
+        lampPropsToggle.RegisterValueChangedCallback(e => _includeLampProps = e.newValue);
 
         // Wire selection groups panel
         _sgList        = rootVisualElement.Q<ScrollView>("sg-list");
@@ -795,9 +795,9 @@ public class DiamondEWinFixtureMap : EditorWindow
 
         // Get brightness normalised to max brightness.
         float brightness = 0f;
-        if (driverTyped.PropsTransform != null)
+        if (driverTyped.LampProps != null)
         {
-            float scale = driverTyped.PropsTransform.localScale.x;
+            float scale = driverTyped.LampProps.localScale.x;
             brightness = Mathf.InverseLerp(0f, definitionTyped.Profile.BrightnessMax, scale);
         }
 
@@ -1002,7 +1002,7 @@ public class DiamondEWinFixtureMap : EditorWindow
         if (_includeMainFixture)
             outList.Add(fixtureRoot);
 
-        if (_includeFixtureHead || _includePropsTransform)
+        if (_includeFixtureHead || _includeLampProps)
         {
             if (fixtureIndex < _fixtureDrivers.Count)
             {
@@ -1011,8 +1011,8 @@ public class DiamondEWinFixtureMap : EditorWindow
                 {
                     if (_includeFixtureHead && driver.Head != null)
                         outList.Add(driver.Head.gameObject);
-                    if (_includePropsTransform && driver.PropsTransform != null)
-                        outList.Add(driver.PropsTransform.gameObject);
+                    if (_includeLampProps && driver.LampProps != null)
+                        outList.Add(driver.LampProps.gameObject);
                 }
             }
         }

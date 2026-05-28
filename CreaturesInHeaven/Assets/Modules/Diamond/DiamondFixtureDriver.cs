@@ -3,16 +3,26 @@ using UdonSharp;
 using UnityEngine;
 
 // Runtime driver for a lighting fixture. Attach to the fixture root prefab.
-// The parent animator keys properties on _PropsTransform's localScale and
-// the head's localRotation directly. This script reads those each frame and
-// applies brightness/collimation via MaterialPropertyBlock to preserve batching.
+// The parent animator keys properties on two proxy transforms and the head's
+// localRotation directly. This script reads those each frame and applies
+// brightness/collimation via MaterialPropertyBlock to preserve batching.
 //
-// _PropsTransform.localScale channels:
-//   x - Brightness (emissive multiplier, HDR range 0..2)
-//   y - Beam spread, stored as tan(half-angle) so the shader can use it
-//       directly with no per-frame trig. UIs (inspector, properties window)
-//       expose it as full cone angle in degrees and convert at the boundary.
-//   z - Beam intensity (volumetric shaft brightness; "haze density")
+// Animatable channels are split across TWO transforms, each using a DIFFERENT
+// Unity property, so the animator records them as fully independent curves
+// rather than bundling them as a single Vector3 keyframe.
+//
+// _LampProps:
+//   .localScale.x       - Brightness (emissive multiplier, HDR range 0..2)
+//   .gameObject.activeSelf - On/off
+//
+// _BeamProps:
+//   .localEulerAngles.x - Beam spread, stored as tan(half-angle). UIs convert
+//                         to/from degrees at the boundary. (Rotation, not
+//                         scale, so it doesn't bundle with intensity.)
+//   .localScale.y       - Beam intensity (volumetric shaft brightness; haze)
+//
+// Free slots on _BeamProps for future channels: localEulerAngles.y/z,
+// localScale.x/z, localPosition.xyz -- eight more independent floats.
 public class DiamondFixtureDriver : UdonSharpBehaviour
 {
     // --- Inspector references ----------------------------------------
@@ -20,8 +30,13 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
     // The moving head child GameObject. The animator keys its localRotation directly.
     public Transform Head;
 
-    // Proxy transform whose localScale carries the animated float channels.
-    public Transform PropsTransform;
+    // Proxy transform whose localScale.x carries animated brightness, and
+    // whose gameObject.activeSelf is the on/off state.
+    public Transform LampProps;
+
+    // Proxy transform whose localEulerAngles.x carries animated spread and
+    // localScale.y carries animated beam intensity.
+    public Transform BeamProps;
 
     // The renderer on the head whose emissive is driven by brightness.
     public Renderer HeadRenderer;
@@ -34,7 +49,7 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
     public Vector2 EmitterSize = new Vector2(1, 1);
 
     // Base emission colour. Set via FixtureDefinition in the editor; not animated.
-    // Brightness (from PropsTransform) is applied as a multiplier on top of this.
+    // Brightness (from LampProps) is applied as a multiplier on top of this.
     public Color EmissionColor = Color.white;
 
     private MaterialPropertyBlock _propBlock;
@@ -83,14 +98,14 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
 
     private bool IsLightOff()
     {
-        // If PropsTransform is disabled, it's off.
-        if (!PropsTransform.gameObject.activeSelf)
+        // If LampProps is disabled, it's off.
+        if (!LampProps.gameObject.activeSelf)
         {
             return true;
         }
 
         // If brightness is 0, it basically is.
-        float brightness = PropsTransform.localScale.x;
+        float brightness = LampProps.localScale.x;
         if (brightness == 0)
         {
             return true;
@@ -107,9 +122,9 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
 
     private void ApplyMaterialProperties()
     {
-        if (HeadRenderer == null || PropsTransform == null)
+        if (HeadRenderer == null || LampProps == null)
         {
-            Debug.LogWarning("  [Diamond] No HeadRenderer or PropsTransform.");
+            Debug.LogWarning("[Diamond] No HeadRenderer or LampProps.");
             return;
         }
 
@@ -127,9 +142,17 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
             return;
         }
 
-        float brightness    = PropsTransform.localScale.x;
-        float spread        = PropsTransform.localScale.y;
-        float beamIntensity = PropsTransform.localScale.z;
+        float brightness = LampProps.localScale.x;
+
+        // BeamProps is optional -- if a fixture has no beam shaft, leave the
+        // animated channels at their defaults (spread 0, intensity 1).
+        float spread        = 0f;
+        float beamIntensity = 1f;
+        if (BeamProps != null)
+        {
+            spread        = BeamProps.localEulerAngles.x;
+            beamIntensity = BeamProps.localScale.y;
+        }
 
         Color drivenColour = EmissionColor * brightness;
 
@@ -143,8 +166,8 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
             BeamRenderer.gameObject.SetActive(true);
             _beamPropBlock.SetColor("_Color", drivenColour);
             _beamPropBlock.SetFloat("_BeamIntensity", beamIntensity);
-            _beamPropBlock.SetFloat("_SpreadX", 0.02f);
-            _beamPropBlock.SetFloat("_SpreadZ", 0.02f);
+            _beamPropBlock.SetFloat("_SpreadX", spread);
+            _beamPropBlock.SetFloat("_SpreadZ", spread);
             BeamRenderer.SetPropertyBlock(_beamPropBlock);
         }
     }

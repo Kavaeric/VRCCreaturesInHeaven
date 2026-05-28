@@ -5,11 +5,14 @@ using UnityEngine;
 //   1. Holds fixture metadata (DisplayName, FixtureProfile) for the fixture map tool.
 //
 //   2. In edit mode, DiamondFixtureMapPreview (editor library) drives material preview
-//      so brightness and spread changes on PropsTransform are visible in the scene.
+//      so brightness, spread, and beam-intensity changes on LampProps/BeamProps are
+//      visible in the scene.
 //
-//   3. Exposes friendly controls in the inspector that alias to PropsTransform.localScale
-//      and Head.localEulerAngles. Which controls appear is determined by the FixtureProfile.
-//      When animated, those underlying properties are what gets keyframed.
+//   3. Exposes friendly controls in the inspector that alias to LampProps.localScale.x
+//      (brightness), BeamProps.localEulerAngles.x (spread), BeamProps.localScale.y
+//      (beam intensity), and Head.localEulerAngles (rotation). Which controls appear
+//      is determined by the FixtureProfile. When animated, those underlying properties
+//      are what gets keyframed.
 
 public class DiamondFixtureDefinition : MonoBehaviour
 {
@@ -70,7 +73,7 @@ public class DiamondFixtureDefinition : MonoBehaviour
 
     // --- Spread conversion ------------------------------------------------
     //
-    // Spread is stored on PropsTransform.localScale.y as tan(half-angle) -- the
+    // Spread is stored on BeamProps.localEulerAngles.x as tan(half-angle) -- the
     // value the beam shader's _SpreadX/_SpreadZ use directly. The user-facing
     // value is the FULL cone angle in degrees (stage-lighting convention: a
     // "30 degree fixture" is 30 degrees tip-to-tip across the cone). These

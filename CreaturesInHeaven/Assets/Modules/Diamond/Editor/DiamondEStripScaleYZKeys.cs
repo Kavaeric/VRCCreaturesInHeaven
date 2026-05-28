@@ -112,9 +112,13 @@ public static class DiamondEStripScaleYZKeys
         int lastSlash = path.LastIndexOf('/');
         string leaf = lastSlash < 0 ? path : path.Substring(lastSlash + 1);
 
-        // Match both "PropsTransform" and "_PropsTransform" (the prefab leaf
-        // name uses an underscore; we accept either for safety).
-        return leaf == "PropsTransform" || leaf == "_PropsTransform";
+        // Match the new leaf name (_LampProps) as well as the legacy ones
+        // (_PropsTransform / PropsTransform) so this tool works against clips
+        // both before and after the props-transform-split refactor.
+        return leaf == "_LampProps"
+            || leaf == "LampProps"
+            || leaf == "_PropsTransform"
+            || leaf == "PropsTransform";
     }
 }
 #endif

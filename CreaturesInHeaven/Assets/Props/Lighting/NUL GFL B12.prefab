@@ -93,7 +93,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3683907717810278853}
   m_Layer: 0
-  m_Name: _PropsTransform
+  m_Name: _LampProps
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -109,7 +109,38 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0, y: 0.043660942, z: 0.2}
+  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1305038497409783678}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &8324050740081644174
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3909274399151128820}
+  m_Layer: 0
+  m_Name: _BeamProps
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3909274399151128820
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8324050740081644174}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1305038497409783678}
@@ -204,6 +235,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 3683907717810278853}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 182e98e728d7d8d49bcda83b383758b7,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3909274399151128820}
     - targetCorrespondingSourceObject: {fileID: 7876023681238672744, guid: 182e98e728d7d8d49bcda83b383758b7,
         type: 3}
       insertIndex: -1
@@ -274,7 +309,8 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 1330132999158733947}
   Head: {fileID: 8708718316436788733}
-  PropsTransform: {fileID: 3683907717810278853}
+  LampProps: {fileID: 3683907717810278853}
+  BeamProps: {fileID: 3909274399151128820}
   HeadRenderer: {fileID: 6042516975229323470}
   BeamRenderer: {fileID: 6916292504349618127}
   EmitterSize: {x: 4, y: 0.12}

@@ -117,7 +117,7 @@ Shader "Diamond/Beam"
 
             // Per-instance properties: pushed by DiamondFixtureDriver via a
             // MaterialPropertyBlock so each fixture can vary independently.
-            // _SpreadX/_SpreadZ are animated (via PropsTransform.localScale.y),
+            // _SpreadX/_SpreadZ are animated (via BeamProps.localEulerAngles.x),
             // so they live here too. Stored as tan(half-angle) so the shader
             // can use them directly.
             UNITY_INSTANCING_BUFFER_START(Props)

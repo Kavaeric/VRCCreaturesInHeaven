@@ -62,7 +62,7 @@ public static class DiamondBakeryLights
             // Add the driver sibling on the fixture root.
             var bakeryDriver = Undo.AddComponent<DiamondBakeryDriver>(go);
             bakeryDriver.Light           = bakeryLight;
-            bakeryDriver.PropsTransform  = driver.PropsTransform;
+            bakeryDriver.LampProps       = driver.LampProps;
             bakeryDriver.BrightnessScale = profile.BakeryBrightnessScale;
 
             Undo.CollapseUndoOperations(group);

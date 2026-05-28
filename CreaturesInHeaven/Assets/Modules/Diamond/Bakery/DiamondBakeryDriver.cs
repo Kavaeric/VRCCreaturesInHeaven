@@ -8,14 +8,14 @@ using UnityEngine;
 public class DiamondBakeryDriver : MonoBehaviour
 {
     public Component  Light;
-    public Transform  PropsTransform;
+    public Transform  LampProps;
     public float      BrightnessScale;
 
     void Update()
     {
-        if (Light == null || PropsTransform == null) return;
+        if (Light == null || LampProps == null) return;
 
-        float brightness = PropsTransform.localScale.x * BrightnessScale;
+        float brightness = LampProps.localScale.x * BrightnessScale;
         var   fixture   = GetComponent<DiamondFixtureDriver>();
         Color colour    = fixture != null ? fixture.EmissionColor : Color.white;
 
@@ -24,7 +24,7 @@ public class DiamondBakeryDriver : MonoBehaviour
 
     public void UpdateLightState(float intensity, Color colour)
     {
-        bool lightIsOff = !PropsTransform.gameObject.activeSelf
+        bool lightIsOff = !LampProps.gameObject.activeSelf
                        || intensity <= 0f
                        || (colour.r <= 0f && colour.g <= 0f && colour.b <= 0f);
 

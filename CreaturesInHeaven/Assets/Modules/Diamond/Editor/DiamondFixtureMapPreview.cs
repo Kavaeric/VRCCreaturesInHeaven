@@ -29,7 +29,7 @@ public static class DiamondFixtureMapPreview
         foreach (var def in definitions)
         {
             var driver = def.GetComponent<DiamondFixtureDriver>();
-            if (driver == null || driver.PropsTransform == null || driver.HeadRenderer == null) continue;
+            if (driver == null || driver.LampProps == null || driver.HeadRenderer == null) continue;
 
             int id = def.GetInstanceID();
             if (!_headBlocks.TryGetValue(id, out var headBlock))
@@ -43,7 +43,7 @@ public static class DiamondFixtureMapPreview
                 _beamBlocks[id] = beamBlock;
             }
 
-            if (!driver.PropsTransform.gameObject.activeSelf)
+            if (!driver.LampProps.gameObject.activeSelf)
             {
                 headBlock.SetColor("_EmissionColor", Color.black);
                 driver.HeadRenderer.SetPropertyBlock(headBlock);
@@ -60,10 +60,12 @@ public static class DiamondFixtureMapPreview
                 ? DiamondFixtureDefinition.BlackbodyToRGB(def.ColourTemperature)
                 : def.EmissionColor;
 
-            float linearBrightness = driver.PropsTransform.localScale.x;
-            float spread           = driver.PropsTransform.localScale.y;
-            float beamIntensity    = driver.PropsTransform.localScale.z;
-            Color drivenColour     = emission * linearBrightness;
+            float linearBrightness = driver.LampProps.localScale.x;
+            // BeamProps is optional -- fixtures without a beam shaft just won't
+            // have one wired up, in which case spread/intensity stay at defaults.
+            float spread        = driver.BeamProps != null ? driver.BeamProps.localEulerAngles.x : 0f;
+            float beamIntensity = driver.BeamProps != null ? driver.BeamProps.localScale.y       : 1f;
+            Color drivenColour  = emission * linearBrightness;
 
             headBlock.SetColor("_EmissionColor", drivenColour);
             driver.HeadRenderer.SetPropertyBlock(headBlock);

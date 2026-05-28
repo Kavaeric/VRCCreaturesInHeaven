@@ -33,14 +33,10 @@ MonoBehaviour:
   BrightnessMin: 0
   BrightnessMax: 2
   HasSpread: 1
+  SpreadMinDegrees: 5
+  SpreadMaxDegrees: 90
+  SpreadDefaultDegrees: 20
   HasBeam: 1
-  BeamEmitterWidth: 4
-  BeamEmitterHeight: 0.12
-  BeamSpreadXMin: 0
-  BeamSpreadXMax: 0.5
-  BeamSpreadZMin: 0
-  BeamSpreadZMax: 0.5
-  BeamLength: 15
   BakeryLightType: 2
   BakeryBrightnessScale: 8
   BakeryLightOffset: {x: 0, y: 0.1, z: 0}

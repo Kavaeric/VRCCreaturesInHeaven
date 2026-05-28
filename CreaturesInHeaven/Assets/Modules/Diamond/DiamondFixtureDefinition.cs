@@ -8,7 +8,7 @@ using UnityEngine;
 //      so brightness, spread, and beam-intensity changes on LampProps/BeamProps are
 //      visible in the scene.
 //
-//   3. Exposes friendly controls in the inspector that alias to LampProps.localScale.x
+//   3. Exposes friendly controls in the inspector that alias to LampProps.localPosition.y
 //      (brightness), BeamProps.localEulerAngles.x (spread), BeamProps.localScale.y
 //      (beam intensity), and Head.localEulerAngles (rotation). Which controls appear
 //      is determined by the FixtureProfile. When animated, those underlying properties
@@ -69,6 +69,55 @@ public class DiamondFixtureDefinition : MonoBehaviour
         // edit mode (not just at runtime via Start).
         driver.EmitterSize = new Vector2(Profile.FixtureWidth, Profile.FixtureHeight);
         driver.ApplyBeamEmitterSize();
+    }
+
+    // Writes the profile's default values to every programmable channel on the
+    // fixture (brightness, spread, beam intensity, head rotation). Intended to
+    // be invoked manually via the inspector "Reset to Profile Defaults" button
+    // -- never auto-fires, so animator-authored curves never get clobbered.
+    //
+    // Where the profile doesn't have an explicit default field yet (brightness,
+    // beam intensity, rotation), we stub sensible values inline. Add proper
+    // *Default fields to FixtureProfile later if/when this matters.
+    public void ApplyProfileDefaults()
+    {
+        var driver = GetComponent<DiamondFixtureDriver>();
+        if (driver == null || Profile == null) return;
+
+        // Brightness: stub at BrightnessMax (no BrightnessDefault field yet).
+        if (driver.LampProps != null)
+        {
+            var pos = driver.LampProps.localPosition;
+            pos.y = Profile.BrightnessMax;
+            driver.LampProps.localPosition = pos;
+        }
+
+        // Spread: convert the profile's default degrees to tan(half-angle).
+        if (Profile.HasSpread && driver.BeamProps != null)
+        {
+            var euler = driver.BeamProps.localEulerAngles;
+            euler.x = SpreadDegreesToTan(Profile.SpreadDefaultDegrees);
+            driver.BeamProps.localEulerAngles = euler;
+        }
+
+        // Beam intensity: stub at 1.0 (no BeamIntensityDefault field yet).
+        if (Profile.HasBeam && driver.BeamProps != null)
+        {
+            var s = driver.BeamProps.localScale;
+            s.y = 1f;
+            driver.BeamProps.localScale = s;
+        }
+
+        // Head rotation: stub each enabled axis at the midpoint of its range
+        // (no AxisDefault field yet). Disabled axes are left untouched.
+        if (driver.Head != null)
+        {
+            var euler = driver.Head.localEulerAngles;
+            if (Profile.AxisX.Enabled) euler.x = 0.5f * (Profile.AxisX.Min + Profile.AxisX.Max);
+            if (Profile.AxisY.Enabled) euler.y = 0.5f * (Profile.AxisY.Min + Profile.AxisY.Max);
+            if (Profile.AxisZ.Enabled) euler.z = 0.5f * (Profile.AxisZ.Min + Profile.AxisZ.Max);
+            driver.Head.localEulerAngles = euler;
+        }
     }
 
     // --- Spread conversion ------------------------------------------------

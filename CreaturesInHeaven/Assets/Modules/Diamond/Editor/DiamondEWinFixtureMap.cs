@@ -797,8 +797,8 @@ public class DiamondEWinFixtureMap : EditorWindow
         float brightness = 0f;
         if (driverTyped.LampProps != null)
         {
-            float scale = driverTyped.LampProps.localScale.x;
-            brightness = Mathf.InverseLerp(0f, definitionTyped.Profile.BrightnessMax, scale);
+            float value = driverTyped.LampProps.localPosition.y;
+            brightness = Mathf.InverseLerp(0f, definitionTyped.Profile.BrightnessMax, value);
         }
 
         // Fill and outline colours have alpha modulated by brightness.

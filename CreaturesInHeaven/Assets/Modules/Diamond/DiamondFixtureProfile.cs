@@ -40,6 +40,14 @@ public class DiamondFixtureProfile : ScriptableObject
 
     public bool HasSpread;
 
+    // Spread range in degrees (full cone angle). Clamps the editor UI to the
+    // fixture's physical capabilities. SpreadDefault is what the inspector
+    // resets to and what new fixtures sit at when the profile is assigned.
+    // Only meaningful when HasSpread is true.
+    public float SpreadMinDegrees     = 0f;
+    public float SpreadMaxDegrees     = 90f;
+    public float SpreadDefaultDegrees = 30f;
+
     // Whether this fixture has a visible volumetric beam shaft.
     // Gates the "Beam Intensity" control in the FixtureDefinition inspector.
     public bool HasBeam;

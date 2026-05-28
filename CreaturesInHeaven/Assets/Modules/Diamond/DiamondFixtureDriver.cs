@@ -12,17 +12,23 @@ using UnityEngine;
 // rather than bundling them as a single Vector3 keyframe.
 //
 // _LampProps:
-//   .localScale.x       - Brightness (emissive multiplier, HDR range 0..2)
-//   .gameObject.activeSelf - On/off
+//   .localPosition.y    - Brightness (emissive multiplier, HDR range 0..2).
+//                         Stored on position, not scale, so that localScale
+//                         remains free to carry an RGB colour vector (each
+//                         component independently keyable, and bundling is
+//                         desirable for colour fades).
+//   .gameObject.activeSelf - On/off.
 //
 // _BeamProps:
 //   .localEulerAngles.x - Beam spread, stored as tan(half-angle). UIs convert
 //                         to/from degrees at the boundary. (Rotation, not
 //                         scale, so it doesn't bundle with intensity.)
-//   .localScale.y       - Beam intensity (volumetric shaft brightness; haze)
+//   .localScale.y       - Beam intensity (volumetric shaft brightness; haze).
 //
-// Free slots on _BeamProps for future channels: localEulerAngles.y/z,
-// localScale.x/z, localPosition.xyz -- eight more independent floats.
+// Free slots on _LampProps: localScale.xyz (reserved for future RGB colour),
+// localPosition.x/z, localEulerAngles.xyz.
+// Free slots on _BeamProps: localEulerAngles.y/z, localScale.x/z,
+// localPosition.xyz -- eight more independent floats.
 public class DiamondFixtureDriver : UdonSharpBehaviour
 {
     // --- Inspector references ----------------------------------------
@@ -30,7 +36,7 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
     // The moving head child GameObject. The animator keys its localRotation directly.
     public Transform Head;
 
-    // Proxy transform whose localScale.x carries animated brightness, and
+    // Proxy transform whose localPosition.y carries animated brightness, and
     // whose gameObject.activeSelf is the on/off state.
     public Transform LampProps;
 
@@ -105,7 +111,7 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
         }
 
         // If brightness is 0, it basically is.
-        float brightness = LampProps.localScale.x;
+        float brightness = LampProps.localPosition.y;
         if (brightness == 0)
         {
             return true;
@@ -142,9 +148,9 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
             return;
         }
 
-        float brightness = LampProps.localScale.x;
+        float brightness = LampProps.localPosition.y;
 
-        // BeamProps is optional -- if a fixture has no beam shaft, leave the
+        // BeamProps is optional. If a fixture has no beam shaft, leave the
         // animated channels at their defaults (spread 0, intensity 1).
         float spread        = 0f;
         float beamIntensity = 1f;

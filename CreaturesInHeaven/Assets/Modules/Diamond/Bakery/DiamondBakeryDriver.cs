@@ -15,7 +15,7 @@ public class DiamondBakeryDriver : MonoBehaviour
     {
         if (Light == null || LampProps == null) return;
 
-        float brightness = LampProps.localScale.x * BrightnessScale;
+        float brightness = LampProps.localPosition.y * BrightnessScale;
         var   fixture   = GetComponent<DiamondFixtureDriver>();
         Color colour    = fixture != null ? fixture.EmissionColor : Color.white;
 

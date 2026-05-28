@@ -60,7 +60,7 @@ public static class DiamondFixtureMapPreview
                 ? DiamondFixtureDefinition.BlackbodyToRGB(def.ColourTemperature)
                 : def.EmissionColor;
 
-            float linearBrightness = driver.LampProps.localScale.x;
+            float linearBrightness = driver.LampProps.localPosition.y;
             // BeamProps is optional -- fixtures without a beam shaft just won't
             // have one wired up, in which case spread/intensity stay at defaults.
             float spread        = driver.BeamProps != null ? driver.BeamProps.localEulerAngles.x : 0f;

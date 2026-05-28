@@ -100,6 +100,22 @@ public class DiamondEInsFixtureDefinition : Editor
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Material", EditorStyles.boldLabel);
 
+        // Reset-to-defaults button. Records Undo per target so it's a single
+        // reversible operation across multi-select.
+        if (GUILayout.Button("Reset to Profile Defaults"))
+        {
+            foreach (var t in targets)
+            {
+                var d = (DiamondFixtureDefinition)t;
+                var driver = d.GetComponent<DiamondFixtureDriver>();
+                if (driver == null) continue;
+                if (driver.LampProps != null) Undo.RecordObject(driver.LampProps, "Reset to Profile Defaults");
+                if (driver.BeamProps != null) Undo.RecordObject(driver.BeamProps, "Reset to Profile Defaults");
+                if (driver.Head      != null) Undo.RecordObject(driver.Head,      "Reset to Profile Defaults");
+                d.ApplyProfileDefaults();
+            }
+        }
+
         // On/Off toggle. Show mixed-value indicator if not unanimous.
         bool firstOn = ((DiamondFixtureDefinition)targets[0]).GetComponent<DiamondFixtureDriver>().LampProps.gameObject.activeSelf;
         bool mixedOn = false;
@@ -125,17 +141,17 @@ public class DiamondEInsFixtureDefinition : Editor
             }
         }
 
-        // Brightness: display in gamma space, store linear in LampProps.localScale.x.
+        // Brightness: display in gamma space, store linear in LampProps.localPosition.y.
         var firstDriver = ((DiamondFixtureDefinition)targets[0]).GetComponent<DiamondFixtureDriver>();
         float firstBrightnessGamma = firstDriver.LampProps != null
-            ? Mathf.LinearToGammaSpace(firstDriver.LampProps.localScale.x) : 0f;
+            ? Mathf.LinearToGammaSpace(firstDriver.LampProps.localPosition.y) : 0f;
 
         bool mixedBrightness = false;
         foreach (var t in targets)
         {
             var lp = ((DiamondFixtureDefinition)t).GetComponent<DiamondFixtureDriver>().LampProps;
             if (lp == null) { mixedBrightness = true; break; }
-            if (!Mathf.Approximately(Mathf.LinearToGammaSpace(lp.localScale.x), firstBrightnessGamma))
+            if (!Mathf.Approximately(Mathf.LinearToGammaSpace(lp.localPosition.y), firstBrightnessGamma))
                 mixedBrightness = true;
         }
 
@@ -151,7 +167,7 @@ public class DiamondEInsFixtureDefinition : Editor
                 var lp = ((DiamondFixtureDefinition)t).GetComponent<DiamondFixtureDriver>().LampProps;
                 if (lp == null) continue;
                 Undo.RecordObject(lp, "Fixture Brightness");
-                var s = lp.localScale; s.x = newLinear; lp.localScale = s;
+                var pos = lp.localPosition; pos.y = newLinear; lp.localPosition = pos;
             }
         }
 
@@ -172,7 +188,8 @@ public class DiamondEInsFixtureDefinition : Editor
 
             EditorGUI.showMixedValue = mixedSpread;
             EditorGUI.BeginChangeCheck();
-            float newDegrees = EditorGUILayout.Slider("Spread (degrees)", firstSpreadDegrees, 0f, 180f);
+            float newDegrees = EditorGUILayout.Slider("Spread (degrees)", firstSpreadDegrees,
+                p.SpreadMinDegrees, p.SpreadMaxDegrees);
             EditorGUI.showMixedValue = false;
             if (EditorGUI.EndChangeCheck())
             {

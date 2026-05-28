@@ -188,9 +188,9 @@ public class DiamondEWinFixtureProperties : EditorWindow
             foreach (var (_, driver, _) in _selection)
             {
                 Undo.RecordObject(driver.LampProps, "Fixture Brightness");
-                var scale = driver.LampProps.localScale;
-                scale.x = e.newValue;
-                driver.LampProps.localScale = scale;
+                var pos = driver.LampProps.localPosition;
+                pos.y = e.newValue;
+                driver.LampProps.localPosition = pos;
             }
         });
 
@@ -200,9 +200,9 @@ public class DiamondEWinFixtureProperties : EditorWindow
             foreach (var (_, driver, _) in _selection)
             {
                 Undo.RecordObject(driver.LampProps, "Fixture Brightness");
-                var scale = driver.LampProps.localScale;
-                scale.x = e.newValue;
-                driver.LampProps.localScale = scale;
+                var pos = driver.LampProps.localPosition;
+                pos.y = e.newValue;
+                driver.LampProps.localPosition = pos;
             }
         });
 
@@ -355,8 +355,8 @@ public class DiamondEWinFixtureProperties : EditorWindow
         // Update colour
         RefreshColourUI();
 
-        // Update brightness (LampProps.localScale.x)
-        var brightnessValues = _selection.Select(s => s.driver.LampProps.localScale.x).Distinct().ToList();
+        // Update brightness (LampProps.localPosition.y)
+        var brightnessValues = _selection.Select(s => s.driver.LampProps.localPosition.y).Distinct().ToList();
         if (brightnessValues.Count == 1)
         {
             if (!Mathf.Approximately(_brightnessSlider.value, brightnessValues[0]))
@@ -568,7 +568,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
         _brightnessSlider.lowValue = minBrightness;
         _brightnessSlider.highValue = maxBrightness;
 
-        var brightnessValues = _selection.Select(s => s.driver.LampProps.localScale.x).Distinct().ToList();
+        var brightnessValues = _selection.Select(s => s.driver.LampProps.localPosition.y).Distinct().ToList();
         if (brightnessValues.Count == 1)
         {
             _brightnessSlider.SetValueWithoutNotify(brightnessValues[0]);
@@ -589,6 +589,8 @@ public class DiamondEWinFixtureProperties : EditorWindow
             _spreadSlider.style.display = DisplayStyle.Flex;
 
             var spreadCapable = _selection.Where(s => s.profile.HasSpread).ToList();
+            _spreadSlider.lowValue  = spreadCapable.Min(s => s.profile.SpreadMinDegrees);
+            _spreadSlider.highValue = spreadCapable.Max(s => s.profile.SpreadMaxDegrees);
             var spreadValues = spreadCapable.Select(s => s.driver.BeamProps.localEulerAngles.x).Distinct().ToList();
             if (spreadValues.Count == 1)
             {

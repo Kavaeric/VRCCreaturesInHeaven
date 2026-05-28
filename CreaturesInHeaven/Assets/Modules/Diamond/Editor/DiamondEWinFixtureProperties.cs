@@ -39,6 +39,8 @@ public class DiamondEWinFixtureProperties : EditorWindow
     private Label _spreadPlaceholder;
     private FloatField _spreadFloatField;
     private Slider _spreadSlider;
+    private Label _beamIntensityPlaceholder;
+    private FloatField _beamIntensityField;
     private Label _rotationPlaceholder;
     private VisualElement _axisXControl;
     private FloatField _axisXFloatField;
@@ -119,6 +121,8 @@ public class DiamondEWinFixtureProperties : EditorWindow
         _spreadPlaceholder = rootVisualElement.Q<Label>("spread-placeholder");
         _spreadFloatField = rootVisualElement.Q<FloatField>("spread-float-field");
         _spreadSlider = rootVisualElement.Q<Slider>("spread-slider");
+        _beamIntensityPlaceholder = rootVisualElement.Q<Label>("beam-intensity-placeholder");
+        _beamIntensityField = rootVisualElement.Q<FloatField>("beam-intensity-field");
         _rotationPlaceholder = rootVisualElement.Q<Label>("rotation-placeholder");
         _axisXControl = rootVisualElement.Q<VisualElement>("axis-x-control");
         _axisXFloatField = rootVisualElement.Q<FloatField>("axis-x-float-field");
@@ -202,15 +206,17 @@ public class DiamondEWinFixtureProperties : EditorWindow
             }
         });
 
+        // Spread UI is in degrees (full cone); storage is tan(half-angle).
         _spreadFloatField.RegisterValueChangedCallback(e =>
         {
             _spreadSlider.SetValueWithoutNotify(e.newValue);
+            float tan = DiamondFixtureDefinition.SpreadDegreesToTan(e.newValue);
             foreach (var (_, driver, profile) in _selection)
             {
                 if (!profile.HasSpread) continue;
                 Undo.RecordObject(driver.PropsTransform, "Fixture Spread");
                 var scale = driver.PropsTransform.localScale;
-                scale.y = e.newValue;
+                scale.y = tan;
                 driver.PropsTransform.localScale = scale;
             }
         });
@@ -218,12 +224,25 @@ public class DiamondEWinFixtureProperties : EditorWindow
         _spreadSlider.RegisterValueChangedCallback(e =>
         {
             _spreadFloatField.SetValueWithoutNotify(e.newValue);
+            float tan = DiamondFixtureDefinition.SpreadDegreesToTan(e.newValue);
             foreach (var (_, driver, profile) in _selection)
             {
                 if (!profile.HasSpread) continue;
                 Undo.RecordObject(driver.PropsTransform, "Fixture Spread");
                 var scale = driver.PropsTransform.localScale;
-                scale.y = e.newValue;
+                scale.y = tan;
+                driver.PropsTransform.localScale = scale;
+            }
+        });
+
+        _beamIntensityField.RegisterValueChangedCallback(e =>
+        {
+            foreach (var (_, driver, profile) in _selection)
+            {
+                if (!profile.HasBeam) continue;
+                Undo.RecordObject(driver.PropsTransform, "Fixture Beam Intensity");
+                var scale = driver.PropsTransform.localScale;
+                scale.z = e.newValue;
                 driver.PropsTransform.localScale = scale;
             }
         });
@@ -345,7 +364,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
             }
         }
 
-        // Update spread
+        // Update spread (storage is tan(half-angle); UI is full cone degrees).
         bool anyHasSpread = _selection.Any(s => s.profile.HasSpread);
         if (anyHasSpread)
         {
@@ -353,10 +372,26 @@ public class DiamondEWinFixtureProperties : EditorWindow
             var spreadValues = spreadCapable.Select(s => s.driver.PropsTransform.localScale.y).Distinct().ToList();
             if (spreadValues.Count == 1)
             {
-                if (!Mathf.Approximately(_spreadSlider.value, spreadValues[0]))
+                float degrees = DiamondFixtureDefinition.SpreadTanToDegrees(spreadValues[0]);
+                if (!Mathf.Approximately(_spreadSlider.value, degrees))
                 {
-                    _spreadSlider.SetValueWithoutNotify(spreadValues[0]);
-                    _spreadFloatField.SetValueWithoutNotify(spreadValues[0]);
+                    _spreadSlider.SetValueWithoutNotify(degrees);
+                    _spreadFloatField.SetValueWithoutNotify(degrees);
+                }
+            }
+        }
+
+        // Update beam intensity
+        bool anyHasBeam = _selection.Any(s => s.profile.HasBeam);
+        if (anyHasBeam)
+        {
+            var beamCapable = _selection.Where(s => s.profile.HasBeam).ToList();
+            var beamValues = beamCapable.Select(s => s.driver.PropsTransform.localScale.z).Distinct().ToList();
+            if (beamValues.Count == 1)
+            {
+                if (!Mathf.Approximately(_beamIntensityField.value, beamValues[0]))
+                {
+                    _beamIntensityField.SetValueWithoutNotify(beamValues[0]);
                 }
             }
         }
@@ -554,8 +589,9 @@ public class DiamondEWinFixtureProperties : EditorWindow
             var spreadValues = spreadCapable.Select(s => s.driver.PropsTransform.localScale.y).Distinct().ToList();
             if (spreadValues.Count == 1)
             {
-                _spreadSlider.SetValueWithoutNotify(spreadValues[0]);
-                _spreadFloatField.SetValueWithoutNotify(spreadValues[0]);
+                float degrees = DiamondFixtureDefinition.SpreadTanToDegrees(spreadValues[0]);
+                _spreadSlider.SetValueWithoutNotify(degrees);
+                _spreadFloatField.SetValueWithoutNotify(degrees);
             }
             else
             {
@@ -568,6 +604,30 @@ public class DiamondEWinFixtureProperties : EditorWindow
             _spreadPlaceholder.style.display = DisplayStyle.Flex;
             _spreadFloatField.style.display = DisplayStyle.None;
             _spreadSlider.style.display = DisplayStyle.None;
+        }
+
+        // Beam intensity - show only if any fixture has a volumetric beam
+        bool anyHasBeam = _selection.Any(s => s.profile.HasBeam);
+        if (anyHasBeam)
+        {
+            _beamIntensityPlaceholder.style.display = DisplayStyle.None;
+            _beamIntensityField.style.display = DisplayStyle.Flex;
+
+            var beamCapable = _selection.Where(s => s.profile.HasBeam).ToList();
+            var beamValues = beamCapable.Select(s => s.driver.PropsTransform.localScale.z).Distinct().ToList();
+            if (beamValues.Count == 1)
+            {
+                _beamIntensityField.SetValueWithoutNotify(beamValues[0]);
+            }
+            else
+            {
+                _beamIntensityField.SetValueWithoutNotify(0);
+            }
+        }
+        else
+        {
+            _beamIntensityPlaceholder.style.display = DisplayStyle.Flex;
+            _beamIntensityField.style.display = DisplayStyle.None;
         }
 
         // Rotations - show if any fixture has rotation

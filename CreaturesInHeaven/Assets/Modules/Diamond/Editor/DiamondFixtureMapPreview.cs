@@ -8,8 +8,11 @@ using UnityEngine;
 [InitializeOnLoad]
 public static class DiamondFixtureMapPreview
 {
-    // Per-definition MaterialPropertyBlock, keyed by instance ID to avoid GC on every frame.
-    private static readonly Dictionary<int, MaterialPropertyBlock> _propBlocks = new();
+    // Per-definition MaterialPropertyBlocks, keyed by instance ID to avoid GC on every frame.
+    // The head and beam each get their own block since their property names differ
+    // (HeadRenderer uses _EmissionColor / _Spread; BeamRenderer uses _Color / _EmitterWidth / etc).
+    private static readonly Dictionary<int, MaterialPropertyBlock> _headBlocks = new();
+    private static readonly Dictionary<int, MaterialPropertyBlock> _beamBlocks = new();
 
     static DiamondFixtureMapPreview()
     {
@@ -29,16 +32,27 @@ public static class DiamondFixtureMapPreview
             if (driver == null || driver.PropsTransform == null || driver.HeadRenderer == null) continue;
 
             int id = def.GetInstanceID();
-            if (!_propBlocks.TryGetValue(id, out var propBlock))
+            if (!_headBlocks.TryGetValue(id, out var headBlock))
             {
-                propBlock = new MaterialPropertyBlock();
-                _propBlocks[id] = propBlock;
+                headBlock = new MaterialPropertyBlock();
+                _headBlocks[id] = headBlock;
+            }
+            if (!_beamBlocks.TryGetValue(id, out var beamBlock))
+            {
+                beamBlock = new MaterialPropertyBlock();
+                _beamBlocks[id] = beamBlock;
             }
 
             if (!driver.PropsTransform.gameObject.activeSelf)
             {
-                propBlock.SetColor("_EmissionColor", Color.black);
-                driver.HeadRenderer.SetPropertyBlock(propBlock);
+                headBlock.SetColor("_EmissionColor", Color.black);
+                driver.HeadRenderer.SetPropertyBlock(headBlock);
+
+                if (driver.BeamRenderer != null)
+                {
+                    beamBlock.SetColor("_Color", Color.clear);
+                    driver.BeamRenderer.SetPropertyBlock(beamBlock);
+                }
                 continue;
             }
 
@@ -48,10 +62,26 @@ public static class DiamondFixtureMapPreview
 
             float linearBrightness = driver.PropsTransform.localScale.x;
             float spread           = driver.PropsTransform.localScale.y;
+            float beamIntensity    = driver.PropsTransform.localScale.z;
+            Color drivenColour     = emission * linearBrightness;
 
-            propBlock.SetColor("_EmissionColor", emission * linearBrightness);
-            propBlock.SetFloat("_Spread", spread);
-            driver.HeadRenderer.SetPropertyBlock(propBlock);
+            headBlock.SetColor("_EmissionColor", drivenColour);
+            driver.HeadRenderer.SetPropertyBlock(headBlock);
+
+            // Mirror onto the beam shaft: brightness-modulated colour, animated
+            // intensity, animated spread (stored as tan(half-angle)), and the
+            // emitter dimensions from the driver (kept in sync with the profile
+            // by DiamondFixtureDefinition.SyncEmitterSize).
+            if (driver.BeamRenderer != null)
+            {
+                beamBlock.SetColor("_Color", drivenColour);
+                beamBlock.SetFloat("_EmitterWidth",  driver.EmitterSize.x);
+                beamBlock.SetFloat("_EmitterHeight", driver.EmitterSize.y);
+                beamBlock.SetFloat("_BeamIntensity", beamIntensity);
+                beamBlock.SetFloat("_SpreadX",       spread);
+                beamBlock.SetFloat("_SpreadZ",       spread);
+                driver.BeamRenderer.SetPropertyBlock(beamBlock);
+            }
         }
     }
 }

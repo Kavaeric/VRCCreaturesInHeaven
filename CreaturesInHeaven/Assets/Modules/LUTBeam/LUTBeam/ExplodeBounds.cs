@@ -8,6 +8,6 @@ public class ExplodeBounds : UdonSharpBehaviour
     {
         MeshRenderer meshRenderer = GetComponent<MeshRenderer>();
         if (meshRenderer)
-            meshRenderer.bounds = new Bounds(this.transform.position, Vector3.one * 9999);
+            meshRenderer.bounds = new Bounds(this.transform.position, Vector3.one * 99);
     }
 }

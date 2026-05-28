@@ -33,8 +33,17 @@ public class DiamondFixtureDefinition : MonoBehaviour
     // the resulting RGB is written to EmissionColor and synced to FixtureDriver.
     public float ColourTemperature = 6500f;
 
-    private void OnEnable() => SyncDriverColour();
-    private void OnValidate() => SyncDriverColour();
+    private void OnEnable()
+    {
+        SyncEmitterSize();
+        SyncDriverColour();
+    }
+
+    private void OnValidate()
+    {
+        SyncEmitterSize();
+        SyncDriverColour();
+    }
 
     public void SyncDriverColour()
     {
@@ -45,6 +54,36 @@ public class DiamondFixtureDefinition : MonoBehaviour
         driver.EmissionColor = Colour == ColourMode.Blackbody
             ? BlackbodyToRGB(ColourTemperature)
             : EmissionColor;
+    }
+
+    public void SyncEmitterSize()
+    {
+        var driver = GetComponent<DiamondFixtureDriver>();
+        if (driver == null || Profile == null) return;
+
+        // Set the correct emitter size based on the assigned profile, then push
+        // it onto the beam renderer's property block so the change shows up in
+        // edit mode (not just at runtime via Start).
+        driver.EmitterSize = new Vector2(Profile.FixtureWidth, Profile.FixtureHeight);
+        driver.ApplyBeamEmitterSize();
+    }
+
+    // --- Spread conversion ------------------------------------------------
+    //
+    // Spread is stored on PropsTransform.localScale.y as tan(half-angle) -- the
+    // value the beam shader's _SpreadX/_SpreadZ use directly. The user-facing
+    // value is the FULL cone angle in degrees (stage-lighting convention: a
+    // "30 degree fixture" is 30 degrees tip-to-tip across the cone). These
+    // helpers convert at the UI boundary so the per-frame path does no trig.
+
+    public static float SpreadDegreesToTan(float fullConeDegrees)
+    {
+        return Mathf.Tan(fullConeDegrees * 0.5f * Mathf.Deg2Rad);
+    }
+
+    public static float SpreadTanToDegrees(float tan)
+    {
+        return Mathf.Atan(tan) * 2f * Mathf.Rad2Deg;
     }
 
     // Converts a colour temperature in Kelvin to a linear RGB approximation.

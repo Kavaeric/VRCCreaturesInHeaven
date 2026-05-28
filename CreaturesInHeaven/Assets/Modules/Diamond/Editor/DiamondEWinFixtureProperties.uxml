@@ -76,14 +76,28 @@
                 <ui:VisualElement class="separator" />
                 <ui:VisualElement class="h-2" />
 
-                <!-- Spread -->
+                <!-- Spread (full cone angle, degrees) -->
                 <ui:VisualElement name="spread-control">
-                    <ui:Label class="font-bold" text="Spread" />
+                    <ui:Label class="font-bold" text="Spread (degrees)" />
                     <ui:VisualElement class="h-0p5" />
                     <ui:VisualElement class="row">
                         <ui:Label name="spread-placeholder" text="Fixture does not have programmable spread." class="text-muted"/>
-                        <ui:FloatField name="spread-float-field" class="min-w-10" low-value="0" high-value="1" />
-                        <ui:Slider name="spread-slider" class="grow" low-value="0" high-value="1" />
+                        <ui:FloatField name="spread-float-field" class="min-w-10" low-value="0" high-value="180" />
+                        <ui:Slider name="spread-slider" class="grow" low-value="0" high-value="180" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:VisualElement class="h-2" />
+                <ui:VisualElement class="separator" />
+                <ui:VisualElement class="h-2" />
+
+                <!-- Beam intensity (volumetric shaft brightness; conceptually fog density) -->
+                <ui:VisualElement name="beam-intensity-control">
+                    <ui:Label class="font-bold" text="Beam Intensity" />
+                    <ui:VisualElement class="h-0p5" />
+                    <ui:VisualElement class="row">
+                        <ui:Label name="beam-intensity-placeholder" text="Fixture does not have a volumetric beam." class="text-muted"/>
+                        <ui:FloatField name="beam-intensity-field" class="grow" />
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>

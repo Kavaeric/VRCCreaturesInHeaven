@@ -40,6 +40,10 @@ public class DiamondFixtureProfile : ScriptableObject
 
     public bool HasSpread;
 
+    // Whether this fixture has a visible volumetric beam shaft.
+    // Gates the "Beam Intensity" control in the FixtureDefinition inspector.
+    public bool HasBeam;
+
     // --- Bakery light ---------------------------------------------------
 
 #if BAKERY_INCLUDED

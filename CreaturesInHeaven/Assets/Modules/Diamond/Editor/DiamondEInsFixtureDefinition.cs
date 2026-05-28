@@ -157,18 +157,52 @@ public class DiamondEInsFixtureDefinition : Editor
 
         if (p.HasSpread)
         {
-            float firstSpread = firstDriver.PropsTransform != null ? firstDriver.PropsTransform.localScale.y : 0f;
+            // Spread is stored as tan(half-angle) but presented as full cone
+            // degrees (stage-lighting convention).
+            float firstSpreadTan     = firstDriver.PropsTransform != null ? firstDriver.PropsTransform.localScale.y : 0f;
+            float firstSpreadDegrees = DiamondFixtureDefinition.SpreadTanToDegrees(firstSpreadTan);
             bool mixedSpread = false;
             foreach (var t in targets)
             {
                 var pt = ((DiamondFixtureDefinition)t).GetComponent<DiamondFixtureDriver>().PropsTransform;
                 if (pt == null) { mixedSpread = true; break; }
-                if (!Mathf.Approximately(pt.localScale.y, firstSpread)) mixedSpread = true;
+                if (!Mathf.Approximately(pt.localScale.y, firstSpreadTan)) mixedSpread = true;
             }
 
             EditorGUI.showMixedValue = mixedSpread;
             EditorGUI.BeginChangeCheck();
-            float newSpread = EditorGUILayout.Slider("Spread", firstSpread, 0f, 1f);
+            float newDegrees = EditorGUILayout.Slider("Spread (degrees)", firstSpreadDegrees, 0f, 180f);
+            EditorGUI.showMixedValue = false;
+            if (EditorGUI.EndChangeCheck())
+            {
+                float newTan = DiamondFixtureDefinition.SpreadDegreesToTan(newDegrees);
+                foreach (var t in targets)
+                {
+                    var pt = ((DiamondFixtureDefinition)t).GetComponent<DiamondFixtureDriver>().PropsTransform;
+                    if (pt == null) continue;
+                    Undo.RecordObject(pt, "Fixture Spread");
+                    var s = pt.localScale; s.y = newTan; pt.localScale = s;
+                }
+            }
+        }
+
+        if (p.HasBeam)
+        {
+            // Beam Intensity lives on PropsTransform.localScale.z so it's keyframable
+            // by the animator alongside Brightness (x) and Spread (y). No clamp
+            // since this represents air/fog density, not a fixture-internal value.
+            float firstBeam = firstDriver.PropsTransform != null ? firstDriver.PropsTransform.localScale.z : 0f;
+            bool mixedBeam = false;
+            foreach (var t in targets)
+            {
+                var pt = ((DiamondFixtureDefinition)t).GetComponent<DiamondFixtureDriver>().PropsTransform;
+                if (pt == null) { mixedBeam = true; break; }
+                if (!Mathf.Approximately(pt.localScale.z, firstBeam)) mixedBeam = true;
+            }
+
+            EditorGUI.showMixedValue = mixedBeam;
+            EditorGUI.BeginChangeCheck();
+            float newBeam = EditorGUILayout.FloatField("Beam Intensity", firstBeam);
             EditorGUI.showMixedValue = false;
             if (EditorGUI.EndChangeCheck())
             {
@@ -176,8 +210,8 @@ public class DiamondEInsFixtureDefinition : Editor
                 {
                     var pt = ((DiamondFixtureDefinition)t).GetComponent<DiamondFixtureDriver>().PropsTransform;
                     if (pt == null) continue;
-                    Undo.RecordObject(pt, "Fixture Spread");
-                    var s = pt.localScale; s.y = newSpread; pt.localScale = s;
+                    Undo.RecordObject(pt, "Fixture Beam Intensity");
+                    var s = pt.localScale; s.z = newBeam; pt.localScale = s;
                 }
             }
         }

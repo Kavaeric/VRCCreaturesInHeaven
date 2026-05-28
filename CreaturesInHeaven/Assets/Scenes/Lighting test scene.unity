@@ -648,16 +648,16 @@ Light:
   m_Type: 1
   m_Shape: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 0.2
+  m_Intensity: 0.01
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
   m_CookieSize: 10
   m_Shadows:
     m_Type: 2
-    m_Resolution: -1
+    m_Resolution: 0
     m_CustomResolution: -1
-    m_Strength: 1
+    m_Strength: 0
     m_Bias: 0
     m_NormalBias: 0.4
     m_NearPlane: 0.2
@@ -687,7 +687,7 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingLayerMask: 1
-  m_Lightmapping: 2
+  m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
@@ -720,7 +720,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 396777393}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c74ce2158ae608549902afb4112fd042, type: 3}
   m_Name: 
@@ -3483,7 +3483,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!95 &572279933
 Animator:
   serializedVersion: 5
@@ -12778,7 +12778,11 @@ MonoBehaviour:
   TargetVolume: {fileID: 1950454027}
   Crt: {fileID: 8600000, guid: 4389a9a7b3d9bc34ab08b3eb3126d461, type: 2}
   AnimatedTexture: {fileID: 11700000, guid: 45d4845d277d8b148829f5b14dc5974d, type: 2}
+  SnapshotX: 0
   SnapshotY: 26
+  SnapshotsPerColumn: 1
+  NumColumnsBaked: 1
+  NumSnapshotsBaked: 0
   SHMode: 0
   BitDepth: 1
   PreviewVoxels: 0
@@ -12908,6 +12912,12 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 3897812079991548462, guid: 2de4a84f595dfdd428644457d77eccd2,
+        type: 3}
+      propertyPath: serializationData.Prefab
+      value: 
+      objectReference: {fileID: 3897812079991548462, guid: 2de4a84f595dfdd428644457d77eccd2,
+        type: 3}
     - target: {fileID: 4404650725835581694, guid: 2de4a84f595dfdd428644457d77eccd2,
         type: 3}
       propertyPath: m_LocalPosition.x

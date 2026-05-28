@@ -17,6 +17,9 @@
     },
     "red.sim.lightvolumes": {
       "version": "2.1.3"
+    },
+    "com.varneon.vudon.depth-buffer-toolkit": {
+      "version": "0.1.0"
     }
   },
   "locked": {
@@ -47,6 +50,12 @@
     "red.sim.lightvolumes": {
       "version": "2.1.3",
       "dependencies": {}
+    },
+    "com.varneon.vudon.depth-buffer-toolkit": {
+      "version": "0.1.0",
+      "dependencies": {
+        "com.vrchat.udonsharp": "1.x.x"
+      }
     }
   }
 }

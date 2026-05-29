@@ -180,6 +180,12 @@ public class MomentAnimatedLightVolume : UdonSharpBehaviour
     {
         if (Crt == null || TargetVolume == null || AnimatedTexture == null) return;
 
+        // Switch the CRT to OnDemand so it stops issuing a draw call per slice every frame.
+        // LightVolumeSetup forces Realtime when it (re)builds the post-processor chain, but
+        // that only runs in the editor at bake time — at runtime we own the update cadence
+        // and only need to refresh the atlas when our inputs actually change.
+        Crt.updateMode = CustomRenderTextureUpdateMode.OnDemand;
+
         _animator = AnimatorSource;
         _mat = Crt.material;
         _hasAnimTimeParam  = _animator != null && AnimTimeParameter  != "";
@@ -234,24 +240,35 @@ public class MomentAnimatedLightVolume : UdonSharpBehaviour
         float animTime = _hasAnimTimeParam ? _animator.GetFloat(AnimTimeParameter) : Time;
         _mat.SetFloat("_Time4D", animTime);
         _prevTime = animTime;
+
+        // Kick one update so the initial frame is composited into the atlas.
+        // Without this the volume reads as black until something changes.
+        Crt.Update();
     }
 
     void Update()
     {
         if (_mat == null) return;
 
-        // Only push to the material when values actually change.
+        // Track whether anything changed this frame. If nothing did, we skip the CRT update
+        // entirely — that's the whole point of switching to OnDemand. One ALV used to issue
+        // numSlices draw calls every frame regardless of activity; now it issues zero when
+        // the animation is paused or holding a frame.
+        bool dirty = false;
+
         float animTime = _hasAnimTimeParam ? _animator.GetFloat(AnimTimeParameter) : Time;
         if (animTime != _prevTime)
         {
             _mat.SetFloat("_Time4D", animTime);
             _prevTime = animTime;
+            dirty = true;
         }
 
         if (Blending != _blendMode)
         {
             _mat.SetInt("_BlendMode", (int)Blending);
             _blendMode = Blending;
+            dirty = true;
         }
 
         float intensity = _hasIntensityParam ? _animator.GetFloat(IntensityParameter) : Intensity;
@@ -259,7 +276,10 @@ public class MomentAnimatedLightVolume : UdonSharpBehaviour
         {
             _mat.SetFloat("_Intensity", intensity);
             _intensity = intensity;
+            dirty = true;
         }
+
+        if (dirty) Crt.Update();
     }
 
 }

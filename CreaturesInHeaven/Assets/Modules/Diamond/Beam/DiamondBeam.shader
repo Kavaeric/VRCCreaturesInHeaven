@@ -138,17 +138,45 @@ Shader "Diamond/Beam"
 
             struct v2f
             {
-                float4 vertex        : SV_POSITION;
+                float4 vertex          : SV_POSITION;
                 // Vertex position in "beam space": coords are in world units,
                 // emitter is at y=0, far cap is at y=beamLength. The frag's
                 // ray math is done entirely in this space.
-                float3 vertBeamSpace : TEXCOORD0;
-                float4 screenPos     : TEXCOORD1;
-                float3 vertWorldSpace: TEXCOORD2;
+                float3 vertBeamSpace   : TEXCOORD0;
+                float4 screenPos       : TEXCOORD1;
+                float3 vertWorldSpace  : TEXCOORD2;
+                // Oblique-frustum correction for mirror-camera depth reads.
+                // Stored as dot(clipPos, correctionVec); frag divides by clipW.
+                float  frustumCorrection : TEXCOORD3;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             UNITY_DECLARE_DEPTH_TEXTURE(_CameraDepthTexture);
+
+            // Mirror cameras use an OBLIQUE near plane to clip geometry behind
+            // the mirror surface. The standard Unity helper LinearEyeDepth()
+            // assumes the projection matrix's third row has its default shape,
+            // which obliques break. The fix is to derive a per-pixel correction
+            // factor from the projection matrix and use it when reading depth.
+            //
+            // Adapted from LUTBeam (Torvid / ValueFactory / Micca), which in turn
+            // adapted it from:
+            //   https://github.com/lukis101/VRCUnityStuffs/blob/master/Shaders/DJL/Overlays/WorldPosOblique.shader
+            float4 CalculateFrustumCorrection()
+            {
+                float x1 = -UNITY_MATRIX_P._31 / (UNITY_MATRIX_P._11 * UNITY_MATRIX_P._34);
+                float x2 = -UNITY_MATRIX_P._32 / (UNITY_MATRIX_P._22 * UNITY_MATRIX_P._34);
+                return float4(x1, x2, 0,
+                    UNITY_MATRIX_P._33 / UNITY_MATRIX_P._34 + x1 * UNITY_MATRIX_P._13 + x2 * UNITY_MATRIX_P._23);
+            }
+
+            // Replacement for LinearEyeDepth that handles oblique near planes.
+            // frustumCorrection is dot(clipPos, CalculateFrustumCorrection())
+            // divided by clipPos.w, computed in vert and reconstructed in frag.
+            float CorrectedLinearEyeDepth(float z, float frustumCorrection)
+            {
+                return 1.0 / (z / UNITY_MATRIX_P._34 + frustumCorrection);
+            }
 
             // Evaluates the per-point brightness density at a distance from the
             // emitter, using the same formula the frag shader uses. Lets the
@@ -284,10 +312,11 @@ Shader "Diamond/Beam"
                 float3 objectSpace = beamSpace / cubeLocalScale;
                 float4 expandedObject = float4(objectSpace, 1);
 
-                o.vertex        = UnityObjectToClipPos(expandedObject);
-                o.vertBeamSpace = beamSpace;
-                o.vertWorldSpace= mul(unity_ObjectToWorld, expandedObject).xyz;
-                o.screenPos     = ComputeScreenPos(o.vertex);
+                o.vertex            = UnityObjectToClipPos(expandedObject);
+                o.vertBeamSpace     = beamSpace;
+                o.vertWorldSpace    = mul(unity_ObjectToWorld, expandedObject).xyz;
+                o.screenPos         = ComputeScreenPos(o.vertex);
+                o.frustumCorrection = dot(o.vertex, CalculateFrustumCorrection());
                 return o;
             }
 
@@ -402,9 +431,12 @@ Shader "Diamond/Beam"
 
                 if (rawDepth > 0)
                 {
-                    // LinearEyeDepth converts raw depth to a linear distance in metres,
-                    // measured along the camera's forward axis.
-                    float  sceneEyeDepth   = LinearEyeDepth(rawDepth);
+                    // CorrectedLinearEyeDepth handles mirror cameras (oblique
+                    // near planes) where stock LinearEyeDepth would be wrong.
+                    // The frustumCorrection v2f field was filled in vert as
+                    // dot(clipPos, correctionVec); divide by clipW here so the
+                    // perspective interpolation cancels.
+                    float  sceneEyeDepth   = CorrectedLinearEyeDepth(rawDepth, i.frustumCorrection / i.screenPos.w);
                     float3 cameraForwardWS = -UNITY_MATRIX_V[2].xyz;
                     float3 rayDirWS        = normalize(i.vertWorldSpace - _WorldSpaceCameraPos);
 
@@ -442,7 +474,7 @@ Shader "Diamond/Beam"
                 float distance      = beamMidpoint.y;                       // metres from emitter
 
                 // Softness grows linearly with distance from the emitter.
-                // No baseline -- right at the emitter face the beam is crisp,
+                // No baseline: right at the emitter face the beam is crisp,
                 // and the halo expands as you go down the beam. The growth
                 // rate is set by _EdgeSoftness directly (1.0 -> 1 metre of
                 // halo per metre of throw). Haze multiplies because thicker
@@ -505,6 +537,7 @@ Shader "Diamond/Beam"
                 // is the light per unit volume at this point; (tExit - tEntry)
                 // is how many metres the ray spends inside the beam volume.
                 float beamSegment = lightFalloff * (tExit - tEntry);
+
                 return fixed4(instColor.rgb * beamSegment * beamIntensity, 1);
             }
 

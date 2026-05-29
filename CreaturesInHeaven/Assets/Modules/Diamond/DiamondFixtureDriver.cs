@@ -54,6 +54,17 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
 
     public Vector2 EmitterSize = new Vector2(1, 1);
 
+    // Worst-case spread (as tan(half-angle)) used for renderer-bounds sizing.
+    // Mirrored from the FixtureProfile by DiamondFixtureDefinition.SyncBounds.
+    // Defaults to tan(45 degrees) = 1.0 -- a sane 90-degree max cone.
+    public float MaxSpreadTan = 1f;
+
+    // Worst-case beam length (metres) used for renderer-bounds sizing.
+    // Mirrored from the shader's _BeamLengthMax. Hardcoded fallback matches
+    // the shader's default; override per fixture if a beam material uses a
+    // different cap.
+    public float MaxBeamLength = 50f;
+
     // Base emission colour. Set via FixtureDefinition in the editor; not animated.
     // Brightness (from LampProps) is applied as a multiplier on top of this.
     public Color EmissionColor = Color.white;
@@ -67,6 +78,43 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
     {
         EnsurePropertyBlocks();
         ApplyBeamEmitterSize();
+        ApplyBeamRendererBounds();
+    }
+
+    // Computes worst-case bounds for the beam renderer and writes them so
+    // Unity's frustum culler doesn't disable the renderer when the small
+    // proxy cube goes off-screen but the actual beam volume is still visible.
+    //
+    // The bounds are sized in local space to the fixture root, then assigned
+    // as world-space bounds (Unity transforms them by the renderer's local
+    // matrix internally when used for culling). Safe to call from edit mode.
+    public void ApplyBeamRendererBounds()
+    {
+        if (BeamRenderer == null) return;
+
+        // Lateral half-extent at the far cap of the beam: emitter half-width
+        // plus the worst-case spread plus a small margin for the soft-edge
+        // halo. Same shape the vertex shader inflates the bounding cube to.
+        float halfLateralX = EmitterSize.x * 0.5f + MaxSpreadTan * MaxBeamLength + 1f;
+        float halfLateralZ = EmitterSize.y * 0.5f + MaxSpreadTan * MaxBeamLength + 1f;
+
+        // Local-space AABB. The beam fires along +Y from y=0 to y=MaxBeamLength.
+        Vector3 center = new Vector3(0f, MaxBeamLength * 0.5f, 0f);
+        Vector3 size   = new Vector3(halfLateralX * 2f, MaxBeamLength, halfLateralZ * 2f);
+        Bounds localBounds = new Bounds(center, size);
+
+        // Transform to world space. Renderer.bounds is in world space, so we
+        // need to convert. Use the beam renderer's transform (not the fixture
+        // root) since the bounds are about that GameObject's mesh.
+        var t = BeamRenderer.transform;
+        Vector3 worldCenter = t.TransformPoint(localBounds.center);
+        // For arbitrary rotations a full corner-transform is needed, but the
+        // simpler axis-aligned extent works fine for the worst-case sizing
+        // (slightly overestimates after rotation, which is what we want).
+        Vector3 worldExtents = t.TransformVector(localBounds.extents);
+        worldExtents = new Vector3(Mathf.Abs(worldExtents.x), Mathf.Abs(worldExtents.y), Mathf.Abs(worldExtents.z));
+
+        BeamRenderer.bounds = new Bounds(worldCenter, worldExtents * 2f);
     }
 
     // Lazily creates the property blocks so callers from edit mode (e.g.

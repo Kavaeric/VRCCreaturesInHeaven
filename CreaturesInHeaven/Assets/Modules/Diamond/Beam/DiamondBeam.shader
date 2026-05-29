@@ -33,7 +33,7 @@ Shader "Diamond/Beam"
         // falloff, the fixture's flux, and _BeamIntensity. A small threshold
         // means longer-looking beams (more shading work); a larger one cuts
         // them off sooner.
-        _BeamCutoffThreshold ("Beam Cutoff Threshold", Float) = 0.00001
+        _BeamCutoffThreshold ("Beam Cutoff Threshold", Float) = 0.0001
 
         // Hard ceiling on the auto-derived beam length, in metres. Prevents
         // pathologically long beams from a very high _BeamIntensity or a
@@ -53,7 +53,8 @@ Shader "Diamond/Beam"
 
         _Color ("Color", Color) = (1, 1, 1, 1)
 
-        // Intensity multiplier for the beam.
+        // Intensity multiplier for the beam. Flat modifier with no real
+        // world or physically-based analogue.
         _BeamIntensity ("Intensity", Float) = 1.0
 
         // Haze density: the per-metre extinction coefficient of the air the
@@ -222,7 +223,7 @@ Shader "Diamond/Beam"
 
                 // 16 iterations -> ~1/65000 of _BeamLengthMax resolution. Plenty.
                 [unroll]
-                for (int it = 0; it < 16; it++)
+                for (int it = 0; it < 8; it++)
                 {
                     float mid = 0.5 * (lo + hi);
                     float density = BeamDensityAtDistance(mid, emitterWidth, emitterHeight, spreadX, spreadZ, intensity, haze);
@@ -284,6 +285,22 @@ Shader "Diamond/Beam"
                 v2f o;
                 UNITY_SETUP_INSTANCE_ID(v);
                 UNITY_TRANSFER_INSTANCE_ID(v, o);
+
+                // Early-out: any of these conditions makes the beam contribute
+                // nothing visible. Collapse every vertex to clip-space origin
+                // so the triangle gets culled before fragments are rasterised:
+                //   * Zero haze -> nothing scatters light into the camera.
+                //   * Zero beam intensity -> per-fixture brightness multiplier
+                //     is off (e.g. the animator has dimmed this fixture to 0).
+                //   * Black colour -> nothing to add via additive blending.
+                float earlyOutIntensity = UNITY_ACCESS_INSTANCED_PROP(Props, _BeamIntensity);
+                float4 earlyOutColor    = UNITY_ACCESS_INSTANCED_PROP(Props, _Color);
+                float  earlyOutColorMax = max(earlyOutColor.r, max(earlyOutColor.g, earlyOutColor.b));
+                if (_HazeDensity <= 1e-5 || earlyOutIntensity <= 1e-5 || earlyOutColorMax <= 1e-5)
+                {
+                    o.vertex = float4(0, 0, 0, 0);
+                    return o;
+                }
 
                 // Expand the unit cube into the frustum's beam-space bounding box.
                 // This is in world metres -- the values we want to actually render at.
@@ -538,6 +555,9 @@ Shader "Diamond/Beam"
                 // is how many metres the ray spends inside the beam volume.
                 float beamSegment = lightFalloff * (tExit - tEntry);
 
+                // float3 debugOverlay = float3(0.05, 0, 0);
+
+                // return fixed4(instColor.rgb * beamSegment * beamIntensity + debugOverlay, 1);
                 return fixed4(instColor.rgb * beamSegment * beamIntensity, 1);
             }
 

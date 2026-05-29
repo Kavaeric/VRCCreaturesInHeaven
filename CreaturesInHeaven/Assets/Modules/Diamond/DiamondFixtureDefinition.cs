@@ -69,6 +69,16 @@ public class DiamondFixtureDefinition : MonoBehaviour
         // edit mode (not just at runtime via Start).
         driver.EmitterSize = new Vector2(Profile.FixtureWidth, Profile.FixtureHeight);
         driver.ApplyBeamEmitterSize();
+
+        // Push worst-case spread from the profile so the driver can size the
+        // beam renderer's bounds correctly. Use the profile's max spread in
+        // degrees converted to tan(half-angle) -- same convention as the
+        // animated spread storage.
+        if (Profile.HasSpread)
+        {
+            driver.MaxSpreadTan = SpreadDegreesToTan(Profile.SpreadMaxDegrees);
+        }
+        driver.ApplyBeamRendererBounds();
     }
 
     // Writes the profile's default values to every programmable channel on the

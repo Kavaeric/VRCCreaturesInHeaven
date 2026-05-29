@@ -13,11 +13,15 @@ Patched changes inside the package source carry a `// Patch (PR #XX):` comment s
 
 ### How to apply
 
-Each patched section is marked with a `// Patch (PR #84):` comment. To reapply:
+Canonical patched copies of the affected files live under `patches/red.sim.lightvolumes/` at the repo root, mirroring the package's folder structure. To (re)apply:
 
-1. Confirm the new package version still lacks the fix. If it's 2.1.4 or later, check the upstream commit history; the fix may already be in. If so, delete this section from PATCHES.md and skip the rest of these steps.
-2. Otherwise, re-apply the diffs against the new files. The PR diff is at https://patch-diff.githubusercontent.com/raw/REDSIM/VRCLightVolumes/pull/84.diff and the hunks for the two files above are small.
-3. After applying, trigger a rebake on a scene that uses the Moment ALV and inspect the generated `LightVolumeAtlas.asset`. Its depth should drop significantly (in our test scene: from 694 down to ~128).
+1. Confirm the installed package version still lacks the fix. If it's 2.1.4 or later, check the upstream commit history; the fix may already be in. If so, delete the `patches/red.sim.lightvolumes/` folder and this section from PATCHES.md, and skip the rest of these steps.
+
+2. Otherwise, copy everything from `patches/red.sim.lightvolumes/` over `CreaturesInHeaven/Packages/red.sim.lightvolumes/`, preserving the folder layout. Overwrite when prompted. Each patched section in the copied files is marked with a `// Patch (PR #84):` comment so it's easy to find when reading the code later.
+
+3. Trigger a rebake on a scene that uses the Moment ALV. The generated `LightVolumeAtlas.asset`'s depth should drop significantly (in our test scene: from 694 down to ~128).
+
+If the upstream package gets a non-trivial update before the fix lands officially, the canonical copies in `patches/` may need to be refreshed against the new version before reapplying — a `diff` between `patches/red.sim.lightvolumes/` and the freshly-installed `Packages/red.sim.lightvolumes/` will show what moved.
 
 ### Background & rationale
 

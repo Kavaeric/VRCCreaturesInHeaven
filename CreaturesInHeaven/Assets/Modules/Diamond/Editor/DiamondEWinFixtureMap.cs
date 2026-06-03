@@ -113,6 +113,7 @@ public class DiamondEWinFixtureMap : EditorWindow
     private bool _includeMainFixture = true;
     private bool _includeFixtureHead = true;
     private bool _includeLampProps = true;
+    private bool _includeBeamProps = true;
 
     // Selection groups state
     private List<SelectionGroup> _selectionGroups    = new();
@@ -257,6 +258,10 @@ public class DiamondEWinFixtureMap : EditorWindow
         var lampPropsToggle = rootVisualElement.Q<Toggle>("include-props-transform-toggle");
         lampPropsToggle.value = _includeLampProps;
         lampPropsToggle.RegisterValueChangedCallback(e => _includeLampProps = e.newValue);
+
+        var beamPropsToggle = rootVisualElement.Q<Toggle>("include-beam-props-toggle");
+        beamPropsToggle.value = _includeBeamProps;
+        beamPropsToggle.RegisterValueChangedCallback(e => _includeBeamProps = e.newValue);
 
         // Wire selection groups panel
         _sgList        = rootVisualElement.Q<ScrollView>("sg-list");
@@ -1002,7 +1007,7 @@ public class DiamondEWinFixtureMap : EditorWindow
         if (_includeMainFixture)
             outList.Add(fixtureRoot);
 
-        if (_includeFixtureHead || _includeLampProps)
+        if (_includeFixtureHead || _includeLampProps || _includeBeamProps)
         {
             if (fixtureIndex < _fixtureDrivers.Count)
             {
@@ -1013,6 +1018,8 @@ public class DiamondEWinFixtureMap : EditorWindow
                         outList.Add(driver.Head.gameObject);
                     if (_includeLampProps && driver.LampProps != null)
                         outList.Add(driver.LampProps.gameObject);
+                    if (_includeBeamProps && driver.BeamProps != null)
+                        outList.Add(driver.BeamProps.gameObject);
                 }
             }
         }

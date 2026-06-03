@@ -17,10 +17,15 @@
 
         <ui:Label text="Selection options" class="font-bold" />
         <ui:VisualElement class="h-1" />
-        <ui:VisualElement class="col">
-            <ui:Toggle name="include-main-fixture-toggle" label="Include main fixture object" class="toggle-left max-w-60" />
-            <ui:Toggle name="include-fixture-head-toggle" label="Include fixture head" class="toggle-left max-w-60" />
-            <ui:Toggle name="include-props-transform-toggle" label="Include _LampProps object" class="toggle-left  max-w-60" />
+        <ui:VisualElement class="row">
+            <ui:VisualElement class="col w-1f3">
+                <ui:Toggle name="include-main-fixture-toggle" label="Include main fixture object" class="toggle-left max-w-60" />
+                <ui:Toggle name="include-fixture-head-toggle" label="Include fixture head" class="toggle-left max-w-60" />
+            </ui:VisualElement>
+            <ui:VisualElement class="col w-1f3">
+                <ui:Toggle name="include-props-transform-toggle" label="Include _LampProps object" class="toggle-left  max-w-60" />
+                <ui:Toggle name="include-beam-props-toggle" label="Include _BeamProps object" class="toggle-left  max-w-60" />
+            </ui:VisualElement>
         </ui:VisualElement>
 
         <ui:VisualElement class="h-2" />

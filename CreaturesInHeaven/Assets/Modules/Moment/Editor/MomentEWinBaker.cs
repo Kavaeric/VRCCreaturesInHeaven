@@ -219,7 +219,11 @@ public class MomentEWinBaker : EditorWindow
             ScrubToLastClickedCell();
         };
         _flipbookTimeline.OnHoverChanged += _ => UpdateFlipbookStatusLabels();
-        _flipbookTimeline.OnFocusChanged += _ => UpdateFlipbookStatusLabels();
+        _flipbookTimeline.OnFocusChanged += _ =>
+        {
+            UpdateFlipbookStatusLabels();
+            SyncPreviewSnapshotToFocus();
+        };
 
         _snapshotQueueAddBtn = rootVisualElement.Q<Button>("snapshot-queue-add-btn");
         _snapshotQueueRemoveBtn = rootVisualElement.Q<Button>("snapshot-queue-remove-btn");
@@ -523,6 +527,23 @@ public class MomentEWinBaker : EditorWindow
         if (idx < 0) return;
         AnimationWindowFrame = _params.SnapshotToAnimFrame(idx);
         _lastAnimWindowFrame = AnimationWindowFrame;
+    }
+
+    // If the ALV has voxel preview enabled, drive PreviewSnapshot from the focused timeline cell
+    // so the in-scene gizmo follows keyboard / click focus.
+    void SyncPreviewSnapshotToFocus()
+    {
+        if (_flipbookTimeline == null) return;
+        int idx = _flipbookTimeline.FocusedIndex;
+        if (idx < 0) return;
+
+        MomentAnimatedLightVolume alv = MomentOnVolume;
+        if (alv == null || !alv.PreviewVoxels || alv.PreviewSnapshot == idx) return;
+
+        Undo.RecordObject(alv, "Preview Snapshot");
+        alv.PreviewSnapshot = idx;
+        EditorUtility.SetDirty(alv);
+        SceneView.RepaintAll();
     }
 
     // Called at ~10Hz. Detects when the animation window has been scrubbed externally

@@ -50,6 +50,12 @@ Shader "Hidden/Moment/AnimatedLightVolume"
         // 1 if the packed texture is UNORM and needs the [0,1]->[-1,1] decode.
         // True for all Depth8 modes and MonoL1+Depth16 (RGB48).
         _IsUnorm ("Is UNORM", Int) = 1
+
+        // 1 to make this pass a no-op: the frag returns the incoming atlas (_MainTex)
+        // unchanged, contributing nothing. Used when no valid flipbook is bound (index -1
+        // or out of range) so the CRT can stay registered in the AtlasPostProcessors chain
+        // without leaking light or blanking the atlas. Correct under every blend mode.
+        _Passthrough ("Passthrough", Int) = 0
     }
     SubShader
     {
@@ -79,6 +85,7 @@ Shader "Hidden/Moment/AnimatedLightVolume"
             int   _SHMode;
             int   _BitDepth;
             int   _IsUnorm;
+            int   _Passthrough;
 
             // Sample one slot from the packed texture for a given snapshot index and slot index.
             // The atlas tiles snapshots column-major: snapshot s lives at (col = s / spc, row = s % spc)
@@ -153,6 +160,11 @@ Shader "Hidden/Moment/AnimatedLightVolume"
             {
                 float3 uvw = i.localTexcoord.xyz;
                 float4 col = tex3D(_MainTex, uvw);
+
+                // No flipbook bound: return the incoming atlas untouched. Skips all packed-texture
+                // sampling and SH reconstruction, so even the settling frame is cheap.
+                if (_Passthrough != 0)
+                    return col;
 
                 bool inTex0 = all(uvw >= _UvwMin0) && all(uvw < _UvwMax0);
                 bool inTex1 = all(uvw >= _UvwMin1) && all(uvw < _UvwMax1);

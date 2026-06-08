@@ -3,7 +3,7 @@
     <Style src="project://database/Assets/Modules/Atelier/AtelierUI.uss" />
 
     <ui:ScrollView class="p-2">
-        
+
         <ui:HelpBox text="Use this tool to estimate bake size in VRAM (uncompressed) and an approximate bundle (compressed) size." />
 
         <ui:VisualElement class="h-1" />
@@ -103,6 +103,12 @@
 
             <ui:VisualElement class="h-1" />
             <ui:VisualElement class="separator" />
+            <ui:VisualElement class="h-1" />
+
+            <ui:VisualElement class="row">
+                <ui:Label text="Packing efficiency" class="w-1f2 font-bold" />
+                <ui:Label name="vram-packing-efficiency" text="%" />
+            </ui:VisualElement>
 
         </ui:VisualElement>
 

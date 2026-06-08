@@ -17,6 +17,9 @@ public class MomentEWinEstimate : EditorWindow
     // Bundle cell label triplets indexed by [shMode, bitDepth]: (lo, hi).
     (Label lo, Label hi)[,] _bundleCells;
 
+    // Packing efficiency readout (column-wrap padding waste). Independent of SH mode / bit depth.
+    Label _packingEfficiency;
+
     public void CreateGUI()
     {
         string dir = MomentAssetPaths.ScriptDir();
@@ -65,6 +68,8 @@ public class MomentEWinEstimate : EditorWindow
             }
         }
 
+        _packingEfficiency = rootVisualElement.Q<Label>("vram-packing-efficiency");
+
         // Seed the initial snapshot value from the UXML default.
         _snapshots = snapsField.value;
         UpdateTable();
@@ -73,6 +78,13 @@ public class MomentEWinEstimate : EditorWindow
     void UpdateTable()
     {
         bool valid = _dimensions.x > 0 && _dimensions.y > 0 && _dimensions.z > 0 && _snapshots > 0;
+
+        // Packing efficiency depends only on snapshot height and count (column-wrap is mode-agnostic),
+        // so it's computed once here rather than per cell.
+        if (_packingEfficiency != null)
+            _packingEfficiency.text = valid
+                ? $"{MomentALVFormat.PackingEfficiency(_dimensions.y, _snapshots) * 100.0:F0}%"
+                : "—";
 
         for (int s = 0; s < 3; s++)
         {

@@ -1,72 +1,5 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &1098037324821585233
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2240753484741952693}
-  - component: {fileID: 8647026147043591411}
-  m_Layer: 0
-  m_Name: Bakery Volume - LV Concourse Lightshow 1
-  m_TagString: EditorOnly
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &2240753484741952693
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1098037324821585233}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 3416835475807202542}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8647026147043591411
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1098037324821585233}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 17ce3c1d3490b7143a67ebdc73cab6c1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  enableBaking: 1
-  bounds:
-    m_Center: {x: 0, y: 4.625459, z: 0}
-    m_Extent: {x: 20.25, y: 4.875459, z: 40.25}
-  adaptiveRes: 0
-  voxelsPerUnit: 0.5
-  resolutionX: 40
-  resolutionY: 10
-  resolutionZ: 80
-  encoding: 0
-  shadowmaskEncoding: 0
-  firstLightIsAlwaysAlpha: 0
-  denoise: 1
-  isGlobal: 0
-  bakedTexture0: {fileID: 11700000, guid: 23fa680b1e94d7b4c9e8fe50e40a803e, type: 2}
-  bakedTexture1: {fileID: 11700000, guid: 944728c8bb130444187d1127c48cfc62, type: 2}
-  bakedTexture2: {fileID: 11700000, guid: 27cd52582757c304fac198be9d207880, type: 2}
-  bakedTexture3: {fileID: 0}
-  bakedMask: {fileID: 0}
-  supportRotationAfterBake: 0
-  rotateAroundY: 0
-  _rotateAroundXYZ: 1
-  multiVolumePriority: 0
 --- !u!1 &2434372488145011654
 GameObject:
   m_ObjectHideFlags: 0
@@ -163,13 +96,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7592580023519544999}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 4.875122, z: 0}
   m_LocalScale: {x: 40.5, y: 10.000674, z: 80.5}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 503235687955157971}
-  - {fileID: 2240753484741952693}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &878062728298108794
@@ -196,7 +128,7 @@ MonoBehaviour:
   Exposure: 0
   Shadows: 0
   Highlights: 0
-  Bake: 0
+  Bake: 1
   PointLightShadows: 1
   ShadowsScale: 1
   BlurShadows: 1
@@ -204,7 +136,7 @@ MonoBehaviour:
   VoxelsPerUnit: 0.5
   Resolution: {x: 20, y: 5, z: 40}
   PreviewVoxels: 0
-  BakeryVolume: {fileID: 0}
+  BakeryVolume: {fileID: 5113468771923155946}
   LightVolumeInstance: {fileID: 5001852114736887328}
   LightVolumeSetup: {fileID: 0}
 --- !u!114 &5001852114736887328
@@ -234,23 +166,23 @@ MonoBehaviour:
   IsDynamic: 0
   IsAdditive: 1
   InvBakedRotation: {x: 0, y: 0, z: 0, w: 1}
-  BoundsUvwMin0: {x: 0.023809524, y: 0.083333336, z: 0.0040650405, w: 0.9523809}
-  BoundsUvwMin1: {x: 0.023809524, y: 0.083333336, z: 0.33739838, w: 0.8333334}
-  BoundsUvwMin2: {x: 0.023809524, y: 0.083333336, z: 0.6707317, w: 0.32520327}
+  BoundsUvwMin0: {x: 0.045454547, y: 0.14285715, z: 0.023809524, w: 0.9090909}
+  BoundsUvwMin1: {x: 0.045454547, y: 0.14285715, z: 0.023809524, w: 0.71428573}
+  BoundsUvwMin2: {x: 0.045454547, y: 0.14285715, z: 0.023809524, w: 0.9523809}
   BoundsUvwMinOcclusion: {x: 0, y: 0, z: 0, w: 1}
-  BoundsUvwMax0: {x: 0.97619045, y: 0.9166667, z: 0.3292683, w: 0}
-  BoundsUvwMax1: {x: 0.97619045, y: 0.9166667, z: 0.66260165, w: 0}
-  BoundsUvwMax2: {x: 0.97619045, y: 0.9166667, z: 0.99593496, w: 0}
-  InvLocalEdgeSmoothing: {x: 162, y: 39.003674, z: 322, w: 0}
+  BoundsUvwMax0: {x: 0.95454544, y: 0.85714287, z: 0.97619045, w: 0}
+  BoundsUvwMax1: {x: 0.95454544, y: 0.85714287, z: 0.97619045, w: 0}
+  BoundsUvwMax2: {x: 0.95454544, y: 0.85714287, z: 0.97619045, w: 0}
+  InvLocalEdgeSmoothing: {x: 162, y: 40.002697, z: 322, w: 0}
   InvWorldMatrix:
     e00: 0.024691358
     e01: 0
     e02: 0
     e03: 0
     e10: 0
-    e11: 0.10255444
+    e11: 0.09999326
     e12: 0
-    e13: -0.4743614
+    e13: -0.48747933
     e20: 0
     e21: 0
     e22: 0.0124223605
@@ -329,14 +261,14 @@ MonoBehaviour:
   PreviewSnapshot: 0
   BakeAnimator: {fileID: 0}
   BakeClip: {fileID: 7400000, guid: 9f918e1f7cf1ce34ab3053cc882b484f, type: 2}
-  BakeSnapshotCount: 163
+  BakeSnapshotCount: 801
   BakeStartFrame: 0
-  BakeEndFrame: 648
+  BakeEndFrame: 1600
   BakeSHMode: 1
   BakeBitDepth: 0
   BakeOutputName: ALV_ConcourseLightshow_1
   BakeSettingsFoldout: 0
-  Blending: 1
+  Blending: 0
   AnimatorSource: {fileID: 0}
   Time: 0
   AnimTimeParameter: _ALVTime
@@ -361,7 +293,7 @@ MonoBehaviour:
   SynchronizePosition: 0
   AllowCollisionOwnershipTransfer: 0
   Reliable: 0
-  _syncMethod: 2
+  _syncMethod: 1
   serializedProgramAsset: {fileID: 11400000, guid: 607528cb0ffe5b848ab13015eb9d5820,
     type: 2}
   programSource: {fileID: 11400000, guid: 8c0fa654b7041864fae65392e98dbcc0, type: 2}

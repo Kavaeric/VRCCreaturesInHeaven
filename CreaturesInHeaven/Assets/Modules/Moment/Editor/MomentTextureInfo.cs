@@ -90,16 +90,20 @@ public class MomentTextureInfo
         info.schemaVersion = CurrentSchemaVersion;
     }
 
-    // Writes snapshot layout metadata from this sidecar into a MomentAnimatedLightVolume component.
-    public void ApplyTo(MomentAnimatedLightVolume alv)
+    // Writes snapshot layout metadata from this sidecar into the component's parallel flipbook arrays
+    // at the given slot. This is the path the runtime reads from. Grows the arrays as needed and marks
+    // the component dirty. The texture itself is assigned by the caller (it's a UnityEngine.Object
+    // reference, kept in FlipbookTextures).
+    public void ApplyTo(MomentAnimatedLightVolume alv, int slot)
     {
-        alv.SnapshotX           = snapshotX;
-        alv.SnapshotY           = snapshotY;
-        alv.SnapshotsPerColumn  = snapshotsPerColumn > 0 ? snapshotsPerColumn : Mathf.Max(1, numSnapshots);
-        alv.NumColumnsBaked     = numColumns         > 0 ? numColumns         : 1;
-        alv.NumSnapshotsBaked   = numSnapshots;
-        alv.SHMode              = shMode;
-        alv.BitDepth            = bitDepth;
+        MomentFlipbookArrays.EnsureLength(alv, slot + 1);
+        alv.FlipbookSnapshotX[slot]          = snapshotX;
+        alv.FlipbookSnapshotY[slot]          = snapshotY;
+        alv.FlipbookSnapshotsPerColumn[slot] = snapshotsPerColumn > 0 ? snapshotsPerColumn : Mathf.Max(1, numSnapshots);
+        alv.FlipbookNumColumns[slot]         = numColumns         > 0 ? numColumns         : 1;
+        alv.FlipbookNumSnapshots[slot]       = numSnapshots;
+        alv.FlipbookSHMode[slot]             = (int)shMode;
+        alv.FlipbookBitDepth[slot]           = (int)bitDepth;
         EditorUtility.SetDirty(alv);
     }
 }

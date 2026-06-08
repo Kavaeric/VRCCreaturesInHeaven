@@ -76,6 +76,14 @@
                 <ui:VisualElement class="h-1" />
 
                 <ui:VisualElement class="col">
+                    <ui:Label text="Target flipbook slot" for="target-slot-field" />
+                    <ui:VisualElement class="h-0p5" />
+                    <uie:IntegerField name="target-slot-field" value="0" />
+                </ui:VisualElement>
+
+                <ui:VisualElement class="h-1" />
+
+                <ui:VisualElement class="col">
                     <ui:Label text="No. of snapshots" for="snapshot-count-field" />
                     <ui:VisualElement class="h-0p5" />
                     <uie:IntegerField name="snapshot-count-field" value="8" />

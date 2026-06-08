@@ -84,8 +84,33 @@ public static class MomentALVFormat
     }
 
     // VRAM occupied by a packed texture, in megabytes.
-    public static double VramMB(int w, int h, int d, int numSnapshots, MomentALVSHMode shMode, MomentALVBitDepth bitDepth) =>
-        (long)w * h * d * numSnapshots * (double)NumSlots(shMode) * BytesPerTexel(shMode, bitDepth) / (1024.0 * 1024.0);
+    // This is the *real* allocation Unity makes: the column-wrap layout pads the last column up to
+    // snapshotsPerColumn rows, so the texture can be larger than the raw snapshot data needs. We size
+    // from the packed dimensions (PackedWidth/Height/Depth) rather than numSnapshots so the figure
+    // matches what SavePackedTexture/InitialiseTexture actually create. See PackingEfficiency for the
+    // ratio of useful data to allocated size.
+    public static double VramMB(int w, int h, int d, int numSnapshots, MomentALVSHMode shMode, MomentALVBitDepth bitDepth)
+    {
+        int snapshotsPerColumn = SnapshotsPerColumn(h);
+        int numColumns         = NumColumns(numSnapshots, snapshotsPerColumn);
+        long totalW = PackedWidth (w, numColumns);
+        long totalH = PackedHeight(h, snapshotsPerColumn);
+        long totalD = PackedDepth (d, shMode);
+        return totalW * totalH * totalD * BytesPerTexel(shMode, bitDepth) / (1024.0 * 1024.0);
+    }
+
+    // Fraction (0..1) of the allocated packed texture that holds real snapshot data, the rest being
+    // column-wrap padding. 1.0 means the grid is exactly filled (numSnapshots is a multiple of
+    // snapshotsPerColumn, or fits in a single column); lower means the last column is partial and
+    // some allocated rows are wasted. Returns 0 for invalid input.
+    public static double PackingEfficiency(int h, int numSnapshots)
+    {
+        if (h <= 0 || numSnapshots <= 0) return 0.0;
+        int snapshotsPerColumn = SnapshotsPerColumn(h);
+        int numColumns         = NumColumns(numSnapshots, snapshotsPerColumn);
+        int gridCells          = snapshotsPerColumn * numColumns;
+        return gridCells > 0 ? (double)numSnapshots / gridCells : 0.0;
+    }
 
     // AssetBundle compression ratios relative to uncompressed VRAM size.
     // Derived from noise (high/worst-case) and Gaussian-blob (low/realistic) bundle tests.
@@ -108,27 +133,25 @@ public class MomentAnimatedLightVolume : UdonSharpBehaviour
     [Tooltip("The CustomRenderTexture that runs the CRT shader. Created and managed by the editor setup tool.")]
     public CustomRenderTexture Crt;
 
-    [Tooltip("Packed 4D SH texture produced by the baking tool.")]
-    public Texture3D AnimatedTexture;
+    // Flipbooks the volume can play, stored as parallel arrays indexed by flipbook. UdonSharp can't
+    // read fields off elements of a serializable-class array (it throws "Field access for
+    // ImportedUdonSharpFieldSymbol is not implemented"), so the flipbook data is flattened into one
+    // array per field instead of an array of structs. The editor keeps these in lockstep; index i of
+    // every array describes flipbook i. The custom inspector draws them as a unified list.
+    [Tooltip("Packed 4D SH textures, one per flipbook. Index 0 is bound on Start. Swap at runtime via the index parameter below; an index of -1 or out of range makes the pass a passthrough (contributes nothing).")]
+    public Texture3D[] FlipbookTextures;
+    [HideInInspector] public int[] FlipbookSnapshotX;
+    [HideInInspector] public int[] FlipbookSnapshotY;
+    [HideInInspector] public int[] FlipbookSnapshotsPerColumn;
+    [HideInInspector] public int[] FlipbookNumColumns;
+    [HideInInspector] public int[] FlipbookNumSnapshots;
+    // SH mode / bit depth stored as ints (enum cast) — Udon serialises these cleanly and the shader
+    // wants the int anyway. 0/1/2 = L1/MonoL1/MonoL0; bit depth 0/1 = Depth8/Depth16.
+    [HideInInspector] public int[] FlipbookSHMode;
+    [HideInInspector] public int[] FlipbookBitDepth;
 
-    // Spatial size of one snapshot slice in the packed texture. Set from the sidecar by the editor.
-    // SnapshotX is needed at runtime to compute the column-wrap UV offset; older sidecars that lack
-    // it leave SnapshotX = 0, in which case the runtime falls back to single-column behaviour.
-    [HideInInspector] public int SnapshotX;
-    [HideInInspector] public int SnapshotY;
-
-    // Column-wrap layout. NumColumnsBaked == 1 collapses to the original single-column layout,
-    // so legacy sidecars (which set this to 1 on migration) behave identically to before.
-    // NumSnapshotsBaked is the true snapshot count from the sidecar — it can be less than
-    // SnapshotsPerColumn * NumColumnsBaked when the last column is only partially filled.
-    [HideInInspector] public int SnapshotsPerColumn  = 1;
-    [HideInInspector] public int NumColumnsBaked     = 1;
-    [HideInInspector] public int NumSnapshotsBaked   = 0;
-
-    // SH fidelity mode and bit depth of the packed texture. Set automatically by the
-    // editor when AnimatedTexture is assigned via sidecar.
-    [HideInInspector] public MomentALVSHMode   SHMode   = MomentALVSHMode.MonoL1;
-    [HideInInspector] public MomentALVBitDepth BitDepth = MomentALVBitDepth.Depth8;
+    [Tooltip("Name of the Animator Float parameter that selects which flipbook is active (rounded to the nearest index; use Constant keyframe tangents). -1 or any out-of-range value makes the pass a passthrough. Leave empty to always use index 0.")]
+    public string FlipbookIndexParameter = "";
 
     // Editor-only voxel preview state. Controlled by MomentEInsAnimatedLightVolume inspector.
     [HideInInspector] public bool PreviewVoxels = false;
@@ -146,6 +169,8 @@ public class MomentAnimatedLightVolume : UdonSharpBehaviour
     [HideInInspector] public MomentALVBitDepth BakeBitDepth = MomentALVBitDepth.Depth8;
     [HideInInspector] public string BakeOutputName = "ALV_Bake";
     [HideInInspector] public bool BakeSettingsFoldout = false;
+    // Which Flipbooks[] slot the Setup/Baker windows target.
+    [HideInInspector] public int BakeTargetSlot = 0;
 #endif
     [Tooltip("How this volume's SH contribution is composited onto the atlas bake.")]
     public MomentALVBlendingMode Blending = MomentALVBlendingMode.Add;
@@ -174,11 +199,16 @@ public class MomentAnimatedLightVolume : UdonSharpBehaviour
     private bool _hasAnimTimeParam;
     private bool _hasIntensityParam;
 
+    // Flipbook swap state. _activeFlipbook tracks which entry is currently bound (-1 = none/passthrough),
+    // so BindFlipbook can early-out when the requested index is unchanged.
+    private bool _hasFlipbookParam;
+    private int  _activeFlipbook = -1;
+
     public int NumSnapshots { get; private set; }
 
     void Start()
     {
-        if (Crt == null || TargetVolume == null || AnimatedTexture == null) return;
+        if (Crt == null || TargetVolume == null || FlipbookTextures == null || FlipbookTextures.Length == 0) return;
 
         // Switch the CRT to OnDemand so it stops issuing a draw call per slice every frame.
         // LightVolumeSetup forces Realtime when it (re)builds the post-processor chain, but
@@ -190,6 +220,7 @@ public class MomentAnimatedLightVolume : UdonSharpBehaviour
         _mat = Crt.material;
         _hasAnimTimeParam  = _animator != null && AnimTimeParameter  != "";
         _hasIntensityParam = _animator != null && IntensityParameter != "";
+        _hasFlipbookParam  = _animator != null && FlipbookIndexParameter != "";
 
         // Push static properties, though only if the volume or texture changes.
         _mat.SetVector("_UvwMin0", TargetVolume.BoundsUvwMin0);
@@ -198,37 +229,6 @@ public class MomentAnimatedLightVolume : UdonSharpBehaviour
         _mat.SetVector("_UvwMax1", TargetVolume.BoundsUvwMax1);
         _mat.SetVector("_UvwMin2", TargetVolume.BoundsUvwMin2);
         _mat.SetVector("_UvwMax2", TargetVolume.BoundsUvwMax2);
-
-        _mat.SetTexture("_PackedTex", AnimatedTexture);
-
-        // Resolve layout. Sidecar populates SnapshotsPerColumn / NumColumnsBaked / NumSnapshotsBaked
-        // at setup; older sidecars (or in-Editor assignment before ApplyTo runs) leave them at the
-        // defaults, in which case we fall back to deriving from the texture's Y stack.
-        int snapsPerCol = SnapshotsPerColumn > 0 ? SnapshotsPerColumn : 1;
-        int numCols     = NumColumnsBaked    > 0 ? NumColumnsBaked    : 1;
-        // Total snapshot count: trust the sidecar value when present. The grid (snapsPerCol * numCols)
-        // is an upper bound, not the actual count — the last column can be partial. The texture-height
-        // fallback only fires for legacy single-column atlases where the height divides exactly.
-        if (NumSnapshotsBaked > 0)
-            NumSnapshots = NumSnapshotsBaked;
-        else
-            NumSnapshots = SnapshotY > 0 ? (AnimatedTexture.height / SnapshotY) * numCols : snapsPerCol * numCols;
-        int numSlots = MomentALVFormat.NumSlots(SHMode);
-        _mat.SetInt  ("_NumSnapshots",       NumSnapshots);
-        _mat.SetInt  ("_SnapshotsPerColumn", snapsPerCol);
-        _mat.SetInt  ("_NumColumns",         numCols);
-        // _SnapshotScale now means "1 / snapsPerCol" (V stride per snapshot within a column),
-        // not "1 / numSnapshots" as before. The shader uses _ColumnScale for the U stride between
-        // adjacent columns. Keeping the name avoids churning the shader property table.
-        _mat.SetFloat("_SnapshotScale", 1f / snapsPerCol);
-        _mat.SetFloat("_ColumnScale",   1f / numCols);
-        _mat.SetFloat("_SliceScale",    1f / numSlots);
-
-        _mat.SetInt("_SHMode",   (int)SHMode);
-        _mat.SetInt("_BitDepth", (int)BitDepth);
-
-        bool isUnorm = MomentALVFormat.IsUnorm(SHMode, BitDepth);
-        _mat.SetInt("_IsUnorm", isUnorm ? 1 : 0);
 
         _mat.SetInt("_BlendMode", (int)Blending);
         _blendMode = Blending;
@@ -240,6 +240,13 @@ public class MomentAnimatedLightVolume : UdonSharpBehaviour
         float animTime = _hasAnimTimeParam ? _animator.GetFloat(AnimTimeParameter) : Time;
         _mat.SetFloat("_Time4D", animTime);
         _prevTime = animTime;
+
+        // Bind the initial flipbook. If a param drives the index, honour it on the first frame so we
+        // don't flash flipbook 0 before the swap; otherwise default to 0. The index is an Animator
+        // Float parameter (Unity can't keyframe Ints) read via GetFloat and rounded to the nearest
+        // index — author keys with Constant tangents so the value steps cleanly between whole numbers.
+        int initialIndex = _hasFlipbookParam ? Mathf.RoundToInt(_animator.GetFloat(FlipbookIndexParameter)) : 0;
+        BindFlipbook(initialIndex);
 
         // Kick one update so the initial frame is composited into the atlas.
         // Without this the volume reads as black until something changes.
@@ -253,8 +260,18 @@ public class MomentAnimatedLightVolume : UdonSharpBehaviour
         // Track whether anything changed this frame. If nothing did, we skip the CRT update
         // entirely — that's the whole point of switching to OnDemand. One ALV used to issue
         // numSlices draw calls every frame regardless of activity; now it issues zero when
-        // the animation is paused or holding a frame.
+        // the animation is paused or holding a frame (passthrough included).
         bool dirty = false;
+
+        if (_hasFlipbookParam)
+        {
+            int idx = Mathf.RoundToInt(_animator.GetFloat(FlipbookIndexParameter));
+            if (idx != _activeFlipbook)
+            {
+                BindFlipbook(idx);
+                dirty = true;
+            }
+        }
 
         float animTime = _hasAnimTimeParam ? _animator.GetFloat(AnimTimeParameter) : Time;
         if (animTime != _prevTime)
@@ -280,6 +297,77 @@ public class MomentAnimatedLightVolume : UdonSharpBehaviour
         }
 
         if (dirty) Crt.Update();
+    }
+
+    // Binds Flipbooks[index]'s texture and layout into the CRT material and clears passthrough.
+    // An index of -1, out of range, or pointing at a null entry/texture switches the pass to
+    // passthrough (the frag returns the incoming atlas unchanged) so the CRT can stay in the chain
+    // without contributing. Early-outs when the requested index is already active, so a constant
+    // index parameter costs nothing. Caller is responsible for the Crt.Update() that flushes it.
+    private void BindFlipbook(int index)
+    {
+        if (index == _activeFlipbook) return;
+
+        Texture3D tex = (FlipbookTextures != null && index >= 0 && index < FlipbookTextures.Length)
+            ? FlipbookTextures[index] : null;
+
+        // No valid flipbook: become a passthrough pass. Leave the last texture/layout bound — the
+        // shader ignores them while _Passthrough is set, and we avoid touching them needlessly.
+        if (tex == null)
+        {
+            _mat.SetInt("_Passthrough", 1);
+            _activeFlipbook = index;
+            return;
+        }
+
+        _mat.SetTexture("_PackedTex", tex);
+
+        // Resolve layout from the parallel arrays at this index. Sidecar values are written there at
+        // setup; if an array is short or zero (in-Editor assignment before ApplyTo runs) we fall back
+        // to single-column defaults / deriving from the texture's Y stack.
+        int snapshotY   = ArrayGet(FlipbookSnapshotY, index, 0);
+        int snapsPerCol = ArrayGet(FlipbookSnapshotsPerColumn, index, 0); snapsPerCol = snapsPerCol > 0 ? snapsPerCol : 1;
+        int numCols     = ArrayGet(FlipbookNumColumns, index, 0);         numCols     = numCols     > 0 ? numCols     : 1;
+        int baked       = ArrayGet(FlipbookNumSnapshots, index, 0);
+        int shMode      = ArrayGet(FlipbookSHMode, index, (int)MomentALVSHMode.MonoL1);
+        int bitDepth    = ArrayGet(FlipbookBitDepth, index, (int)MomentALVBitDepth.Depth8);
+
+        // Total snapshot count: trust the sidecar value when present. The grid (snapsPerCol * numCols)
+        // is an upper bound, not the actual count — the last column can be partial. The texture-height
+        // fallback only fires for legacy single-column atlases where the height divides exactly.
+        int numSnapshots;
+        if (baked > 0)
+            numSnapshots = baked;
+        else
+            numSnapshots = snapshotY > 0 ? (tex.height / snapshotY) * numCols : snapsPerCol * numCols;
+        int numSlots = MomentALVFormat.NumSlots((MomentALVSHMode)shMode);
+
+        _mat.SetInt  ("_NumSnapshots",       numSnapshots);
+        _mat.SetInt  ("_SnapshotsPerColumn", snapsPerCol);
+        _mat.SetInt  ("_NumColumns",         numCols);
+        // _SnapshotScale means "1 / snapsPerCol" (V stride per snapshot within a column); the shader
+        // uses _ColumnScale for the U stride between adjacent columns.
+        _mat.SetFloat("_SnapshotScale", 1f / snapsPerCol);
+        _mat.SetFloat("_ColumnScale",   1f / numCols);
+        _mat.SetFloat("_SliceScale",    1f / numSlots);
+
+        _mat.SetInt("_SHMode",   shMode);
+        _mat.SetInt("_BitDepth", bitDepth);
+        _mat.SetInt("_IsUnorm",  MomentALVFormat.IsUnorm((MomentALVSHMode)shMode, (MomentALVBitDepth)bitDepth) ? 1 : 0);
+
+        _mat.SetInt("_Passthrough", 0);
+
+        NumSnapshots    = numSnapshots;
+        _activeFlipbook = index;
+    }
+
+    // Safe indexed read for the parallel flipbook arrays: returns fallback when the array is null,
+    // too short, or the index is negative. Keeps BindFlipbook robust against arrays that haven't been
+    // populated yet (e.g. a texture assigned in the inspector before the sidecar layout was applied).
+    private int ArrayGet(int[] array, int index, int fallback)
+    {
+        if (array == null || index < 0 || index >= array.Length) return fallback;
+        return array[index];
     }
 
 }

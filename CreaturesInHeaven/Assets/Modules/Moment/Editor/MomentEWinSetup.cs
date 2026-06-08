@@ -28,6 +28,7 @@ public class MomentEWinSetup : EditorWindow
     MomentALVSHMode   _shMode   = MomentALVSHMode.MonoL1;
     MomentALVBitDepth _bitDepth = MomentALVBitDepth.Depth8;
     string _outputName = "ALV_Bake";
+    int _targetSlot = 0;   // Which Flipbooks[] entry this setup writes into.
 
     // --- UI element refs ------------------------------------------------
 
@@ -37,6 +38,7 @@ public class MomentEWinSetup : EditorWindow
     IntegerField _startFrameField;
     IntegerField _endFrameField;
     IntegerField _snapshotCountField;
+    IntegerField _targetSlotField;
     TextField _outputNameField;
     EnumField _shModeField;
     [SerializeField] AtelierHelpPage _shModeHelpPage;
@@ -151,6 +153,15 @@ public class MomentEWinSetup : EditorWindow
         });
 
         // --- Flipbook output ---
+        _targetSlotField = rootVisualElement.Q<IntegerField>("target-slot-field");
+        _targetSlotField.value = _targetSlot;
+        _targetSlotField.RegisterCallback<FocusOutEvent>(_ =>
+        {
+            _targetSlot = Mathf.Max(_targetSlotField.value, 0);
+            _targetSlotField.SetValueWithoutNotify(_targetSlot);
+            UpdateUI();
+        });
+
         _snapshotCountField = rootVisualElement.Q<IntegerField>("snapshot-count-field");
         _snapshotCountField.value = _params.SnapshotCount;
         _snapshotCountField.RegisterCallback<FocusOutEvent>(_ =>
@@ -217,10 +228,12 @@ public class MomentEWinSetup : EditorWindow
         _shMode               = alv.BakeSHMode;
         _bitDepth             = alv.BakeBitDepth;
         _outputName           = alv.BakeOutputName;
+        _targetSlot           = Mathf.Max(alv.BakeTargetSlot, 0);
 
         _animatorField?.SetValueWithoutNotify(_animator);
         _clipField?.SetValueWithoutNotify(_params.Clip);
         _snapshotCountField?.SetValueWithoutNotify(_params.SnapshotCount);
+        _targetSlotField?.SetValueWithoutNotify(_targetSlot);
         _outputNameField?.SetValueWithoutNotify(_outputName);
         _shModeField?.SetValueWithoutNotify(_shMode);
         _bitDepthField?.SetValueWithoutNotify(_bitDepth);
@@ -240,6 +253,7 @@ public class MomentEWinSetup : EditorWindow
         alv.BakeSHMode        = _shMode;
         alv.BakeBitDepth      = _bitDepth;
         alv.BakeOutputName    = _outputName;
+        alv.BakeTargetSlot    = _targetSlot;
         EditorUtility.SetDirty(alv);
     }
 
@@ -342,6 +356,7 @@ public class MomentEWinSetup : EditorWindow
         return $"{assetDir}/{_outputName}.asset";
     }
 
+
     void RunSetup()
     {
         MomentAnimatedLightVolume alv = MomentOnVolume;
@@ -401,11 +416,12 @@ public class MomentEWinSetup : EditorWindow
         };
         sidecar.Save(assetPath);
 
-        // 5. Wire the atlas onto the ALV so the runtime knows where to read from, and
-        // propagate the layout (SnapshotY, SHMode, BitDepth) used by the runtime/preview.
-        alv.AnimatedTexture = tex;
-        sidecar.ApplyTo(alv);
-        EditorUtility.SetDirty(alv);
+        // 5. Wire the atlas into the target flipbook slot so the runtime knows where to read from, and
+        // propagate the layout (SnapshotY, SHMode, BitDepth) used by the runtime/preview. The runtime
+        // reads exclusively from the parallel flipbook arrays, so this is where setup output must land.
+        MomentFlipbookArrays.EnsureLength(alv, _targetSlot + 1);
+        alv.FlipbookTextures[_targetSlot] = tex;
+        sidecar.ApplyTo(alv, _targetSlot);   // ApplyTo marks the component dirty.
         AssetDatabase.SaveAssets();
 
         Debug.Log($"[Moment] Set up '{alv.gameObject.name}' → atlas at {assetPath} " +

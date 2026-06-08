@@ -313,8 +313,14 @@ public class MomentEWinBaker : EditorWindow
         if (alv == null)
             return "This Light Volume has no MomentAnimatedLightVolume component. Open the Setup window to create one.";
 
-        if (alv.AnimatedTexture == null)
-            return "This ALV has no atlas yet. Open the Setup window to initialise it.";
+        // The target slot must exist and hold a texture. Setup writes the atlas into the parallel
+        // flipbook arrays at this slot; the bake itself writes slices to the texture asset on disk
+        // (resolved from BakeOutputName), so it's otherwise slot-agnostic.
+        int slot = alv.BakeTargetSlot;
+        bool slotReady = alv.FlipbookTextures != null && slot >= 0 && slot < alv.FlipbookTextures.Length
+            && alv.FlipbookTextures[slot] != null;
+        if (!slotReady)
+            return "This ALV has no atlas in the target flipbook slot yet. Open the Setup window to initialise it.";
 
         if (_flipbookState == null)
             return "Sidecar metadata is missing for this ALV. Open the Setup window to re-initialise.";

@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b7550af53cc6704ca2431811a275f56, type: 3}
+  m_Name: Nullumination GFL H30
+  m_EditorClassIdentifier: 
+  FixtureMake: Nullumination
+  FixtureModel: GFL H30
+  FixtureDescription: 
+  FixtureType: Hybrid spot
+  FixtureWidth: 0.3
+  FixtureHeight: 0.3
+  AxisX:
+    Enabled: 1
+    Min: -90
+    Max: 90
+  AxisY:
+    Enabled: 1
+    Min: -180
+    Max: 180
+  AxisZ:
+    Enabled: 0
+    Min: 0
+    Max: 0
+  Shape: 0
+  BrightnessMin: 0
+  BrightnessMax: 4
+  HasSpread: 1
+  SpreadMinDegrees: 2
+  SpreadMaxDegrees: 60
+  SpreadDefaultDegrees: 15
+  HasBeam: 1
+  BakeryLightType: 1
+  BakeryBrightnessScale: 8
+  BakeryLightOffset: {x: 0, y: 0.15, z: 0}
+  BakeryMeshLightSize: {x: 0, y: 0, z: 0}

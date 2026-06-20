@@ -71,7 +71,7 @@
                         <ui:Slider name="brightness-slider" class="grow" low-value="0" high-value="1" />
                     </ui:VisualElement>
                 </ui:VisualElement>
-                
+
                 <ui:VisualElement class="h-2" />
                 <ui:VisualElement class="separator" />
                 <ui:VisualElement class="h-2" />
@@ -123,22 +123,22 @@
                             <ui:Slider name="axis-x-slider" class="grow" low-value="-180" high-value="1" />
                         </ui:VisualElement>
                     </ui:VisualElement>
-                    
+
                     <ui:VisualElement class="h-1" />
 
                     <ui:VisualElement name="axis-y-control">
-                        <ui:Label name="axis-y-placeholder" text="Y (pan)" />
+                        <ui:Label name="axis-y-placeholder" text="Y (roll)" />
                         <ui:VisualElement class="h-0p5" />
                         <ui:VisualElement class="row">
                             <ui:FloatField name="axis-y-float-field" class="min-w-10" low-value="-180" high-value="180" />
                             <ui:Slider name="axis-y-slider" class="grow" low-value="-180" high-value="180" />
                         </ui:VisualElement>
                     </ui:VisualElement>
-                    
+
                     <ui:VisualElement class="h-1" />
 
                     <ui:VisualElement name="axis-z-control">
-                        <ui:Label name="axis-z-placeholder" text="Z (roll)" />
+                        <ui:Label name="axis-z-placeholder" text="Z (pan)" />
                         <ui:VisualElement class="h-0p5" />
                         <ui:VisualElement class="row">
                             <ui:FloatField name="axis-z-float-field" class="min-w-10" low-value="-180" high-value="180" />

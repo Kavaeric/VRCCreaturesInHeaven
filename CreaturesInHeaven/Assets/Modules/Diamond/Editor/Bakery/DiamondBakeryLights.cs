@@ -65,6 +65,11 @@ public static class DiamondBakeryLights
             bakeryDriver.LampProps       = driver.LampProps;
             bakeryDriver.BrightnessScale = profile.BakeryBrightnessScale;
 
+            // Spot fixtures: let the cone angle track animated spread. Harmless
+            // for point/mesh (the driver no-ops unless the light is a cone).
+            if (profile.BakeryLightType == DiamondBakeryLightType.Spot)
+                bakeryDriver.BeamProps = driver.BeamProps;
+
             Undo.CollapseUndoOperations(group);
             added++;
         }
@@ -83,9 +88,29 @@ public static class DiamondBakeryLights
         switch (profile.BakeryLightType)
         {
             case DiamondBakeryLightType.Point:
-            case DiamondBakeryLightType.Spot:
             {
                 return go.AddComponent<BakeryPointLight>();
+            }
+
+            case DiamondBakeryLightType.Spot:
+            {
+                // A Bakery cone (spot) is a point light with projMode = Cone.
+                // The cone fires along the light's local -Y. The Diamond beam
+                // fires along the fixture's local +Y, so rotate the light 180
+                // degrees about X to align -Y with the fixture's beam axis
+                // (mirrors how the fixture itself is flipped to shine downward).
+                var spot = go.AddComponent<BakeryPointLight>();
+                spot.projMode     = BakeryPointLight.ftLightProjectionMode.Cone;
+                spot.directionMode = BakeryPointLight.Direction.NegativeY;
+                go.transform.localRotation = Quaternion.Euler(180f, 0f, 0f);
+
+                // Cone full-angle from the profile's spread, if it has one.
+                // Bakery's `angle` is the full cone angle in degrees -- the same
+                // convention the profile's SpreadDefaultDegrees uses.
+                if (profile.HasSpread)
+                    spot.angle = profile.SpreadDefaultDegrees;
+
+                return spot;
             }
 
             case DiamondBakeryLightType.Mesh:

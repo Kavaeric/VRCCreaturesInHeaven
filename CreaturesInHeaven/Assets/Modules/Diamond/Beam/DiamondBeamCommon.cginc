@@ -1,0 +1,311 @@
+// Diamond - Beam sub-module - shared math
+//
+// Profile-INDEPENDENT machinery shared by every beam shape (rect, round, ...).
+// Each concrete beam shader (DiamondBeam = rect, DiamondBeamRound = round)
+// includes this file and supplies only the parts that differ between shapes:
+//
+//   * the ray/volume side-wall intersection (planes for rect, a quadric for round)
+//   * the cross-section area used for the inverse-square geometric falloff
+//   * the lateral edge-softness distance-to-wall
+//
+// Everything else -- depth handling, mirror-camera oblique correction, haze
+// scattering/extinction, beam-length derivation, and the unit-cube -> frustum
+// bounding-box expansion -- lives here so the two shape shaders can't drift.
+//
+// The beam points along the object's local +Y axis (fixtures hang from a
+// ceiling and shine downward when rotated 180 degrees around X). The mesh is a
+// UNIT CUBE (corners at +/-0.5); the vertex shader expands it to contain the
+// frustum implied by the shader properties.
+
+#ifndef DIAMOND_BEAM_COMMON_INCLUDED
+#define DIAMOND_BEAM_COMMON_INCLUDED
+
+#include "UnityCG.cginc"
+
+// --- Material-level (non-instanced) properties -------------------------------
+// Shared across all instances of a fixture type (set on the material asset).
+float  _ShearX;
+float  _ShearZ;
+float  _BeamCutoffThreshold;
+float  _BeamLengthMax;
+float  _HazeDensity;
+float  _EdgeSoftness;
+
+// --- Per-instance properties -------------------------------------------------
+// Pushed by DiamondFixtureDriver via a MaterialPropertyBlock so each fixture
+// can vary independently. _SpreadX/_SpreadZ are animated (via
+// BeamProps.localEulerAngles.x), stored as tan(half-angle) so the shader uses
+// them directly. The round shader only reads _SpreadX (symmetric cone) but the
+// driver writes both -- _SpreadZ is simply ignored there.
+UNITY_INSTANCING_BUFFER_START(Props)
+    UNITY_DEFINE_INSTANCED_PROP(float,  _EmitterWidth)
+    UNITY_DEFINE_INSTANCED_PROP(float,  _EmitterHeight)
+    UNITY_DEFINE_INSTANCED_PROP(float,  _SpreadX)
+    UNITY_DEFINE_INSTANCED_PROP(float,  _SpreadZ)
+    UNITY_DEFINE_INSTANCED_PROP(float4, _Color)
+    UNITY_DEFINE_INSTANCED_PROP(float4, _CubeLocalScale)
+    UNITY_DEFINE_INSTANCED_PROP(float,  _BeamIntensity)
+UNITY_INSTANCING_BUFFER_END(Props)
+
+struct appdata
+{
+    float4 vertex : POSITION;
+    UNITY_VERTEX_INPUT_INSTANCE_ID
+};
+
+struct v2f
+{
+    float4 vertex          : SV_POSITION;
+    // Vertex position in "beam space": coords are in world units, emitter is at
+    // y=0, far cap is at y=beamLength. The frag's ray math is done entirely in
+    // this space.
+    float3 vertBeamSpace   : TEXCOORD0;
+    float4 screenPos       : TEXCOORD1;
+    float3 vertWorldSpace  : TEXCOORD2;
+    // Oblique-frustum correction for mirror-camera depth reads.
+    // Stored as dot(clipPos, correctionVec); frag divides by clipW.
+    float  frustumCorrection : TEXCOORD3;
+    UNITY_VERTEX_INPUT_INSTANCE_ID
+};
+
+UNITY_DECLARE_DEPTH_TEXTURE(_CameraDepthTexture);
+
+// --- Mirror-camera oblique depth correction ----------------------------------
+// Mirror cameras use an OBLIQUE near plane to clip geometry behind the mirror
+// surface. The standard Unity helper LinearEyeDepth() assumes the projection
+// matrix's third row has its default shape, which obliques break. The fix is to
+// derive a per-pixel correction factor from the projection matrix and use it
+// when reading depth.
+//
+// Adapted from LUTBeam (Torvid / ValueFactory / Micca), which in turn adapted
+// it from:
+//   https://github.com/lukis101/VRCUnityStuffs/blob/master/Shaders/DJL/Overlays/WorldPosOblique.shader
+float4 CalculateFrustumCorrection()
+{
+    float x1 = -UNITY_MATRIX_P._31 / (UNITY_MATRIX_P._11 * UNITY_MATRIX_P._34);
+    float x2 = -UNITY_MATRIX_P._32 / (UNITY_MATRIX_P._22 * UNITY_MATRIX_P._34);
+    return float4(x1, x2, 0,
+        UNITY_MATRIX_P._33 / UNITY_MATRIX_P._34 + x1 * UNITY_MATRIX_P._13 + x2 * UNITY_MATRIX_P._23);
+}
+
+// Replacement for LinearEyeDepth that handles oblique near planes.
+// frustumCorrection is dot(clipPos, CalculateFrustumCorrection()) divided by
+// clipPos.w, computed in vert and reconstructed in frag.
+float CorrectedLinearEyeDepth(float z, float frustumCorrection)
+{
+    return 1.0 / (z / UNITY_MATRIX_P._34 + frustumCorrection);
+}
+
+// --- Beam length derivation --------------------------------------------------
+// Evaluates the per-point brightness density at a distance from the emitter,
+// using the same formula the frag shader uses. Lets the beam-length derivation
+// actually match what gets rendered.
+//
+// crossArea is the cone's cross-section area at the given distance -- this is
+// the only shape-dependent term, so callers pass it in. (Rect: w*h. Round:
+// pi*r^2.) emitterArea is the cross-section area at the emitter face.
+float BeamDensityAtDistance(float distance, float crossArea, float emitterArea,
+    float beamIntensity, float haze)
+{
+    float geometric  = emitterArea / max(crossArea, 1e-6);
+    float extinction = exp(-haze * distance);
+    return geometric * haze * extinction * beamIntensity;
+}
+
+// Finds the distance at which beam density falls below the cutoff threshold.
+// We bisect against the actual per-point brightness formula (instead of solving
+// the components separately) so the result matches what the frag shader renders.
+//
+// crossAreaAtDistance / emitterArea encapsulate the shape; the caller supplies
+// them via the shape-specific CROSS-SECTION macros declared below, so this stays
+// shape-agnostic.
+//
+// Both vert and frag call this so they agree on where the beam ends.
+//
+// Shape shaders define DIAMOND_CROSS_AREA(distance) and DIAMOND_EMITTER_AREA as
+// expressions in terms of the locals already in scope (emitter dims, spread).
+#define DIAMOND_DERIVE_BEAM_LENGTH(outLength)                                   \
+{                                                                              \
+    float _threshold = max(_BeamCutoffThreshold, 1e-5);                        \
+    float _intensity = max(beamIntensity, 0);                                  \
+    float _haze      = max(_HazeDensity, 1e-5);                                \
+    float _emArea    = DIAMOND_EMITTER_AREA;                                   \
+    if (BeamDensityAtDistance(0, DIAMOND_CROSS_AREA(0), _emArea, _intensity, _haze) <= _threshold) \
+        outLength = 0;                                                         \
+    else if (BeamDensityAtDistance(_BeamLengthMax, DIAMOND_CROSS_AREA(_BeamLengthMax), _emArea, _intensity, _haze) > _threshold) \
+        outLength = _BeamLengthMax;                                            \
+    else                                                                       \
+    {                                                                          \
+        float _lo = 0;                                                         \
+        float _hi = _BeamLengthMax;                                            \
+        [unroll]                                                              \
+        for (int _it = 0; _it < 8; _it++)                                      \
+        {                                                                      \
+            float _mid = 0.5 * (_lo + _hi);                                    \
+            float _d   = BeamDensityAtDistance(_mid, DIAMOND_CROSS_AREA(_mid), _emArea, _intensity, _haze); \
+            if (_d > _threshold) _lo = _mid; else _hi = _mid;                  \
+        }                                                                      \
+        outLength = _hi;                                                       \
+    }                                                                          \
+}
+
+// --- Unit-cube -> frustum bounding box ---------------------------------------
+// Maps a unit-cube vertex to the bounding box of the frustum, in beam space
+// (world units, +Y along beam, origin at emitter centre). A circular cone fits
+// inside the same bounding box as a square one of equal spread, so both shapes
+// share this -- spreadX/spreadZ are the per-axis lateral growth rates (for the
+// round shader pass the single spread for both).
+//
+// Input vertex is expected in [-0.5, +0.5] on every axis.
+//   x in [-0.5, +0.5] -> X side of the bounding box
+//   y in [-0.5, +0.5] -> 0 to beamLength along the beam
+//   z in [-0.5, +0.5] -> Z side of the bounding box
+float3 ExpandUnitCubeToFrustumBounds(float3 unitVertex,
+    float emitterWidth, float emitterHeight,
+    float spreadX, float spreadZ, float beamLength)
+{
+    float yT    = unitVertex.y + 0.5;        // 0..1 along beam length
+    float beamY = yT * beamLength;
+
+    // Inflate the cube laterally by the soft-edge halo at the far end of the
+    // beam (where it's widest). Matches the softness formula in the frag shader
+    // so blurred pixels don't get clipped at the bounding cube walls. Near cap
+    // stays un-inflated since softness = 0 at d = 0.
+    float diffusionRate = _EdgeSoftness * (0.02 + _HazeDensity);
+    float maxSoftness   = diffusionRate * beamLength;
+
+    float halfWidthNear  = emitterWidth  * 0.5;
+    float halfHeightNear = emitterHeight * 0.5;
+    float halfWidthFar   = halfWidthNear  + (spreadX + abs(_ShearX)) * beamLength + maxSoftness;
+    float halfHeightFar  = halfHeightNear + (spreadZ + abs(_ShearZ)) * beamLength + maxSoftness;
+
+    float halfWidthAtY  = lerp(halfWidthNear,  halfWidthFar,  yT);
+    float halfHeightAtY = lerp(halfHeightNear, halfHeightFar, yT);
+
+    float3 beamSpace;
+    beamSpace.x = unitVertex.x * 2.0 * halfWidthAtY;
+    beamSpace.y = beamY;
+    beamSpace.z = unitVertex.z * 2.0 * halfHeightAtY;
+    return beamSpace;
+}
+
+// --- Ray / interval helpers (cap planes; round side wall is a quadric) --------
+// Returns the distance along the ray where it crosses a plane.
+// Negative result means the intersection is behind the ray origin.
+float RayPlaneDistance(float3 rayOrigin, float3 rayDirection,
+    float3 planeNormal, float planeOffset)
+{
+    float distanceFromPlane = dot(planeNormal, rayOrigin) + planeOffset;
+    float approachRate      = dot(planeNormal, rayDirection);
+    return -distanceFromPlane / approachRate;
+}
+
+// Folds one plane (defined by its OUTWARD-pointing normal) into a running
+// [tEntry, tExit] interval. The plane defines a half-space: the inside of the
+// volume is where planeNormal . p + planeOffset <= 0.
+void FoldPlaneIntoInterval(float3 rayOrigin, float3 rayDirection,
+    float3 planeNormal, float planeOffset,
+    inout float tEntry, inout float tExit)
+{
+    float t = RayPlaneDistance(rayOrigin, rayDirection, planeNormal, planeOffset);
+
+    if (dot(planeNormal, rayDirection) > 0)
+        tExit  = min(tExit,  t);   // exiting this half-space
+    else
+        tEntry = max(tEntry, t);   // entering this half-space
+}
+
+// --- Shared vert -------------------------------------------------------------
+// The whole vertex stage is shape-independent: it derives beam length (via the
+// shape macros) and expands the cube. Shape shaders just #define the macros and
+// call this. Declared as a function the shape's "vert" entry point forwards to.
+v2f DiamondBeamVert(appdata v)
+{
+    v2f o;
+    UNITY_SETUP_INSTANCE_ID(v);
+    UNITY_TRANSFER_INSTANCE_ID(v, o);
+
+    // Early-out: any of these conditions makes the beam contribute nothing
+    // visible. Collapse every vertex to the clip-space origin so the triangle
+    // gets culled before fragments are rasterised:
+    //   * Zero haze -> nothing scatters light into the camera.
+    //   * Zero beam intensity -> per-fixture brightness multiplier is off.
+    //   * Black colour -> nothing to add via additive blending.
+    float earlyOutIntensity = UNITY_ACCESS_INSTANCED_PROP(Props, _BeamIntensity);
+    float4 earlyOutColor    = UNITY_ACCESS_INSTANCED_PROP(Props, _Color);
+    float  earlyOutColorMax = max(earlyOutColor.r, max(earlyOutColor.g, earlyOutColor.b));
+    if (_HazeDensity <= 1e-5 || earlyOutIntensity <= 1e-5 || earlyOutColorMax <= 1e-5)
+    {
+        o.vertex = float4(0, 0, 0, 0);
+        o.vertBeamSpace = 0; o.screenPos = 0; o.vertWorldSpace = 0; o.frustumCorrection = 0;
+        return o;
+    }
+
+    float emitterWidth  = UNITY_ACCESS_INSTANCED_PROP(Props, _EmitterWidth);
+    float emitterHeight = UNITY_ACCESS_INSTANCED_PROP(Props, _EmitterHeight);
+    float spreadX       = UNITY_ACCESS_INSTANCED_PROP(Props, _SpreadX);
+    float spreadZ       = UNITY_ACCESS_INSTANCED_PROP(Props, _SpreadZ);
+    float beamIntensity = UNITY_ACCESS_INSTANCED_PROP(Props, _BeamIntensity);
+
+    float beamLength;
+    DIAMOND_DERIVE_BEAM_LENGTH(beamLength);
+
+    // The round shader collapses to a symmetric cone: it #defines spreadZ to
+    // equal spreadX before including, so the bounding box is a square that
+    // contains the circle. (Rect uses the two independently.)
+    float3 beamSpace = ExpandUnitCubeToFrustumBounds(
+        v.vertex.xyz, emitterWidth, emitterHeight,
+        DIAMOND_BOUNDS_SPREAD_X, DIAMOND_BOUNDS_SPREAD_Z, beamLength);
+
+    // The cube's transform applies its localScale on top via ObjectToWorld. To
+    // make the rendered size independent of that scale, pre-divide by the
+    // user-supplied counter-scale so ObjectToWorld's scale cancels out.
+    float3 cubeLocalScale = UNITY_ACCESS_INSTANCED_PROP(Props, _CubeLocalScale).xyz;
+    float3 objectSpace    = beamSpace / cubeLocalScale;
+    float4 expandedObject = float4(objectSpace, 1);
+
+    o.vertex            = UnityObjectToClipPos(expandedObject);
+    o.vertBeamSpace     = beamSpace;
+    o.vertWorldSpace    = mul(unity_ObjectToWorld, expandedObject).xyz;
+    o.screenPos         = ComputeScreenPos(o.vertex);
+    o.frustumCorrection = dot(o.vertex, CalculateFrustumCorrection());
+    return o;
+}
+
+// --- Shared frag tail: depth clamp + integration -----------------------------
+// Given a [tEntry, tExit] interval already shrunk against the shape's side walls
+// and caps, clamps tExit against scene depth and returns the final additive
+// colour. lightFalloffAtMid is the shape's per-unit-volume light density at the
+// ray midpoint (geometric falloff * edge factor * haze * extinction); the
+// caller computes it because it depends on the shape's cross-section + edge.
+//
+// Returns false (via discard caller) if the ray misses; here we just return the
+// colour and let the caller discard when tExit <= tEntry.
+fixed4 DiamondBeamIntegrate(v2f i, float3 rayOrigin, float3 rayDirection,
+    float tEntry, inout float tExit, float lightFalloffAtMid,
+    float3 instColorRGB, float beamIntensity)
+{
+    // beamSegment = (light per unit volume at midpoint) x (metres inside volume)
+    float beamSegment = lightFalloffAtMid * (tExit - tEntry);
+    return fixed4(instColorRGB * beamSegment * beamIntensity, 1);
+}
+
+// Depth clamp shared by both shapes. Shrinks tExit so the beam terminates at the
+// nearest scene surface in front of its far cap. Returns nothing; mutates tExit.
+void DiamondBeamDepthClamp(v2f i, float3 rayDirection, inout float tExit)
+{
+    float2 screenUV = i.screenPos.xy / i.screenPos.w;
+    float  rawDepth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, screenUV);
+
+    // rawDepth == 0 means no geometry here (sky / background): leave tExit alone.
+    if (rawDepth > 0)
+    {
+        float  sceneEyeDepth   = CorrectedLinearEyeDepth(rawDepth, i.frustumCorrection / i.screenPos.w);
+        float3 cameraForwardWS = -UNITY_MATRIX_V[2].xyz;
+        float3 rayDirWS        = normalize(i.vertWorldSpace - _WorldSpaceCameraPos);
+        float  sceneT          = sceneEyeDepth / max(dot(cameraForwardWS, rayDirWS), 1e-5);
+        tExit = min(tExit, sceneT);
+    }
+}
+
+#endif // DIAMOND_BEAM_COMMON_INCLUDED

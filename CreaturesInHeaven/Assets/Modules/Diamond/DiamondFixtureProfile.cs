@@ -33,6 +33,17 @@ public class DiamondFixtureProfile : ScriptableObject
     // Roll: head local Z axis
     public RotationAxis AxisZ;
 
+    // --- Beam shape --------------------------------------------------
+
+    // Cross-section profile of this fixture's beam/emitter.
+    //   Rect  - rectangular emitter + (optionally elliptical) cone. Uses the
+    //           Diamond/Beam shader and a Bakery mesh or point light.
+    //   Round - circular emitter + symmetric cone (a true spotlight). Uses the
+    //           Diamond/BeamRound shader and a Bakery cone (spot) light.
+    //           FixtureWidth is the emitter DIAMETER; FixtureHeight is unused.
+    public enum BeamShape { Rect, Round }
+    public BeamShape Shape = BeamShape.Rect;
+
     // --- Material channels -------------------------------------------
 
     public float BrightnessMin;

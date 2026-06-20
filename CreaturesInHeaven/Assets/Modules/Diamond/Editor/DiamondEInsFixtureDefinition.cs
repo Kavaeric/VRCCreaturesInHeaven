@@ -25,9 +25,15 @@ public class DiamondEInsFixtureDefinition : Editor
             EditorGUILayout.LabelField("Manufacturer", profile.FixtureMake != "" ? profile.FixtureMake : "Found lying by the road");
             EditorGUILayout.LabelField("Model", profile.FixtureModel != "" ? profile.FixtureModel : "—");
 
-            if (profile.FixtureHeight > 0 && profile.FixtureWidth > 0)
+            if (profile.Shape == DiamondFixtureProfile.BeamShape.Round)
+            {
+                if (profile.FixtureWidth > 0)
+                    EditorGUILayout.LabelField("Light surface", $"{profile.FixtureWidth:0.0##} m ⌀");
+            }
+            else if (profile.FixtureHeight > 0 && profile.FixtureWidth > 0)
+            {
                 EditorGUILayout.LabelField("Light surface", $"{profile.FixtureHeight:0.0##} × {profile.FixtureWidth:0.0##} m");
-
+            }
         }
 
         EditorGUILayout.Space(8);
@@ -241,8 +247,8 @@ public class DiamondEInsFixtureDefinition : Editor
             EditorGUILayout.LabelField("Rotation", EditorStyles.boldLabel);
 
             DrawAxisSlider("X (tilt)", p.AxisX, 0, targets);
-            DrawAxisSlider("Y (pan)",  p.AxisY, 1, targets);
-            DrawAxisSlider("Z (roll)", p.AxisZ, 2, targets);
+            DrawAxisSlider("Y (roll)",  p.AxisY, 1, targets);
+            DrawAxisSlider("Z (pan)", p.AxisZ, 2, targets);
         }
     }
 

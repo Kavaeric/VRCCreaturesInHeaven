@@ -12,6 +12,9 @@ public class AssetResolutionCheck : MonoBehaviour
 
     enum HeadsetPreset { ValveIndex, QuestPro, Beyond2E, SteamFrame, Custom }
 
+    // How each density ring is drawn: a flat circle on the XZ plane, or a full wire sphere.
+    enum RingShape { Circle, Sphere }
+
     [SerializeField] private HeadsetPreset headset = HeadsetPreset.ValveIndex;
 
     [SerializeField] private int customResX = 1440;
@@ -26,6 +29,9 @@ public class AssetResolutionCheck : MonoBehaviour
     [SerializeField] private int referenceDensity = 512;
     [SerializeField] private float referenceRadius = 0f;
 
+    [SerializeField] private RingShape ringShape = RingShape.Circle;
+    // When true, the rings inherit the object's rotation, so the circle plane follows the transform.
+    [SerializeField] private bool orientToTransform = true;
     [SerializeField] private int circleSegments = 64;
     [SerializeField] private Color gizmosColor = Color.red;
 
@@ -69,7 +75,14 @@ public class AssetResolutionCheck : MonoBehaviour
     void OnDrawGizmos()
     {
         HeadsetSpec hs = GetSpec();
-        Vector3 center = transform.position;
+
+        // Drive the gizmo space off the transform. When oriented, rings inherit the object's rotation;
+        // otherwise they stay axis-aligned at the object's position. Everything below is drawn in this
+        // local space, so the center is the origin.
+        Quaternion rot = orientToTransform ? transform.rotation : Quaternion.identity;
+        Matrix4x4 gizmoMatrix = Matrix4x4.TRS(transform.position, rot, Vector3.one);
+        Gizmos.matrix = gizmoMatrix;
+        Vector3 center = Vector3.zero;
 
         float anchorOffset = referenceRadius - DensityToDistance(referenceDensity, hs);
 
@@ -103,11 +116,17 @@ public class AssetResolutionCheck : MonoBehaviour
                 outsideIdx++;
             }
 
-            DrawCircle(center, radius, circleSegments);
+            if (ringShape == RingShape.Sphere)
+                Gizmos.DrawWireSphere(center, radius);
+            else
+                DrawCircle(center, radius, circleSegments);
 
-            Vector3 labelPos = center + new Vector3(radius, 0f, 0f);
+            // Handles.Label ignores Gizmos.matrix, so transform the local label position into world space.
+            Vector3 labelPos = gizmoMatrix.MultiplyPoint3x4(center + new Vector3(radius, 0f, 0f));
             Handles.Label(labelPos, $"{density:0} px/m\n{radius:0.##}m");
         }
+
+        Gizmos.matrix = Matrix4x4.identity;
     }
 
 #endif
@@ -164,8 +183,18 @@ public class AssetResolutionCheckEditor : Editor
         EditorGUILayout.LabelField("Display", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(serializedObject.FindProperty("gizmosColor"),
             new GUIContent("Colour", "Base colour for non-reference rings. Alpha is scaled per ring."));
+
+        var ringShapeProp = serializedObject.FindProperty("ringShape");
+        EditorGUILayout.PropertyField(ringShapeProp,
+            new GUIContent("Ring shape", "Draw each ring as a flat circle on the XZ plane, or as a full wire sphere."));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("orientToTransform"),
+            new GUIContent("Orient to transform", "When enabled, the rings inherit the object's rotation. Useful for checking texel density on other planes/axes. When disabled, rings stay axis-aligned."));
+
+        bool isCircle = ringShapeProp.enumValueIndex == 0; // RingShape.Circle
+        EditorGUI.BeginDisabledGroup(!isCircle);
         EditorGUILayout.PropertyField(serializedObject.FindProperty("circleSegments"),
-            new GUIContent("Circle segments", "Number of line segments used to draw each circle. Higher values are smoother but slower to render."));
+            new GUIContent("Circle segments", "Number of line segments used to draw each circle. Higher values are smoother but slower to render. Unused for wire spheres."));
+        EditorGUI.EndDisabledGroup();
 
         serializedObject.ApplyModifiedProperties();
     }

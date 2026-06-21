@@ -9,12 +9,21 @@ using UnityEngine;
 public static class DiamondFixtureMapWriter
 {
     // Crawls fixtures and groups under the given root, writes the JSON to outputPath,
-    // and refreshes the AssetDatabase.
-    public static void Write(
+    // and refreshes the AssetDatabase. Returns null on success, or a human-readable
+    // error message if the path is invalid (so callers can show a clear dialog
+    // instead of letting File.WriteAllText throw a cryptic UnauthorizedAccessException).
+    public static string Write(
         DiamondFixtureDefinition[]      fixtures,
         DiamondFixtureGroupDefinition[] groups,
         string                          outputPath)
     {
+        // Validate the output path before doing any work. The most common mistake is
+        // pointing at a folder (no filename), which makes WriteAllText throw "access
+        // denied" rather than anything informative.
+        string pathError = ValidateOutputPath(outputPath);
+        if (pathError != null)
+            return pathError;
+
         // Compute the XZ bounding box so we can centre the canvas layout at 0,0.
         float minX = float.MaxValue, maxX = float.MinValue;
         float minZ = float.MaxValue, maxZ = float.MinValue;
@@ -54,13 +63,21 @@ public static class DiamondFixtureMapWriter
             string fixtureGuid = GetSceneObjectGuid(f.gameObject);
             string comma       = i < fixtures.Length - 1 ? "," : "";
 
+            // Beam cross-section shape: "rect" or "round". Drives how the fixture map
+            // renderer draws the node. Defaults to rect when no profile is assigned.
+            bool   isRound = f.Profile != null && f.Profile.Shape == DiamondFixtureProfile.BeamShape.Round;
+            string shape   = isRound ? "round" : "rect";
+
             // Physical dimensions from profile: width = long axis (X), depth = short axis (Z).
+            // Round fixtures use FixtureWidth as the emitter diameter and leave FixtureHeight
+            // unused, so emit a square (diameter x diameter) rather than a zero-height node.
             float nodeW = f.Profile != null ? f.Profile.FixtureWidth  : 0f;
-            float nodeD = f.Profile != null ? f.Profile.FixtureHeight : 0f;
+            float nodeD = isRound ? nodeW : (f.Profile != null ? f.Profile.FixtureHeight : 0f);
 
             sb.AppendLine("    {");
             sb.AppendLine($"      \"name\": \"{name}\",");
             sb.AppendLine($"      \"sceneObject\": \"{fixtureGuid}\",");
+            sb.AppendLine($"      \"shape\": \"{shape}\",");
             sb.AppendLine($"      \"position\": {{ \"x\": {cx:F3}, \"y\": {cy:F3} }},");
             sb.AppendLine($"      \"size\": {{ \"x\": {nodeW:F3}, \"y\": {nodeD:F3} }}");
             sb.AppendLine($"    }}{comma}");
@@ -105,6 +122,27 @@ public static class DiamondFixtureMapWriter
         AssetDatabase.Refresh();
 
         Debug.Log($"[Diamond] Wrote {fixtures.Length} fixture(s) and {groups.Length} group(s) to {outputPath}");
+        return null;
+    }
+
+    // Checks that outputPath is something we can actually write a JSON file to.
+    // Returns null when valid, otherwise a message explaining what's wrong.
+    private static string ValidateOutputPath(string outputPath)
+    {
+        if (string.IsNullOrWhiteSpace(outputPath))
+            return "Output path is empty. Provide a folder and a .json filename.";
+
+        if (!outputPath.EndsWith(".json", System.StringComparison.OrdinalIgnoreCase))
+            return $"Output path must end in .json, but was:\n{outputPath}";
+
+        string fullPath = Path.GetFullPath(Path.Combine(Application.dataPath, "../", outputPath));
+
+        // If the path already exists as a directory, WriteAllText would throw an
+        // unhelpful "access denied". Catch that here with a clear message.
+        if (Directory.Exists(fullPath))
+            return $"Output path points at an existing folder, not a file:\n{outputPath}";
+
+        return null;
     }
 
     // Returns a stable per-scene-object identifier via GlobalObjectId.

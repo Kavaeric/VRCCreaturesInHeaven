@@ -10,13 +10,24 @@ public static class DiamondFixtureMapLayout
 {
     // --- Data types --------------------------------------------------
 
+    // Node draw shape, parsed from the JSON "shape" string.
+    public enum NodeShape { Rect, Round }
+
     [Serializable]
     public struct FixtureEntry
     {
         public string          name;
         public string          sceneObject;
+        public string          shape;     // "rect" (default) or "round"
         public FixturePosition position;
         public FixturePosition size;  // width (X, long axis) and depth (Y, short axis) in metres
+
+        // Parsed form of the shape string. Missing/unrecognised values fall back to Rect
+        // so older maps written before the shape field keep rendering as rectangles.
+        public NodeShape Shape =>
+            string.Equals(shape, "round", StringComparison.OrdinalIgnoreCase)
+                ? NodeShape.Round
+                : NodeShape.Rect;
     }
 
     [Serializable]

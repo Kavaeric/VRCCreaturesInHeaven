@@ -31,7 +31,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 4.875122, z: 0}
-  m_LocalScale: {x: 40.5, y: 10.000674, z: 80.5}
+  m_LocalScale: {x: 40.5, y: 13.750674, z: 80.5}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2745052908158443392}
@@ -67,7 +67,7 @@ MonoBehaviour:
   BlurShadows: 1
   AdaptiveResolution: 1
   VoxelsPerUnit: 0.5
-  Resolution: {x: 20, y: 5, z: 40}
+  Resolution: {x: 20, y: 7, z: 40}
   PreviewVoxels: 0
   BakeryVolume: {fileID: 1949567307003724063}
   LightVolumeInstance: {fileID: 8822602833489323784}
@@ -99,13 +99,13 @@ MonoBehaviour:
   IsDynamic: 0
   IsAdditive: 1
   InvBakedRotation: {x: -0, y: -0, z: -0, w: 1}
-  BoundsUvwMin0: {x: 0.045454547, y: 0.52380955, z: 0.023809524, w: 0.9090909}
-  BoundsUvwMin1: {x: 0.045454547, y: 0.6904762, z: 0.023809524, w: 0.11904758}
-  BoundsUvwMin2: {x: 0.045454547, y: 0.85714287, z: 0.023809524, w: 0.9523809}
+  BoundsUvwMin0: {x: 0.045454547, y: 0.2857143, z: 0.023809524, w: 0.9090909}
+  BoundsUvwMin1: {x: 0.045454547, y: 0.53571427, z: 0.023809524, w: 0.1785714}
+  BoundsUvwMin2: {x: 0.045454547, y: 0.78571427, z: 0.023809524, w: 0.9523809}
   BoundsUvwMinOcclusion: {x: 0, y: 0, z: 0, w: 1}
-  BoundsUvwMax0: {x: 0.95454544, y: 0.64285713, z: 0.97619045, w: 0}
-  BoundsUvwMax1: {x: 0.95454544, y: 0.8095238, z: 0.97619045, w: 0}
-  BoundsUvwMax2: {x: 0.95454544, y: 0.97619045, z: 0.97619045, w: 0}
+  BoundsUvwMax0: {x: 0.95454544, y: 0.4642857, z: 0.97619045, w: 0}
+  BoundsUvwMax1: {x: 0.95454544, y: 0.71428573, z: 0.97619045, w: 0}
+  BoundsUvwMax2: {x: 0.95454544, y: 0.96428573, z: 0.97619045, w: 0}
   InvLocalEdgeSmoothing: {x: 162, y: 40.002697, z: 322, w: 0}
   InvWorldMatrix:
     e00: 0.024691358
@@ -113,9 +113,9 @@ MonoBehaviour:
     e02: 0
     e03: 0
     e10: 0
-    e11: 0.09999326
+    e11: 0.07272371
     e12: 0
-    e13: -0.48747933
+    e13: -0.4908939
     e20: 0
     e21: 0
     e22: 0.0124223605
@@ -182,16 +182,18 @@ MonoBehaviour:
   _udonSharpBackingUdonBehaviour: {fileID: 4040011052667341137}
   TargetVolume: {fileID: 8822602833489323784}
   Crt: {fileID: 8600000, guid: 10380d3584c8d38459413a68da3e4ea5, type: 2}
-  AnimatedTexture: {fileID: 11700000, guid: 64375ad5a398ddd4d85d8dc27d1a8f66, type: 2}
-  SnapshotX: 20
-  SnapshotY: 5
-  SnapshotsPerColumn: 409
-  NumColumnsBaked: 1
-  NumSnapshotsBaked: 105
-  SHMode: 1
-  BitDepth: 0
+  FlipbookTextures:
+  - {fileID: 11700000, guid: 64375ad5a398ddd4d85d8dc27d1a8f66, type: 2}
+  FlipbookSnapshotX: 14000000
+  FlipbookSnapshotY: 05000000
+  FlipbookSnapshotsPerColumn: 99010000
+  FlipbookNumColumns: 01000000
+  FlipbookNumSnapshots: 69000000
+  FlipbookSHMode: 01000000
+  FlipbookBitDepth: 00000000
+  FlipbookIndexParameter: 
   PreviewVoxels: 1
-  PreviewSnapshot: 0
+  PreviewSnapshot: 64
   BakeAnimator: {fileID: 0}
   BakeClip: {fileID: 7400000, guid: 9f918e1f7cf1ce34ab3053cc882b484f, type: 2}
   BakeSnapshotCount: 105
@@ -199,8 +201,9 @@ MonoBehaviour:
   BakeEndFrame: 2624
   BakeSHMode: 1
   BakeBitDepth: 0
-  BakeOutputName: ALV_Bake
+  BakeOutputName: ALV_ConcourseLightshow_2
   BakeSettingsFoldout: 0
+  BakeTargetSlot: 0
   Blending: 0
   AnimatorSource: {fileID: 0}
   Time: 0
@@ -279,12 +282,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enableBaking: 1
   bounds:
-    m_Center: {x: 0, y: 4.875122, z: 0}
-    m_Extent: {x: 20.25, y: 5.000337, z: 40.25}
+    m_Center: {x: 0, y: 6.750122, z: 0}
+    m_Extent: {x: 20.25, y: 6.875337, z: 40.25}
   adaptiveRes: 0
   voxelsPerUnit: 0.5
   resolutionX: 20
-  resolutionY: 5
+  resolutionY: 7
   resolutionZ: 40
   encoding: 0
   shadowmaskEncoding: 0

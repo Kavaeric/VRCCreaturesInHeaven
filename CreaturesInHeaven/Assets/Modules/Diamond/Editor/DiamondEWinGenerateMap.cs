@@ -9,7 +9,11 @@ using UnityEngine;
 public class DiamondEWinGenerateMap : EditorWindow
 {
     private GameObject _root;
-    private string     _outputPath = "Assets/Modules/Diamond/FixtureMap.json";
+    private string     _outputFolder   = "Assets/Modules/Diamond";
+    private string     _outputFileName = "FixtureMap.json";
+
+    // Project-relative path assembled from the folder and filename fields.
+    private string OutputPath => $"{_outputFolder.TrimEnd('/', '\\')}/{_outputFileName}";
 
     [MenuItem("Tools/Diamond/Generate fixture map...")]
     private static void Open() => GetWindow<DiamondEWinGenerateMap>("Generate fixture map");
@@ -25,9 +29,15 @@ public class DiamondEWinGenerateMap : EditorWindow
 
         EditorGUILayout.Space(4);
 
-        _outputPath = EditorGUILayout.TextField(
-            new GUIContent("Output path", "Project-relative path for the generated JSON file."),
-            _outputPath);
+        _outputFolder = EditorGUILayout.TextField(
+            new GUIContent("Output folder", "Project-relative folder for the generated JSON file."),
+            _outputFolder);
+
+        _outputFileName = EditorGUILayout.TextField(
+            new GUIContent("File name", "Name of the generated JSON file, including the .json extension."),
+            _outputFileName);
+
+        EditorGUILayout.LabelField(" ", OutputPath, EditorStyles.miniLabel);
 
         EditorGUILayout.Space(12);
 
@@ -56,7 +66,7 @@ public class DiamondEWinGenerateMap : EditorWindow
 
         string summary = $"Found {fixtures.Length} fixture{(fixtures.Length == 1 ? "" : "s")} " +
                          $"and {groups.Length} group{(groups.Length == 1 ? "" : "s")} under '{_root.name}'.\n\n" +
-                         $"Output: {_outputPath}\n\nProceed?";
+                         $"Output: {OutputPath}\n\nProceed?";
 
         bool confirmed = EditorUtility.DisplayDialog("Generate Fixture Map", summary, "Generate", "Cancel");
         if (!confirmed) return;
@@ -66,8 +76,14 @@ public class DiamondEWinGenerateMap : EditorWindow
 
     private void Write(DiamondFixtureDefinition[] fixtures, DiamondFixtureGroupDefinition[] groups)
     {
-        DiamondFixtureMapWriter.Write(fixtures, groups, _outputPath);
-        EditorUtility.DisplayDialog("Done", $"Wrote {fixtures.Length} fixture(s) and {groups.Length} group(s) to:\n{_outputPath}", "OK");
+        string error = DiamondFixtureMapWriter.Write(fixtures, groups, OutputPath);
+        if (error != null)
+        {
+            EditorUtility.DisplayDialog("Cannot write fixture map", error, "OK");
+            return;
+        }
+
+        EditorUtility.DisplayDialog("Done", $"Wrote {fixtures.Length} fixture(s) and {groups.Length} group(s) to:\n{OutputPath}", "OK");
     }
 }
 #endif

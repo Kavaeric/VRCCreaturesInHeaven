@@ -251,6 +251,7 @@ MonoBehaviour:
   Light: {fileID: 406991087}
   LampProps: {fileID: 1419414590}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &2152629
 GameObject:
   m_ObjectHideFlags: 0
@@ -363,6 +364,95 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2152629}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1001 &2678771
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 439049407602442269}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 216
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_ScaleInLightmap
+      value: 0.02
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 1d5308a0299231d4da9629b447f88443, type: 2}
+    - target: {fileID: 919132149155446097, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_Name
+      value: AirportSeating (3)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 410289a494e732649868cdae5db99194, type: 3}
+--- !u!4 &2678772 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+    type: 3}
+  m_PrefabInstance: {fileID: 2678771}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &5022521
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -378,6 +468,7 @@ MonoBehaviour:
   Light: {fileID: 1932623655}
   LampProps: {fileID: 238506975}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &6447667
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -393,6 +484,7 @@ MonoBehaviour:
   Light: {fileID: 267406902}
   LampProps: {fileID: 1419414350}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &8929815
 GameObject:
   m_ObjectHideFlags: 0
@@ -1033,6 +1125,7 @@ MonoBehaviour:
   Light: {fileID: 1071035786}
   LampProps: {fileID: 1419414668}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &22393613
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1048,6 +1141,7 @@ MonoBehaviour:
   Light: {fileID: 2045575920}
   LampProps: {fileID: 1419414605}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &23445020
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1063,6 +1157,7 @@ MonoBehaviour:
   Light: {fileID: 553804611}
   LampProps: {fileID: 238507005}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &30372224
 GameObject:
   m_ObjectHideFlags: 0
@@ -1302,6 +1397,7 @@ MonoBehaviour:
   Light: {fileID: 1887345294}
   LampProps: {fileID: 238507239}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &45112758
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1317,6 +1413,7 @@ MonoBehaviour:
   Light: {fileID: 324570414}
   LampProps: {fileID: 1419414470}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &46096901
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1332,6 +1429,7 @@ MonoBehaviour:
   Light: {fileID: 1223559088}
   LampProps: {fileID: 1419414821}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &47892658
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1347,6 +1445,7 @@ MonoBehaviour:
   Light: {fileID: 1263864389}
   LampProps: {fileID: 1419414521}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &48956323
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1362,6 +1461,7 @@ MonoBehaviour:
   Light: {fileID: 913323781}
   LampProps: {fileID: 238507230}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &49639422
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1377,6 +1477,7 @@ MonoBehaviour:
   Light: {fileID: 672102874}
   LampProps: {fileID: 1419414413}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &50897746
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1392,6 +1493,7 @@ MonoBehaviour:
   Light: {fileID: 983290962}
   LampProps: {fileID: 238507083}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &58134055
 GameObject:
   m_ObjectHideFlags: 0
@@ -1519,6 +1621,7 @@ MonoBehaviour:
   Light: {fileID: 1837180899}
   LampProps: {fileID: 238506984}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &60169461
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1534,6 +1637,7 @@ MonoBehaviour:
   Light: {fileID: 1122906296}
   LampProps: {fileID: 1419414266}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &61735582
 GameObject:
   m_ObjectHideFlags: 0
@@ -1773,6 +1877,7 @@ MonoBehaviour:
   Light: {fileID: 1874312533}
   LampProps: {fileID: 1419414872}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &63788547
 GameObject:
   m_ObjectHideFlags: 0
@@ -1900,6 +2005,7 @@ MonoBehaviour:
   Light: {fileID: 1071920976}
   LampProps: {fileID: 1419414518}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &65196622
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1915,6 +2021,7 @@ MonoBehaviour:
   Light: {fileID: 169346970}
   LampProps: {fileID: 238507128}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &66845594
 GameObject:
   m_ObjectHideFlags: 0
@@ -2490,6 +2597,7 @@ MonoBehaviour:
   Light: {fileID: 525976612}
   LampProps: {fileID: 1419414524}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &93217423
 GameObject:
   m_ObjectHideFlags: 0
@@ -2729,6 +2837,7 @@ MonoBehaviour:
   Light: {fileID: 63788549}
   LampProps: {fileID: 1419414629}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &108281327
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2744,6 +2853,7 @@ MonoBehaviour:
   Light: {fileID: 2038232180}
   LampProps: {fileID: 238507164}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &109235610
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2759,6 +2869,7 @@ MonoBehaviour:
   Light: {fileID: 626909437}
   LampProps: {fileID: 238506978}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &113641423
 GameObject:
   m_ObjectHideFlags: 0
@@ -2886,6 +2997,7 @@ MonoBehaviour:
   Light: {fileID: 1501337334}
   LampProps: {fileID: 238507032}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &122066049
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2901,6 +3013,7 @@ MonoBehaviour:
   Light: {fileID: 1103729102}
   LampProps: {fileID: 1419414551}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &124812589
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2916,6 +3029,7 @@ MonoBehaviour:
   Light: {fileID: 1758226645}
   LampProps: {fileID: 1419414764}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &124918115
 GameObject:
   m_ObjectHideFlags: 0
@@ -3043,6 +3157,7 @@ MonoBehaviour:
   Light: {fileID: 600787198}
   LampProps: {fileID: 1419414806}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &137046497
 GameObject:
   m_ObjectHideFlags: 0
@@ -3506,6 +3621,7 @@ MonoBehaviour:
   Light: {fileID: 93217425}
   LampProps: {fileID: 1419414542}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &161551190
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3521,6 +3637,7 @@ MonoBehaviour:
   Light: {fileID: 473767712}
   LampProps: {fileID: 1419414509}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &162323588
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3536,6 +3653,7 @@ MonoBehaviour:
   Light: {fileID: 2065186781}
   LampProps: {fileID: 1419414890}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &166853071
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3551,6 +3669,7 @@ MonoBehaviour:
   Light: {fileID: 1278189856}
   LampProps: {fileID: 1419414824}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &166998933
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3566,6 +3685,7 @@ MonoBehaviour:
   Light: {fileID: 1374645525}
   LampProps: {fileID: 1419414731}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &168413927
 GameObject:
   m_ObjectHideFlags: 0
@@ -4171,6 +4291,7 @@ MonoBehaviour:
   Light: {fileID: 529956379}
   LampProps: {fileID: 1419414329}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &175145089
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4186,6 +4307,7 @@ MonoBehaviour:
   Light: {fileID: 534940261}
   LampProps: {fileID: 1419414380}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &175331867
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4201,6 +4323,7 @@ MonoBehaviour:
   Light: {fileID: 1209335974}
   LampProps: {fileID: 1419414386}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &176908112
 GameObject:
   m_ObjectHideFlags: 0
@@ -4440,6 +4563,7 @@ MonoBehaviour:
   Light: {fileID: 2144432451}
   LampProps: {fileID: 238507071}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &180998884 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 515268420931719051, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
@@ -4579,6 +4703,7 @@ MonoBehaviour:
   Light: {fileID: 1638632057}
   LampProps: {fileID: 1419414338}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &190588482
 GameObject:
   m_ObjectHideFlags: 0
@@ -4818,6 +4943,7 @@ MonoBehaviour:
   Light: {fileID: 176908114}
   LampProps: {fileID: 238507170}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &199955052
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4833,6 +4959,7 @@ MonoBehaviour:
   Light: {fileID: 1312145798}
   LampProps: {fileID: 1419414209}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &205043795
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4848,6 +4975,7 @@ MonoBehaviour:
   Light: {fileID: 470990298}
   LampProps: {fileID: 1419414452}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &214989754
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4863,6 +4991,7 @@ MonoBehaviour:
   Light: {fileID: 955822126}
   LampProps: {fileID: 1419414608}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &216881009
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4878,6 +5007,7 @@ MonoBehaviour:
   Light: {fileID: 1552796503}
   LampProps: {fileID: 1419414458}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &217591815
 GameObject:
   m_ObjectHideFlags: 0
@@ -5453,6 +5583,7 @@ MonoBehaviour:
   Light: {fileID: 1033476986}
   LampProps: {fileID: 238507101}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &236243394
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5468,6 +5599,7 @@ MonoBehaviour:
   Light: {fileID: 1745854420}
   LampProps: {fileID: 1419414587}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!4 &238506906 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7128574359022541051, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -7643,6 +7775,7 @@ MonoBehaviour:
   Light: {fileID: 570430161}
   LampProps: {fileID: 238507260}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &238507267
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7658,6 +7791,7 @@ MonoBehaviour:
   Light: {fileID: 1527294555}
   LampProps: {fileID: 238507263}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &241036847
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7673,6 +7807,7 @@ MonoBehaviour:
   Light: {fileID: 1978299904}
   LampProps: {fileID: 238507017}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &244995319
 GameObject:
   m_ObjectHideFlags: 0
@@ -7800,6 +7935,7 @@ MonoBehaviour:
   Light: {fileID: 482063191}
   LampProps: {fileID: 1419414434}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &252700573
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7815,6 +7951,7 @@ MonoBehaviour:
   Light: {fileID: 803822263}
   LampProps: {fileID: 1419414563}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &258848919
 GameObject:
   m_ObjectHideFlags: 0
@@ -7942,6 +8079,7 @@ MonoBehaviour:
   Light: {fileID: 456076915}
   LampProps: {fileID: 1419414536}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &260153726
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7957,6 +8095,7 @@ MonoBehaviour:
   Light: {fileID: 689644744}
   LampProps: {fileID: 238507044}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &264561118
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7972,6 +8111,7 @@ MonoBehaviour:
   Light: {fileID: 1194446275}
   LampProps: {fileID: 238506924}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &267406900
 GameObject:
   m_ObjectHideFlags: 0
@@ -8099,6 +8239,7 @@ MonoBehaviour:
   Light: {fileID: 571011453}
   LampProps: {fileID: 1419414770}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &268767716
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8114,6 +8255,7 @@ MonoBehaviour:
   Light: {fileID: 217591817}
   LampProps: {fileID: 1419414557}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &272415405
 GameObject:
   m_ObjectHideFlags: 0
@@ -8577,6 +8719,7 @@ MonoBehaviour:
   Light: {fileID: 769244351}
   LampProps: {fileID: 1419414785}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &282353766
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8592,6 +8735,7 @@ MonoBehaviour:
   Light: {fileID: 1250335705}
   LampProps: {fileID: 1419414533}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &287963760
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8607,6 +8751,7 @@ MonoBehaviour:
   Light: {fileID: 1614970156}
   LampProps: {fileID: 1419414284}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &288273118
 GameObject:
   m_ObjectHideFlags: 0
@@ -8734,6 +8879,7 @@ MonoBehaviour:
   Light: {fileID: 58134057}
   LampProps: {fileID: 1419414707}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &296693389
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8749,6 +8895,7 @@ MonoBehaviour:
   Light: {fileID: 946725707}
   LampProps: {fileID: 238507173}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &301204435
 GameObject:
   m_ObjectHideFlags: 0
@@ -8988,6 +9135,7 @@ MonoBehaviour:
   Light: {fileID: 142218774}
   LampProps: {fileID: 1419414692}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &308173544
 GameObject:
   m_ObjectHideFlags: 0
@@ -9227,6 +9375,7 @@ MonoBehaviour:
   Light: {fileID: 1653842871}
   LampProps: {fileID: 238507146}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &316351359
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9242,6 +9391,7 @@ MonoBehaviour:
   Light: {fileID: 1492898425}
   LampProps: {fileID: 238506963}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &320949428
 GameObject:
   m_ObjectHideFlags: 0
@@ -9705,6 +9855,7 @@ MonoBehaviour:
   Light: {fileID: 1921339430}
   LampProps: {fileID: 1419414260}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &326009811
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9720,6 +9871,7 @@ MonoBehaviour:
   Light: {fileID: 636567236}
   LampProps: {fileID: 1419414431}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &330415746
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9735,6 +9887,7 @@ MonoBehaviour:
   Light: {fileID: 1069869853}
   LampProps: {fileID: 238507206}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &331872209
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9750,6 +9903,7 @@ MonoBehaviour:
   Light: {fileID: 1615960677}
   LampProps: {fileID: 1419414221}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &338402897
 GameObject:
   m_ObjectHideFlags: 0
@@ -9989,6 +10143,7 @@ MonoBehaviour:
   Light: {fileID: 689417918}
   LampProps: {fileID: 1419414758}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &344166205
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10004,6 +10159,7 @@ MonoBehaviour:
   Light: {fileID: 1897672233}
   LampProps: {fileID: 1419414281}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &351128473
 GameObject:
   m_ObjectHideFlags: 0
@@ -10355,6 +10511,7 @@ MonoBehaviour:
   Light: {fileID: 1970362542}
   LampProps: {fileID: 238507002}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &358185325
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10370,6 +10527,7 @@ MonoBehaviour:
   Light: {fileID: 670027960}
   LampProps: {fileID: 1419414704}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &358700513
 GameObject:
   m_ObjectHideFlags: 0
@@ -10497,6 +10655,7 @@ MonoBehaviour:
   Light: {fileID: 508777161}
   LampProps: {fileID: 1419414812}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &363963683
 GameObject:
   m_ObjectHideFlags: 0
@@ -10624,6 +10783,7 @@ MonoBehaviour:
   Light: {fileID: 1320460905}
   LampProps: {fileID: 1419414371}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &369905067
 GameObject:
   m_ObjectHideFlags: 0
@@ -10975,6 +11135,7 @@ MonoBehaviour:
   Light: {fileID: 220486845}
   LampProps: {fileID: 1419414416}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &378163567
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10990,6 +11151,7 @@ MonoBehaviour:
   Light: {fileID: 1366548408}
   LampProps: {fileID: 238507179}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &380135436
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11005,6 +11167,7 @@ MonoBehaviour:
   Light: {fileID: 1528418235}
   LampProps: {fileID: 1419414278}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &389711857
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11020,6 +11183,7 @@ MonoBehaviour:
   Light: {fileID: 940279227}
   LampProps: {fileID: 238507011}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &392910873
 GameObject:
   m_ObjectHideFlags: 0
@@ -11147,6 +11311,7 @@ MonoBehaviour:
   Light: {fileID: 888121196}
   LampProps: {fileID: 1419414500}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &396870230
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11162,6 +11327,7 @@ MonoBehaviour:
   Light: {fileID: 2000824733}
   LampProps: {fileID: 1419414698}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &398924766
 GameObject:
   m_ObjectHideFlags: 0
@@ -11289,6 +11455,7 @@ MonoBehaviour:
   Light: {fileID: 172832818}
   LampProps: {fileID: 1419414875}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &406991085
 GameObject:
   m_ObjectHideFlags: 0
@@ -11416,6 +11583,7 @@ MonoBehaviour:
   Light: {fileID: 1925661708}
   LampProps: {fileID: 238506909}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &413054876
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11431,6 +11599,7 @@ MonoBehaviour:
   Light: {fileID: 1427995597}
   LampProps: {fileID: 1419414230}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &416810014
 GameObject:
   m_ObjectHideFlags: 0
@@ -11670,6 +11839,7 @@ MonoBehaviour:
   Light: {fileID: 1571231508}
   LampProps: {fileID: 1419414863}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &425091223
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11685,6 +11855,7 @@ MonoBehaviour:
   Light: {fileID: 770094589}
   LampProps: {fileID: 238507257}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &427763166
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11700,6 +11871,7 @@ MonoBehaviour:
   Light: {fileID: 308173546}
   LampProps: {fileID: 238506951}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &428080234
 GameObject:
   m_ObjectHideFlags: 0
@@ -12051,6 +12223,7 @@ MonoBehaviour:
   Light: {fileID: 1492224707}
   LampProps: {fileID: 238506993}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &445477086
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12066,6 +12239,7 @@ MonoBehaviour:
   Light: {fileID: 338402899}
   LampProps: {fileID: 238507200}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &456076913
 GameObject:
   m_ObjectHideFlags: 0
@@ -12193,6 +12367,7 @@ MonoBehaviour:
   Light: {fileID: 1788094602}
   LampProps: {fileID: 1419414200}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &463833530
 GameObject:
   m_ObjectHideFlags: 0
@@ -12432,6 +12607,7 @@ MonoBehaviour:
   Light: {fileID: 775267525}
   LampProps: {fileID: 1419414584}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &473767710
 GameObject:
   m_ObjectHideFlags: 0
@@ -12783,6 +12959,7 @@ MonoBehaviour:
   Light: {fileID: 302737057}
   LampProps: {fileID: 1419414683}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &491660544
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12798,6 +12975,7 @@ MonoBehaviour:
   Light: {fileID: 428080236}
   LampProps: {fileID: 1419414782}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &493739032
 GameObject:
   m_ObjectHideFlags: 0
@@ -12925,6 +13103,7 @@ MonoBehaviour:
   Light: {fileID: 1048630573}
   LampProps: {fileID: 1419414662}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &508436594
 GameObject:
   m_ObjectHideFlags: 0
@@ -13279,7 +13458,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &512380832
 Transform:
   m_ObjectHideFlags: 0
@@ -13309,7 +13488,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UID: -519455311
   color: {r: 1, g: 1, b: 1, a: 1}
-  intensity: 0.09218502
+  intensity: 16
   texture: {fileID: 0}
   cutoff: 100
   samples: 128
@@ -13373,6 +13552,90 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 512380831}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1001 &513352862
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 439049407602442269}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 56
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 1d5308a0299231d4da9629b447f88443, type: 2}
+    - target: {fileID: 919132149155446097, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_Name
+      value: AirportSeating (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 410289a494e732649868cdae5db99194, type: 3}
+--- !u!4 &513352863 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+    type: 3}
+  m_PrefabInstance: {fileID: 513352862}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &525976610
 GameObject:
   m_ObjectHideFlags: 0
@@ -13724,6 +13987,7 @@ MonoBehaviour:
   Light: {fileID: 75847192}
   LampProps: {fileID: 1419414263}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &534779095
 GameObject:
   m_ObjectHideFlags: 0
@@ -14075,6 +14339,7 @@ MonoBehaviour:
   Light: {fileID: 1313626738}
   LampProps: {fileID: 1419414506}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &548491185
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14090,6 +14355,7 @@ MonoBehaviour:
   Light: {fileID: 1188801784}
   LampProps: {fileID: 1419414461}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &553481564
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14105,6 +14371,7 @@ MonoBehaviour:
   Light: {fileID: 113641425}
   LampProps: {fileID: 1419414686}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &553804609
 GameObject:
   m_ObjectHideFlags: 0
@@ -14232,6 +14499,7 @@ MonoBehaviour:
   Light: {fileID: 1349645235}
   LampProps: {fileID: 1419414206}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &558401217
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14247,6 +14515,7 @@ MonoBehaviour:
   Light: {fileID: 1529784309}
   LampProps: {fileID: 1419414401}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &559607270
 GameObject:
   m_ObjectHideFlags: 0
@@ -14374,6 +14643,7 @@ MonoBehaviour:
   Light: {fileID: 1546389716}
   LampProps: {fileID: 1419414392}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &566045997
 GameObject:
   m_ObjectHideFlags: 0
@@ -14613,6 +14883,7 @@ MonoBehaviour:
   Light: {fileID: 1708281026}
   LampProps: {fileID: 1419414437}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &571011451
 GameObject:
   m_ObjectHideFlags: 0
@@ -14740,6 +15011,7 @@ MonoBehaviour:
   Light: {fileID: 1582487950}
   LampProps: {fileID: 1419414308}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &576991521
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14755,6 +15027,7 @@ MonoBehaviour:
   Light: {fileID: 1203772974}
   LampProps: {fileID: 238507014}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &577692075
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14770,6 +15043,7 @@ MonoBehaviour:
   Light: {fileID: 1316636424}
   LampProps: {fileID: 1419414623}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &581167324
 GameObject:
   m_ObjectHideFlags: 0
@@ -15121,6 +15395,7 @@ MonoBehaviour:
   Light: {fileID: 274585567}
   LampProps: {fileID: 1419414911}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &603364304
 GameObject:
   m_ObjectHideFlags: 0
@@ -15360,6 +15635,7 @@ MonoBehaviour:
   Light: {fileID: 392910875}
   LampProps: {fileID: 238507050}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &611034113
 GameObject:
   m_ObjectHideFlags: 0
@@ -15711,6 +15987,7 @@ MonoBehaviour:
   Light: {fileID: 1436561158}
   LampProps: {fileID: 1419414512}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &615195162
 GameObject:
   m_ObjectHideFlags: 0
@@ -15838,6 +16115,7 @@ MonoBehaviour:
   Light: {fileID: 962364851}
   LampProps: {fileID: 1419414677}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &619859329
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15898,6 +16176,7 @@ MonoBehaviour:
   Light: {fileID: 1318933889}
   LampProps: {fileID: 1419414428}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &621935628
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15913,6 +16192,7 @@ MonoBehaviour:
   Light: {fileID: 1403257734}
   LampProps: {fileID: 238507221}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &626909435
 GameObject:
   m_ObjectHideFlags: 0
@@ -16040,6 +16320,7 @@ MonoBehaviour:
   Light: {fileID: 1749105033}
   LampProps: {fileID: 1419414275}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &632056341
 GameObject:
   m_ObjectHideFlags: 0
@@ -16615,6 +16896,7 @@ MonoBehaviour:
   Light: {fileID: 1570781827}
   LampProps: {fileID: 1419414395}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &664972721
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16630,6 +16912,7 @@ MonoBehaviour:
   Light: {fileID: 777805885}
   LampProps: {fileID: 1419414716}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &666422901
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16645,6 +16928,7 @@ MonoBehaviour:
   Light: {fileID: 983786637}
   LampProps: {fileID: 238507110}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &668059718
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16660,6 +16944,7 @@ MonoBehaviour:
   Light: {fileID: 534359882}
   LampProps: {fileID: 1419414497}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &670027958
 GameObject:
   m_ObjectHideFlags: 0
@@ -16899,6 +17184,7 @@ MonoBehaviour:
   Light: {fileID: 611053753}
   LampProps: {fileID: 1419414311}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &682651246
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16914,6 +17200,7 @@ MonoBehaviour:
   Light: {fileID: 1169930860}
   LampProps: {fileID: 238507233}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &685131414
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16929,6 +17216,7 @@ MonoBehaviour:
   Light: {fileID: 150945711}
   LampProps: {fileID: 1419414473}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &689417916
 GameObject:
   m_ObjectHideFlags: 0
@@ -17392,6 +17680,7 @@ MonoBehaviour:
   Light: {fileID: 272415407}
   LampProps: {fileID: 1419414368}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &694921528
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17407,6 +17696,7 @@ MonoBehaviour:
   Light: {fileID: 1830877296}
   LampProps: {fileID: 238507053}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &695048478
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17422,6 +17712,7 @@ MonoBehaviour:
   Light: {fileID: 854454502}
   LampProps: {fileID: 1419414656}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &696108216
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17437,6 +17728,7 @@ MonoBehaviour:
   Light: {fileID: 1604982818}
   LampProps: {fileID: 238507152}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &698333624
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17452,6 +17744,7 @@ MonoBehaviour:
   Light: {fileID: 2005618794}
   LampProps: {fileID: 1419414842}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &701669417
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17467,6 +17760,7 @@ MonoBehaviour:
   Light: {fileID: 1307210556}
   LampProps: {fileID: 238507203}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &702716858
 GameObject:
   m_ObjectHideFlags: 0
@@ -17706,6 +18000,7 @@ MonoBehaviour:
   Light: {fileID: 353327810}
   LampProps: {fileID: 1419414836}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &722789431
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17721,6 +18016,7 @@ MonoBehaviour:
   Light: {fileID: 1711414942}
   LampProps: {fileID: 1419414251}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &726943577
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17736,6 +18032,7 @@ MonoBehaviour:
   Light: {fileID: 377785043}
   LampProps: {fileID: 238506921}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &727643835
 GameObject:
   m_ObjectHideFlags: 0
@@ -17863,6 +18160,7 @@ MonoBehaviour:
   Light: {fileID: 493739034}
   LampProps: {fileID: 238507056}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &729719374
 GameObject:
   m_ObjectHideFlags: 0
@@ -17881,7 +18179,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &729719375
 Transform:
   m_ObjectHideFlags: 0
@@ -17911,7 +18209,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UID: 1004066614
   color: {r: 1, g: 1, b: 1, a: 1}
-  intensity: 0.09218502
+  intensity: 16
   texture: {fileID: 0}
   cutoff: 100
   samples: 128
@@ -17990,6 +18288,7 @@ MonoBehaviour:
   Light: {fileID: 2093275685}
   LampProps: {fileID: 238507116}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &734968351
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18005,6 +18304,7 @@ MonoBehaviour:
   Light: {fileID: 171486592}
   LampProps: {fileID: 1419414809}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &739000227
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18020,6 +18320,7 @@ MonoBehaviour:
   Light: {fileID: 2099227907}
   LampProps: {fileID: 238507026}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &742366829
 GameObject:
   m_ObjectHideFlags: 0
@@ -18147,6 +18448,7 @@ MonoBehaviour:
   Light: {fileID: 605632526}
   LampProps: {fileID: 1419414833}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &743659260
 GameObject:
   m_ObjectHideFlags: 0
@@ -18274,6 +18576,7 @@ MonoBehaviour:
   Light: {fileID: 1335540521}
   LampProps: {fileID: 1419414791}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &747363727
 GameObject:
   m_ObjectHideFlags: 0
@@ -18401,6 +18704,7 @@ MonoBehaviour:
   Light: {fileID: 1312092080}
   LampProps: {fileID: 238507080}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &751323472
 GameObject:
   m_ObjectHideFlags: 0
@@ -18528,6 +18832,7 @@ MonoBehaviour:
   Light: {fileID: 1481297194}
   LampProps: {fileID: 1419414485}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &758832417
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18543,6 +18848,7 @@ MonoBehaviour:
   Light: {fileID: 1081483991}
   LampProps: {fileID: 1419414881}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &761063218
 GameObject:
   m_ObjectHideFlags: 0
@@ -19006,6 +19312,7 @@ MonoBehaviour:
   Light: {fileID: 301204437}
   LampProps: {fileID: 1419414494}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &775267523
 GameObject:
   m_ObjectHideFlags: 0
@@ -19357,6 +19664,7 @@ MonoBehaviour:
   Light: {fileID: 309936815}
   LampProps: {fileID: 1419414884}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &793463628
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19372,6 +19680,7 @@ MonoBehaviour:
   Light: {fileID: 858050235}
   LampProps: {fileID: 1419414734}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &795012695
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19387,6 +19696,7 @@ MonoBehaviour:
   Light: {fileID: 988411152}
   LampProps: {fileID: 238507023}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &797387092
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19402,6 +19712,7 @@ MonoBehaviour:
   Light: {fileID: 1461072323}
   LampProps: {fileID: 1419414389}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &803822261
 GameObject:
   m_ObjectHideFlags: 0
@@ -19529,6 +19840,7 @@ MonoBehaviour:
   Light: {fileID: 1223873683}
   LampProps: {fileID: 1419414359}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &805024982
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19544,6 +19856,7 @@ MonoBehaviour:
   Light: {fileID: 1186499185}
   LampProps: {fileID: 1419414746}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &806889521
 GameObject:
   m_ObjectHideFlags: 0
@@ -19671,6 +19984,7 @@ MonoBehaviour:
   Light: {fileID: 940315009}
   LampProps: {fileID: 1419414539}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &818964361
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19686,6 +20000,7 @@ MonoBehaviour:
   Light: {fileID: 1549840139}
   LampProps: {fileID: 238507191}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &822662173
 GameObject:
   m_ObjectHideFlags: 0
@@ -19813,6 +20128,7 @@ MonoBehaviour:
   Light: {fileID: 1043671284}
   LampProps: {fileID: 1419414602}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &836310299
 GameObject:
   m_ObjectHideFlags: 0
@@ -20164,6 +20480,7 @@ MonoBehaviour:
   Light: {fileID: 1405678141}
   LampProps: {fileID: 1419414674}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &849486841
 GameObject:
   m_ObjectHideFlags: 0
@@ -20444,6 +20761,7 @@ MonoBehaviour:
   Light: {fileID: 1554847028}
   LampProps: {fileID: 1419414242}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &854454500
 GameObject:
   m_ObjectHideFlags: 0
@@ -20571,6 +20889,7 @@ MonoBehaviour:
   Light: {fileID: 351128475}
   LampProps: {fileID: 238507041}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &858050233
 GameObject:
   m_ObjectHideFlags: 0
@@ -20810,6 +21129,7 @@ MonoBehaviour:
   Light: {fileID: 727643837}
   LampProps: {fileID: 1419414641}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &872632313
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20825,6 +21145,7 @@ MonoBehaviour:
   Light: {fileID: 1766450850}
   LampProps: {fileID: 238507095}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &877371937
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20840,6 +21161,7 @@ MonoBehaviour:
   Light: {fileID: 972255627}
   LampProps: {fileID: 1419414233}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &885069863
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20855,6 +21177,7 @@ MonoBehaviour:
   Light: {fileID: 341806657}
   LampProps: {fileID: 1419414290}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &888121194
 GameObject:
   m_ObjectHideFlags: 0
@@ -21094,6 +21417,7 @@ MonoBehaviour:
   Light: {fileID: 62109789}
   LampProps: {fileID: 238507209}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &894210760
 GameObject:
   m_ObjectHideFlags: 0
@@ -21333,6 +21657,7 @@ MonoBehaviour:
   Light: {fileID: 1278769}
   LampProps: {fileID: 238507182}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &905992216
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21348,6 +21673,7 @@ MonoBehaviour:
   Light: {fileID: 1151946993}
   LampProps: {fileID: 1419414635}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &907088479
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21363,6 +21689,7 @@ MonoBehaviour:
   Light: {fileID: 321976833}
   LampProps: {fileID: 1419414800}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &907272722
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21378,6 +21705,7 @@ MonoBehaviour:
   Light: {fileID: 640442196}
   LampProps: {fileID: 238507176}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &913030539
 GameObject:
   m_ObjectHideFlags: 0
@@ -21617,6 +21945,7 @@ MonoBehaviour:
   Light: {fileID: 1789858648}
   LampProps: {fileID: 238507086}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &918804815
 GameObject:
   m_ObjectHideFlags: 0
@@ -21744,6 +22073,7 @@ MonoBehaviour:
   Light: {fileID: 420936826}
   LampProps: {fileID: 1419414548}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &922671958
 GameObject:
   m_ObjectHideFlags: 0
@@ -21871,6 +22201,7 @@ MonoBehaviour:
   Light: {fileID: 2120175361}
   LampProps: {fileID: 1419414479}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &924046590
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21886,6 +22217,7 @@ MonoBehaviour:
   Light: {fileID: 1037042099}
   LampProps: {fileID: 1419414398}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &925008983
 GameObject:
   m_ObjectHideFlags: 0
@@ -22013,6 +22345,7 @@ MonoBehaviour:
   Light: {fileID: 1456001239}
   LampProps: {fileID: 1419414356}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &928816758
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22028,6 +22361,7 @@ MonoBehaviour:
   Light: {fileID: 691641847}
   LampProps: {fileID: 1419414482}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &931167690
 GameObject:
   m_ObjectHideFlags: 0
@@ -22155,6 +22489,7 @@ MonoBehaviour:
   Light: {fileID: 1378181662}
   LampProps: {fileID: 1419414851}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &933566816
 GameObject:
   m_ObjectHideFlags: 0
@@ -22282,6 +22617,7 @@ MonoBehaviour:
   Light: {fileID: 508436596}
   LampProps: {fileID: 238507134}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &939111352
 GameObject:
   m_ObjectHideFlags: 0
@@ -22745,6 +23081,7 @@ MonoBehaviour:
   Light: {fileID: 1696588069}
   LampProps: {fileID: 1419414710}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &946725705
 GameObject:
   m_ObjectHideFlags: 0
@@ -22872,6 +23209,7 @@ MonoBehaviour:
   Light: {fileID: 1306919435}
   LampProps: {fileID: 1419414236}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &955822124
 GameObject:
   m_ObjectHideFlags: 0
@@ -22999,6 +23337,7 @@ MonoBehaviour:
   Light: {fileID: 440389583}
   LampProps: {fileID: 1419414845}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &962364849
 GameObject:
   m_ObjectHideFlags: 0
@@ -23462,6 +23801,7 @@ MonoBehaviour:
   Light: {fileID: 2066221516}
   LampProps: {fileID: 1419414545}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &975712877
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -23477,6 +23817,7 @@ MonoBehaviour:
   Light: {fileID: 1089846350}
   LampProps: {fileID: 1419414572}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &981111458
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -23492,6 +23833,7 @@ MonoBehaviour:
   Light: {fileID: 1094765482}
   LampProps: {fileID: 1419414440}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &983290960
 GameObject:
   m_ObjectHideFlags: 0
@@ -23955,6 +24297,7 @@ MonoBehaviour:
   Light: {fileID: 931167692}
   LampProps: {fileID: 1419414773}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &995103872
 GameObject:
   m_ObjectHideFlags: 0
@@ -24082,6 +24425,7 @@ MonoBehaviour:
   Light: {fileID: 1010045183}
   LampProps: {fileID: 238506915}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1000832568
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -24097,6 +24441,7 @@ MonoBehaviour:
   Light: {fileID: 2068486009}
   LampProps: {fileID: 1419414332}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1006698777
 GameObject:
   m_ObjectHideFlags: 0
@@ -24224,6 +24569,7 @@ MonoBehaviour:
   Light: {fileID: 1379769635}
   LampProps: {fileID: 1419414896}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1010045181
 GameObject:
   m_ObjectHideFlags: 0
@@ -24351,6 +24697,7 @@ MonoBehaviour:
   Light: {fileID: 581167326}
   LampProps: {fileID: 1419414560}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1016238063
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -24366,6 +24713,7 @@ MonoBehaviour:
   Light: {fileID: 1165931095}
   LampProps: {fileID: 1419414362}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1017843729
 GameObject:
   m_ObjectHideFlags: 0
@@ -24493,6 +24841,7 @@ MonoBehaviour:
   Light: {fileID: 69396359}
   LampProps: {fileID: 1419414293}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1023393467
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -24508,6 +24857,7 @@ MonoBehaviour:
   Light: {fileID: 743659262}
   LampProps: {fileID: 238507062}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1030907400
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -24523,6 +24873,7 @@ MonoBehaviour:
   Light: {fileID: 706090271}
   LampProps: {fileID: 1419414902}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1033476984
 GameObject:
   m_ObjectHideFlags: 0
@@ -24650,6 +25001,7 @@ MonoBehaviour:
   Light: {fileID: 33902261}
   LampProps: {fileID: 1419414326}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1037042097
 GameObject:
   m_ObjectHideFlags: 0
@@ -24777,6 +25129,7 @@ MonoBehaviour:
   Light: {fileID: 611034115}
   LampProps: {fileID: 1419414860}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1040169011
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -24792,6 +25145,7 @@ MonoBehaviour:
   Light: {fileID: 1114022138}
   LampProps: {fileID: 1419414611}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1041463307
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -24807,6 +25161,7 @@ MonoBehaviour:
   Light: {fileID: 1588290076}
   LampProps: {fileID: 238506918}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1041921363
 GameObject:
   m_ObjectHideFlags: 0
@@ -25031,6 +25386,90 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1043671282}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1001 &1048235126
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 439049407602442269}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -24
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 1d5308a0299231d4da9629b447f88443, type: 2}
+    - target: {fileID: 919132149155446097, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_Name
+      value: AirportSeating
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 410289a494e732649868cdae5db99194, type: 3}
+--- !u!4 &1048235127 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+    type: 3}
+  m_PrefabInstance: {fileID: 1048235126}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1048630571
 GameObject:
   m_ObjectHideFlags: 0
@@ -25158,6 +25597,7 @@ MonoBehaviour:
   Light: {fileID: 773332158}
   LampProps: {fileID: 1419414455}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1050448501
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -25173,6 +25613,7 @@ MonoBehaviour:
   Light: {fileID: 416810016}
   LampProps: {fileID: 238507122}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1053705018
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -25188,6 +25629,7 @@ MonoBehaviour:
   Light: {fileID: 2129157632}
   LampProps: {fileID: 1419414374}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1053766482
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -25203,6 +25645,7 @@ MonoBehaviour:
   Light: {fileID: 751323474}
   LampProps: {fileID: 238507035}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1060855199
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -25218,6 +25661,7 @@ MonoBehaviour:
   Light: {fileID: 1006698779}
   LampProps: {fileID: 1419414776}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1069869851
 GameObject:
   m_ObjectHideFlags: 0
@@ -25569,6 +26013,7 @@ MonoBehaviour:
   Light: {fileID: 398924768}
   LampProps: {fileID: 1419414227}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1079488102
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -25584,6 +26029,7 @@ MonoBehaviour:
   Light: {fileID: 512380833}
   LampProps: {fileID: 1419414752}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1080918193
 GameObject:
   m_ObjectHideFlags: 0
@@ -25935,6 +26381,7 @@ MonoBehaviour:
   Light: {fileID: 1241280020}
   LampProps: {fileID: 1419414794}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1089267154
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -25950,6 +26397,7 @@ MonoBehaviour:
   Light: {fileID: 8929817}
   LampProps: {fileID: 1419414218}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1089846348
 GameObject:
   m_ObjectHideFlags: 0
@@ -26077,6 +26525,7 @@ MonoBehaviour:
   Light: {fileID: 913030541}
   LampProps: {fileID: 1419414419}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1094765480
 GameObject:
   m_ObjectHideFlags: 0
@@ -26204,6 +26653,7 @@ MonoBehaviour:
   Light: {fileID: 1981319563}
   LampProps: {fileID: 238507161}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1098073777
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26219,6 +26669,7 @@ MonoBehaviour:
   Light: {fileID: 1434678016}
   LampProps: {fileID: 1419414614}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1099736602
 GameObject:
   m_ObjectHideFlags: 0
@@ -26346,6 +26797,7 @@ MonoBehaviour:
   Light: {fileID: 13275688}
   LampProps: {fileID: 1419414659}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1103729100
 GameObject:
   m_ObjectHideFlags: 0
@@ -26809,6 +27261,7 @@ MonoBehaviour:
   Light: {fileID: 1886088913}
   LampProps: {fileID: 1419414488}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1129277242
 GameObject:
   m_ObjectHideFlags: 0
@@ -26936,6 +27389,7 @@ MonoBehaviour:
   Light: {fileID: 191182783}
   LampProps: {fileID: 238507224}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1138358101
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26951,6 +27405,7 @@ MonoBehaviour:
   Light: {fileID: 894210762}
   LampProps: {fileID: 238507149}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1139291860
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26966,6 +27421,7 @@ MonoBehaviour:
   Light: {fileID: 897012677}
   LampProps: {fileID: 238507248}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1146770050
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26981,6 +27437,7 @@ MonoBehaviour:
   Light: {fileID: 1658917858}
   LampProps: {fileID: 1419414665}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1147396139
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26996,6 +27453,7 @@ MonoBehaviour:
   Light: {fileID: 358700515}
   LampProps: {fileID: 1419414719}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1147728082
 GameObject:
   m_ObjectHideFlags: 0
@@ -27123,6 +27581,7 @@ MonoBehaviour:
   Light: {fileID: 1201812245}
   LampProps: {fileID: 238506966}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1151319839
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27138,6 +27597,7 @@ MonoBehaviour:
   Light: {fileID: 702716860}
   LampProps: {fileID: 1419414530}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1151946991
 GameObject:
   m_ObjectHideFlags: 0
@@ -27265,6 +27725,7 @@ MonoBehaviour:
   Light: {fileID: 351560425}
   LampProps: {fileID: 238507104}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1154240179
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27280,6 +27741,7 @@ MonoBehaviour:
   Light: {fileID: 225847209}
   LampProps: {fileID: 238507197}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1154768490
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27295,6 +27757,7 @@ MonoBehaviour:
   Light: {fileID: 1268938604}
   LampProps: {fileID: 238507212}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1158166873
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27310,6 +27773,7 @@ MonoBehaviour:
   Light: {fileID: 463833532}
   LampProps: {fileID: 1419414857}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1165931093
 GameObject:
   m_ObjectHideFlags: 0
@@ -27661,6 +28125,7 @@ MonoBehaviour:
   Light: {fileID: 86929572}
   LampProps: {fileID: 1419414212}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1174359571
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -27676,6 +28141,7 @@ MonoBehaviour:
   Light: {fileID: 925008985}
   LampProps: {fileID: 1419414527}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1184792942
 GameObject:
   m_ObjectHideFlags: 0
@@ -27806,7 +28272,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1186499184
 Transform:
   m_ObjectHideFlags: 0
@@ -28251,6 +28717,7 @@ MonoBehaviour:
   Light: {fileID: 1957602404}
   LampProps: {fileID: 1419414383}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1190016069
 GameObject:
   m_ObjectHideFlags: 0
@@ -29050,6 +29517,7 @@ MonoBehaviour:
   Light: {fileID: 1188702354}
   LampProps: {fileID: 238507065}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1217611391
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -29065,6 +29533,7 @@ MonoBehaviour:
   Light: {fileID: 1207401086}
   LampProps: {fileID: 238507047}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1220447934
 GameObject:
   m_ObjectHideFlags: 0
@@ -29640,6 +30109,7 @@ MonoBehaviour:
   Light: {fileID: 1786569219}
   LampProps: {fileID: 1419414749}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1240675628
 GameObject:
   m_ObjectHideFlags: 0
@@ -29924,6 +30394,7 @@ MonoBehaviour:
   Light: {fileID: 632056343}
   LampProps: {fileID: 1419414575}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1250335703
 GameObject:
   m_ObjectHideFlags: 0
@@ -30051,6 +30522,7 @@ MonoBehaviour:
   Light: {fileID: 1347934837}
   LampProps: {fileID: 238507125}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1258059379
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -30066,6 +30538,7 @@ MonoBehaviour:
   Light: {fileID: 806889523}
   LampProps: {fileID: 1419414566}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1259324707
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -30081,6 +30554,7 @@ MonoBehaviour:
   Light: {fileID: 1224944883}
   LampProps: {fileID: 238507074}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1259367164
 GameObject:
   m_ObjectHideFlags: 0
@@ -30208,6 +30682,7 @@ MonoBehaviour:
   Light: {fileID: 1387430893}
   LampProps: {fileID: 1419414254}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1263864387
 GameObject:
   m_ObjectHideFlags: 0
@@ -30447,6 +30922,7 @@ MonoBehaviour:
   Light: {fileID: 1977574277}
   LampProps: {fileID: 238506972}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1278189854
 GameObject:
   m_ObjectHideFlags: 0
@@ -30574,6 +31050,7 @@ MonoBehaviour:
   Light: {fileID: 1586107371}
   LampProps: {fileID: 238507077}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1296763670
 GameObject:
   m_ObjectHideFlags: 0
@@ -30701,6 +31178,7 @@ MonoBehaviour:
   Light: {fileID: 655594867}
   LampProps: {fileID: 238507158}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1302933579
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -30716,6 +31194,7 @@ MonoBehaviour:
   Light: {fileID: 1041921365}
   LampProps: {fileID: 238506945}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1304531099
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -30731,6 +31210,7 @@ MonoBehaviour:
   Light: {fileID: 1543267035}
   LampProps: {fileID: 238507029}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1306609389
 GameObject:
   m_ObjectHideFlags: 0
@@ -31530,6 +32010,7 @@ MonoBehaviour:
   Light: {fileID: 995103874}
   LampProps: {fileID: 1419414407}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1316636422
 GameObject:
   m_ObjectHideFlags: 0
@@ -31769,6 +32250,7 @@ MonoBehaviour:
   Light: {fileID: 1533705133}
   LampProps: {fileID: 1419414689}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1320460903
 GameObject:
   m_ObjectHideFlags: 0
@@ -32008,6 +32490,7 @@ MonoBehaviour:
   Light: {fileID: 1080918195}
   LampProps: {fileID: 1419414737}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1330484746
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -32023,6 +32506,7 @@ MonoBehaviour:
   Light: {fileID: 689971142}
   LampProps: {fileID: 1419414797}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1335540519
 GameObject:
   m_ObjectHideFlags: 0
@@ -32150,6 +32634,7 @@ MonoBehaviour:
   Light: {fileID: 1171117290}
   LampProps: {fileID: 238507008}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1345785383
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -32165,6 +32650,7 @@ MonoBehaviour:
   Light: {fileID: 1184792944}
   LampProps: {fileID: 1419414647}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1347934835
 GameObject:
   m_ObjectHideFlags: 0
@@ -32292,6 +32778,7 @@ MonoBehaviour:
   Light: {fileID: 1587749605}
   LampProps: {fileID: 1419414815}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1348919343
 GameObject:
   m_ObjectHideFlags: 0
@@ -32643,6 +33130,7 @@ MonoBehaviour:
   Light: {fileID: 534779097}
   LampProps: {fileID: 238506954}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1359472043
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -32658,6 +33146,7 @@ MonoBehaviour:
   Light: {fileID: 1905681516}
   LampProps: {fileID: 1419414887}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1361160153
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -32673,6 +33162,7 @@ MonoBehaviour:
   Light: {fileID: 2132227292}
   LampProps: {fileID: 1419414503}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1366548406
 GameObject:
   m_ObjectHideFlags: 0
@@ -32800,6 +33290,7 @@ MonoBehaviour:
   Light: {fileID: 1579195627}
   LampProps: {fileID: 238506930}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1374645523
 GameObject:
   m_ObjectHideFlags: 0
@@ -33151,6 +33642,7 @@ MonoBehaviour:
   Light: {fileID: 1312749418}
   LampProps: {fileID: 1419414728}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1381353530
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -33166,6 +33658,7 @@ MonoBehaviour:
   Light: {fileID: 281675322}
   LampProps: {fileID: 1419414899}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1387109175
 GameObject:
   m_ObjectHideFlags: 0
@@ -33293,6 +33786,7 @@ MonoBehaviour:
   Light: {fileID: 1222747915}
   LampProps: {fileID: 1419414353}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1387430891
 GameObject:
   m_ObjectHideFlags: 0
@@ -33420,6 +33914,7 @@ MonoBehaviour:
   Light: {fileID: 369905069}
   LampProps: {fileID: 1419414224}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1402592132
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -33435,6 +33930,7 @@ MonoBehaviour:
   Light: {fileID: 845247045}
   LampProps: {fileID: 1419414422}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1403257732
 GameObject:
   m_ObjectHideFlags: 0
@@ -33677,7 +34173,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1409079216
 Transform:
   m_ObjectHideFlags: 0
@@ -33786,6 +34282,7 @@ MonoBehaviour:
   Light: {fileID: 939111354}
   LampProps: {fileID: 1419414599}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1417250198
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -33801,6 +34298,7 @@ MonoBehaviour:
   Light: {fileID: 850756137}
   LampProps: {fileID: 1419414347}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1417971505
 GameObject:
   m_ObjectHideFlags: 0
@@ -43517,6 +44015,7 @@ MonoBehaviour:
   Light: {fileID: 184124984}
   LampProps: {fileID: 1419414914}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1419414921
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -43532,6 +44031,7 @@ MonoBehaviour:
   Light: {fileID: 18646497}
   LampProps: {fileID: 1419414917}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1422887829
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -43547,6 +44047,7 @@ MonoBehaviour:
   Light: {fileID: 1925008023}
   LampProps: {fileID: 238506957}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1425925364
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -43562,6 +44063,7 @@ MonoBehaviour:
   Light: {fileID: 1112198593}
   LampProps: {fileID: 1419414638}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1427995595
 GameObject:
   m_ObjectHideFlags: 0
@@ -43689,6 +44191,7 @@ MonoBehaviour:
   Light: {fileID: 918804817}
   LampProps: {fileID: 1419414476}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1434678014
 GameObject:
   m_ObjectHideFlags: 0
@@ -43816,6 +44319,7 @@ MonoBehaviour:
   Light: {fileID: 485658445}
   LampProps: {fileID: 1419414830}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1436561156
 GameObject:
   m_ObjectHideFlags: 0
@@ -44055,6 +44559,7 @@ MonoBehaviour:
   Light: {fileID: 288273120}
   LampProps: {fileID: 1419414320}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1456001237
 GameObject:
   m_ObjectHideFlags: 0
@@ -44406,6 +44911,7 @@ MonoBehaviour:
   Light: {fileID: 244995321}
   LampProps: {fileID: 1419414653}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1479713940
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -44421,6 +44927,7 @@ MonoBehaviour:
   Light: {fileID: 2070834558}
   LampProps: {fileID: 238507098}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1480218838
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -44436,6 +44943,7 @@ MonoBehaviour:
   Light: {fileID: 1199662001}
   LampProps: {fileID: 238507242}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1481297192
 GameObject:
   m_ObjectHideFlags: 0
@@ -44563,6 +45071,7 @@ MonoBehaviour:
   Light: {fileID: 1824544768}
   LampProps: {fileID: 238506933}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1484174402
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -44578,6 +45087,7 @@ MonoBehaviour:
   Light: {fileID: 559607272}
   LampProps: {fileID: 1419414866}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1484226192
 GameObject:
   m_ObjectHideFlags: 0
@@ -44929,6 +45439,7 @@ MonoBehaviour:
   Light: {fileID: 1770596850}
   LampProps: {fileID: 1419414302}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1492898423
 GameObject:
   m_ObjectHideFlags: 0
@@ -45280,6 +45791,7 @@ MonoBehaviour:
   Light: {fileID: 1188749998}
   LampProps: {fileID: 1419414272}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1520408034
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -45295,6 +45807,7 @@ MonoBehaviour:
   Light: {fileID: 1409079217}
   LampProps: {fileID: 1419414743}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1526140709
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -45310,6 +45823,7 @@ MonoBehaviour:
   Light: {fileID: 1491209173}
   LampProps: {fileID: 238507155}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1527294553
 GameObject:
   m_ObjectHideFlags: 0
@@ -45997,6 +46511,7 @@ MonoBehaviour:
   Light: {fileID: 2121287705}
   LampProps: {fileID: 1419414245}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1543267033
 GameObject:
   m_ObjectHideFlags: 0
@@ -46236,6 +46751,7 @@ MonoBehaviour:
   Light: {fileID: 761063220}
   LampProps: {fileID: 238506948}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1549840137
 GameObject:
   m_ObjectHideFlags: 0
@@ -46587,6 +47103,7 @@ MonoBehaviour:
   Light: {fileID: 377833520}
   LampProps: {fileID: 1419414869}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1555766024
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -46602,6 +47119,7 @@ MonoBehaviour:
   Light: {fileID: 1099736604}
   LampProps: {fileID: 1419414695}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1560225223
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -46617,6 +47135,7 @@ MonoBehaviour:
   Light: {fileID: 124918117}
   LampProps: {fileID: 1419414818}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1561488344
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -46632,6 +47151,7 @@ MonoBehaviour:
   Light: {fileID: 66845596}
   LampProps: {fileID: 1419414248}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1570781825
 GameObject:
   m_ObjectHideFlags: 0
@@ -46871,6 +47391,7 @@ MonoBehaviour:
   Light: {fileID: 1462980561}
   LampProps: {fileID: 238507185}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1575455620
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -46886,6 +47407,7 @@ MonoBehaviour:
   Light: {fileID: 780028252}
   LampProps: {fileID: 1419414257}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1575878181
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -46901,6 +47423,7 @@ MonoBehaviour:
   Light: {fileID: 1835788910}
   LampProps: {fileID: 1419414443}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1578059642
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -46916,6 +47439,7 @@ MonoBehaviour:
   Light: {fileID: 137046499}
   LampProps: {fileID: 238506912}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1579195625
 GameObject:
   m_ObjectHideFlags: 0
@@ -47715,6 +48239,7 @@ MonoBehaviour:
   Light: {fileID: 972994712}
   LampProps: {fileID: 238507119}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1598441623
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -47730,6 +48255,7 @@ MonoBehaviour:
   Light: {fileID: 1801018360}
   LampProps: {fileID: 1419414671}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1599287440
 GameObject:
   m_ObjectHideFlags: 0
@@ -47857,6 +48383,7 @@ MonoBehaviour:
   Light: {fileID: 1657862530}
   LampProps: {fileID: 1419414239}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1603976633
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -47872,6 +48399,7 @@ MonoBehaviour:
   Light: {fileID: 1348919345}
   LampProps: {fileID: 1419414908}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1604982816
 GameObject:
   m_ObjectHideFlags: 0
@@ -48223,6 +48751,7 @@ MonoBehaviour:
   Light: {fileID: 1081492819}
   LampProps: {fileID: 238507194}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1612840548
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -48238,6 +48767,7 @@ MonoBehaviour:
   Light: {fileID: 603364306}
   LampProps: {fileID: 238507227}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1613764061
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -48253,6 +48783,7 @@ MonoBehaviour:
   Light: {fileID: 61735584}
   LampProps: {fileID: 1419414725}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1614970154
 GameObject:
   m_ObjectHideFlags: 0
@@ -48548,6 +49079,7 @@ MonoBehaviour:
   Light: {fileID: 986323155}
   LampProps: {fileID: 238507140}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1630888275
 GameObject:
   m_ObjectHideFlags: 0
@@ -48836,6 +49368,7 @@ MonoBehaviour:
   Light: {fileID: 19856806}
   LampProps: {fileID: 1419414287}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1638632055
 GameObject:
   m_ObjectHideFlags: 0
@@ -48963,6 +49496,7 @@ MonoBehaviour:
   Light: {fileID: 537719402}
   LampProps: {fileID: 1419414593}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1644526185
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -48978,6 +49512,7 @@ MonoBehaviour:
   Light: {fileID: 1351333661}
   LampProps: {fileID: 238506942}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1645679737
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -48993,6 +49528,7 @@ MonoBehaviour:
   Light: {fileID: 2012901640}
   LampProps: {fileID: 1419414296}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1647954228
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -49008,6 +49544,7 @@ MonoBehaviour:
   Light: {fileID: 1531457684}
   LampProps: {fileID: 1419414449}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1653666794
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -49023,6 +49560,7 @@ MonoBehaviour:
   Light: {fileID: 971788709}
   LampProps: {fileID: 1419414620}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1653842869
 GameObject:
   m_ObjectHideFlags: 0
@@ -49150,6 +49688,7 @@ MonoBehaviour:
   Light: {fileID: 747363729}
   LampProps: {fileID: 1419414446}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1655920614
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -49165,6 +49704,7 @@ MonoBehaviour:
   Light: {fileID: 1963548434}
   LampProps: {fileID: 1419414848}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1656717577
 GameObject:
   m_ObjectHideFlags: 0
@@ -49292,6 +49832,7 @@ MonoBehaviour:
   Light: {fileID: 512136490}
   LampProps: {fileID: 1419414269}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1657862528
 GameObject:
   m_ObjectHideFlags: 0
@@ -49531,6 +50072,7 @@ MonoBehaviour:
   Light: {fileID: 2139119650}
   LampProps: {fileID: 1419414854}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1665958768
 GameObject:
   m_ObjectHideFlags: 0
@@ -49658,6 +50200,7 @@ MonoBehaviour:
   Light: {fileID: 1417971507}
   LampProps: {fileID: 1419414578}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1672908412
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -49673,6 +50216,7 @@ MonoBehaviour:
   Light: {fileID: 1484226194}
   LampProps: {fileID: 1419414632}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1674270527
 GameObject:
   m_ObjectHideFlags: 1
@@ -51816,6 +52360,7 @@ MonoBehaviour:
   Light: {fileID: 822662175}
   LampProps: {fileID: 238507167}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1682131503
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -51831,6 +52376,7 @@ MonoBehaviour:
   Light: {fileID: 1220447936}
   LampProps: {fileID: 1419414644}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1682817203
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -51846,6 +52392,7 @@ MonoBehaviour:
   Light: {fileID: 30372226}
   LampProps: {fileID: 1419414299}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1686161544
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -51861,6 +52408,96 @@ MonoBehaviour:
   Light: {fileID: 566045999}
   LampProps: {fileID: 1419414467}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
+--- !u!1001 &1688464008
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 439049407602442269}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 136
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_ScaleInLightmap
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 1d5308a0299231d4da9629b447f88443, type: 2}
+    - target: {fileID: 919132149155446097, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_Name
+      value: AirportSeating (2)
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 410289a494e732649868cdae5db99194,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 2147483647
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 410289a494e732649868cdae5db99194, type: 3}
+--- !u!4 &1688464009 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 410289a494e732649868cdae5db99194,
+    type: 3}
+  m_PrefabInstance: {fileID: 1688464008}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1689538737
 GameObject:
   m_ObjectHideFlags: 0
@@ -51988,6 +52625,7 @@ MonoBehaviour:
   Light: {fileID: 1786686549}
   LampProps: {fileID: 1419414377}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1695021930
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -52003,6 +52641,7 @@ MonoBehaviour:
   Light: {fileID: 14847006}
   LampProps: {fileID: 1419414365}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1696588067
 GameObject:
   m_ObjectHideFlags: 0
@@ -52354,6 +52993,7 @@ MonoBehaviour:
   Light: {fileID: 276709483}
   LampProps: {fileID: 238506906}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1715540747
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -52369,6 +53009,7 @@ MonoBehaviour:
   Light: {fileID: 729719376}
   LampProps: {fileID: 1419414755}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1724007270
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -52384,6 +53025,7 @@ MonoBehaviour:
   Light: {fileID: 1259367166}
   LampProps: {fileID: 238507113}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1724733504
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -52399,6 +53041,7 @@ MonoBehaviour:
   Light: {fileID: 363963685}
   LampProps: {fileID: 238506987}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1725995274
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -52414,6 +53057,7 @@ MonoBehaviour:
   Light: {fileID: 1296763672}
   LampProps: {fileID: 238507218}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1735941852
 GameObject:
   m_ObjectHideFlags: 0
@@ -52653,6 +53297,7 @@ MonoBehaviour:
   Light: {fileID: 1129277244}
   LampProps: {fileID: 1419414581}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1743684428
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -52668,6 +53313,7 @@ MonoBehaviour:
   Light: {fileID: 103827412}
   LampProps: {fileID: 1419414410}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1745854418
 GameObject:
   m_ObjectHideFlags: 0
@@ -52907,6 +53553,7 @@ MonoBehaviour:
   Light: {fileID: 258848921}
   LampProps: {fileID: 1419414722}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1758226643
 GameObject:
   m_ObjectHideFlags: 0
@@ -53146,6 +53793,7 @@ MonoBehaviour:
   Light: {fileID: 1328428426}
   LampProps: {fileID: 1419414464}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1770596848
 GameObject:
   m_ObjectHideFlags: 0
@@ -53273,6 +53921,7 @@ MonoBehaviour:
   Light: {fileID: 922671960}
   LampProps: {fileID: 1419414767}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1775638028
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -53288,6 +53937,7 @@ MonoBehaviour:
   Light: {fileID: 2095401382}
   LampProps: {fileID: 1419414779}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1777916944
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -53303,6 +53953,7 @@ MonoBehaviour:
   Light: {fileID: 1854712908}
   LampProps: {fileID: 1419414905}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1782257156
 GameObject:
   m_ObjectHideFlags: 0
@@ -53430,6 +54081,7 @@ MonoBehaviour:
   Light: {fileID: 841935425}
   LampProps: {fileID: 238507107}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1786569217
 GameObject:
   m_ObjectHideFlags: 0
@@ -53448,7 +54100,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1786569218
 Transform:
   m_ObjectHideFlags: 0
@@ -53478,7 +54130,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   UID: -1489904778
   color: {r: 1, g: 1, b: 1, a: 1}
-  intensity: 0.09218502
+  intensity: 16
   texture: {fileID: 0}
   cutoff: 100
   samples: 128
@@ -53893,6 +54545,7 @@ MonoBehaviour:
   Light: {fileID: 1387109177}
   LampProps: {fileID: 1419414650}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1801018358
 GameObject:
   m_ObjectHideFlags: 0
@@ -54020,6 +54673,7 @@ MonoBehaviour:
   Light: {fileID: 1689538739}
   LampProps: {fileID: 238507089}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1814358317
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -54035,6 +54689,7 @@ MonoBehaviour:
   Light: {fileID: 1579914561}
   LampProps: {fileID: 238507020}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1820027722
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -54050,6 +54705,7 @@ MonoBehaviour:
   Light: {fileID: 1509465814}
   LampProps: {fileID: 1419414317}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1824544766
 GameObject:
   m_ObjectHideFlags: 0
@@ -54177,6 +54833,7 @@ MonoBehaviour:
   Light: {fileID: 1599287442}
   LampProps: {fileID: 238506969}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1830877294
 GameObject:
   m_ObjectHideFlags: 0
@@ -54528,6 +55185,7 @@ MonoBehaviour:
   Light: {fileID: 1147728084}
   LampProps: {fileID: 1419414617}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1839133846
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -54543,6 +55201,7 @@ MonoBehaviour:
   Light: {fileID: 1190016071}
   LampProps: {fileID: 238507131}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1839965235
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -54558,6 +55217,7 @@ MonoBehaviour:
   Light: {fileID: 1740744129}
   LampProps: {fileID: 238507236}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1840953866
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -54573,6 +55233,7 @@ MonoBehaviour:
   Light: {fileID: 1925513550}
   LampProps: {fileID: 1419414203}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1854712906
 GameObject:
   m_ObjectHideFlags: 0
@@ -54700,6 +55361,7 @@ MonoBehaviour:
   Light: {fileID: 157891391}
   LampProps: {fileID: 1419414803}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1862226669
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -54715,6 +55377,7 @@ MonoBehaviour:
   Light: {fileID: 1735941854}
   LampProps: {fileID: 1419414404}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!850595691 &1868073472
 LightingSettings:
   m_ObjectHideFlags: 0
@@ -54906,6 +55569,7 @@ MonoBehaviour:
   Light: {fileID: 634835044}
   LampProps: {fileID: 238506936}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1881470346
 GameObject:
   m_ObjectHideFlags: 0
@@ -55033,6 +55697,7 @@ MonoBehaviour:
   Light: {fileID: 190588484}
   LampProps: {fileID: 1419414827}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1886088911
 GameObject:
   m_ObjectHideFlags: 0
@@ -55272,6 +55937,7 @@ MonoBehaviour:
   Light: {fileID: 858525161}
   LampProps: {fileID: 1419414680}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1897672231
 GameObject:
   m_ObjectHideFlags: 0
@@ -55511,6 +56177,7 @@ MonoBehaviour:
   Light: {fileID: 2100121151}
   LampProps: {fileID: 1419414569}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1918855335
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -55526,6 +56193,7 @@ MonoBehaviour:
   Light: {fileID: 2035395173}
   LampProps: {fileID: 1419414740}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1919592761
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -55541,6 +56209,7 @@ MonoBehaviour:
   Light: {fileID: 940721801}
   LampProps: {fileID: 238506960}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1921309509
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -55556,6 +56225,7 @@ MonoBehaviour:
   Light: {fileID: 168413929}
   LampProps: {fileID: 1419414893}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1921339428
 GameObject:
   m_ObjectHideFlags: 0
@@ -56019,6 +56689,7 @@ MonoBehaviour:
   Light: {fileID: 227838488}
   LampProps: {fileID: 238507092}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1928824105
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -56034,6 +56705,7 @@ MonoBehaviour:
   Light: {fileID: 1017843731}
   LampProps: {fileID: 238506996}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1932623653
 GameObject:
   m_ObjectHideFlags: 0
@@ -56161,6 +56833,7 @@ MonoBehaviour:
   Light: {fileID: 1609693665}
   LampProps: {fileID: 238507245}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1945362959
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -56176,6 +56849,7 @@ MonoBehaviour:
   Light: {fileID: 742366831}
   LampProps: {fileID: 238507038}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1952466112
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -56191,6 +56865,7 @@ MonoBehaviour:
   Light: {fileID: 836310301}
   LampProps: {fileID: 238507251}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1954540516
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -56206,6 +56881,7 @@ MonoBehaviour:
   Light: {fileID: 1528733220}
   LampProps: {fileID: 238506927}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1955938653
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -56221,6 +56897,7 @@ MonoBehaviour:
   Light: {fileID: 320949430}
   LampProps: {fileID: 238507188}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1957602402
 GameObject:
   m_ObjectHideFlags: 0
@@ -56348,6 +57025,7 @@ MonoBehaviour:
   Light: {fileID: 1881470348}
   LampProps: {fileID: 238507137}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1959263883
 GameObject:
   m_ObjectHideFlags: 0
@@ -56587,6 +57265,7 @@ MonoBehaviour:
   Light: {fileID: 2081345860}
   LampProps: {fileID: 1419414878}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &1967339961
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -56602,6 +57281,7 @@ MonoBehaviour:
   Light: {fileID: 1665958770}
   LampProps: {fileID: 238506981}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1970362540
 GameObject:
   m_ObjectHideFlags: 0
@@ -56841,6 +57521,7 @@ MonoBehaviour:
   Light: {fileID: 434403800}
   LampProps: {fileID: 1419414788}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1978299902
 GameObject:
   m_ObjectHideFlags: 0
@@ -56968,6 +57649,7 @@ MonoBehaviour:
   Light: {fileID: 1782257158}
   LampProps: {fileID: 1419414323}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &1981319561
 GameObject:
   m_ObjectHideFlags: 0
@@ -57095,6 +57777,7 @@ MonoBehaviour:
   Light: {fileID: 1596048728}
   LampProps: {fileID: 238506990}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &2000824731
 GameObject:
   m_ObjectHideFlags: 0
@@ -57222,6 +57905,7 @@ MonoBehaviour:
   Light: {fileID: 2131431447}
   LampProps: {fileID: 1419414839}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &2005618792
 GameObject:
   m_ObjectHideFlags: 0
@@ -57573,6 +58257,7 @@ MonoBehaviour:
   Light: {fileID: 891593041}
   LampProps: {fileID: 238507068}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &2020022136
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -57588,6 +58273,7 @@ MonoBehaviour:
   Light: {fileID: 324493456}
   LampProps: {fileID: 1419414515}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &2020844313
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -57603,6 +58289,7 @@ MonoBehaviour:
   Light: {fileID: 1656717579}
   LampProps: {fileID: 1419414344}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &2021482621
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -57618,6 +58305,7 @@ MonoBehaviour:
   Light: {fileID: 2047145357}
   LampProps: {fileID: 1419414305}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &2024101003
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -57633,6 +58321,7 @@ MonoBehaviour:
   Light: {fileID: 1306609391}
   LampProps: {fileID: 1419414341}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &2025549105
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -57648,6 +58337,7 @@ MonoBehaviour:
   Light: {fileID: 1439678089}
   LampProps: {fileID: 238507215}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &2035395171
 GameObject:
   m_ObjectHideFlags: 0
@@ -57666,7 +58356,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 1
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &2035395172
 Transform:
   m_ObjectHideFlags: 0
@@ -57775,6 +58465,7 @@ MonoBehaviour:
   Light: {fileID: 2012181522}
   LampProps: {fileID: 1419414713}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &2038232178
 GameObject:
   m_ObjectHideFlags: 0
@@ -57902,6 +58593,7 @@ MonoBehaviour:
   Light: {fileID: 1630888277}
   LampProps: {fileID: 238507059}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &2045575918
 GameObject:
   m_ObjectHideFlags: 0
@@ -58029,6 +58721,7 @@ MonoBehaviour:
   Light: {fileID: 2152631}
   LampProps: {fileID: 1419414626}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &2047145355
 GameObject:
   m_ObjectHideFlags: 0
@@ -58156,6 +58849,7 @@ MonoBehaviour:
   Light: {fileID: 1634933872}
   LampProps: {fileID: 1419414425}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &2057951360
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -58171,6 +58865,7 @@ MonoBehaviour:
   Light: {fileID: 611724663}
   LampProps: {fileID: 1419414761}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &2063666965
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -58186,6 +58881,7 @@ MonoBehaviour:
   Light: {fileID: 221339603}
   LampProps: {fileID: 238507143}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &2065186779
 GameObject:
   m_ObjectHideFlags: 0
@@ -58313,6 +59009,7 @@ MonoBehaviour:
   Light: {fileID: 177644918}
   LampProps: {fileID: 238506939}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &2066221514
 GameObject:
   m_ObjectHideFlags: 0
@@ -58664,6 +59361,7 @@ MonoBehaviour:
   Light: {fileID: 2138944509}
   LampProps: {fileID: 1419414701}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &2081345858
 GameObject:
   m_ObjectHideFlags: 0
@@ -58791,6 +59489,7 @@ MonoBehaviour:
   Light: {fileID: 597448984}
   LampProps: {fileID: 1419414596}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &2093275683
 GameObject:
   m_ObjectHideFlags: 0
@@ -59254,6 +59953,7 @@ MonoBehaviour:
   Light: {fileID: 1959263885}
   LampProps: {fileID: 1419414491}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &2106164372
 GameObject:
   m_ObjectHideFlags: 0
@@ -59381,6 +60081,7 @@ MonoBehaviour:
   Light: {fileID: 1606143532}
   LampProps: {fileID: 1419414215}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!114 &2115395186
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -59396,6 +60097,7 @@ MonoBehaviour:
   Light: {fileID: 2106164374}
   LampProps: {fileID: 238507254}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &2120175359
 GameObject:
   m_ObjectHideFlags: 0
@@ -59635,6 +60337,7 @@ MonoBehaviour:
   Light: {fileID: 933566818}
   LampProps: {fileID: 1419414554}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &2129157630
 GameObject:
   m_ObjectHideFlags: 0
@@ -59762,6 +60465,7 @@ MonoBehaviour:
   Light: {fileID: 615195164}
   LampProps: {fileID: 238506999}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &2131431445
 GameObject:
   m_ObjectHideFlags: 0
@@ -60225,6 +60929,7 @@ MonoBehaviour:
   Light: {fileID: 76385125}
   LampProps: {fileID: 1419414314}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!1 &2144432449
 GameObject:
   m_ObjectHideFlags: 0
@@ -60352,6 +61057,7 @@ MonoBehaviour:
   Light: {fileID: 1240675630}
   LampProps: {fileID: 1419414335}
   BrightnessScale: 8
+  BeamProps: {fileID: 0}
 --- !u!23 &13190923872946497
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -60458,6 +61164,10 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 2678772}
+  - {fileID: 1688464009}
+  - {fileID: 513352863}
+  - {fileID: 1048235127}
   - {fileID: 1181616352501903918}
   - {fileID: 6440713361085649791}
   - {fileID: 8001787766671152479}
@@ -61450,6 +62160,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 878062728298108794, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
+      propertyPath: Resolution.y
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 878062728298108794, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
+        type: 3}
       propertyPath: LightVolumeSetup
       value: 
       objectReference: {fileID: 170607190}
@@ -61461,7 +62176,7 @@ PrefabInstance:
     - target: {fileID: 3416835475807202542, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 4.875122
+      value: 6.750122
       objectReference: {fileID: 0}
     - target: {fileID: 3416835475807202542, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
@@ -61476,17 +62191,17 @@ PrefabInstance:
     - target: {fileID: 3416835475807202542, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3416835475807202542, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3416835475807202542, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3416835475807202542, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
@@ -61502,41 +62217,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5001852114736887328, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: BoundsUvwMax0.y
-      value: 0.21428572
-      objectReference: {fileID: 0}
-    - target: {fileID: 5001852114736887328, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: BoundsUvwMax1.y
-      value: 0.21428572
-      objectReference: {fileID: 0}
-    - target: {fileID: 5001852114736887328, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: BoundsUvwMax2.y
-      value: 0.21428572
-      objectReference: {fileID: 0}
-    - target: {fileID: 5001852114736887328, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: BoundsUvwMin0.y
-      value: 0.035714287
-      objectReference: {fileID: 0}
-    - target: {fileID: 5001852114736887328, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: BoundsUvwMin1.w
-      value: 0.17857143
-      objectReference: {fileID: 0}
-    - target: {fileID: 5001852114736887328, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: BoundsUvwMin1.y
-      value: 0.035714287
-      objectReference: {fileID: 0}
-    - target: {fileID: 5001852114736887328, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: BoundsUvwMin2.y
-      value: 0.035714287
       objectReference: {fileID: 0}
     - target: {fileID: 5001852114736887328, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
@@ -61565,91 +62245,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
-    - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: FlipbookSHMode.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: FlipbookBitDepth.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: FlipbookTextures.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: FlipbookSHMode.Array.data[0]
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: FlipbookSnapshotX.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: FlipbookSnapshotY.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: FlipbookNumColumns.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: FlipbookTextures.Array.data[0]
-      value: 
-      objectReference: {fileID: 11700000, guid: 089424fc77ac1204bbb60385fa2d91b7,
-        type: 2}
-    - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: FlipbookNumSnapshots.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: FlipbookSnapshotX.Array.data[0]
-      value: 20
-      objectReference: {fileID: 0}
-    - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: FlipbookSnapshotY.Array.data[0]
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: FlipbookNumColumns.Array.data[0]
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: FlipbookNumSnapshots.Array.data[0]
-      value: 801
-      objectReference: {fileID: 0}
-    - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: FlipbookSnapshotsPerColumn.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6386179068679237950, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: FlipbookSnapshotsPerColumn.Array.data[0]
-      value: 409
-      objectReference: {fileID: 0}
     - target: {fileID: 7592580023519544999, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
         type: 3}
       propertyPath: m_Name
       value: LV Concourse Lightshow 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7592580023519544999, guid: 753ab29dc0f2f5a4aa4e0445ab365260,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -62478,106 +63077,15 @@ PrefabInstance:
       objectReference: {fileID: 1419414199}
     - target: {fileID: 6432381418249060566, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
         type: 3}
-      propertyPath: PreviewVoxels
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6432381418249060566, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
       propertyPath: AnimatorSource
       value: 
       objectReference: {fileID: 1419414199}
-    - target: {fileID: 6432381418249060566, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: BakeOutputName
-      value: ALV_ConcourseLightshow_2
-      objectReference: {fileID: 0}
-    - target: {fileID: 6432381418249060566, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: PreviewSnapshot
-      value: 64
-      objectReference: {fileID: 0}
     - target: {fileID: 6432381418249060566, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
         type: 3}
       propertyPath: serializationData.Prefab
       value: 
       objectReference: {fileID: 6432381418249060566, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
         type: 3}
-    - target: {fileID: 6432381418249060566, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: FlipbookSHMode.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6432381418249060566, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: FlipbookBitDepth.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6432381418249060566, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: FlipbookTextures.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6432381418249060566, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: FlipbookSHMode.Array.data[0]
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6432381418249060566, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: FlipbookSnapshotX.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6432381418249060566, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: FlipbookSnapshotY.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6432381418249060566, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: FlipbookNumColumns.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6432381418249060566, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: FlipbookTextures.Array.data[0]
-      value: 
-      objectReference: {fileID: 11700000, guid: 64375ad5a398ddd4d85d8dc27d1a8f66,
-        type: 2}
-    - target: {fileID: 6432381418249060566, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: FlipbookNumSnapshots.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6432381418249060566, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: FlipbookSnapshotX.Array.data[0]
-      value: 20
-      objectReference: {fileID: 0}
-    - target: {fileID: 6432381418249060566, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: FlipbookSnapshotY.Array.data[0]
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 6432381418249060566, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: FlipbookNumColumns.Array.data[0]
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6432381418249060566, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: FlipbookNumSnapshots.Array.data[0]
-      value: 105
-      objectReference: {fileID: 0}
-    - target: {fileID: 6432381418249060566, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: FlipbookSnapshotsPerColumn.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6432381418249060566, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: FlipbookSnapshotsPerColumn.Array.data[0]
-      value: 409
-      objectReference: {fileID: 0}
     - target: {fileID: 8728897044468128770, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -62586,7 +63094,7 @@ PrefabInstance:
     - target: {fileID: 8728897044468128770, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 4.875122
+      value: 6.750122
       objectReference: {fileID: 0}
     - target: {fileID: 8728897044468128770, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
         type: 3}
@@ -62630,44 +63138,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8822602833489323784, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
         type: 3}
-      propertyPath: BoundsUvwMax0.y
-      value: 0.4642857
-      objectReference: {fileID: 0}
-    - target: {fileID: 8822602833489323784, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: BoundsUvwMax1.y
-      value: 0.71428573
-      objectReference: {fileID: 0}
-    - target: {fileID: 8822602833489323784, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: BoundsUvwMax2.y
-      value: 0.96428573
-      objectReference: {fileID: 0}
-    - target: {fileID: 8822602833489323784, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: BoundsUvwMin0.y
-      value: 0.2857143
-      objectReference: {fileID: 0}
-    - target: {fileID: 8822602833489323784, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: BoundsUvwMin1.w
-      value: 0.1785714
-      objectReference: {fileID: 0}
-    - target: {fileID: 8822602833489323784, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: BoundsUvwMin1.y
-      value: 0.53571427
-      objectReference: {fileID: 0}
-    - target: {fileID: 8822602833489323784, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
-      propertyPath: BoundsUvwMin2.y
-      value: 0.78571427
-      objectReference: {fileID: 0}
-    - target: {fileID: 8822602833489323784, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
-        type: 3}
       propertyPath: LightVolumeManager
       value: 
       objectReference: {fileID: 170607189}
+    - target: {fileID: 8822602833489323784, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
+        type: 3}
+      propertyPath: InvLocalEdgeSmoothing.y
+      value: 55.002697
+      objectReference: {fileID: 0}
     - target: {fileID: 8822602833489323784, guid: 25c79c5f662e30f4cb6c833cbda24d3b,
         type: 3}
       propertyPath: serializationData.Prefab

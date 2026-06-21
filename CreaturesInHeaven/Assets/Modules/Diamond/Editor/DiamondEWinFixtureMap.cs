@@ -565,9 +565,19 @@ public class DiamondEWinFixtureMap : EditorWindow
         for (int i = _fixtureLayouts.Count - 1; i >= 0; i--)
         {
             var fl = _fixtureLayouts[i];
-            if (new Rect(fl.centre.x - fl.halfExt.x, fl.centre.y - fl.halfExt.y,
-                         fl.halfExt.x * 2f, fl.halfExt.y * 2f).Contains(layoutPos))
-                { fixtureHit = i; break; }
+            bool hit;
+            if (_fixtures[i].Shape == DiamondFixtureMapLayout.NodeShape.Round)
+            {
+                // Round nodes are drawn as a disc inscribed in the cell; test by radius.
+                float r = Mathf.Min(fl.halfExt.x, fl.halfExt.y);
+                hit = (layoutPos - fl.centre).sqrMagnitude <= r * r;
+            }
+            else
+            {
+                hit = new Rect(fl.centre.x - fl.halfExt.x, fl.centre.y - fl.halfExt.y,
+                               fl.halfExt.x * 2f, fl.halfExt.y * 2f).Contains(layoutPos);
+            }
+            if (hit) { fixtureHit = i; break; }
         }
 
         if (fixtureHit >= 0)
@@ -749,6 +759,8 @@ public class DiamondEWinFixtureMap : EditorWindow
 
     private void DrawFixtureNode(FixtureEntry fixture, FixtureLayout layout, UnityEngine.Object definition, UnityEngine.Object driver, bool selected)
     {
+        bool round = fixture.Shape == DiamondFixtureMapLayout.NodeShape.Round;
+
         Vector2 p = layout.centre;
         float dpw = layout.halfExt.x;
         float dpd = layout.halfExt.y;
@@ -759,6 +771,9 @@ public class DiamondEWinFixtureMap : EditorWindow
         float dpws = dpw * _logicalScale * _zoom;
         float dpds = dpd * _logicalScale * _zoom;
 
+        Color fill = selected ? _theme.nodeFill_Active.ToColor() : _theme.nodeFill.ToColor();
+        Color outline = selected ? _theme.nodeOutline_Active.ToColor() : _theme.nodeOutline.ToColor();
+
         // Corners: top-left, top-right, bottom-right, bottom-left (clockwise).
         var corners = new Vector3[]
         {
@@ -768,9 +783,13 @@ public class DiamondEWinFixtureMap : EditorWindow
             new(ps.x - dpws, ps.y + dpds),
         };
 
-        Color fill = selected ? _theme.nodeFill_Active.ToColor() : _theme.nodeFill.ToColor();
-        Color outline = selected ? _theme.nodeOutline_Active.ToColor() : _theme.nodeOutline.ToColor();
-        Handles.DrawSolidRectangleWithOutline(corners, fill, outline);
+        // Round fixtures emit a square node (diameter x diameter); draw a disc using the
+        // smaller half-extent as the radius so a slightly non-square cell still inscribes.
+        float radius = Mathf.Min(dpws, dpds);
+        if (round)
+            DrawDiscWithOutline(ps, radius, fill, outline);
+        else
+            Handles.DrawSolidRectangleWithOutline(corners, fill, outline);
 
         if (selected)
         {
@@ -784,7 +803,7 @@ public class DiamondEWinFixtureMap : EditorWindow
         var driverTyped = (DiamondFixtureDriver)driver;
         var definitionTyped = (DiamondFixtureDefinition)definition;
 
-        // Inner rectangle visualising luminaire state
+        // Normalised head rotation on each axis, 0..1 across the axis range (0.5 = centred).
         float rotationX = 0.5f;
         if (definitionTyped.Profile != null && definitionTyped.Profile.AxisX.Enabled && driverTyped.Head != null)
             rotationX = GetNormalizedAxisRotation(driverTyped.Head, definitionTyped.Profile.AxisX, 0);
@@ -813,15 +832,43 @@ public class DiamondEWinFixtureMap : EditorWindow
         outlineColor.a = brightness + 0.5f;
 
         float padding = .06f * _logicalScale * _zoom;
-        var innerCorners = new Vector3[]
-        {
-            new(corners[0].x + padding * rotationZ, corners[0].y + padding * rotationX),
-            new(corners[1].x - padding * rotationZ, corners[1].y + padding * rotationX),
-            new(corners[2].x - padding * (1 - rotationZ), corners[2].y - padding * (1 - rotationX)),
-            new(corners[3].x + padding * (1 - rotationZ), corners[3].y - padding * (1 - rotationX))
-        };
 
-        Handles.DrawSolidRectangleWithOutline(innerCorners, fillColor, outlineColor);
+        if (round)
+        {
+            // Inner disc visualising luminaire state. Head rotation nudges the disc's
+            // centre within the padding band (X/Z mapped to screen X/Y; 0.5 = centred).
+            float innerRadius = Mathf.Max(radius - padding, 0f);
+            var innerCentre = new Vector2(
+                ps.x + padding * (rotationZ - 0.5f) * 2f,
+                ps.y + padding * (rotationX - 0.5f) * 2f);
+            DrawDiscWithOutline(innerCentre, innerRadius, fillColor, outlineColor);
+        }
+        else
+        {
+            // Inner rectangle visualising luminaire state, skewed by head rotation.
+            var innerCorners = new Vector3[]
+            {
+                new(corners[0].x + padding * rotationZ, corners[0].y + padding * rotationX),
+                new(corners[1].x - padding * rotationZ, corners[1].y + padding * rotationX),
+                new(corners[2].x - padding * (1 - rotationZ), corners[2].y - padding * (1 - rotationX)),
+                new(corners[3].x + padding * (1 - rotationZ), corners[3].y - padding * (1 - rotationX))
+            };
+
+            Handles.DrawSolidRectangleWithOutline(innerCorners, fillColor, outlineColor);
+        }
+    }
+
+    // Draws a filled disc with an outline ring, mirroring Handles.DrawSolidRectangleWithOutline.
+    private static void DrawDiscWithOutline(Vector2 centre, float radius, Color fill, Color outline)
+    {
+        if (radius <= 0f) return;
+        var c = new Vector3(centre.x, centre.y, 0f);
+        Color prev = Handles.color;
+        Handles.color = fill;
+        Handles.DrawSolidDisc(c, Vector3.forward, radius);
+        Handles.color = outline;
+        Handles.DrawWireDisc(c, Vector3.forward, radius);
+        Handles.color = prev;
     }
 
     private float GetNormalizedAxisRotation(Transform head, DiamondFixtureProfile.RotationAxis axis, int axisComponent)

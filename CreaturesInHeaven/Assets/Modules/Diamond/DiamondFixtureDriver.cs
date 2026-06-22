@@ -54,6 +54,12 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
 
     public Vector2 EmitterSize = new Vector2(1, 1);
 
+    // True for round (symmetric-cone) fixtures using the Diamond/BeamRound
+    // shader, which reads only _SpreadX. Mirrored from the profile's BeamShape
+    // by DiamondFixtureDefinition.SyncEmitterSize. When set, the driver skips
+    // the _SpreadZ write that the round shader would ignore anyway.
+    public bool SymmetricBeam = false;
+
     // Worst-case spread (as tan(half-angle)) used for renderer-bounds sizing.
     // Mirrored from the FixtureProfile by DiamondFixtureDefinition.SyncBounds.
     // Defaults to tan(45 degrees) = 1.0 -- a sane 90-degree max cone.
@@ -221,7 +227,13 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
             _beamPropBlock.SetColor("_Color", drivenColour);
             _beamPropBlock.SetFloat("_BeamIntensity", beamIntensity);
             _beamPropBlock.SetFloat("_SpreadX", spread);
-            _beamPropBlock.SetFloat("_SpreadZ", spread);
+
+            // Round fixtures use the BeamRound shader, which reads only _SpreadX.
+            // Rect fixtures need _SpreadZ too (independent per-axis spread; here
+            // mirrored from _SpreadX for a symmetric square cone).
+            if (!SymmetricBeam)
+                _beamPropBlock.SetFloat("_SpreadZ", spread);
+
             BeamRenderer.SetPropertyBlock(_beamPropBlock);
         }
     }

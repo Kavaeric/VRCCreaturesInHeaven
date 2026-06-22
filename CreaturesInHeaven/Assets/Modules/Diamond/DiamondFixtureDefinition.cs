@@ -70,6 +70,11 @@ public class DiamondFixtureDefinition : MonoBehaviour
         driver.EmitterSize = new Vector2(Profile.FixtureWidth, Profile.FixtureHeight);
         driver.ApplyBeamEmitterSize();
 
+        // Mirror the beam shape so the runtime driver knows whether the beam is
+        // symmetric (round shader reads only _SpreadX) and can skip the unused
+        // _SpreadZ write. BeamShape is editor-only; the driver carries a bool.
+        driver.SymmetricBeam = Profile.Shape == DiamondFixtureProfile.BeamShape.Round;
+
         // Push worst-case spread from the profile so the driver can size the
         // beam renderer's bounds correctly. Use the profile's max spread in
         // degrees converted to tan(half-angle) -- same convention as the

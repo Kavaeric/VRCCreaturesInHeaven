@@ -9,7 +9,8 @@ using GroupEntry         = DiamondFixtureMapLayout.GroupEntry;
 using FixtureLayout      = DiamondFixtureMapLayout.FixtureLayout;
 using GroupLayout        = DiamondFixtureMapLayout.GroupLayout;
 using SelectionGroup     = DiamondFixtureMapLayout.SelectionGroup;
-using SelectionGroupFile = DiamondFixtureMapLayout.SelectionGroupFile;
+using SerialisedSelectionGroup = DiamondFixtureMapLayout.SerialisedSelectionGroup;
+using SelectionGroupFile    = DiamondFixtureMapLayout.SelectionGroupFile;
 
 // Graphical fixture map window. Displays fixtures loaded from a FixtureMap.json
 // (produced by DiamondEWinGenerateMap) as labelled nodes on a 2D canvas.
@@ -356,14 +357,42 @@ public class DiamondEWinFixtureMap : EditorWindow
         }
     }
 
+    // Persist groups by each member's stable GlobalObjectId (FixtureEntry.sceneObject)
+    // rather than its array index. Indices are reassigned whenever the map is regenerated,
+    // so index-based groups would silently point at the wrong fixtures after a rebuild;
+    // GIDs are tied to the GameObject and survive regeneration. Runtime groups stay
+    // index-based — we only translate index -> GID here at the file boundary.
     private void SaveSelectionGroups()
     {
         string path = SelectionsPath;
         if (path == null) return;
-        try { File.WriteAllText(path, JsonUtility.ToJson(new SelectionGroupFile { groups = _selectionGroups }, prettyPrint: true)); }
+
+        var selectionGroups = new List<SerialisedSelectionGroup>(_selectionGroups.Count);
+        foreach (var g in _selectionGroups)
+        {
+            var gids = new List<string>();
+            if (g.fixtures != null)
+            {
+                foreach (int idx in g.fixtures)
+                {
+                    // Drop indices that no longer resolve or have no stable GID.
+                    if (idx < 0 || idx >= _fixtures.Count) continue;
+                    string gid = _fixtures[idx].sceneObject;
+                    if (!string.IsNullOrEmpty(gid)) gids.Add(gid);
+                }
+            }
+            selectionGroups.Add(new SerialisedSelectionGroup { name = g.name, fixtureGids = gids });
+        }
+
+        try { File.WriteAllText(path, JsonUtility.ToJson(new SelectionGroupFile { groups = selectionGroups }, prettyPrint: true)); }
         catch (Exception ex) { Debug.LogWarning($"[Diamond] Could not save selections: {ex.Message}"); }
     }
 
+    // Loads groups and resolves their stored GIDs to current array indices, dropping any
+    // fixture that no longer exists in the map.
+    //
+    // Requires _fixtures (and _fixtures[*].sceneObject) to be populated first; LoadFrom calls
+    // ParseMap and ResolveSceneObjects before this.
     private void LoadSelectionGroups()
     {
         _selectionGroups    = new();
@@ -373,7 +402,27 @@ public class DiamondEWinFixtureMap : EditorWindow
         try
         {
             var file = JsonUtility.FromJson<SelectionGroupFile>(File.ReadAllText(path));
-            _selectionGroups = file.groups ?? new();
+            var persistGroups = file.groups ?? new List<SerialisedSelectionGroup>();
+
+            // GID -> current index lookup, built once from the freshly parsed map.
+            var indexByGid = new Dictionary<string, int>(_fixtures.Count);
+            for (int i = 0; i < _fixtures.Count; i++)
+            {
+                string gid = _fixtures[i].sceneObject;
+                if (!string.IsNullOrEmpty(gid) && !indexByGid.ContainsKey(gid))
+                    indexByGid[gid] = i;
+            }
+
+            foreach (var pg in persistGroups)
+            {
+                var indices = new List<int>();
+                if (pg.fixtureGids != null)
+                    foreach (string gid in pg.fixtureGids)
+                        if (indexByGid.TryGetValue(gid, out int idx))
+                            indices.Add(idx);
+
+                _selectionGroups.Add(new SelectionGroup { name = pg.name, fixtures = indices });
+            }
         }
         catch (Exception ex)
         {
@@ -574,8 +623,13 @@ public class DiamondEWinFixtureMap : EditorWindow
             }
             else
             {
-                hit = new Rect(fl.centre.x - fl.halfExt.x, fl.centre.y - fl.halfExt.y,
-                               fl.halfExt.x * 2f, fl.halfExt.y * 2f).Contains(layoutPos);
+                // Rotate the click into the node's local (unrotated) frame, then do the
+                // axis-aligned bounds check against the half-extents.
+                float yawRad = -_fixtures[i].yaw * Mathf.Deg2Rad;
+                float c = Mathf.Cos(yawRad), s = Mathf.Sin(yawRad);
+                Vector2 d = layoutPos - fl.centre;
+                Vector2 local = new(d.x * c - d.y * s, d.x * s + d.y * c);
+                hit = Mathf.Abs(local.x) <= fl.halfExt.x && Mathf.Abs(local.y) <= fl.halfExt.y;
             }
             if (hit) { fixtureHit = i; break; }
         }
@@ -771,16 +825,25 @@ public class DiamondEWinFixtureMap : EditorWindow
         float dpws = dpw * _logicalScale * _zoom;
         float dpds = dpd * _logicalScale * _zoom;
 
+        // World yaw of the fixture footprint. Corners are built in local node space
+        // (centred at origin) and rotated by this before being offset to ps, so the
+        // node and its tilt indicator share one orientation. Round nodes are
+        // rotation-invariant, so the yaw only matters for the inner indicator there.
+        float yawRad = fixture.yaw * Mathf.Deg2Rad;
+        float cos = Mathf.Cos(yawRad), sin = Mathf.Sin(yawRad);
+        Vector3 ToWorld(float lx, float ly) =>
+            new(ps.x + lx * cos - ly * sin, ps.y + lx * sin + ly * cos);
+
         Color fill = selected ? _theme.nodeFill_Active.ToColor() : _theme.nodeFill.ToColor();
         Color outline = selected ? _theme.nodeOutline_Active.ToColor() : _theme.nodeOutline.ToColor();
 
-        // Corners: top-left, top-right, bottom-right, bottom-left (clockwise).
+        // Corners in local node space: top-left, top-right, bottom-right, bottom-left.
         var corners = new Vector3[]
         {
-            new(ps.x - dpws, ps.y - dpds),
-            new(ps.x + dpws, ps.y - dpds),
-            new(ps.x + dpws, ps.y + dpds),
-            new(ps.x - dpws, ps.y + dpds),
+            ToWorld(-dpws, -dpds),
+            ToWorld(+dpws, -dpds),
+            ToWorld(+dpws, +dpds),
+            ToWorld(-dpws, +dpds),
         };
 
         // Round fixtures emit a square node (diameter x diameter); draw a disc using the
@@ -803,15 +866,6 @@ public class DiamondEWinFixtureMap : EditorWindow
         var driverTyped = (DiamondFixtureDriver)driver;
         var definitionTyped = (DiamondFixtureDefinition)definition;
 
-        // Normalised head rotation on each axis, 0..1 across the axis range (0.5 = centred).
-        float rotationX = 0.5f;
-        if (definitionTyped.Profile != null && definitionTyped.Profile.AxisX.Enabled && driverTyped.Head != null)
-            rotationX = GetNormalizedAxisRotation(driverTyped.Head, definitionTyped.Profile.AxisX, 0);
-
-        float rotationZ = 0.5f;
-        if (definitionTyped.Profile != null && definitionTyped.Profile.AxisZ.Enabled && driverTyped.Head != null)
-            rotationZ = GetNormalizedAxisRotation(driverTyped.Head, definitionTyped.Profile.AxisZ, 2);
-
         // Resolve emission color, handling blackbody mode.
         Color emissionColor = definitionTyped.EmissionColor;
         if (definitionTyped.Colour == DiamondFixtureDefinition.ColourMode.Blackbody)
@@ -831,27 +885,24 @@ public class DiamondEWinFixtureMap : EditorWindow
         Color outlineColor = emissionColor;
         outlineColor.a = brightness + 0.5f;
 
-        float padding = .06f * _logicalScale * _zoom;
+        float padding = .03f * _logicalScale * _zoom;
 
         if (round)
         {
-            // Inner disc visualising luminaire state. Head rotation nudges the disc's
-            // centre within the padding band (X/Z mapped to screen X/Y; 0.5 = centred).
+            // Inner disc visualising brightness/colour: concentric, inset by the padding band.
             float innerRadius = Mathf.Max(radius - padding, 0f);
-            var innerCentre = new Vector2(
-                ps.x + padding * (rotationZ - 0.5f) * 2f,
-                ps.y + padding * (rotationX - 0.5f) * 2f);
-            DrawDiscWithOutline(innerCentre, innerRadius, fillColor, outlineColor);
+            DrawDiscWithOutline(ps, innerRadius, fillColor, outlineColor);
         }
         else
         {
-            // Inner rectangle visualising luminaire state, skewed by head rotation.
+            // Inner rectangle visualising brightness/colour: a uniform inset of the local
+            // half-extents, rotated by yaw via ToWorld so it tracks the footprint orientation.
             var innerCorners = new Vector3[]
             {
-                new(corners[0].x + padding * rotationZ, corners[0].y + padding * rotationX),
-                new(corners[1].x - padding * rotationZ, corners[1].y + padding * rotationX),
-                new(corners[2].x - padding * (1 - rotationZ), corners[2].y - padding * (1 - rotationX)),
-                new(corners[3].x + padding * (1 - rotationZ), corners[3].y - padding * (1 - rotationX))
+                ToWorld(-dpws + padding, -dpds + padding),
+                ToWorld(+dpws - padding, -dpds + padding),
+                ToWorld(+dpws - padding, +dpds - padding),
+                ToWorld(-dpws + padding, +dpds - padding),
             };
 
             Handles.DrawSolidRectangleWithOutline(innerCorners, fillColor, outlineColor);
@@ -869,20 +920,6 @@ public class DiamondEWinFixtureMap : EditorWindow
         Handles.color = outline;
         Handles.DrawWireDisc(c, Vector3.forward, radius);
         Handles.color = prev;
-    }
-
-    private float GetNormalizedAxisRotation(Transform head, DiamondFixtureProfile.RotationAxis axis, int axisComponent)
-    {
-        float currentAngle = head.localEulerAngles[axisComponent];
-        currentAngle = NormalizeAngle(currentAngle);
-        return Mathf.InverseLerp(axis.Min, axis.Max, currentAngle);
-    }
-
-    private static float NormalizeAngle(float angle)
-    {
-        angle %= 360f;
-        if (angle > 180f) angle -= 360f;
-        return angle;
     }
 
     // --- Selection Groups UI ----------------------------------------

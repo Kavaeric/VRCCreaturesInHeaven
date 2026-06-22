@@ -81,7 +81,13 @@ public static class DiamondFixtureMapPreview
                 beamBlock.SetFloat("_EmitterHeight", driver.EmitterSize.y);
                 beamBlock.SetFloat("_BeamIntensity", beamIntensity);
                 beamBlock.SetFloat("_SpreadX",       spread);
-                beamBlock.SetFloat("_SpreadZ",       spread);
+
+                // Match the runtime driver: round (symmetric) beams use the
+                // BeamRound shader, which reads only _SpreadX. Only rect beams
+                // need _SpreadZ.
+                if (!driver.SymmetricBeam)
+                    beamBlock.SetFloat("_SpreadZ",   spread);
+
                 driver.BeamRenderer.SetPropertyBlock(beamBlock);
             }
         }

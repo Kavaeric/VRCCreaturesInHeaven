@@ -95,14 +95,21 @@ public static class DiamondBakeryLights
             case DiamondBakeryLightType.Spot:
             {
                 // A Bakery cone (spot) is a point light with projMode = Cone.
-                // The cone fires along the light's local -Y. The Diamond beam
-                // fires along the fixture's local +Y, so rotate the light 180
-                // degrees about X to align -Y with the fixture's beam axis
-                // (mirrors how the fixture itself is flipped to shine downward).
+                // Bakery cones fire along the +Z axis, but Diamond beam fires
+                // along the fixture's local +Y, hence the local rotation.
                 var spot = go.AddComponent<BakeryPointLight>();
                 spot.projMode     = BakeryPointLight.ftLightProjectionMode.Cone;
-                spot.directionMode = BakeryPointLight.Direction.NegativeY;
-                go.transform.localRotation = Quaternion.Euler(180f, 0f, 0f);
+                go.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
+
+                // Physical (inverse-square) falloff so the baked pool models the
+                // beam's geometric emitterArea/crossArea falloff. With this on,
+                // the driver-tracked `cutoff` (range) only trims the tail near
+                // the beam's end rather than reshaping the whole curve.
+                spot.realisticFalloff = true;
+
+                // Set the inner cone range to 50%, arbitrary value. Eventually this
+                // should probably be a controllable parameter of a Diamond fixture.
+                spot.innerAngle = 50f;
 
                 // Cone full-angle from the profile's spread, if it has one.
                 // Bakery's `angle` is the full cone angle in degrees -- the same

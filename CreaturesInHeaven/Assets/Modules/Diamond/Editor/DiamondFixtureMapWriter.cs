@@ -74,12 +74,18 @@ public static class DiamondFixtureMapWriter
             float nodeW = f.Profile != null ? f.Profile.FixtureWidth  : 0f;
             float nodeD = isRound ? nodeW : (f.Profile != null ? f.Profile.FixtureHeight : 0f);
 
+            // World yaw about Y, in degrees clockwise from world +X looking down the map.
+            // The fixture map draws nodes in the XZ plane, so only the yaw matters here;
+            // it rotates both the node footprint and the head-tilt indicator.
+            float yaw = GetMapYaw(f.transform);
+
             sb.AppendLine("    {");
             sb.AppendLine($"      \"name\": \"{name}\",");
             sb.AppendLine($"      \"sceneObject\": \"{fixtureGuid}\",");
             sb.AppendLine($"      \"shape\": \"{shape}\",");
             sb.AppendLine($"      \"position\": {{ \"x\": {cx:F3}, \"y\": {cy:F3} }},");
-            sb.AppendLine($"      \"size\": {{ \"x\": {nodeW:F3}, \"y\": {nodeD:F3} }}");
+            sb.AppendLine($"      \"size\": {{ \"x\": {nodeW:F3}, \"y\": {nodeD:F3} }},");
+            sb.AppendLine($"      \"yaw\": {yaw:F3}");
             sb.AppendLine($"    }}{comma}");
         }
         sb.AppendLine("  ],");
@@ -143,6 +149,25 @@ public static class DiamondFixtureMapWriter
             return $"Output path points at an existing folder, not a file:\n{outputPath}";
 
         return null;
+    }
+
+    // Yaw of the fixture about world Y, in degrees, as used by the map renderer.
+    //
+    // The map draws the footprint in the XZ plane with the node's width along map +X.
+    // That width is the fixture's local +X axis, so we measure how that axis is oriented
+    // in world XZ. Using the axis projection (rather than transform.eulerAngles.y) keeps
+    // the value stable when the fixture is also tilted/rolled on its root. Only the
+    // in-plane component contributes, matching what the 2D map can actually show.
+    //
+    // Returned angle is clockwise from map +X (i.e. screen-space), since the writer maps
+    // world +Z to map +Y (downward on screen). A fixture with no yaw returns 0.
+    private static float GetMapYaw(Transform t)
+    {
+        Vector3 right = t.right;                       // fixture local +X in world space
+        Vector2 inPlane = new Vector2(right.x, right.z);
+        if (inPlane.sqrMagnitude < 1e-8f) return 0f;   // width axis is near-vertical; no meaningful yaw
+        // atan2(z, x): angle from world +X toward +Z, which is the map's clockwise screen angle.
+        return Mathf.Atan2(inPlane.y, inPlane.x) * Mathf.Rad2Deg;
     }
 
     // Returns a stable per-scene-object identifier via GlobalObjectId.

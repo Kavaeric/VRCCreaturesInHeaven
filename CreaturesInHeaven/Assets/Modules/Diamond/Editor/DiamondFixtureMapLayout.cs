@@ -21,6 +21,7 @@ public static class DiamondFixtureMapLayout
         public string          shape;     // "rect" (default) or "round"
         public FixturePosition position;
         public FixturePosition size;  // width (X, long axis) and depth (Y, short axis) in metres
+        public float           yaw;   // world yaw in degrees, clockwise from map +X (0 = unrotated)
 
         // Parsed form of the shape string. Missing/unrecognised values fall back to Rect
         // so older maps written before the shape field keep rendering as rectangles.
@@ -52,10 +53,20 @@ public static class DiamondFixtureMapLayout
         public List<int> fixtures;
     }
 
+    // On-disk form of a selection group. Members are stored as stable GlobalObjectId strings
+    // (FixtureEntry.sceneObject) rather than array indices, since indices are reassigned
+    // whenever the map is regenerated.
+    [Serializable]
+    public struct SerialisedSelectionGroup
+    {
+        public string       name;
+        public List<string> fixtureGids;
+    }
+
     [Serializable]
     public struct SelectionGroupFile
     {
-        public List<SelectionGroup> groups;
+        public List<SerialisedSelectionGroup> groups;
     }
 
     // Precomputed layout for a single fixture node (logical space).

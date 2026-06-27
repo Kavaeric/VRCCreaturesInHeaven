@@ -110,11 +110,11 @@ public class DiamondEWinFixtureMap : EditorWindow
     private IMGUIContainer _canvas;
     private Label          _pathLabel;
 
-    // Selection options state
-    private bool _includeMainFixture = true;
-    private bool _includeFixtureHead = true;
-    private bool _includeLampProps = true;
-    private bool _includeBeamProps = true;
+    // Selection includes state: which sub-objects of a fixture a selection grabs.
+    private bool _selectionIncludesMainFixture = true;
+    private bool _selectionIncludesFixtureHead = true;
+    private bool _selectionIncludesLampProps = true;
+    private bool _selectionIncludesBeamProps = true;
 
     // Selection groups state
     private List<SelectionGroup> _selectionGroups    = new();
@@ -247,22 +247,24 @@ public class DiamondEWinFixtureMap : EditorWindow
             _canvas.MarkDirtyRepaint();
         });
 
-        // Wire selection options toggles. All default to true.
-        var mainFixtureToggle = rootVisualElement.Q<Toggle>("include-main-fixture-toggle");
-        mainFixtureToggle.value = _includeMainFixture;
-        mainFixtureToggle.RegisterValueChangedCallback(e => _includeMainFixture = e.newValue);
+        // Wire selection includes toggles. All default to true. Changing a toggle re-applies
+        // the includes to whatever fixtures are currently active, so the live selection updates
+        // in place without the user having to re-click the fixtures.
+        var mainFixtureToggle = rootVisualElement.Q<Toggle>("selection-includes-main-fixture-toggle");
+        mainFixtureToggle.value = _selectionIncludesMainFixture;
+        mainFixtureToggle.RegisterValueChangedCallback(e => { _selectionIncludesMainFixture = e.newValue; ReapplySelectionIncludes(); });
 
-        var fixtureHeadToggle = rootVisualElement.Q<Toggle>("include-fixture-head-toggle");
-        fixtureHeadToggle.value = _includeFixtureHead;
-        fixtureHeadToggle.RegisterValueChangedCallback(e => _includeFixtureHead = e.newValue);
+        var fixtureHeadToggle = rootVisualElement.Q<Toggle>("selection-includes-fixture-head-toggle");
+        fixtureHeadToggle.value = _selectionIncludesFixtureHead;
+        fixtureHeadToggle.RegisterValueChangedCallback(e => { _selectionIncludesFixtureHead = e.newValue; ReapplySelectionIncludes(); });
 
-        var lampPropsToggle = rootVisualElement.Q<Toggle>("include-props-transform-toggle");
-        lampPropsToggle.value = _includeLampProps;
-        lampPropsToggle.RegisterValueChangedCallback(e => _includeLampProps = e.newValue);
+        var lampPropsToggle = rootVisualElement.Q<Toggle>("selection-includes-lamp-props-toggle");
+        lampPropsToggle.value = _selectionIncludesLampProps;
+        lampPropsToggle.RegisterValueChangedCallback(e => { _selectionIncludesLampProps = e.newValue; ReapplySelectionIncludes(); });
 
-        var beamPropsToggle = rootVisualElement.Q<Toggle>("include-beam-props-toggle");
-        beamPropsToggle.value = _includeBeamProps;
-        beamPropsToggle.RegisterValueChangedCallback(e => _includeBeamProps = e.newValue);
+        var beamPropsToggle = rootVisualElement.Q<Toggle>("selection-includes-beam-props-toggle");
+        beamPropsToggle.value = _selectionIncludesBeamProps;
+        beamPropsToggle.RegisterValueChangedCallback(e => { _selectionIncludesBeamProps = e.newValue; ReapplySelectionIncludes(); });
 
         // Wire selection groups panel
         _sgList        = rootVisualElement.Q<ScrollView>("sg-list");
@@ -1069,6 +1071,49 @@ public class DiamondEWinFixtureMap : EditorWindow
         return result;
     }
 
+    // Like GetSelectedFixtureIndices, but treats a fixture as active if ANY of its
+    // constituent objects (root, head, lamp props, beam props) is currently selected,
+    // ignoring the include toggles. Used to recover the active fixture set when re-applying
+    // include changes, so fixtures whose root isn't selected (e.g. "Main fixture object" off)
+    // aren't silently dropped.
+    private List<int> GetActiveFixtureIndices()
+    {
+        var selectionSet = new HashSet<UnityEngine.Object>(Selection.objects);
+        var result = new List<int>();
+        for (int i = 0; i < _fixtureObjects.Count; i++)
+        {
+            if (_fixtureObjects[i] != null && selectionSet.Contains(_fixtureObjects[i]))
+            {
+                result.Add(i);
+                continue;
+            }
+
+            // Root not selected: check the driver's head/props objects.
+            var driver = i < _fixtureDrivers.Count ? _fixtureDrivers[i] as DiamondFixtureDriver : null;
+            if (driver == null) continue;
+            if ((driver.Head      != null && selectionSet.Contains(driver.Head.gameObject)) ||
+                (driver.LampProps != null && selectionSet.Contains(driver.LampProps.gameObject)) ||
+                (driver.BeamProps != null && selectionSet.Contains(driver.BeamProps.gameObject)))
+                result.Add(i);
+        }
+        return result;
+    }
+
+    // Re-applies the current include toggles to whichever fixtures are presently active.
+    // Called when an include toggle changes so the live Unity selection updates in place,
+    // without the user having to re-click the fixtures.
+    private void ReapplySelectionIncludes()
+    {
+        var active = GetActiveFixtureIndices();
+        if (active.Count == 0) return;
+
+        var toSelect = new List<UnityEngine.Object>();
+        foreach (int idx in active)
+            CollectFixtureObjects(idx, toSelect);
+
+        SetFixtureSelection(toSelect, SelectionMode.Replace);
+    }
+
     // Count how many fixtures in a group are currently selected.
     private int GetGroupSelectionCount(SelectionGroup group, HashSet<UnityEngine.Object> selectionSet = null)
     {
@@ -1088,21 +1133,21 @@ public class DiamondEWinFixtureMap : EditorWindow
         var fixtureRoot = _fixtureObjects[fixtureIndex];
         if (fixtureRoot == null) return;
 
-        if (_includeMainFixture)
+        if (_selectionIncludesMainFixture)
             outList.Add(fixtureRoot);
 
-        if (_includeFixtureHead || _includeLampProps || _includeBeamProps)
+        if (_selectionIncludesFixtureHead || _selectionIncludesLampProps || _selectionIncludesBeamProps)
         {
             if (fixtureIndex < _fixtureDrivers.Count)
             {
                 var driver = _fixtureDrivers[fixtureIndex] as DiamondFixtureDriver;
                 if (driver != null)
                 {
-                    if (_includeFixtureHead && driver.Head != null)
+                    if (_selectionIncludesFixtureHead && driver.Head != null)
                         outList.Add(driver.Head.gameObject);
-                    if (_includeLampProps && driver.LampProps != null)
+                    if (_selectionIncludesLampProps && driver.LampProps != null)
                         outList.Add(driver.LampProps.gameObject);
-                    if (_includeBeamProps && driver.BeamProps != null)
+                    if (_selectionIncludesBeamProps && driver.BeamProps != null)
                         outList.Add(driver.BeamProps.gameObject);
                 }
             }

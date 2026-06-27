@@ -15,16 +15,16 @@
         <ui:IMGUIContainer name="canvas" class="grow canvas" />
         <ui:VisualElement class="h-2" />
 
-        <ui:Label text="Selection options" class="font-bold" />
+        <ui:Label text="Include in selection" class="font-bold" />
         <ui:VisualElement class="h-1" />
         <ui:VisualElement class="row">
             <ui:VisualElement class="col w-1f3">
-                <ui:Toggle name="include-main-fixture-toggle" label="Include main fixture object" class="toggle-left max-w-60" />
-                <ui:Toggle name="include-fixture-head-toggle" label="Include fixture head" class="toggle-left max-w-60" />
+                <ui:Toggle name="selection-includes-main-fixture-toggle" label="Main fixture object" class="toggle-left max-w-60" />
+                <ui:Toggle name="selection-includes-fixture-head-toggle" label="Fixture head" class="toggle-left max-w-60" />
             </ui:VisualElement>
             <ui:VisualElement class="col w-1f3">
-                <ui:Toggle name="include-props-transform-toggle" label="Include _LampProps object" class="toggle-left  max-w-60" />
-                <ui:Toggle name="include-beam-props-toggle" label="Include _BeamProps object" class="toggle-left  max-w-60" />
+                <ui:Toggle name="selection-includes-lamp-props-toggle" label="_LampProps object" class="toggle-left  max-w-60" />
+                <ui:Toggle name="selection-includes-beam-props-toggle" label="_BeamProps object" class="toggle-left  max-w-60" />
             </ui:VisualElement>
         </ui:VisualElement>
 

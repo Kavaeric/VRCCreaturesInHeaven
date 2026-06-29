@@ -30,6 +30,16 @@ float  _BeamCutoffThreshold;
 float  _BeamLengthMax;
 float  _HazeDensity;
 float  _EdgeSoftness;
+float  _FarFade;
+
+// Focus: gobo sharpness, depth-invariant (laser-like, constant across the throw).
+//   1 = crisp edge: flat full-brightness core out to the cone wall, hard cliff.
+//   0 = fully defocused: bright only at the very centre, attenuating immediately
+//       outward, and the projected image DOUBLES in radius (reach 2x the wall).
+// Modelled in normalized radial coord u = r/R(d): a smoothstep whose inner edge
+// slides wall->centre and outer edge slides wall->2x as focus drops.
+//   innerEdge = f ;  outerEdge = 2 - f ;  profile = 1 - smoothstep(inner,outer,u)
+float  _Focus;
 
 // --- Per-instance properties -------------------------------------------------
 // Pushed by DiamondFixtureDriver via a MaterialPropertyBlock so each fixture
@@ -167,17 +177,17 @@ float3 ExpandUnitCubeToFrustumBounds(float3 unitVertex,
     float yT    = unitVertex.y + 0.5;        // 0..1 along beam length
     float beamY = yT * beamLength;
 
-    // Inflate the cube laterally by the soft-edge halo at the far end of the
-    // beam (where it's widest). Matches the softness formula in the frag shader
-    // so blurred pixels don't get clipped at the bounding cube walls. Near cap
-    // stays un-inflated since softness = 0 at d = 0.
-    float diffusionRate = _EdgeSoftness * (0.02 + _HazeDensity);
-    float maxSoftness   = diffusionRate * beamLength;
+    // Inflate the cube laterally so defocus can't clip the widened image. Focus
+    // grows the projected radius by reach = 2 - _Focus (up to 2x at full blur),
+    // applied to the WHOLE cross-section (emitter radius + spread growth), so the
+    // halo is enclosed at every depth, near cap included (unlike the old haze-
+    // diffusion halo, which vanished at d=0). Shear adds its own lateral lean.
+    float reach = 2.0 - saturate(_Focus);    // 1 (crisp) .. 2 (full blur)
 
-    float halfWidthNear  = emitterWidth  * 0.5;
-    float halfHeightNear = emitterHeight * 0.5;
-    float halfWidthFar   = halfWidthNear  + (spreadX + abs(_ShearX)) * beamLength + maxSoftness;
-    float halfHeightFar  = halfHeightNear + (spreadZ + abs(_ShearZ)) * beamLength + maxSoftness;
+    float halfWidthNear  = emitterWidth  * 0.5 * reach;
+    float halfHeightNear = emitterHeight * 0.5 * reach;
+    float halfWidthFar   = (emitterWidth  * 0.5 + spreadX * beamLength) * reach + abs(_ShearX) * beamLength;
+    float halfHeightFar  = (emitterHeight * 0.5 + spreadZ * beamLength) * reach + abs(_ShearZ) * beamLength;
 
     float halfWidthAtY  = lerp(halfWidthNear,  halfWidthFar,  yT);
     float halfHeightAtY = lerp(halfHeightNear, halfHeightFar, yT);
@@ -291,8 +301,17 @@ fixed4 DiamondBeamIntegrate(v2f i, float3 rayOrigin, float3 rayDirection,
 }
 
 // Depth clamp shared by both shapes. Shrinks tExit so the beam terminates at the
-// nearest scene surface in front of its far cap. Returns nothing; mutates tExit.
-void DiamondBeamDepthClamp(v2f i, float3 rayDirection, inout float tExit)
+// nearest scene surface in front of its far cap -- this is what makes the beam
+// land ON the floor/walls instead of passing through them. Mutates tExit.
+//
+// CRITICAL UNIT NOTE: tExit is in BEAM-SPACE t, but the scene hit reconstructed
+// from the depth texture is a WORLD-SPACE distance (metres). Beam space is object
+// space scaled component-wise by cubeLocalScale (e.g. 0.1), so beam-space t and
+// world metres differ -- mixing them is the original on-axis-hole bug. We convert
+// by measuring how many world metres ONE unit of beam-space t spans along this
+// ray, then sceneT_beam = sceneDist_world / metresPerT.
+void DiamondBeamDepthClamp(v2f i, float3 rayDirection, float3 cubeLocalScale,
+    inout float tExit)
 {
     float2 screenUV = i.screenPos.xy / i.screenPos.w;
     float  rawDepth = SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, screenUV);
@@ -300,10 +319,19 @@ void DiamondBeamDepthClamp(v2f i, float3 rayDirection, inout float tExit)
     // rawDepth == 0 means no geometry here (sky / background): leave tExit alone.
     if (rawDepth > 0)
     {
+        // Scene surface distance from the camera, in WORLD metres along the ray.
         float  sceneEyeDepth   = CorrectedLinearEyeDepth(rawDepth, i.frustumCorrection / i.screenPos.w);
         float3 cameraForwardWS = -UNITY_MATRIX_V[2].xyz;
         float3 rayDirWS        = normalize(i.vertWorldSpace - _WorldSpaceCameraPos);
-        float  sceneT          = sceneEyeDepth / max(dot(cameraForwardWS, rayDirWS), 1e-5);
+        float  sceneDistWS     = sceneEyeDepth / max(dot(cameraForwardWS, rayDirWS), 1e-5);
+
+        // World metres spanned by one unit of beam-space t. beam = object*scale,
+        // so a beam-space step is (rayDirection / cubeLocalScale) in OBJECT space;
+        // transform that (direction only) to world and take its length.
+        float3 stepWS    = mul((float3x3)unity_ObjectToWorld, rayDirection / cubeLocalScale);
+        float  metresPerT = max(length(stepWS), 1e-6);
+
+        float sceneT = sceneDistWS / metresPerT;   // now in beam-space t
         tExit = min(tExit, sceneT);
     }
 }

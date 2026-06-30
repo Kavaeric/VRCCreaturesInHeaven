@@ -44,3 +44,26 @@ Files touched:
 
 - `CreaturesInHeaven/Packages/red.sim.lightvolumes/Scripts/LightVolumeSetup.cs`
   - `GenerateAtlas()` now inspects `LightVolumeManager.AtlasPostProcessors`; if any CRT is registered, it passes `MinimumDepth` to `CreateAtlas`. Note the upstream PR reads `AtlasPostProcessors` off `LightVolumeSetup` because it also moves the field. We read it off `LightVolumeManager`where 2.1.3 still keeps it.
+
+---
+
+## Depth Buffer Toolkit — compatibility
+
+**Package**: `com.varneon.vudon.depth-buffer-toolkit` (currently 0.1.0, released 21 Sept 2022)
+
+### How to apply
+
+Canonical patched copies of the affected files live under `patches/com.varneon.vudon.depth-buffer-toolkit/` at the repo root, mirroring the package's folder structure. To (re)apply:
+
+1. Confirm the installed package version still lacks the fix. If it's a later version than 0.1.0, delete the `patches/com.varneon.vudon.depth-buffer-toolkit/` folder and this section from PATCHES.md, and skip the rest of these steps.
+
+2. Otherwise, copy everything from `patches/com.varneon.vudon.depth-buffer-toolkit/` over `CreaturesInHeaven/Packages/com.varneon.vudon.depth-buffer-toolkit/`, preserving the folder layout. Overwrite when prompted.
+
+3. Open the project. When prompted to auto-update old API, accept.
+
+
+### Background & rationale
+
+The package is old enough that its package.json manifest still lists dependency for Udon 1.x. Newer versions of the VRChat SDK have included Udon, and no longer maintain a seperate package for Udon.
+
+The dependencies are flagged by Unity as being unavailable and prevent the project from being opened project cleanly, even though Udon is indeed available now within the SDK. This patch simply removes the legacy dependency pointers in the manifest to allow the project to open and trigger the auto-updater.

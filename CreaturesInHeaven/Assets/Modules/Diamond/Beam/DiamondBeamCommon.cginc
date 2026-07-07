@@ -31,6 +31,7 @@ float  _BeamLengthMax;
 float  _HazeDensity;
 float  _EdgeSoftness;
 float  _FarFade;
+float  _ScatterStrength;
 
 // Focus: gobo sharpness, depth-invariant (laser-like, constant across the throw).
 //   1 = crisp edge: flat full-brightness core out to the cone wall, hard cliff.

@@ -28,13 +28,15 @@ Material:
     - _BeamCutoffThreshold: 0.00001
     - _BeamIntensity: 1
     - _BeamLengthMax: 50
-    - _DebugMode: 9
-    - _EdgeSoftness: 1
+    - _DebugMode: 0
+    - _EdgeSoftness: 0.5
     - _EmitterHeight: 1
     - _EmitterWidth: 1
-    - _FarFade: 0.15
-    - _Focus: 0.5
+    - _FarFade: 0.1
+    - _Focus: 0
+    - _FocusRampFrac: 0.139
     - _HazeDensity: 0.03
+    - _NearThrow: 2
     - _ScatterStrength: 0.5
     - _ShearX: 0
     - _ShearZ: 0

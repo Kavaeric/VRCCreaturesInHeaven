@@ -1,6 +1,6 @@
 // Diamond - Beam sub-module - shared math
 //
-// Profile-INDEPENDENT machinery shared by every beam shape (rect, round, ...).
+// Profile-independent code shared by every beam shape.
 // Each concrete beam shader (DiamondBeam = rect, DiamondBeamRound = round)
 // includes this file and supplies only the parts that differ between shapes:
 //
@@ -8,19 +8,34 @@
 //   * the cross-section area used for the inverse-square geometric falloff
 //   * the lateral edge-softness distance-to-wall
 //
-// Everything else -- depth handling, mirror-camera oblique correction, haze
-// scattering/extinction, beam-length derivation, and the unit-cube -> frustum
-// bounding-box expansion -- lives here so the two shape shaders can't drift.
+// Everything else lives here so the two shape shaders can't drift.
 //
 // The beam points along the object's local +Y axis (fixtures hang from a
 // ceiling and shine downward when rotated 180 degrees around X). The mesh is a
-// UNIT CUBE (corners at +/-0.5); the vertex shader expands it to contain the
+// unit cube (corners at +/-0.5); the vertex shader expands it to contain the
 // frustum implied by the shader properties.
 
 #ifndef DIAMOND_BEAM_COMMON_INCLUDED
 #define DIAMOND_BEAM_COMMON_INCLUDED
 
 #include "UnityCG.cginc"
+
+// --- Lateral diffusion rate --------------------------------------------------
+// The "law" constant for how fast the lateral edge spills with depth. Both the
+// focus and haze-scatter spills grow as DIAMOND_SCATTER_K * rate * d (metres), so
+// K sets the overall diffusion scale; rate is what _Focus / haze*strength supply.
+// K = 1 anchors one unit of spill to one metre * unit rate. It lives here (not in
+// the round frag) because BOTH the vert bounding box (ExpandUnitCubeToFrustumBounds)
+// and the frag's spill math need it and must agree. Retune only if the underlying
+// diffusion model changes; it is a law, not an art knob (_Focus / _ScatterStrength
+// / _HazeDensity art-direct the look).
+//
+// NOTE: the spill is now measured in absolute metres and added to the cone wall
+// (outer edge = R(d) + spill_m(d)), so it needs no width ceiling -- a straight
+// metric edge neither flat-lines nor bows. The geometry (vert box + cone clip)
+// is what bounds it. (This replaces the old normalized-u WMAX/reach ceiling, which
+// existed only because blur in u inherited the cone taper and had to be clamped.)
+#define DIAMOND_SCATTER_K 1.0
 
 // --- Material-level (non-instanced) properties -------------------------------
 // Shared across all instances of a fixture type (set on the material asset).
@@ -33,13 +48,18 @@ float  _EdgeSoftness;
 float  _FarFade;
 float  _ScatterStrength;
 
-// Focus: gobo sharpness, depth-invariant (laser-like, constant across the throw).
-//   1 = crisp edge: flat full-brightness core out to the cone wall, hard cliff.
-//   0 = fully defocused: bright only at the very centre, attenuating immediately
-//       outward, and the projected image DOUBLES in radius (reach 2x the wall).
-// Modelled in normalized radial coord u = r/R(d): a smoothstep whose inner edge
-// slides wall->centre and outer edge slides wall->2x as focus drops.
-//   innerEdge = f ;  outerEdge = 2 - f ;  profile = 1 - smoothstep(inner,outer,u)
+// Focus: how fast the cone defocuses with distance, modelled as a second scatter
+// source (physically like haze scatter, but with no light falloff riding on it).
+// The beam is ALWAYS perfectly focused at the emitter (zero blur at d = 0) and
+// spreads more toward the far end; _Focus sets the rate.
+//   1 = perfectly collimated: crisp edge, only haze softens it across the throw.
+//   0 = defocuses fastest: the edge spreads widest with distance downrange.
+// The focus spill is metric and linear in depth: spill_focus = K*(1-_Focus)*d
+// (metres), combined in quadrature with the haze scatter spill, then divided by the
+// cone radius R(d) to form the edge profile's u-space width (see DiamondFocusSpill
+// / DiamondEdgeWidth in the frag). Because the spill is 0 at d = 0 AND added in
+// metres to the wall (edge = R(d) + spill_m), the source stays at r0 with no
+// over-radius, and the edge is a straight envelope rather than a bowed one.
 float  _Focus;
 
 // --- Per-instance properties -------------------------------------------------
@@ -128,7 +148,7 @@ float BeamDensityAtDistance(float distance, float crossArea, float emitterArea,
 // the components separately) so the result matches what the frag shader renders.
 //
 // crossAreaAtDistance / emitterArea encapsulate the shape; the caller supplies
-// them via the shape-specific CROSS-SECTION macros declared below, so this stays
+// them via the shape-specific cross-section macros declared below, so this stays
 // shape-agnostic.
 //
 // Both vert and frag call this so they agree on where the beam ends.
@@ -160,43 +180,56 @@ float BeamDensityAtDistance(float distance, float crossArea, float emitterArea,
     }                                                                          \
 }
 
-// --- Unit-cube -> frustum bounding box ---------------------------------------
-// Maps a unit-cube vertex to the bounding box of the frustum, in beam space
-// (world units, +Y along beam, origin at emitter centre). A circular cone fits
-// inside the same bounding box as a square one of equal spread, so both shapes
-// share this -- spreadX/spreadZ are the per-axis lateral growth rates (for the
-// round shader pass the single spread for both).
+// --- Unit-cube -> conservative bounding box ----------------------------------
+// Maps a unit-cube vertex to a bounding box in beam space (world units, +Y along
+// beam, origin at emitter centre) that is guarantees to contain the beam in every
+// configuration. A circular cone fits inside the same box as a square one of
+// equal spread, so both shapes share this (round passes its single spread twice).
+//
+// Deliberately simple and over-conservative: a plain box (constant cross-section,
+// no taper), sized to the worst case. It exists only to give the frag's ray math
+// something to rasterise. Tighten later once shader is in a better state.
+//
+//   Height (Y): _BeamLengthMax -- the absolute ceiling, ignoring whether
+//               extinction/far-fade ends the beam sooner. Always tall enough.
+//   Lateral (X/Z): the widest the beam could EVER be, evaluated at _BeamLengthMax:
+//               emitter half-size
+//             + (geometric spread + lateral SPILL spread) over the max length
+//             + shear lean over the max length
+//               Held CONSTANT top-to-bottom (box, not cone) so the near cap is
+//               just as wide -- can't clip the emitter-end halo either.
+//
+// The lateral spill (defocus + haze scatter) is now an additive metric amount that
+// grows linearly with depth (see DiamondEdgeWidth in the round frag), so it reads
+// as extra SPREAD rather than a multiplicative reach. Worst case per metre: full
+// defocus (focus = 0 -> rate DIAMOND_SCATTER_K) and haze scatter (haze*strength),
+// combined in quadrature to match the frag's cone-clip. Conservative on focus (uses
+// the max rate regardless of the current _Focus) so the box never clips the halo.
 //
 // Input vertex is expected in [-0.5, +0.5] on every axis.
-//   x in [-0.5, +0.5] -> X side of the bounding box
-//   y in [-0.5, +0.5] -> 0 to beamLength along the beam
-//   z in [-0.5, +0.5] -> Z side of the bounding box
+//   x in [-0.5, +0.5] -> X side of the box
+//   y in [-0.5, +0.5] -> 0 to _BeamLengthMax along the beam
+//   z in [-0.5, +0.5] -> Z side of the box
 float3 ExpandUnitCubeToFrustumBounds(float3 unitVertex,
     float emitterWidth, float emitterHeight,
     float spreadX, float spreadZ, float beamLength)
 {
-    float yT    = unitVertex.y + 0.5;        // 0..1 along beam length
-    float beamY = yT * beamLength;
+    float maxLen = max(_BeamLengthMax, 0.0);
 
-    // Inflate the cube laterally so defocus can't clip the widened image. Focus
-    // grows the projected radius by reach = 2 - _Focus (up to 2x at full blur),
-    // applied to the WHOLE cross-section (emitter radius + spread growth), so the
-    // halo is enclosed at every depth, near cap included (unlike the old haze-
-    // diffusion halo, which vanished at d=0). Shear adds its own lateral lean.
-    float reach = 2.0 - saturate(_Focus);    // 1 (crisp) .. 2 (full blur)
+    // Worst-case extra spread per metre from lateral spill (focus + haze scatter),
+    // matching the frag's spillSpread but with focus pinned to its max rate.
+    float focusRate   = DIAMOND_SCATTER_K;   // full defocus (focus = 0)
+    float scatterRate = DIAMOND_SCATTER_K * max(_HazeDensity, 0.0) * saturate(_ScatterStrength);
+    float spillSpread = sqrt(focusRate*focusRate + scatterRate*scatterRate);
 
-    float halfWidthNear  = emitterWidth  * 0.5 * reach;
-    float halfHeightNear = emitterHeight * 0.5 * reach;
-    float halfWidthFar   = (emitterWidth  * 0.5 + spreadX * beamLength) * reach + abs(_ShearX) * beamLength;
-    float halfHeightFar  = (emitterHeight * 0.5 + spreadZ * beamLength) * reach + abs(_ShearZ) * beamLength;
-
-    float halfWidthAtY  = lerp(halfWidthNear,  halfWidthFar,  yT);
-    float halfHeightAtY = lerp(halfHeightNear, halfHeightFar, yT);
+    // Worst-case half-extents at the far end, held constant over the whole box.
+    float halfWidth  = emitterWidth  * 0.5 + (spreadX + spillSpread) * maxLen + abs(_ShearX) * maxLen;
+    float halfHeight = emitterHeight * 0.5 + (spreadZ + spillSpread) * maxLen + abs(_ShearZ) * maxLen;
 
     float3 beamSpace;
-    beamSpace.x = unitVertex.x * 2.0 * halfWidthAtY;
-    beamSpace.y = beamY;
-    beamSpace.z = unitVertex.z * 2.0 * halfHeightAtY;
+    beamSpace.x = unitVertex.x * 2.0 * halfWidth;
+    beamSpace.y = (unitVertex.y + 0.5) * maxLen;   // 0 .. _BeamLengthMax
+    beamSpace.z = unitVertex.z * 2.0 * halfHeight;
     return beamSpace;
 }
 
@@ -211,7 +244,7 @@ float RayPlaneDistance(float3 rayOrigin, float3 rayDirection,
     return -distanceFromPlane / approachRate;
 }
 
-// Folds one plane (defined by its OUTWARD-pointing normal) into a running
+// Folds one plane (defined by its outward-pointing normal) into a running
 // [tEntry, tExit] interval. The plane defines a half-space: the inside of the
 // volume is where planeNormal . p + planeOffset <= 0.
 void FoldPlaneIntoInterval(float3 rayOrigin, float3 rayDirection,
@@ -305,12 +338,11 @@ fixed4 DiamondBeamIntegrate(v2f i, float3 rayOrigin, float3 rayDirection,
 // nearest scene surface in front of its far cap -- this is what makes the beam
 // land ON the floor/walls instead of passing through them. Mutates tExit.
 //
-// CRITICAL UNIT NOTE: tExit is in BEAM-SPACE t, but the scene hit reconstructed
-// from the depth texture is a WORLD-SPACE distance (metres). Beam space is object
-// space scaled component-wise by cubeLocalScale (e.g. 0.1), so beam-space t and
-// world metres differ -- mixing them is the original on-axis-hole bug. We convert
-// by measuring how many world metres ONE unit of beam-space t spans along this
-// ray, then sceneT_beam = sceneDist_world / metresPerT.
+// tExit is in beam-space t, but the scene hit reconstructed from the depth texture is
+// a world-space distance (metres). Beam space is object space scaled component-wise by
+// cubeLocalScale (e.g. 0.1), so beam-space t and world metres differ. We convert by
+// measuring how many world metres one unit of beam-space t spans along this ray,
+// then sceneT_beam = sceneDist_world / metresPerT.
 void DiamondBeamDepthClamp(v2f i, float3 rayDirection, float3 cubeLocalScale,
     inout float tExit)
 {
@@ -327,7 +359,7 @@ void DiamondBeamDepthClamp(v2f i, float3 rayDirection, float3 cubeLocalScale,
         float  sceneDistWS     = sceneEyeDepth / max(dot(cameraForwardWS, rayDirWS), 1e-5);
 
         // World metres spanned by one unit of beam-space t. beam = object*scale,
-        // so a beam-space step is (rayDirection / cubeLocalScale) in OBJECT space;
+        // so a beam-space step is (rayDirection / cubeLocalScale) in object space;
         // transform that (direction only) to world and take its length.
         float3 stepWS    = mul((float3x3)unity_ObjectToWorld, rayDirection / cubeLocalScale);
         float  metresPerT = max(length(stepWS), 1e-6);

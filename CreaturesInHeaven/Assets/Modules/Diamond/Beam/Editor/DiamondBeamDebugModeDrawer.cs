@@ -23,9 +23,8 @@ public class DiamondBeamDebugModeDrawer : MaterialPropertyDrawer
         "Far Cap Fade",
         "D-Axis Integral",
         "Lateral U",
-        "Focus Profile",
-        "Scatter Profile",
-        "Beam Integral",
+        "Lateral Edge",
+        "Vertex Bounds",
     };
 
     static readonly string[] Descriptions =
@@ -37,12 +36,11 @@ public class DiamondBeamDebugModeDrawer : MaterialPropertyDrawer
         "Far-cap fade term (0..1): fades the beam out over the last _FarFade fraction of its length.",
         "Combined falloff x extinction x fade, numerically integrated along the ray's chord.",
         "Normalized lateral coordinate at the surface hit: 0 on axis, 1 at the cone wall, up to 2 under full defocus.",
-        "Focus/gobo sharpness profile at the surface hit (1 = crisp core, 0 = fully defocused edge).",
-        "Lateral scatter profile at the surface hit: crisp at the emitter, softening toward the far end as haze accumulates (1 = core, 0 = diffused edge).",
-        "Full brightness integral along the ray: d-axis factors times the per-point focus x scatter lateral profile (this is what the normal render sums).",
+        "Lateral edge profile at the surface hit: one soft edge whose blur combines focus and haze scatter as metric spills added to the wall (straight envelope). 1 = lit core, 0 = past the edge.",
+        "Vertex-displacement bounds: faint red over every fragment of the expanded bounding cube, before any beam discard. Shows the full box (incl. empty margin) to check it isn't clipping or oversized.",
     };
 
-    static readonly int[] Values = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+    static readonly int[] Values = { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
 
     public override float GetPropertyHeight(MaterialProperty prop, string label, MaterialEditor editor)
     {

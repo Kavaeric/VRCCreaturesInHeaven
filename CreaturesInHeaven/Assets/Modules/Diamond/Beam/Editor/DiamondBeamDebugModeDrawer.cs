@@ -39,7 +39,7 @@ public class DiamondBeamDebugModeDrawer : MaterialPropertyDrawer
         "Normalised lateral coordinate at the surface hit: 0 on axis, 1 at the cone wall, up to 2 under full defocus.",
         "Lateral edge profile at the surface hit: one soft edge whose blur combines focus and haze scatter as metric spills added to the wall (straight envelope). 1 = lit core, 0 = past the edge.",
         "Vertex-displacement bounds. Faint red over every fragment of the expanded bounding cube.",
-        "Henyey-Greenstein phase p(theta) at the surface hit (raw, grayscale). Reproduces scatter phenomenon where a light beam appears brighter looking toward the emitter (forward scatter), dimmer across/behind.",
+        "Henyey-Greenstein phase p(theta) at the surface hit. Reproduces scatter phenomenon where a light beam appears brighter looking toward the emitter (forward scatter), dimmer across/behind.",
     };
 
     static readonly int[] Values = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };

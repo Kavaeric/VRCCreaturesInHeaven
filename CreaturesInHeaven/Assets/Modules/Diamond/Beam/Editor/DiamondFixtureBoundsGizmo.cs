@@ -7,7 +7,7 @@ using UnityEngine;
 // neither clips the visible beam nor wastefully oversizes the culling silhouette.
 public static class DiamondFixtureBoundsGizmo
 {
-    private static bool s_ShowBounds = true;
+    private static bool s_ShowBounds = false;
 
     [MenuItem("Tools/Diamond/Toggle beam culling bounds gizmo")]
     static void ToggleBoundsGizmo()

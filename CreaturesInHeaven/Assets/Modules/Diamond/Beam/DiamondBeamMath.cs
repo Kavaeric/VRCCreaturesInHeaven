@@ -9,14 +9,13 @@ using UnityEngine;
 // ends so a baked light's range can terminate with the shaft. Rather than let
 // Bakery reach into the shader's internals (and silently drift when the shader
 // math changes), both sides go through this one helper. Keep this in lockstep
-// with DiamondBeamCommon.cginc -- if the falloff formula there changes, change
+// with DiamondBeamCommon.cginc: if the falloff formula there changes, change
 // it here too.
 //
-// Currently implements the ROUND cross-section only (pi * r^2), since round
+// Currently implements the round cross-section only (pi * r^2), since round
 // fixtures are the ones that bake as a cone/Spot light and need range tracking.
-// Rect beams bake as mesh/point lights and don't use this path; calling the
-// round derivation for a rect profile would give a wrong length, so callers
-// should gate on shape.
+// Rect beams bake as mesh/point lights and don't require a max range parameter
+// to be set.
 public static class DiamondBeamMath
 {
     // Per-point brightness density at a distance from the emitter. Mirror of
@@ -83,7 +82,7 @@ public static class DiamondBeamMath
     }
 
     // Finds the distance at which beam density falls below the cutoff threshold,
-    // for a ROUND cone. Mirror of DIAMOND_DERIVE_BEAM_LENGTH: same 8-iteration
+    // for a round cone. Mirror of DIAMOND_DERIVE_BEAM_LENGTH: same 8-iteration
     // bisection against the same density formula, so C# and the shader agree on
     // where the beam ends.
     //

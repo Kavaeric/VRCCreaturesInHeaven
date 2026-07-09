@@ -47,19 +47,24 @@ float  _HazeDensity;
 float  _EdgeSoftness;
 float  _FarFade;
 float  _ScatterStrength;
+float  _Anisotropy;
 
-// Focus: how fast the cone defocuses with distance, modelled as a second scatter
-// source (physically like haze scatter, but with no light falloff riding on it).
-// The beam is ALWAYS perfectly focused at the emitter (zero blur at d = 0) and
-// spreads more toward the far end; _Focus sets the rate.
+// Focus: how fast the cone defocuses with distance, RELATIVE TO ITS OWN SPREAD.
+// Always perfectly focused at the emitter (zero blur at d = 0), spreading more
+// toward the far end; _Focus sets the rate as a fraction of the cone half-angle.
 //   1 = perfectly collimated: crisp edge, only haze softens it across the throw.
-//   0 = defocuses fastest: the edge spreads widest with distance downrange.
-// The focus spill is metric and linear in depth: spill_focus = K*(1-_Focus)*d
-// (metres), combined in quadrature with the haze scatter spill, then divided by the
-// cone radius R(d) to form the edge profile's u-space width (see DiamondFocusSpill
-// / DiamondEdgeWidth in the frag). Because the spill is 0 at d = 0 AND added in
-// metres to the wall (edge = R(d) + spill_m), the source stays at r0 with no
-// over-radius, and the edge is a straight envelope rather than a bowed one.
+//   0 = defocuses fastest: the edge sits at DOUBLE the cone half-angle downrange.
+// The focus spill is metric, linear in depth, and PROPORTIONAL to spread:
+//   spill_focus = K*(1-_Focus)*spreadX*d  (metres),
+// combined in quadrature with the haze scatter spill, then divided by the cone
+// radius R(d) to form the edge profile's u-space width (see DiamondFocusSpill /
+// DiamondEdgeWidth in the frag). Tying the rate to spreadX (rather than an absolute
+// metric rate) is what makes defocus feel consistent across beam widths -- narrow
+// and wide beams defocus by the same PROPORTION of their spread, instead of a
+// narrow beam blowing out to a huge angle. A collimated beam (spreadX = 0) has no
+// angle to double, so focus is inert there (haze scatter still softens it). Spill
+// 0 at d = 0 and added in metres to the wall keeps the source at r0 (no over-radius,
+// straight envelope).
 float  _Focus;
 
 // --- Per-instance properties -------------------------------------------------
@@ -217,14 +222,16 @@ float3 ExpandUnitCubeToFrustumBounds(float3 unitVertex,
     float maxLen = max(_BeamLengthMax, 0.0);
 
     // Worst-case extra spread per metre from lateral spill (focus + haze scatter),
-    // matching the frag's spillSpread but with focus pinned to its max rate.
-    float focusRate   = DIAMOND_SCATTER_K;   // full defocus (focus = 0)
-    float scatterRate = DIAMOND_SCATTER_K * max(_HazeDensity, 0.0) * saturate(_ScatterStrength);
-    float spillSpread = sqrt(focusRate*focusRate + scatterRate*scatterRate);
+    // matching the frag's spillSpread. Focus is now PROPORTIONAL to the cone's own
+    // spread -- worst case (focus = 0) the focus rate is spreadX (per axis) -- so the
+    // focus term is per-axis, not a single absolute rate. Scatter is isotropic.
+    float scatterRate  = DIAMOND_SCATTER_K * max(_HazeDensity, 0.0) * saturate(_ScatterStrength);
+    float spillSpreadX = sqrt(spreadX*spreadX * (DIAMOND_SCATTER_K*DIAMOND_SCATTER_K) + scatterRate*scatterRate);
+    float spillSpreadZ = sqrt(spreadZ*spreadZ * (DIAMOND_SCATTER_K*DIAMOND_SCATTER_K) + scatterRate*scatterRate);
 
     // Worst-case half-extents at the far end, held constant over the whole box.
-    float halfWidth  = emitterWidth  * 0.5 + (spreadX + spillSpread) * maxLen + abs(_ShearX) * maxLen;
-    float halfHeight = emitterHeight * 0.5 + (spreadZ + spillSpread) * maxLen + abs(_ShearZ) * maxLen;
+    float halfWidth  = emitterWidth  * 0.5 + (spreadX + spillSpreadX) * maxLen + abs(_ShearX) * maxLen;
+    float halfHeight = emitterHeight * 0.5 + (spreadZ + spillSpreadZ) * maxLen + abs(_ShearZ) * maxLen;
 
     float3 beamSpace;
     beamSpace.x = unitVertex.x * 2.0 * halfWidth;

@@ -25,6 +25,7 @@ public class DiamondBeamDebugModeDrawer : MaterialPropertyDrawer
         "Lateral U",
         "Lateral Edge",
         "Vertex Bounds",
+        "HG Phase",
     };
 
     static readonly string[] Descriptions =
@@ -38,9 +39,10 @@ public class DiamondBeamDebugModeDrawer : MaterialPropertyDrawer
         "Normalized lateral coordinate at the surface hit: 0 on axis, 1 at the cone wall, up to 2 under full defocus.",
         "Lateral edge profile at the surface hit: one soft edge whose blur combines focus and haze scatter as metric spills added to the wall (straight envelope). 1 = lit core, 0 = past the edge.",
         "Vertex-displacement bounds: faint red over every fragment of the expanded bounding cube, before any beam discard. Shows the full box (incl. empty margin) to check it isn't clipping or oversized.",
+        "Henyey-Greenstein phase p(theta) at the surface hit (raw, grayscale). View-dependent scatter toward the eye: brighter looking toward the emitter (forward scatter), dimmer across/behind. Sweep _Anisotropy (g).",
     };
 
-    static readonly int[] Values = { 0, 1, 2, 3, 4, 5, 6, 7, 8 };
+    static readonly int[] Values = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 
     public override float GetPropertyHeight(MaterialProperty prop, string label, MaterialEditor editor)
     {

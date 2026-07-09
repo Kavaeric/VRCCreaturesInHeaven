@@ -170,25 +170,6 @@ Shader "Diamond/BeamRound"
                 // is the single span between the (at most two) valid crossings. Keeping
                 // only real-nappe crossings is what prevents the mirror-cone hole.
                 #define DIAMOND_ON_REAL_NAPPE(t) ((r0 + s * (ro.y + rd.y * (t))) >= -1e-5)
-            bool ConeInterval(float3 ro, float3 rd, float r0, float s,
-                out float coneLo, out float coneHi)
-            {
-                coneLo = -1e20; coneHi = 1e20;
-
-                float k  = r0 + s * ro.y;   // R at t = 0
-                float kd = s * rd.y;        // dR/dt
-                float a = rd.x*rd.x + rd.z*rd.z - kd*kd;
-                float b = 2.0 * (ro.x*rd.x + ro.z*rd.z - k*kd);
-                float c = ro.x*ro.x + ro.z*ro.z - k*k;
-
-                // We solve g(t) = a t^2 + b t + c = 0 for the surface crossings,
-                // then keep only crossings on the real nappe (radius r0+s*y >= 0).
-                // Restricted to the real nappe the solid cone is convex, so the
-                // inside is the single span between the (at most two) valid
-                // crossings. This is what kills the mirror-nappe cutout: a root on
-                // the wrong nappe is simply discarded instead of seeding a bogus
-                // half-infinite interval.
-                #define DIAMOND_ON_REAL_NAPPE(t) ((r0 + s * (ro.y + rd.y * (t))) >= -1e-5)
 
                 // Linear degenerate (ray parallel to a cone wall): single crossing.
                 if (abs(a) < 1e-7)

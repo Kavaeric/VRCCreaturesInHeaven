@@ -277,8 +277,8 @@ Shader "Diamond/BeamRect"
             // Light-travel direction at a point in the rectangular pyramid.
             //
             // A round cone fans from a single apex, so its light direction is just
-            // normalize(p - apex). A RECTANGULAR pyramid has independent per-axis
-            // spreads, so its two wall-pairs converge at DIFFERENT depths behind the
+            // normalize(p - apex). A rectangular pyramid has independent per-axis
+            // spreads, so its two wall-pairs converge at different depths behind the
             // emitter. There is no single apex point; instead each axis fans from its
             // own apex: the X walls meet at y = -(w/2)/spreadX, the Z walls at
             // y = -(h/2)/spreadZ.

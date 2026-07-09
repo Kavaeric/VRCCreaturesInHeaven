@@ -102,6 +102,24 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
     private MaterialPropertyBlock _propBlock;
     private MaterialPropertyBlock _beamPropBlock;
 
+    // --- Per-frame dirty-check cache ---------------------------------
+    // The animator only changes the driven channels on keyframes, but Update
+    // runs every frame. Rather than re-push property blocks (and, worse, re-
+    // toggle the beam GameObject) on every static frame, we cache the last
+    // applied inputs and early-out when nothing moved. This matters at scale:
+    // ~600 fixtures each calling SetActive(false) every frame showed up in the
+    // profiler as GameObject.Deactivate dominating the main thread, because
+    // SetActive(false) on an already-inactive object still does deactivation
+    // bookkeeping (unlike SetActive(true), which short-circuits when active).
+    //
+    // _cacheValid is false until the first Update applies once, so the initial
+    // state is always written regardless of what the fields happen to hold.
+    private bool  _cacheValid = false;
+    private bool  _lastLampActive;
+    private float _lastBrightness;
+    private float _lastSpread;
+    private float _lastBeamIntensity;
+
     // --- Lifecycle ---------------------------------------------------
 
     public void Start()
@@ -204,7 +222,40 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
 
     public void Update()
     {
-        ApplyMaterialProperties();
+        if (LampProps == null) return;
+
+        // Read the raw animated inputs once. These are the only channels the
+        // animator drives per frame; everything else the driver applies is a
+        // deterministic function of them (plus the non-animated EmissionColor).
+        bool  lampActive    = LampProps.gameObject.activeSelf;
+        float brightness    = LampProps.localPosition.y;
+        float spread        = 0f;
+        float beamIntensity = 1f;
+        if (BeamProps != null)
+        {
+            spread        = BeamProps.localEulerAngles.x;
+            beamIntensity = BeamProps.localScale.y;
+        }
+
+        // Skip the whole apply (property-block writes AND the beam SetActive
+        // toggle) when nothing the animator drives has moved since last frame.
+        // _cacheValid guarantees the first frame always applies.
+        if (_cacheValid
+            && lampActive    == _lastLampActive
+            && brightness    == _lastBrightness
+            && spread        == _lastSpread
+            && beamIntensity == _lastBeamIntensity)
+        {
+            return;
+        }
+
+        _lastLampActive    = lampActive;
+        _lastBrightness    = brightness;
+        _lastSpread        = spread;
+        _lastBeamIntensity = beamIntensity;
+        _cacheValid        = true;
+
+        ApplyMaterialProperties(brightness, spread, beamIntensity);
     }
 
     // --- Application -------------------------------------------------
@@ -233,7 +284,9 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
         return false;
     }
 
-    private void ApplyMaterialProperties()
+    // Applies the driven state to the renderers. Inputs are read once in Update
+    // and passed in so the dirty-check and the apply agree on the same values.
+    private void ApplyMaterialProperties(float brightness, float spread, float beamIntensity)
     {
         if (HeadRenderer == null || LampProps == null)
         {
@@ -250,21 +303,14 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
             {
                 _beamPropBlock.SetColor("_Color", new Color(0f, 0f, 0f, 0f));
                 BeamRenderer.SetPropertyBlock(_beamPropBlock);
-                BeamRenderer.gameObject.SetActive(false);
+                // Only toggle when actually changing state. SetActive(false) on
+                // an already-inactive object still runs deactivation bookkeeping
+                // (GameObject.Deactivate), which at ~600 fixtures dominated the
+                // main thread when this fired every frame.
+                if (BeamRenderer.gameObject.activeSelf)
+                    BeamRenderer.gameObject.SetActive(false);
             }
             return;
-        }
-
-        float brightness = LampProps.localPosition.y;
-
-        // BeamProps is optional. If a fixture has no beam shaft, leave the
-        // animated channels at their defaults (spread 0, intensity 1).
-        float spread        = 0f;
-        float beamIntensity = 1f;
-        if (BeamProps != null)
-        {
-            spread        = BeamProps.localEulerAngles.x;
-            beamIntensity = BeamProps.localScale.y;
         }
 
         Color drivenColour = EmissionColor * brightness;
@@ -276,7 +322,9 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
         // onto the beam shaft. Spread is symmetric (X = Z) for a square cone.
         if (BeamRenderer != null)
         {
-            BeamRenderer.gameObject.SetActive(true);
+            // See note above: guard the toggle so we don't re-activate every frame.
+            if (!BeamRenderer.gameObject.activeSelf)
+                BeamRenderer.gameObject.SetActive(true);
             _beamPropBlock.SetColor("_Color", drivenColour);
             _beamPropBlock.SetFloat("_BeamIntensity", beamIntensity);
             _beamPropBlock.SetFloat("_SpreadX", spread);

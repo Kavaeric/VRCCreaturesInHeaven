@@ -1,20 +1,19 @@
 // Diamond - Beam sub-module (round profile)
-// Volumetric light shaft for stage spotlight fixtures with a circular emitter
-// and a symmetric (circular) cone, such as that for a spotlight.
+// A volumetric light shaft for stage spotlight fixtures: a circular emitter and a
+// symmetric circular cone, like a spotlight.
 //
-// Shape-independent machinery lives in DiamondBeamCommon.cginc; this file
-// supplies only the circular specifics: an analytic cone (quadric) side-wall
-// intersection, a circular cross-section area (pi*r^2), and a radial edge
-// softness. The rectangular counterpart is DiamondBeam.shader.
+// The shape-independent machinery lives in DiamondBeamCommon.cginc. This file adds
+// only the circular specifics: an analytic cone (quadric) side-wall intersection, a
+// circular cross-section area (pi*r^2), and a radial edge softness. The rectangular
+// counterpart is DiamondBeam.shader.
 //
-// Symmetric by construction: a single spread value (_SpreadX, animated via
-// BeamProps.localEulerAngles.x) drives the whole cone. The emitter is a circle
-// of radius _EmitterWidth/2 (the fixture's FixtureWidth is its diameter);
-// _EmitterHeight and _SpreadZ are unused here. Shear is not supported for the
-// round profile as of present.
+// The cone is symmetric by construction: one spread value (_SpreadX, animated via
+// BeamProps.localEulerAngles.x) drives it. The emitter is a circle of radius
+// _EmitterWidth/2, so _EmitterHeight and _SpreadZ go unused. Shear is unsupported
+// (a sheared circular cone is oblique and breaks the analytic intersection).
 //
-// The mesh used by this shader should be a unit cube (corners at +/-0.5). The
-// vertex shader expands it to contain the cone's bounding box.
+// The mesh should be a unit cube (corners at +/-0.5); the vertex shader expands it
+// to contain the cone's bounding box.
 
 Shader "Diamond/BeamRound"
 {
@@ -28,37 +27,33 @@ Shader "Diamond/BeamRound"
         _SpreadX ("Spread (tan of half angle)", Float) = 0.0
 
         // --- Unsupported by the round profile ------------------------------
-        // These are declared (so the shared DiamondBeamCommon.cginc and one
-        // MaterialPropertyBlock stay shape-agnostic with the rect shader) but
-        // never read by the round frag. Hidden so they don't show as inert
-        // sliders.
+        // These are declared so the shared cginc and one MaterialPropertyBlock can
+        // stay shape-agnostic with the rect shader, but the round frag never reads
+        // them. Hidden so they don't show as inert sliders.
         //
-        // Shear specifically is unsupported, a sheared circular cone is an
-        // oblique quadric that breaks the cheap analytic intersection.
+        // Shear is genuinely unsupported here: a sheared circular cone is an oblique
+        // quadric, which breaks the cheap analytic intersection this profile relies on.
         [HideInInspector] _EmitterHeight ("Emitter Height (unused)", Float) = 0.5
         [HideInInspector] _SpreadZ ("Spread Z (unused)", Float) = 0.0
         [HideInInspector] _ShearX ("Shear X (unsupported)", Float) = 0.0
         [HideInInspector] _ShearZ ("Shear Z (unsupported)", Float) = 0.0
 
         // Lateral scattering: how strongly haze softens the beam edge with
-        // distance. Unlike Focus (depth-invariant), this is crisp at the emitter
-        // and blurs progressively toward the far end as the beam passes through
-        // more haze. 0 = no lateral softening; higher = edge diffuses sooner and
-        // wider. See _ScatterStrength notes in the frag.
+        // distance. The edge is crisp at the emitter and blurs progressively toward
+        // the far end as the beam passes through more haze. 0 leaves the edge sharp;
+        // higher values diffuse it sooner and wider. See _ScatterStrength in the frag.
         //
-        // Default 0.5: with the fixed rate K=1, the edge reaches FULL blur (the
-        // _Focus=0 dome) at d = 1/(haze*strength). At 0.5 and venue haze (~0.03)
-        // that's ~67m -- past a typical ~50m throw -- so the edge softens visibly
-        // all the way down without ever fully dissolving into a centre-only dome.
-        // Raise toward 1 (full blur by ~2/3 down) for heavier-atmosphere looks.
+        // At the default 0.5 and typical venue haze (~0.03), the edge softens
+        // visibly across a normal throw without ever dissolving into a centre-only
+        // glow. Raise toward 1 for heavier-atmosphere looks.
         _ScatterStrength ("Lateral Scatter Strength", Range(0,1)) = 0.5
 
-        // Anisotropy (Henyey-Greenstein g): how forward-biased the haze scatters
-        // light toward the eye. Drives the view-dependent brightness -- the beam is
-        // brighter looked at TOWARD the emitter (forward scatter) than across/behind.
-        //   0    = isotropic (uniform in all directions; the old flat look)
-        //   0..1 = forward scatter (real haze/fog ~0.6-0.8)
-        //  -1..0 = back scatter (unusual; brighter from behind the light)
+        // Anisotropy (the g parameter of the Henyey-Greenstein phase function):
+        // how forward-biased the haze scatters light toward the eye. This is what
+        // makes the beam brighter when you look toward the emitter than across it.
+        //   0        isotropic (even in all directions; a flat, view-independent look)
+        //   0 to 1   forward scatter, like real haze and fog (around 0.6 to 0.8)
+        //   -1 to 0  back scatter (unusual; brightest seen from behind the light)
         _Anisotropy ("Anisotropy (HG g)", Range(-0.95, 0.95)) = 0.6
 
         _BeamCutoffThreshold ("Beam Cutoff Threshold", Float) = 0.0001
@@ -68,13 +63,14 @@ Shader "Diamond/BeamRound"
         _BeamIntensity ("Intensity", Float) = 1.0
         _HazeDensity ("Haze Density (1/m)", Float) = 0.05
 
-        // Focus: how fast the cone defocuses with distance, RELATIVE to its own
-        // spread. Perfectly focused at the emitter, spreading more toward the far end.
-        //   1 = perfectly collimated (crisp; only haze softens the edge)
-        //   0 = defocuses to DOUBLE the cone half-angle downrange
-        // Rate is proportional to spreadX, so narrow/wide beams defocus by the same
-        // proportion (a collimated spreadX=0 beam is inert). See _Focus /
-        // DiamondFocusSpill notes in the frag.
+        // Focus: how fast the cone defocuses with distance, as a fraction of its
+        // own spread angle. The beam is sharp at the emitter and spreads more toward
+        // the far end.
+        //   1  perfectly collimated (crisp; only haze softens the edge)
+        //   0  defocuses to twice the cone's half-angle by the far end
+        // Because the rate scales with the spread, narrow and wide beams defocus by
+        // the same proportion. A perfectly collimated beam (spread 0) has no angle to
+        // widen, so focus has no effect on it. See DiamondFocusSpill in the frag.
         _Focus ("Focus", Range(0,1)) = 1.0
 
         // Far-cap fade: fraction of the (auto-derived) beam length over which the
@@ -85,7 +81,7 @@ Shader "Diamond/BeamRound"
 
         // Debug visualisation for various components (plain Float; the
         // [DiamondBeamDebugMode] drawer gives a named dropdown). Keep in sync with
-        // the frag dispatch chain AND DiamondBeamDebugModeDrawer.cs:
+        // the frag dispatch chain and DiamondBeamDebugModeDrawer.cs:
         //   0 Normal           4 FarCapFade      8 VertexBounds
         //   1 RaymarchDepth    5 DAxisIntegral   9 HGPhase
         //   2 GeometricFalloff 6 LateralU
@@ -111,6 +107,16 @@ Shader "Diamond/BeamRound"
             #pragma target 5.0
             #pragma multi_compile_instancing
 
+            // The debug scaffolding (component-isolation modes and surface probe) is
+            // gated behind this keyword so the shipping variant compiles it out. Without
+            // it, _DebugMode is a dynamic uniform, so the compiler can't tell the debug
+            // branches are dead and computes every probe value per pixel even in Normal
+            // mode. Using shader_feature_local rather than multi_compile means only the
+            // variants materials actually use get built: a material left at mode 0 never
+            // references DIAMOND_DEBUG and is stripped from the build. The debug-mode
+            // drawer toggles the keyword with the dropdown.
+            #pragma shader_feature_local DIAMOND_DEBUG
+
             // --- Circular shape definitions -------------------------------
             // Cross-section is a disc of radius r(d) = R0 + spread*d, where R0
             // is the emitter radius (= emitterWidth/2). Area = pi*r^2. The
@@ -127,37 +133,43 @@ Shader "Diamond/BeamRound"
 
             #include "DiamondBeamCommon.cginc"
 
-            float _DebugMode;   // REBUILD DEBUG (see Properties)
+            float _DebugMode;   // component-isolation views; see Properties
 
             v2f vert(appdata v) { return DiamondBeamVert(v); }
 
-            // ================================================================
-            // REBUILD IN PROGRESS -- STEP 1: GEOMETRY ONLY
-            // The frag below computes only the inside-segment [tEntry, tExit] of
-            // the camera ray through the cone shape, and outputs its length as
-            // grayscale so we can verify the SHAPE in isolation before adding any
-            // lighting. No density, no integration, no depth clamp yet.
-            // ================================================================
-
-            // Find where the ray is inside the solid circular cone, as an interval
-            // [coneLo, coneHi]. The cone (within the +Y nappe) is the set
-            //   x^2 + z^2 <= (r0 + s*y)^2 .
-            // Along the ray this is the quadratic g(t) = a t^2 + b t + c <= 0.
-            // Returns false if the ray never enters the solid (within real roots).
+            // Find the interval [coneLo, coneHi] where the camera ray is inside the
+            // solid circular cone. Within its +Y nappe the cone is the set of points
+            // with x^2 + z^2 <= (r0 + s*y)^2, so along the ray it reduces to the
+            // quadratic g(t) = a t^2 + b t + c <= 0. Returns false if the ray never
+            // enters the solid.
             //
-            // IMPORTANT: the quadric x^2+z^2 = (r0+s*y)^2 is a double cone. Its
-            // two nappes meet at the apex y = -r0/s; the mirror nappe (y below the
-            // apex) is also "solid" to the bare quadratic. When the ray is aimed
-            // mostly down the +/-Y axis, a = rd.x^2+rd.z^2 - (s*rd.y)^2 goes
-            // NEGATIVE: the bare g(t)<=0 region is then the two outer tails
-            // (-inf, t0] and [t1, +inf), which straddle the apex and include the
-            // mirror nappe. Modelling that as a single interval is what produced
-            // the black mirror-cone cutout when looking toward the emitter. So we
-            // also require the surface point to lie on the real nappe, i.e.
-            // radius r0 + s*y >= 0  <=>  y >= -r0/s, and intersect that half-line
-            // into the result. (Within the beam's own caps y>=0 this is always
-            // satisfied, but the cone interval must enforce it itself so a mirror
-            // root never survives the later cap intersection.)
+            // The quadric x^2 + z^2 = (r0 + s*y)^2 is a double cone: two nappes
+            // meeting at the apex y = -r0/s. The mirror nappe (below the apex) also
+            // satisfies the bare quadratic, and when the ray aims mostly along the
+            // Y axis, a = rd.x^2 + rd.z^2 - (s*rd.y)^2 turns negative and the region
+            // g(t) <= 0 becomes two outer tails that straddle the apex and swallow
+            // the mirror nappe. Treating that as one interval carves a black cone-
+            // shaped hole out of the beam when you look toward the emitter.
+            //
+            // The fix: solve for the surface crossings, then keep only the ones on
+            // the real nappe (where the radius r0 + s*y stays non-negative), and clip
+            // the surviving span to that half-line at the apex. A crossing on the
+            // wrong nappe is discarded rather than seeding a bogus interval.
+            bool ConeInterval(float3 ro, float3 rd, float r0, float s,
+                out float coneLo, out float coneHi)
+            {
+                coneLo = -1e20; coneHi = 1e20;
+
+                float k  = r0 + s * ro.y;   // R at t = 0
+                float kd = s * rd.y;        // dR/dt
+                float a = rd.x*rd.x + rd.z*rd.z - kd*kd;
+                float b = 2.0 * (ro.x*rd.x + ro.z*rd.z - k*kd);
+                float c = ro.x*ro.x + ro.z*ro.z - k*k;
+
+                // Restricted to the real nappe the solid cone is convex, so its inside
+                // is the single span between the (at most two) valid crossings. Keeping
+                // only real-nappe crossings is what prevents the mirror-cone hole.
+                #define DIAMOND_ON_REAL_NAPPE(t) ((r0 + s * (ro.y + rd.y * (t))) >= -1e-5)
             bool ConeInterval(float3 ro, float3 rd, float r0, float s,
                 out float coneLo, out float coneHi)
             {
@@ -219,9 +231,9 @@ Shader "Diamond/BeamRound"
                         if (a > 0)
                         {
                             // Convex bare region [t0,t1]. If a root is on the mirror
-                            // nappe, that end is open -> extend it to the apex (the
-                            // real cone runs from the valid root out to the apex,
-                            // which the cap then trims to y in [0,beamLength]).
+                            // nappe, that end is open, so extend it to the apex: the
+                            // real cone runs from the valid root out to the apex, which
+                            // the cap then trims to y in [0, beamLength].
                             coneLo = v0 ? t0 : -1e20;
                             coneHi = v1 ? t1 :  1e20;
                             if (!v0 && !v1) return false;   // both on mirror nappe
@@ -261,126 +273,101 @@ Shader "Diamond/BeamRound"
                 return (coneHi > coneLo);
             }
 
-            // Lateral diffusion rate DIAMOND_SCATTER_K lives in DiamondBeamCommon.cginc
-            // (shared with the vert bounding box). See the metric-spill note there.
+            // The lateral diffusion rate DIAMOND_SCATTER_K is defined in
+            // DiamondBeamCommon.cginc, shared with the vertex bounding box.
 
-            // --- Lateral edge profile (one fuzzy edge) --------------------------
-            // The beam's lateral brightness across the cross-section is a single
-            // soft-edged profile in the normalized radial coord u = r / R(d):
-            //   u = 0 axis, u = 1 wall (sharp-edge radius), u = 1 + w outer spill.
-            // The half-width w handed in is not a free number: it is spill_m(d)/R(d),
-            // where spill_m is an absolute metric spill (see DiamondEdgeWidth), so the
-            // outer edge lands at metres R(d) + spill_m, a straight envelope. This
-            // profile just draws the soft step; the anti-bow geometry is upstream.
+            // How the beam's edge softness works
+            // -----------------------------------
+            // Brightness across the beam's cross-section is one soft-edged profile.
+            // The natural coordinate is the normalized radius u = r / R(d), where R(d)
+            // is the cone radius at depth d: u = 0 on the axis, u = 1 at the cone wall.
             //
-            //   DiamondEdgeProfile(u, w) = 1 - smoothstep(1 - w, 1 + w, u)
-            //
-            // w is the blur half-width in u, symmetric about the wall (u = 1):
-            //   w = 0 -> hard step at the wall (razor-sharp circle);
-            //   w = 1 -> 1 - smoothstep(0, 2, u): the wall softens out to u = 2 (image
-            //            radius doubled). w has no fixed ceiling; it keeps growing with
-            //            depth, but since spill_m grows linearly and R(d) also grows, w
-            //            itself stays bounded in practice -- the edge just stays soft.
-            //
-            // We add their metric spills in quadrature (variances add, the way real optical
-            // blurs stack) into one spill_m, then draw one edge. So there is only ever a
-            // single edge with a single softness, producing genuine "halfway" blur values
-            // instead of weird superpositions.
-            //
-            //   focusSpill   = DiamondFocusSpill(...)     (metres; grows with depth, _Focus rate)
-            //   scatterSpill = DiamondScatterSpill(...)   (metres; grows with haze*depth)
-            //   spill_m      = sqrt(focusSpill^2 + scatterSpill^2);  w = spill_m / R(d)
+            // The softness itself is measured in world-space metres, not in u. The
+            // reason is geometric: if a blur of half-width w lived directly in u, the
+            // lit edge would sit at u = 1 + w, which in metres is (1 + w) * R(d). That
+            // trailing R(d) makes the edge inherit the cone's taper and multiply it, so
+            // a blur that grows with depth bows the whole beam outward like a trumpet.
+            // Instead the blur is an amount of metres, spill_m(d), added to the wall:
+            //   lit edge in metres = R(d) + spill_m(d).
+            // If spill_m grows linearly with depth this edge is a straight cone, not a
+            // curved one. Each spill source (focus, haze) is linear in d for that reason.
+            // At the point of use the metres are converted back to the profile's
+            // coordinate with w = spill_m / R(d), so everything downstream stays in u.
+
+            // Draws the soft edge: full brightness inside the wall, fading to zero across
+            // a band of half-width w centred on the wall (u = 1). w = 0 is a razor-sharp
+            // circle; larger w softens and widens the edge. w has no fixed ceiling, but
+            // because spill_m and R(d) both grow with depth, w stays bounded in practice.
             float DiamondEdgeProfile(float u, float w)
             {
                 return 1.0 - smoothstep(1.0 - w, 1.0 + w, u);
             }
 
-            // === Lateral blur is measured in world-space metres, not normalized u ===
-            // The edge profile lives in u = r/R(d), so a width w there places the
-            // outer spill at u = 1 + w, i.e. metres (1 + w)*R(d) = R(d) + w*R(d). That
-            // trailing *R(d) makes the spill inherit the cone taper and multiply it, so
-            // a depth-growing w bows the envelope outward (the flare artifact). The fix
-            // is to define the spill as an absolute metric amount spill_m(d) added to
-            // the wall: outer edge = R(d) + spill_m(d). Straight iff spill_m is linear
-            // in d. We then convert back to the profile's u-space at the point of use
-            // via w = spill_m / R(d), so the profile/probe/debug all stay in u while the
-            // geometry of the edge is decoupled from the taper.
-            //
-            // Growth is linear in d (not the old sqrt): sqrt was the diffusion shape but
-            // it is itself super-linear, so even a metric sqrt spill would still bow.
-            // Linear metric spill gives a genuinely straight edge, which is the whole
-            // reason for moving to metres. (If a softer near-source ramp is wanted later
-            // it can be added without re-coupling to R(d).)
-
-            // Haze scatter spill in metres at depth d. Driven by optical depth
-            // tau = haze*d and _ScatterStrength; linear in d. No WMAX clamp -- the
-            // straight metric edge doesn't flat-line or bow, so it needs no ceiling
-            // here (the vert box / cone-clip still bound it geometrically).
+            // Haze scatter contributes an edge blur that grows with optical depth
+            // (haze * d) and _ScatterStrength: crisp at the emitter, softer far away.
+            // Linear in d, in metres. It needs no upper clamp because a straight metric
+            // edge can't bow or flat-line; the geometry (vertex box, cone clip) bounds it.
             float DiamondScatterSpill(float haze, float d, float strength)
             {
                 return DIAMOND_SCATTER_K * max(haze, 0.0) * max(d, 0.0) * saturate(strength);
             }
 
-            // Focus spill in metres at depth d. Focus defocuses even in clear air (no
-            // haze coefficient): sharp at the emitter (d = 0 -> 0 spill), spreading with
-            // distance. The rate is RELATIVE TO THE CONE'S OWN SPREAD, not an absolute
-            // metric rate: spill_focus = (1 - _Focus) * spreadX * d. This is the key to
-            // it feeling intuitive across beam widths -- an absolute rate made a narrow
-            // beam defocus to a huge angle while a wide beam barely moved, because the
-            // eye reads defocus as a FRACTION of the cone's own angle, not in metres.
-            // Tying it to spreadX makes narrow and wide beams defocus by the same
-            // PROPORTION of their spread.
-            //   _Focus = 1 -> rate 0 (crisp wall at R(d))
-            //   _Focus = 0 -> rate spreadX, so the outer edge sits at
-            //                 R(d) + spreadX*d = r0 + 2*spreadX*d -- exactly DOUBLE the
-            //                 cone half-angle (the agreed spec).
-            // Consequence: a perfectly collimated beam (spreadX = 0) has no cone angle
-            // to double, so focus is inert there (haze scatter still softens it). K is
-            // kept as the shared diffusion scale so focus and scatter stay commensurate.
+            // Focus contributes a second edge blur that also grows with distance, but
+            // without a haze term, so a lamp defocuses even in perfectly clear air. Its
+            // rate scales with the cone's own spread rather than an absolute amount of
+            // metres:
+            //   spill_focus = (1 - _Focus) * spreadX * d.
+            // Scaling by spreadX is what makes focus feel consistent across beam widths.
+            // An absolute rate would blow a narrow beam out to a huge angle while barely
+            // touching a wide one, because the eye reads defocus as a fraction of the
+            // cone's own angle. With this rate, narrow and wide beams defocus by the same
+            // proportion:
+            //   _Focus = 1  gives rate 0 (crisp wall at R(d))
+            //   _Focus = 0  gives rate spreadX, putting the edge at R(d) + spreadX*d,
+            //               i.e. twice the cone's half-angle.
+            // A perfectly collimated beam (spreadX = 0) has no angle to widen, so focus
+            // does nothing to it; haze scatter still softens its edge.
             float DiamondFocusSpill(float focusF, float spreadX, float d)
             {
                 float rate = (1.0 - saturate(focusF)) * max(spreadX, 0.0);
                 return DIAMOND_SCATTER_K * rate * max(d, 0.0);
             }
 
-            // Combine the two metric spills (focus and haze scatter) into one spill
-            // in metres via quadrature (both are diffusion-like spreads, variances add),
-            // then convert to the profile's u-space half-width by dividing by the cone
-            // radius R(d) at this depth. The division is the only place R(d) enters the
-            // blur, and because we add spill in metres before dividing, the outer edge
-            // is R(d) + spill_m -- straight, not the bowed (1 + w)*R(d).
+            // Combine the focus and haze spills into a single edge width. The two spills
+            // add in quadrature (their variances add, the way independent optical blurs
+            // stack), giving one metric spill; dividing by the cone radius converts it to
+            // the profile's u coordinate. Adding the spills in metres before the divide is
+            // what keeps the lit edge at R(d) + spill_m, straight rather than bowed.
             float DiamondEdgeWidth(float focusF, float spreadX, float haze, float d, float strength, float radiusAtD)
             {
                 float focusSpill   = DiamondFocusSpill(focusF, spreadX, d);
                 float scatterSpill = DiamondScatterSpill(haze, d, strength);
                 float spillMetres  = sqrt(focusSpill*focusSpill + scatterSpill*scatterSpill);
-                return spillMetres / max(radiusAtD, 1e-6);   // -> u-space half-width
+                return spillMetres / max(radiusAtD, 1e-6);   // metres to u coordinate
             }
 
-            // --- Henyey-Greenstein phase function -------------------------------
-            // The fraction of light scattered toward the eye at a point, as a function
-            // of the scattering angle theta = angle between the light's TRAVEL direction
-            // and the direction to the camera. This is what makes the beam view-
-            // dependent: bright looking back toward the emitter (forward scatter, small
-            // theta), dim across/behind it.
+            // Henyey-Greenstein phase function: how much light a point scatters toward
+            // the eye, as a function of the scattering angle theta between the light's
+            // direction of travel and the direction to the camera. This is what makes
+            // the beam view-dependent, brighter when you look back toward the emitter
+            // (forward scatter, small theta) and dimmer across or behind it.
             //
-            //   p(cosTheta) = (1/4pi) * (1 - g^2) / (1 + g^2 - 2 g cosTheta)^(3/2)
+            //   p(cosTheta) = (1 / 4pi) * (1 - g^2) / (1 + g^2 - 2 g cosTheta)^(3/2)
             //
-            //   g = 0    -> isotropic (1/4pi everywhere; the old flat look)
-            //   g -> +1  -> sharp forward scatter (real haze/fog g ~ 0.6-0.8)
-            //   g -> -1  -> back scatter
+            //   g = 0   even scattering in every direction (a flat, view-independent look)
+            //   g > 0   forward scatter, like real haze and fog (around 0.6 to 0.8)
+            //   g < 0   back scatter
             //
-            // cosTheta = dot(lightTravelDir, viewDir). Both must be in the SAME space
-            // (we use beam space). lightTravelDir is where the beam's light is going at
-            // this point -- it fans out from the apex, so lightTravelDir =
-            // normalize(p - apex), NOT a constant axis (matters for wide cones).
-            // The 1/4pi keeps it a normalized phase function (integrates to 1 over the
-            // sphere); harmless as a constant scale that _BeamIntensity absorbs.
+            // cosTheta is dot(lightTravelDir, viewDir) with both in beam space. Light
+            // fans out from the cone apex, so lightTravelDir is normalize(p - apex)
+            // rather than a fixed axis, which matters for wide cones. The 1/4pi keeps
+            // the function normalized (it integrates to 1 over the sphere) and is a
+            // constant scale that _BeamIntensity absorbs.
             float DiamondHGPhase(float cosTheta, float g)
             {
                 float g2 = g * g;
-                float denom = 1.0 + g2 - 2.0 * g * cosTheta;   // > 0 for |g| < 1
-                denom = max(denom, 1e-6);                      // guard fp edge at grazing
+                float denom = 1.0 + g2 - 2.0 * g * cosTheta;   // positive for |g| < 1
+                denom = max(denom, 1e-6);                      // guard against grazing edge
                 return (1.0 / (4.0 * UNITY_PI)) * (1.0 - g2) * rsqrt(denom * denom * denom);
             }
 
@@ -388,16 +375,15 @@ Shader "Diamond/BeamRound"
             {
                 UNITY_SETUP_INSTANCE_ID(i);
 
-                // === DEBUG: vertex-displacement bounds (mode 8) ==============
-                // Faint red over every rasterised fragment of the expanded cube
-                // (ExpandUnitCubeToFrustumBounds), returned before any cap/cone/
-                // depth discard, so it shows the whole bounding box, including the
-                // empty margin the beam doesn't fill. Use it to check the box isn't
-                // clipping the halo (too tight) or wastefully huge (overdraw). The
-                // beam shape is intentionally not visible in this mode. 0.05 reads on
-                // the One-One additive blend against a dark scene.
+              #ifdef DIAMOND_DEBUG
+                // Debug mode 8: vertex bounds. Faint red over every fragment of the
+                // expanded bounding cube, returned before any discard so the whole box
+                // shows, including the empty margin the beam doesn't fill. Use it to
+                // check the box is neither clipping the halo nor wastefully large. The
+                // beam itself isn't visible in this mode.
                 if (_DebugMode > 7.5 && _DebugMode < 8.5)
                     return fixed4(0.05, 0.0, 0.0, 1.0);
+              #endif
 
                 float3 cubeLocalScale = UNITY_ACCESS_INSTANCED_PROP(Props, _CubeLocalScale).xyz;
                 float4 instColor      = UNITY_ACCESS_INSTANCED_PROP(Props, _Color);
@@ -405,8 +391,9 @@ Shader "Diamond/BeamRound"
                 float  emitterWidth   = UNITY_ACCESS_INSTANCED_PROP(Props, _EmitterWidth);
                 float  spreadX        = UNITY_ACCESS_INSTANCED_PROP(Props, _SpreadX);
 
-                float beamLength;
-                DIAMOND_DERIVE_BEAM_LENGTH(beamLength);
+                // beamLength is derived once in vert and passed down (constant per
+                // instance), no per-pixel bisection here. See v2f.beamLength.
+                float beamLength = i.beamLength;
 
                 float r0 = emitterWidth * 0.5;
 
@@ -432,19 +419,14 @@ Shader "Diamond/BeamRound"
                     tExit  = max(tA, tB);
                 }
 
-                // 2) Cone, intersected into the slab. Defocus and haze scatter inflate
-                // the lit radius by a metric spill spill_m(d) added to the wall, so the
-                // outer lit edge is R(d) + spill_m(d) (see DiamondEdgeWidth). Both spills
-                // are linear in d and zero at d = 0, so their sum is itself a cone: the
-                // widened clip cone shares the emitter radius r0 (no over-radius at the
-                // source) and just gets a steeper spread. The extra spread is the spill
-                // RATE: focus rate (1 - _Focus)*spreadX (proportional to the cone's own
-                // spread) and scatter rate haze*strength, combined in quadrature to match
-                // DiamondFocusSpill / DiamondScatterSpill. Because it's an additive spread
-                // bump (not a multiplicative reach), the clip wall is straight and hugs
-                // the real spill instead of over-widening. Both profiles fade to 0 before
-                // this wall, so the widened clip shows no hard edge; near the emitter where
-                // spill ~= 0 the extra enclosed volume just shades black.
+                // 2) Intersect the cone into the slab. The lit edge spills past the
+                // cone wall (focus and haze both widen it), so the clip has to enclose
+                // that spill or it would slice the halo off. Because each spill is
+                // linear in depth and zero at the emitter, the spilled edge is itself a
+                // cone: same emitter radius, just a steeper spread. So we widen the clip
+                // by adding the combined spill rate to the spread, rather than scaling
+                // the whole cone (which would over-widen near the source). The edge
+                // profile fades to zero before this widened wall, so nothing hard-clips.
                 float focusRate    = DIAMOND_SCATTER_K * (1.0 - saturate(_Focus)) * max(spreadX, 0.0);
                 float scatterRate  = DIAMOND_SCATTER_K * max(_HazeDensity, 0.0) * saturate(_ScatterStrength);
                 float spillSpread  = sqrt(focusRate*focusRate + scatterRate*scatterRate);
@@ -454,171 +436,98 @@ Shader "Diamond/BeamRound"
                 tEntry = max(tEntry, coneLo);
                 tExit  = min(tExit,  coneHi);
 
-                // 3) Only the part in front of the camera.
+                // 3) Keep only the part of the ray in front of the camera.
                 tEntry = max(tEntry, 0.0);
 
-                // 4) Clamp the far end to the nearest scene surface, so the beam
-                // lands on geometry (floor pool, occlusion) instead of passing
-                // through it. Converts scene world-distance into beam-space t
-                // (see DiamondBeamDepthClamp -- the cubeLocalScale conversion is
-                // what keeps the old on-axis hole from coming back).
+                // 4) Clamp the far end to the nearest scene surface so the beam lands on
+                // geometry (the floor, occluders) instead of passing through it.
+                // DiamondBeamDepthClamp converts the scene's world-space distance into
+                // beam-space t; that unit conversion is essential, since beam space is
+                // scaled relative to world space.
                 DiamondBeamDepthClamp(i, rayDirection, cubeLocalScale, tExit);
 
                 if (tExit <= tEntry) discard;
 
-                // --- Sample point: segment entry (front face of the slice) ---
-                // Geometric falloff and extinction depend only on the fore/aft
-                // distance d, so they're constant across any cross-section slice.
-                // Sampling at the ENTRY point shows the factor at the near surface
-                // the pixel is looking at -- view it side-on, where entry-d is the
-                // depth of the slice you see. Down-axis views read entry-d ~= 0.
-                float  segLen   = tExit - tEntry;
-                float3 entryPt  = rayOrigin + rayDirection * tEntry;
-                float  dist     = max(entryPt.y, 0.0);    // metres from emitter
+                // Values the real integral and final colour need, computed for every
+                // pixel. The per-component surface probe below is debug-only and gated
+                // behind DIAMOND_DEBUG, so it costs nothing in the shipping variant.
+                float segLen    = tExit - tEntry;                            // feeds stepLen
+                float haze      = max(_HazeDensity, 0.0);                    // loop extinction
+                float fadeStart = beamLength * (1.0 - saturate(_FarFade));   // loop far-fade
+                // Cone apex: light fans out from here, so it seeds the HG light dir in
+                // the loop. y = -r0/spread (apex of the quadric); origin if collimated.
+                float3 beamApex = float3(0.0, (abs(spreadX) > 1e-6) ? (-r0 / spreadX) : 0.0, 0.0);
 
-                // --- LATERAL INFRA: normalized radial position at the surface --
-                // The lateral factors (focus, edge diffusion) operate in "fraction
-                // of the way from axis to wall", not absolute metres -- a gobo's
-                // profile is depth-invariant in that coordinate. At depth d the
-                // cross-section is a disc of radius R(d) = r0 + spread*d, so a point
-                // at radial distance r from the axis has u = r / R(d):
-                //   u = 0 at the axis, u = 1 at the cone wall.
-                // We sample u at the surface hit (tExit, after the depth clamp), so
-                // dropping a plane in the beam paints the cone's cross-section on it.
+              #ifdef DIAMOND_DEBUG
+                // Surface probe (debug only). Each per-component debug mode samples its
+                // factor once at the exit hit, showing what a plane dropped into the beam
+                // would display. The real brightness integrates these along the chord in
+                // the loop above; the probe just makes each factor viewable on its own,
+                // using the same helpers so the two can't diverge.
+                float3 entryPt  = rayOrigin + rayDirection * tEntry;
+                float  dist     = max(entryPt.y, 0.0);          // metres from emitter
+
                 float3 exitPt  = rayOrigin + rayDirection * tExit;
                 float  exitD   = max(exitPt.y, 0.0);
-                float  exitR   = length(exitPt.xz);            // radial dist from axis
-                float  exitRad = r0 + spreadX * exitD;         // FOCUSED cone radius R(d)
-                float  uLat    = exitR / max(exitRad, 1e-6);   // 0 axis .. 1 wall .. 2 max blur
+                float  exitR   = length(exitPt.xz);             // radial distance from axis
+                float  exitRad = r0 + spreadX * exitD;          // cone radius R(d)
+                float  uLat    = exitR / max(exitRad, 1e-6);    // 0 axis, 1 wall, more is spill
 
-                // NOTE: the lateral edge below is the surface probe -- sampled once
-                // at the exit hit (uLat, exitD) so debug modes 6-8 read "what a plane
-                // dropped in the beam shows". The actual beam brightness integrates
-                // the edge per-point along the chord (inside the d-axis loop),
-                // because both u and the blur width vary with depth as the ray
-                // traverses the volume. Both paths call the same helpers.
-
-                // === COMPONENT: lateral edge (focus + scatter, one edge) ======
-                // A single soft-edged profile across the cross-section. Its blur
-                // half-width w comes from two sources, combined in quadrature (see
-                // DiamondEdgeWidth / DiamondEdgeProfile above) so there's exactly one
-                // edge, never a hard-over-blurred superposition:
-                //
-                // Both are depth-dependent spills in metres: zero at the emitter,
-                // growing linearly with distance. So the beam leaves crisp at r0 and
-                // softens downrange without bowing the edge. They differ only in drive:
-                //   focusSpill   -- K*(1-_Focus)*d: defocus with distance, driven by
-                //                   _Focus alone (no haze coefficient), so it happens
-                //                   even in clear air. focus 1 -> 0; focus 0 -> fastest.
-                //   scatterSpill -- K*tau*strength, tau = haze*d: haze diffusion, driven
-                //                   by optical depth (the same haze*d that drives
-                //                   extinction). _ScatterStrength scales it (0 = off).
-                // Combined in quadrature (metres), then DiamondEdgeWidth divides by the
-                // cone radius R(d) to hand the profile a u-space half-width. Because the
-                // spills are added in metres before that divide, the outer edge sits at
-                // R(d) + spill_m -- a straight envelope, not the bowed (1 + w)*R(d).
-                // Surface-probe uses the exit depth exitD and its radius exitRad.
-                float focusF     = saturate(_Focus);
-                float edgeW      = DiamondEdgeWidth(focusF, spreadX, _HazeDensity, exitD, _ScatterStrength, exitRad);
+                // Lateral edge.
+                float focusF      = saturate(_Focus);
+                float edgeW       = DiamondEdgeWidth(focusF, spreadX, _HazeDensity, exitD, _ScatterStrength, exitRad);
                 float edgeProfile = DiamondEdgeProfile(uLat, edgeW);
 
-                // === COMPONENT: Henyey-Greenstein phase (view-dependent) ======
-                // Scattering angle theta = angle between the light's travel direction
-                // and the direction to the camera. Surface probe evaluates it at the
-                // exit hit; mode 9 shows p(theta) raw.
-                float3 beamApex     = float3(0.0, (abs(spreadX) > 1e-6) ? (-r0 / spreadX) : 0.0, 0.0);
+                // HG phase at the exit hit. The direction to the camera is exactly
+                // -rayDirection (the sample is in front of the camera, ray normalized).
                 float3 lightDirExit = normalize(exitPt - beamApex);
-                float3 viewDirExit  = normalize(rayOrigin - exitPt);
-                float  cosThetaExit = dot(lightDirExit, viewDirExit);
+                float  cosThetaExit = dot(lightDirExit, -rayDirection);
                 float  hgPhase      = DiamondHGPhase(cosThetaExit, _Anisotropy);
 
-                // === COMPONENT: geometric falloff ============================
-                // The cone widens with distance, so a fixed emitter flux is spread
-                // over a larger cross-section -> dimmer. For the circle this is
-                // (r0 / (r0 + spread*d))^2 = emitterArea / crossArea(d).
-                //   d = 0        -> 1.0 (full, at the emitter)
-                //   spread = 0   -> 1.0 everywhere (collimated: no geometric loss)
-                //   d increasing -> falls toward 0
+                // Geometric falloff at the entry point.
                 float radius      = r0 + spreadX * dist;
                 float crossArea   = UNITY_PI * radius * radius;
                 float emitterArea = UNITY_PI * r0 * r0;
                 float geometricFalloff = emitterArea / max(crossArea, 1e-6);
 
-                // === COMPONENT: distance extinction ==========================
-                // Light scatters/absorbs out of the beam as it travels through
-                // haze (Beer-Lambert): exp(-haze * d). Independent of geometry --
-                // depends only on the haze density and distance.
-                //   d = 0      -> 1.0 (no haze traversed yet)
-                //   haze = 0   -> 1.0 everywhere (no medium)
-                //   haze up    -> decays faster (exponential)
-                float haze       = max(_HazeDensity, 0.0);
+                // Distance extinction and far-fade at the entry point.
                 float extinction = exp(-haze * dist);
-
-                // === COMPONENT: far-cap fade =================================
-                // Smoothly fade the beam to zero over the last _FarFade fraction
-                // of its (auto-derived) length, so it dissolves instead of ending
-                // in a hard-clipped disc at beamLength. Purely a d-axis factor.
-                //   d <= fadeStart -> 1.0;  d -> beamLength -> 0.0
-                //   _FarFade = 0   -> hard cap (no fade band)
-                float fadeStart = beamLength * (1.0 - saturate(_FarFade));
-                float farFade   = (beamLength > fadeStart)
-                    ? smoothstep(beamLength, fadeStart, dist)   // 1 at start, 0 at cap
+                float farFade    = (beamLength > fadeStart)
+                    ? smoothstep(beamLength, fadeStart, dist)
                     : 1.0;
+              #endif // DIAMOND_DEBUG
 
-                // === INTEGRATION: along the chord ============================
-                // The brightness the camera sees is the sum of light scattered
-                // toward the eye from every point along the chord [tEntry,tExit],
-                // i.e. the integral over t of the product of every per-point factor
-                // evaluated at that point p(t) = rayOrigin + rayDirection*t:
+                // Integrate the brightness along the chord
+                // -----------------------------------------
+                // What the camera sees is the light scattered toward it from every
+                // point along the chord [tEntry, tExit], which is the integral of the
+                // product of all per-point factors:
                 //
-                //   brightness = INTEGRAL falloff(d)*ext(d)*fade(d)*lateral(u,d) dt
+                //   brightness = integral of falloff(d) * ext(d) * fade(d) * lateral(u,d) dt
                 //
-                // Two kinds of factor appear in that product:
-                //   * d-axis only  (falloff, extinction, far-fade): depend solely
-                //     on depth d(t), constant across a cross-section slice.
-                //   * lateral (focus x scatter): depend on both the radial coord
-                //     u(t) = |p(t).xz| / R(d(t)) and the depth-dependent scatter
-                //     width w(d(t)). This is why the lateral term must live inside
-                //     the loop and can't be a single multiply on the finished
-                //     integral: as the ray traverses the volume, u sweeps across
-                //     the cross-section and w widens with depth, so each point
-                //     contributes its own softness. The blur is thus cumulative
-                //     along the chord -- exactly what a single outer multiply
-                //     (which would freeze one u and one w for the whole ray) loses.
+                // The factors are of two kinds. Falloff, extinction and far-fade depend
+                // only on depth d, so they're constant across a cross-section slice. The
+                // lateral edge depends on both the radial coordinate u and the depth-
+                // dependent blur width, and both change along the ray: as the chord cuts
+                // through the cone, u sweeps across the section and the blur widens with
+                // depth. That is why the lateral factor is evaluated per point inside the
+                // loop rather than multiplied onto the finished sum; folding it in per
+                // point is what accumulates the edge blur that reads as volumetric.
                 //
-                // No clean closed form exists, so we integrate numerically with a
-                // fixed count of midpoint substeps (not a fixed step size): the
-                // chord is always split into N pieces no matter how long, so it is
-                // length-independent and can't under-sample long beams (the old
-                // far-cap ring that scaled with _BeamLengthMax).
+                // There's no clean closed form, so we integrate numerically with a fixed
+                // number of midpoint substeps. Using a fixed count (rather than a fixed
+                // step size) splits any chord into the same number of pieces however long
+                // it is, so long beams aren't under-sampled.
                 //
-                // dAxisIntegral keeps the d-only product (for debug mode 5, so that
-                // factor group stays viewable in isolation). beamIntegral is the FULL
-                // brightness: the same chord integral with the lateral edge folded in
-                // PER SUBSTEP.
-                //
-                // Why the lateral term lives inside the loop (not one outer multiply of
-                // the finished dAxisIntegral): dAxisIntegral is already a collapsed sum,
-                // so multiplying it by a single lateral value would compute
-                //   (INTEGRAL dOnly dt) x lateral(one point)
-                // whereas the correct brightness is
-                //   INTEGRAL dOnly(t) x lateral(u(t), spill(t)) dt.
-                // The lateral weight varies along the chord: as the ray cuts through the
-                // cone its radial coord u(t) = |p.xz|/R(d) sweeps across the section, and
-                // the metric spill width grows with depth. Freezing one u + one width for
-                // the whole ray throws away the cumulative edge blur that makes it read
-                // as volumetric -- so each substep gets its OWN lateral factor.
-                //
-                // 8 substeps (up from 4): the d-axis factors integrate fine at 4, but the
-                // lateral edge varies fastest on grazing rays (u sweeps a lot per chord),
-                // which under-samples and aliases the soft edge at 4. Still a fixed count
-                // (length-independent), so no far-cap ring.
+                // The substep count is the loop's cost/quality dial. The depth-only
+                // factors integrate cleanly at 4; the lateral edge varies fastest on
+                // grazing rays and can stair-step at low counts, so raise this if that
+                // shows. It also sets the unroll length, so keep it small.
                 #define DIAMOND_DAXIS_STEPS 4
 
-                float dy      = rayDirection.y;           // dd/dt along the ray
                 float stepLen = segLen / DIAMOND_DAXIS_STEPS;
-                float dAxisIntegral = 0.0;   // d-only factors (debug 5)
-                float beamIntegral  = 0.0;   // d-only x lateral (real brightness, mode 0)
+                float dAxisIntegral = 0.0;   // depth-only factors, for debug mode 5
+                float beamIntegral  = 0.0;   // full brightness, mode 0
 
                 [unroll]
                 for (int si = 0; si < DIAMOND_DAXIS_STEPS; si++)
@@ -627,14 +536,17 @@ Shader "Diamond/BeamRound"
                     float3 p = rayOrigin + rayDirection * t;  // point on the chord
                     float d = max(p.y, 0.0);                  // depth there
 
-                    // -- falloff(d): r0^2 / (r0 + s*d)^2 --
+                    // Geometric falloff: the cone widens with depth, spreading a fixed
+                    // emitter flux over a larger disc, so brightness drops as (r0/R(d))^2.
                     float rad = r0 + spreadX * d;
                     float fFalloff = (r0*r0) / max(rad*rad, 1e-12);
 
-                    // -- extinction(d): exp(-haze*d) --
+                    // Beer-Lambert extinction: light is absorbed and scattered out of the
+                    // beam as it travels through haze.
                     float fExt = exp(-haze * d);
 
-                    // -- farFade(d): smoothstep tail band --
+                    // Far-cap fade: dissolve the last stretch of the beam instead of
+                    // ending it in a hard disc.
                     float fFade = (beamLength > fadeStart)
                         ? smoothstep(beamLength, fadeStart, d)
                         : 1.0;
@@ -642,63 +554,60 @@ Shader "Diamond/BeamRound"
                     float dOnly = fFalloff * fExt * fFade;
                     dAxisIntegral += dOnly;
 
-                    // -- lateral edge at this point: u sweeps, spill grows with depth --
-                    // Same metric-spill helpers as the surface probe (can't drift): the
-                    // width is spill_m(d)/R(d) via DiamondEdgeWidth, drawn by the one
-                    // soft-edge profile. rad IS R(d) at this substep.
+                    // Lateral edge at this point. The blur width is DiamondEdgeWidth
+                    // written out directly: both spills are linear in depth, so depth
+                    // factors out of the quadrature and the combined spill in metres is
+                    // just spillSpread * d (spillSpread was already computed for the cone
+                    // clip). Dividing by the cone radius gives the width in u. Keep this in
+                    // sync with DiamondEdgeWidth, which the debug surface probe uses.
                     float uHere = length(p.xz) / max(rad, 1e-6);
-                    float wHere = DiamondEdgeWidth(focusF, spreadX, haze, d, _ScatterStrength, rad);
+                    float wHere = spillSpread * d / max(rad, 1e-6);
                     float fLat  = DiamondEdgeProfile(uHere, wHere);
 
-                    // -- flux conservation as the edge spills wider --
-                    // The geometric falloff (fFalloff) conserves flux over the disc of
-                    // radius R(d) only. But focus/haze spill widens the lit disc beyond
-                    // R(d), spreading the same flux over a larger area -> it must dim
-                    // more. The edge profile's area integral is J(w) = 1/2 + w^2/10
-                    // (closed form of the ∫[1-smoothstep]·u du over the section), so the
-                    // spilled area is πR(d)^2·(1 + w^2/5). The flux-conserving factor is
-                    // the hard-disc area over the spilled area:
-                    //   J(0)/J(w) = 1 / (1 + w^2/5).
-                    // One multiply/add/divide -- the integral was solved offline, so no
-                    // per-pixel numerical integration. Exact for w<=1; for w>1 it gently
-                    // over-dims (always in the safe direction), which is fine.
+                    // Flux conservation as the edge spills wider. The geometric falloff
+                    // above conserves flux over the disc of radius R(d), but the spill
+                    // widens the lit disc past that, so the same light covers more area
+                    // and must dim further. The edge profile's area integral has the
+                    // closed form J(w) = 1/2 + w^2/10, giving a spilled area of
+                    // pi*R(d)^2 * (1 + w^2/5), so the correcting factor is the ratio of
+                    // the sharp-disc area to the spilled area, 1 / (1 + w^2/5). Exact for
+                    // w <= 1; beyond that it dims very slightly too much, which is safe.
                     float fFluxNorm = 1.0 / (1.0 + wHere*wHere * 0.2);
 
-                    // -- Henyey-Greenstein phase at this point (view-dependent) --
-                    // Each substep has its OWN scattering angle: lightTravelDir fans out
-                    // from the apex (normalize(p - apex)) and viewDir points back to the
-                    // camera, both in beam space. So the phase must be per-substep, not a
-                    // single outer multiply -- as the ray traverses, cosTheta changes.
-                    // Same helper/apex as the surface probe (can't drift).
+                    // Henyey-Greenstein phase at this point. Light fans out from the apex,
+                    // so its travel direction is normalize(p - apex) and changes along the
+                    // chord, which is why the phase is evaluated per point. The direction
+                    // to the camera is exactly -rayDirection (every sample is in front of
+                    // the camera and the ray is normalized), so it needs no normalize.
                     float3 lightDirHere = normalize(p - beamApex);
-                    float3 viewDirHere  = normalize(rayOrigin - p);
-                    float  phaseHere    = DiamondHGPhase(dot(lightDirHere, viewDirHere), _Anisotropy);
+                    float  phaseHere    = DiamondHGPhase(dot(lightDirHere, -rayDirection), _Anisotropy);
 
                     beamIntegral += dOnly * fLat * fFluxNorm * phaseHere;
                 }
-                dAxisIntegral *= stepLen;   // midpoint rule: sum * substep width
+                dAxisIntegral *= stepLen;   // midpoint rule: sum times substep width
                 beamIntegral  *= stepLen;
 
-                // --- Debug dispatch ------------------------------------------
-                // Additive blend on a dark scene -> grayscale reads directly.
-                // Each mode shows one component so we can verify it in isolation.
-                // (mode 8 VertexBounds is handled by the early return at the top.)
-                //
-                // Mode 0 is checked first and on its own: it is the smallest value, so a
-                // `< 1.5`-style lower bound would also swallow it.
-                if (_DebugMode < 0.5)                             // 0 / normal: the real beam
+              #ifdef DIAMOND_DEBUG
+                // Debug dispatch, compiled out of the shipping variant. On the additive
+                // blend against a dark scene, each grayscale value reads directly, and
+                // every mode isolates one component. Mode 0 is tested first and on its
+                // own, since it's the smallest value and a "< 1.5" bound would catch it
+                // too. Mode 8 (vertex bounds) returns from the top of the function.
+                if (_DebugMode < 0.5)                             // 0: the real beam
                     return fixed4(instColor.rgb * beamIntegral * beamIntensity, 1);
                 if (_DebugMode < 1.5)   return fixed4(segLen.xxx * 0.1, 1);          // 1: segment length
-                if (_DebugMode < 2.5)   return fixed4(geometricFalloff.xxx, 1);      // 2: geometric falloff (0..1)
-                if (_DebugMode < 3.5)   return fixed4(extinction.xxx, 1);            // 3: distance extinction (0..1)
-                if (_DebugMode < 4.5)   return fixed4(farFade.xxx, 1);               // 4: far-cap fade (0..1)
-                if (_DebugMode < 5.5)   return fixed4((dAxisIntegral).xxx, 1);       // 5: d-axis integral (falloff x extinction x fade)
-                if (_DebugMode < 6.5)   return fixed4(uLat.xxx, 1);                  // 6: lateral coord u at surface (0 axis .. 1 wall .. spill)
-                if (_DebugMode < 7.5)   return fixed4(edgeProfile.xxx, 1);           // 7: lateral edge at surface (metric spill, one edge)
-                // (mode 8 VertexBounds returns at the top of frag.)
-                if (_DebugMode < 9.5)   return fixed4(hgPhase.xxx, 1);               // 9: HG phase at surface (raw p(theta); sweep _Anisotropy)
+                if (_DebugMode < 2.5)   return fixed4(geometricFalloff.xxx, 1);      // 2: geometric falloff
+                if (_DebugMode < 3.5)   return fixed4(extinction.xxx, 1);            // 3: distance extinction
+                if (_DebugMode < 4.5)   return fixed4(farFade.xxx, 1);               // 4: far-cap fade
+                if (_DebugMode < 5.5)   return fixed4((dAxisIntegral).xxx, 1);       // 5: depth-only integral
+                if (_DebugMode < 6.5)   return fixed4(uLat.xxx, 1);                  // 6: lateral coordinate u
+                if (_DebugMode < 7.5)   return fixed4(edgeProfile.xxx, 1);           // 7: lateral edge
+                if (_DebugMode < 9.5)   return fixed4(hgPhase.xxx, 1);               // 9: HG phase
+              #endif // DIAMOND_DEBUG
 
-                // Safe fallback for any out-of-range _DebugMode: the real beam.
+                // Shipping path, and the fallback for any out-of-range debug value: the
+                // real beam. dAxisIntegral feeds only debug mode 5, so it (and its
+                // accumulation in the loop) is dead-stripped from the shipping variant.
                 return fixed4(instColor.rgb * beamIntegral * beamIntensity, 1);
             }
 

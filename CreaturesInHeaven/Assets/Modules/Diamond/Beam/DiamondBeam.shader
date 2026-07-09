@@ -98,7 +98,7 @@ Shader "Diamond/Beam"
 
             #include "DiamondBeamCommon.cginc"
 
-            float _DebugMode;   // REBUILD DEBUG (see Properties)
+            float _DebugMode;
 
             v2f vert(appdata v) { return DiamondBeamVert(v); }
 
@@ -150,7 +150,7 @@ Shader "Diamond/Beam"
                 float beamLength;
                 DIAMOND_DERIVE_BEAM_LENGTH(beamLength);
 
-                // Camera ray in BEAM SPACE (origin at emitter centre, +Y along
+                // Camera ray in beam space (origin at emitter centre, +Y along
                 // the beam, t in beam-space units).
                 float3 cameraObject = mul(unity_WorldToObject, float4(_WorldSpaceCameraPos, 1)).xyz;
                 float3 rayOrigin    = cameraObject * cubeLocalScale;
@@ -174,7 +174,7 @@ Shader "Diamond/Beam"
 
                 if (tExit <= tEntry) discard;
 
-                // --- Sample point: segment ENTRY (front face of the slice) ---
+                // --- Sample point: segment entry (front face of the slice) ---
                 // Geometric falloff and extinction depend only on the fore/aft
                 // distance d, so they're constant across any cross-section slice.
                 // Sampling at the ENTRY point shows the factor at the near surface

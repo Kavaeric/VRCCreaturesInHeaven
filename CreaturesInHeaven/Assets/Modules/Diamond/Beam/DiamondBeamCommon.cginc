@@ -21,20 +21,18 @@
 #include "UnityCG.cginc"
 
 // --- Lateral diffusion rate --------------------------------------------------
-// The "law" constant for how fast the lateral edge spills with depth. Both the
-// focus and haze-scatter spills grow as DIAMOND_SCATTER_K * rate * d (metres), so
-// K sets the overall diffusion scale; rate is what _Focus / haze*strength supply.
-// K = 1 anchors one unit of spill to one metre * unit rate. It lives here (not in
-// the round frag) because BOTH the vert bounding box (ExpandUnitCubeToFrustumBounds)
-// and the frag's spill math need it and must agree. Retune only if the underlying
-// diffusion model changes; it is a law, not an art knob (_Focus / _ScatterStrength
-// / _HazeDensity art-direct the look).
+// The constant that sets how fast the lateral edge spills with depth. Both the
+// focus and haze-scatter spills grow as DIAMOND_SCATTER_K * rate * d (in metres),
+// so this sets the overall diffusion scale while _Focus and haze*strength supply
+// the per-source rate. At 1, one unit of rate produces one metre of spill per metre
+// of depth. It lives here rather than in the frag because both the vertex bounding
+// box (ExpandUnitCubeToFrustumBounds) and the frag's spill math read it and must
+// agree. It's a fixed property of the diffusion model, not an art control; _Focus,
+// _ScatterStrength and _HazeDensity are the knobs that shape the look.
 //
-// NOTE: the spill is now measured in absolute metres and added to the cone wall
-// (outer edge = R(d) + spill_m(d)), so it needs no width ceiling -- a straight
-// metric edge neither flat-lines nor bows. The geometry (vert box + cone clip)
-// is what bounds it. (This replaces the old normalized-u WMAX/reach ceiling, which
-// existed only because blur in u inherited the cone taper and had to be clamped.)
+// Because the spill is measured in metres and added to the cone wall (lit edge at
+// R(d) + spill_m(d)), it needs no upper clamp: a straight metric edge can neither
+// bow nor flat-line, and the geometry (vertex box and cone clip) bounds it.
 #define DIAMOND_SCATTER_K 1.0
 
 // --- Material-level (non-instanced) properties -------------------------------
@@ -49,22 +47,19 @@ float  _FarFade;
 float  _ScatterStrength;
 float  _Anisotropy;
 
-// Focus: how fast the cone defocuses with distance, RELATIVE TO ITS OWN SPREAD.
-// Always perfectly focused at the emitter (zero blur at d = 0), spreading more
-// toward the far end; _Focus sets the rate as a fraction of the cone half-angle.
+// Focus: how fast the cone defocuses with distance, as a fraction of its own spread.
+// Sharp at the emitter, spreading more toward the far end.
 //   1 = perfectly collimated: crisp edge, only haze softens it across the throw.
-//   0 = defocuses fastest: the edge sits at DOUBLE the cone half-angle downrange.
-// The focus spill is metric, linear in depth, and PROPORTIONAL to spread:
-//   spill_focus = K*(1-_Focus)*spreadX*d  (metres),
-// combined in quadrature with the haze scatter spill, then divided by the cone
-// radius R(d) to form the edge profile's u-space width (see DiamondFocusSpill /
-// DiamondEdgeWidth in the frag). Tying the rate to spreadX (rather than an absolute
-// metric rate) is what makes defocus feel consistent across beam widths -- narrow
-// and wide beams defocus by the same PROPORTION of their spread, instead of a
-// narrow beam blowing out to a huge angle. A collimated beam (spreadX = 0) has no
-// angle to double, so focus is inert there (haze scatter still softens it). Spill
-// 0 at d = 0 and added in metres to the wall keeps the source at r0 (no over-radius,
-// straight envelope).
+//   0 = defocuses to twice the cone's half-angle by the far end.
+// The focus spill is measured in metres, grows linearly with depth, and scales with
+// the spread: spill_focus = K*(1-_Focus)*spreadX*d. It combines in quadrature with
+// the haze scatter spill and is then divided by the cone radius to give the edge
+// profile's width (see DiamondFocusSpill and DiamondEdgeWidth in the frag). Scaling
+// by the spread is what makes defocus feel consistent across beam widths: narrow and
+// wide beams defocus by the same proportion, instead of a narrow beam blowing out to
+// a huge angle. A collimated beam (spreadX = 0) has no angle to widen, so focus does
+// nothing to it, though haze scatter still softens its edge. Because the spill is
+// zero at the emitter and added in metres to the wall, the source stays at radius r0.
 float  _Focus;
 
 // --- Per-instance properties -------------------------------------------------
@@ -72,7 +67,7 @@ float  _Focus;
 // can vary independently. _SpreadX/_SpreadZ are animated (via
 // BeamProps.localEulerAngles.x), stored as tan(half-angle) so the shader uses
 // them directly. The round shader only reads _SpreadX (symmetric cone) but the
-// driver writes both -- _SpreadZ is simply ignored there.
+// driver writes both, and _SpreadZ is simply ignored there.
 UNITY_INSTANCING_BUFFER_START(Props)
     UNITY_DEFINE_INSTANCED_PROP(float,  _EmitterWidth)
     UNITY_DEFINE_INSTANCED_PROP(float,  _EmitterHeight)
@@ -101,6 +96,11 @@ struct v2f
     // Oblique-frustum correction for mirror-camera depth reads.
     // Stored as dot(clipPos, correctionVec); frag divides by clipW.
     float  frustumCorrection : TEXCOORD3;
+    // Auto-derived beam length, in metres. It's constant per instance, so vert
+    // computes it once (the bisection in DIAMOND_DERIVE_BEAM_LENGTH) and passes it
+    // down, sparing the frag that per-pixel bisection. Interpolation is exact because
+    // every vertex of an instance produces the same value.
+    float  beamLength : TEXCOORD4;
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
@@ -137,8 +137,8 @@ float CorrectedLinearEyeDepth(float z, float frustumCorrection)
 // using the same formula the frag shader uses. Lets the beam-length derivation
 // actually match what gets rendered.
 //
-// crossArea is the cone's cross-section area at the given distance -- this is
-// the only shape-dependent term, so callers pass it in. (Rect: w*h. Round:
+// crossArea is the cone's cross-section area at the given distance. It's the only
+// shape-dependent term, so callers pass it in. (Rect: w*h. Round:
 // pi*r^2.) emitterArea is the cross-section area at the emitter face.
 float BeamDensityAtDistance(float distance, float crossArea, float emitterArea,
     float beamIntensity, float haze)
@@ -195,14 +195,14 @@ float BeamDensityAtDistance(float distance, float crossArea, float emitterArea,
 // no taper), sized to the worst case. It exists only to give the frag's ray math
 // something to rasterise. Tighten later once shader is in a better state.
 //
-//   Height (Y): _BeamLengthMax -- the absolute ceiling, ignoring whether
-//               extinction/far-fade ends the beam sooner. Always tall enough.
-//   Lateral (X/Z): the widest the beam could EVER be, evaluated at _BeamLengthMax:
+//   Height (Y): _BeamLengthMax, the absolute ceiling, ignoring whether extinction
+//               or far-fade ends the beam sooner. Always tall enough.
+//   Lateral (X/Z): the widest the beam could ever be, evaluated at _BeamLengthMax:
 //               emitter half-size
-//             + (geometric spread + lateral SPILL spread) over the max length
+//             + (geometric spread + lateral spill spread) over the max length
 //             + shear lean over the max length
-//               Held CONSTANT top-to-bottom (box, not cone) so the near cap is
-//               just as wide -- can't clip the emitter-end halo either.
+//               Held constant top to bottom (a box, not a cone) so the near cap is
+//               just as wide and can't clip the emitter-end halo either.
 //
 // The lateral spill (defocus + haze scatter) is now an additive metric amount that
 // grows linearly with depth (see DiamondEdgeWidth in the round frag), so it reads
@@ -221,10 +221,10 @@ float3 ExpandUnitCubeToFrustumBounds(float3 unitVertex,
 {
     float maxLen = max(_BeamLengthMax, 0.0);
 
-    // Worst-case extra spread per metre from lateral spill (focus + haze scatter),
-    // matching the frag's spillSpread. Focus is now PROPORTIONAL to the cone's own
-    // spread -- worst case (focus = 0) the focus rate is spreadX (per axis) -- so the
-    // focus term is per-axis, not a single absolute rate. Scatter is isotropic.
+    // Worst-case extra spread per metre from lateral spill (focus plus haze scatter),
+    // matching the frag's spillSpread. Focus scales with the cone's own spread, and at
+    // its worst (focus = 0) the rate equals the spread, so the focus term is per-axis
+    // rather than a single absolute rate. Scatter is the same on both axes.
     float scatterRate  = DIAMOND_SCATTER_K * max(_HazeDensity, 0.0) * saturate(_ScatterStrength);
     float spillSpreadX = sqrt(spreadX*spreadX * (DIAMOND_SCATTER_K*DIAMOND_SCATTER_K) + scatterRate*scatterRate);
     float spillSpreadZ = sqrt(spreadZ*spreadZ * (DIAMOND_SCATTER_K*DIAMOND_SCATTER_K) + scatterRate*scatterRate);
@@ -289,6 +289,7 @@ v2f DiamondBeamVert(appdata v)
     {
         o.vertex = float4(0, 0, 0, 0);
         o.vertBeamSpace = 0; o.screenPos = 0; o.vertWorldSpace = 0; o.frustumCorrection = 0;
+        o.beamLength = 0;
         return o;
     }
 
@@ -320,6 +321,7 @@ v2f DiamondBeamVert(appdata v)
     o.vertWorldSpace    = mul(unity_ObjectToWorld, expandedObject).xyz;
     o.screenPos         = ComputeScreenPos(o.vertex);
     o.frustumCorrection = dot(o.vertex, CalculateFrustumCorrection());
+    o.beamLength        = beamLength;   // pass down; frag skips the per-pixel bisection
     return o;
 }
 
@@ -342,8 +344,8 @@ fixed4 DiamondBeamIntegrate(v2f i, float3 rayOrigin, float3 rayDirection,
 }
 
 // Depth clamp shared by both shapes. Shrinks tExit so the beam terminates at the
-// nearest scene surface in front of its far cap -- this is what makes the beam
-// land ON the floor/walls instead of passing through them. Mutates tExit.
+// nearest scene surface in front of its far cap, which is what makes it land on the
+// floor and walls instead of passing through them. Mutates tExit.
 //
 // tExit is in beam-space t, but the scene hit reconstructed from the depth texture is
 // a world-space distance (metres). Beam space is object space scaled component-wise by

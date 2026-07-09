@@ -67,9 +67,28 @@ public class DiamondBeamDebugModeDrawer : MaterialPropertyDrawer
         EditorGUI.BeginChangeCheck();
         int newIndex = EditorGUI.IntPopup(popupRect, label, index, Names, Values);
         if (EditorGUI.EndChangeCheck())
+        {
             prop.floatValue = newIndex;
+            SyncDebugKeyword(prop, newIndex);
+        }
 
         EditorGUI.HelpBox(helpRect, Descriptions[index], MessageType.Info);
+    }
+
+    // The frag gates all debug scaffolding behind #pragma shader_feature_local
+    // DIAMOND_DEBUG so the shipping (Normal) variant compiles it out entirely. Enable
+    // the keyword whenever a non-Normal mode is picked, disable it on Normal, so a
+    // material left at Normal never references the debug variant (it gets stripped
+    // from builds) yet the debug modes still work while authoring.
+    static void SyncDebugKeyword(MaterialProperty prop, int mode)
+    {
+        foreach (Object target in prop.targets)
+        {
+            Material mat = target as Material;
+            if (mat == null) continue;
+            if (mode == 0) mat.DisableKeyword("DIAMOND_DEBUG");
+            else           mat.EnableKeyword("DIAMOND_DEBUG");
+        }
     }
 
     static int ClampedIndex(MaterialProperty prop)

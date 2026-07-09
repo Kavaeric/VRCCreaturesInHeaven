@@ -71,6 +71,23 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
     // different cap.
     public float MaxBeamLength = 50f;
 
+    // Material-level values that widen the beam's lateral spill, mirrored for
+    // renderer-bounds sizing so the culling AABB encloses the vertex shader's
+    // expanded box (see DiamondBeamMath.LateralHalfExtent). Worst-case defaults;
+    // override per fixture if the beam material differs. Shear is 0 for round.
+    public float MaxHazeDensity     = 0.05f;
+    public float MaxScatterStrength = 1f;
+    public float MaxShear           = 0f;
+
+    // Material _CubeLocalScale: the counter-scale the beam is authored against.
+    // The vertex shader renders in "beam space" (world metres) then divides by
+    // this before applying ObjectToWorld, so the cube's own localScale cancels
+    // and the rendered size is transform-scale-independent (see DiamondBeamVert).
+    // The bounds math must divide by the same factor, or the box comes out scaled
+    // by the cube's localScale (e.g. a 50 m beam culled at 5 m when scale is 0.1).
+    // Mirrored from the material; defaults match the material's 0.1.
+    public Vector3 CubeLocalScale = Vector3.one * 0.1f;
+
     // Base emission colour. Set via FixtureDefinition in the editor; not animated.
     // Brightness (from LampProps) is applied as a multiplier on top of this.
     public Color EmissionColor = Color.white;
@@ -98,15 +115,30 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
     {
         if (BeamRenderer == null) return;
 
-        // Lateral half-extent at the far cap of the beam: emitter half-width
-        // plus the worst-case spread plus a small margin for the soft-edge
-        // halo. Same shape the vertex shader inflates the bounding cube to.
-        float halfLateralX = EmitterSize.x * 0.5f + MaxSpreadTan * MaxBeamLength + 1f;
-        float halfLateralZ = EmitterSize.y * 0.5f + MaxSpreadTan * MaxBeamLength + 1f;
+        // Lateral half-extent at the far cap of the beam. Derived from the same
+        // formula the vertex shader inflates its bounding cube to
+        // (DiamondBeamMath.LateralHalfExtent, mirror of ExpandUnitCubeToFrustumBounds),
+        // so the culling AABB is guaranteed to enclose the rasterised geometry
+        // instead of relying on a hand-tuned margin that could undersize it when
+        // spill grows. Round is symmetric, so both axes use the same spread/shear.
+        float halfLateralX = DiamondBeamMath.LateralHalfExtent(
+            EmitterSize.x * 0.5f, MaxSpreadTan, MaxShear,
+            MaxHazeDensity, MaxScatterStrength, MaxBeamLength);
+        float halfLateralZ = DiamondBeamMath.LateralHalfExtent(
+            EmitterSize.y * 0.5f, MaxSpreadTan, MaxShear,
+            MaxHazeDensity, MaxScatterStrength, MaxBeamLength);
 
-        // Local-space AABB. The beam fires along +Y from y=0 to y=MaxBeamLength.
-        Vector3 center = new Vector3(0f, MaxBeamLength * 0.5f, 0f);
-        Vector3 size   = new Vector3(halfLateralX * 2f, MaxBeamLength, halfLateralZ * 2f);
+        // Beam-space AABB (world metres): beam fires along +Y from 0 to MaxBeamLength.
+        Vector3 beamCenter = new Vector3(0f, MaxBeamLength * 0.5f, 0f);
+        Vector3 beamSize   = new Vector3(halfLateralX * 2f, MaxBeamLength, halfLateralZ * 2f);
+
+        // Convert beam space -> object space by dividing out the cube's counter-scale,
+        // exactly as DiamondBeamVert does (objectSpace = beamSpace / cubeLocalScale).
+        // localToWorld then re-applies the cube's localScale, cancelling it so the box
+        // lands at true world size instead of being shrunk by the counter-scale.
+        Vector3 cs = SafeCubeLocalScale();
+        Vector3 center = new Vector3(beamCenter.x / cs.x, beamCenter.y / cs.y, beamCenter.z / cs.z);
+        Vector3 size   = new Vector3(beamSize.x   / cs.x, beamSize.y   / cs.y, beamSize.z   / cs.z);
         Bounds localBounds = new Bounds(center, size);
 
         // Transform to world space. Renderer.bounds is in world space, so we
@@ -121,6 +153,18 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
         worldExtents = new Vector3(Mathf.Abs(worldExtents.x), Mathf.Abs(worldExtents.y), Mathf.Abs(worldExtents.z));
 
         BeamRenderer.bounds = new Bounds(worldCenter, worldExtents * 2f);
+    }
+
+    // CubeLocalScale with any zero/near-zero component replaced by 1, so the
+    // beam-space -> object-space divide in the bounds math can't blow up. A zero
+    // counter-scale is a misconfiguration; treating it as 1 fails safe (no divide,
+    // box stays beam-sized) rather than producing an infinite bound.
+    public Vector3 SafeCubeLocalScale()
+    {
+        return new Vector3(
+            Mathf.Abs(CubeLocalScale.x) < 1e-6f ? 1f : CubeLocalScale.x,
+            Mathf.Abs(CubeLocalScale.y) < 1e-6f ? 1f : CubeLocalScale.y,
+            Mathf.Abs(CubeLocalScale.z) < 1e-6f ? 1f : CubeLocalScale.z);
     }
 
     // Lazily creates the property blocks so callers from edit mode (e.g.

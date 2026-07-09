@@ -83,6 +83,29 @@ public class DiamondFixtureDefinition : MonoBehaviour
         {
             driver.MaxSpreadTan = SpreadDegreesToTan(Profile.SpreadMaxDegrees);
         }
+
+        // Mirror the material-level values that widen the beam's lateral spill
+        // (and its length cap) so the renderer bounds enclose the vertex shader's
+        // expanded box. Same pattern as DiamondBakeryDriver: read the live
+        // material floats so the bounds track material edits. sharedMaterial in
+        // edit mode to avoid leaking a material instance.
+        var beamMat = driver.BeamRenderer != null ? driver.BeamRenderer.sharedMaterial : null;
+        if (beamMat != null)
+        {
+            if (beamMat.HasProperty("_BeamLengthMax"))
+                driver.MaxBeamLength = beamMat.GetFloat("_BeamLengthMax");
+            if (beamMat.HasProperty("_HazeDensity"))
+                driver.MaxHazeDensity = beamMat.GetFloat("_HazeDensity");
+            if (beamMat.HasProperty("_ScatterStrength"))
+                driver.MaxScatterStrength = beamMat.GetFloat("_ScatterStrength");
+            if (beamMat.HasProperty("_CubeLocalScale"))
+            {
+                // Beam-space -> object-space counter-scale. The bounds math divides
+                // by this to match DiamondBeamVert, so it must track the material.
+                Vector4 v = beamMat.GetVector("_CubeLocalScale");
+                driver.CubeLocalScale = new Vector3(v.x, v.y, v.z);
+            }
+        }
         driver.ApplyBeamRendererBounds();
     }
 

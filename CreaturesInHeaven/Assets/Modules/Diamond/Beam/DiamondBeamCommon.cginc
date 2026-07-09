@@ -1,4 +1,4 @@
-// Diamond - Beam sub-module - shared math
+// DiamondBeamCommon.cginc
 //
 // Profile-independent code shared by every beam shape.
 // Each concrete beam shader (DiamondBeam = rect, DiamondBeamRound = round)
@@ -74,7 +74,7 @@ UNITY_INSTANCING_BUFFER_START(Props)
     UNITY_DEFINE_INSTANCED_PROP(float,  _SpreadX)
     UNITY_DEFINE_INSTANCED_PROP(float,  _SpreadZ)
     UNITY_DEFINE_INSTANCED_PROP(float4, _Color)
-    UNITY_DEFINE_INSTANCED_PROP(float4, _CubeLocalScale)
+    UNITY_DEFINE_INSTANCED_PROP(float3, _CubeLocalScale)
     UNITY_DEFINE_INSTANCED_PROP(float,  _BeamIntensity)
 UNITY_INSTANCING_BUFFER_END(Props)
 
@@ -185,26 +185,31 @@ float BeamDensityAtDistance(float distance, float crossArea, float emitterArea,
     }                                                                          \
 }
 
-// --- Unit-cube -> conservative bounding box ----------------------------------
+// --- Unit-cube -> tapered bounding frustum ------------------------------------
 // Maps a unit-cube vertex to a bounding box in beam space (world units, +Y along
-// beam, origin at emitter centre) that is guarantees to contain the beam in every
+// beam, origin at emitter centre) that guarantees to contain the beam in every
 // configuration. A circular cone fits inside the same box as a square one of
 // equal spread, so both shapes share this (round passes its single spread twice).
 //
-// Deliberately simple and over-conservative: a plain box (constant cross-section,
-// no taper), sized to the worst case. It exists only to give the frag's ray math
-// something to rasterise. Tighten later once shader is in a better state.
+// Tapered: since both the geometric spread and the lateral spill grow linearly
+// with depth, the true worst-case cross-section is itself linear in Y, so the
+// near cap can be as tight as the emitter instead of matching the far cap's
+// width. Lerping half-width by unitVertex.y (0 at the near cap, 1 at the far
+// cap) reproduces that taper exactly with the same 8-vertex cube topology --
+// no extra vertices, just a per-vertex Y-dependent width. This is the main
+// overdraw saving for narrow-emitter / wide-spread fixtures, where the old
+// constant-width box wasted a large fraction of its cross-section as empty
+// margin near the source.
 //
 //   Height (Y): _BeamLengthMax, the absolute ceiling, ignoring whether extinction
 //               or far-fade ends the beam sooner. Always tall enough.
-//   Lateral (X/Z): the widest the beam could ever be, evaluated at _BeamLengthMax:
+//   Lateral (X/Z): interpolated from the emitter half-size at y=0 to the worst-case
+//               far-cap half-width at y=beamLength:
 //               emitter half-size
-//             + (geometric spread + lateral spill spread) over the max length
-//             + shear lean over the max length
-//               Held constant top to bottom (a box, not a cone) so the near cap is
-//               just as wide and can't clip the emitter-end halo either.
+//             + (geometric spread + lateral spill spread) * y
+//             + shear lean * y
 //
-// The lateral spill (defocus + haze scatter) is now an additive metric amount that
+// The lateral spill (defocus + haze scatter) is an additive metric amount that
 // grows linearly with depth (see DiamondEdgeWidth in the round frag), so it reads
 // as extra SPREAD rather than a multiplicative reach. Worst case per metre: full
 // defocus (focus = 0 -> rate DIAMOND_SCATTER_K) and haze scatter (haze*strength),
@@ -220,6 +225,7 @@ float3 ExpandUnitCubeToFrustumBounds(float3 unitVertex,
     float spreadX, float spreadZ, float beamLength)
 {
     float maxLen = max(_BeamLengthMax, 0.0);
+    float yFrac  = unitVertex.y + 0.5;   // 0 at near cap, 1 at far cap
 
     // Worst-case extra spread per metre from lateral spill (focus plus haze scatter),
     // matching the frag's spillSpread. Focus scales with the cone's own spread, and at
@@ -229,13 +235,14 @@ float3 ExpandUnitCubeToFrustumBounds(float3 unitVertex,
     float spillSpreadX = sqrt(spreadX*spreadX * (DIAMOND_SCATTER_K*DIAMOND_SCATTER_K) + scatterRate*scatterRate);
     float spillSpreadZ = sqrt(spreadZ*spreadZ * (DIAMOND_SCATTER_K*DIAMOND_SCATTER_K) + scatterRate*scatterRate);
 
-    // Worst-case half-extents at the far end, held constant over the whole box.
-    float halfWidth  = emitterWidth  * 0.5 + (spreadX + spillSpreadX) * maxLen + abs(_ShearX) * maxLen;
-    float halfHeight = emitterHeight * 0.5 + (spreadZ + spillSpreadZ) * maxLen + abs(_ShearZ) * maxLen;
+    // Half-extents at this vertex's depth (yFrac * maxLen metres from the emitter),
+    // tapering from the emitter half-size up to the far-cap worst case.
+    float halfWidth  = emitterWidth  * 0.5 + (spreadX + spillSpreadX) * maxLen * yFrac + abs(_ShearX) * maxLen * yFrac;
+    float halfHeight = emitterHeight * 0.5 + (spreadZ + spillSpreadZ) * maxLen * yFrac + abs(_ShearZ) * maxLen * yFrac;
 
     float3 beamSpace;
     beamSpace.x = unitVertex.x * 2.0 * halfWidth;
-    beamSpace.y = (unitVertex.y + 0.5) * maxLen;   // 0 .. _BeamLengthMax
+    beamSpace.y = yFrac * maxLen;   // 0 .. _BeamLengthMax
     beamSpace.z = unitVertex.z * 2.0 * halfHeight;
     return beamSpace;
 }
@@ -312,7 +319,7 @@ v2f DiamondBeamVert(appdata v)
     // The cube's transform applies its localScale on top via ObjectToWorld. To
     // make the rendered size independent of that scale, pre-divide by the
     // user-supplied counter-scale so ObjectToWorld's scale cancels out.
-    float3 cubeLocalScale = UNITY_ACCESS_INSTANCED_PROP(Props, _CubeLocalScale).xyz;
+    float3 cubeLocalScale = UNITY_ACCESS_INSTANCED_PROP(Props, _CubeLocalScale);
     float3 objectSpace    = beamSpace / cubeLocalScale;
     float4 expandedObject = float4(objectSpace, 1);
 

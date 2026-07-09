@@ -16,16 +16,16 @@ public class DiamondBeamDebugModeDrawer : MaterialPropertyDrawer
 {
     static readonly string[] Names =
     {
-        "Normal",
-        "Raymarch Depth",
-        "Geometric Falloff",
-        "Haze Extinction",
-        "Far Cap Fade",
-        "D-Axis Integral",
-        "Lateral U",
-        "Lateral Edge",
-        "Vertex Bounds",
-        "HG Phase",
+        "0 Normal",
+        "1 Raymarch depth",
+        "2 Geometric falloff",
+        "3 Haze extinction",
+        "4 Far cap fade",
+        "5 D-Axis Integral",
+        "6 Lateral u",
+        "7 Lateral edge",
+        "8 Vertex bounds",
+        "9 Henyey-Greenstein phase",
     };
 
     static readonly string[] Descriptions =
@@ -33,13 +33,13 @@ public class DiamondBeamDebugModeDrawer : MaterialPropertyDrawer
         "Final composited beam colour (normal render).",
         "Camera-ray segment length inside the beam volume, as grayscale.",
         "Geometric inverse-square falloff term (0..1), sampled at the ray's entry point.",
-        "Haze/Beer-Lambert extinction term (0..1), sampled at the ray's entry point.",
-        "Far-cap fade term (0..1): fades the beam out over the last _FarFade fraction of its length.",
-        "Combined falloff x extinction x fade, numerically integrated along the ray's chord.",
-        "Normalized lateral coordinate at the surface hit: 0 on axis, 1 at the cone wall, up to 2 under full defocus.",
+        "Haze (Beer-Lambert) extinction term (0..1), sampled at the ray's entry point.",
+        "Far-cap fade term (0..1). Fades the beam out over the last _FarFade fraction of its length to prevent unnatural cutoffs at the maximum throw range.",
+        "Combined falloff * extinction * fade, integrated along the ray's chord.",
+        "Normalised lateral coordinate at the surface hit: 0 on axis, 1 at the cone wall, up to 2 under full defocus.",
         "Lateral edge profile at the surface hit: one soft edge whose blur combines focus and haze scatter as metric spills added to the wall (straight envelope). 1 = lit core, 0 = past the edge.",
-        "Vertex-displacement bounds: faint red over every fragment of the expanded bounding cube, before any beam discard. Shows the full box (incl. empty margin) to check it isn't clipping or oversized.",
-        "Henyey-Greenstein phase p(theta) at the surface hit (raw, grayscale). View-dependent scatter toward the eye: brighter looking toward the emitter (forward scatter), dimmer across/behind. Sweep _Anisotropy (g).",
+        "Vertex-displacement bounds. Faint red over every fragment of the expanded bounding cube.",
+        "Henyey-Greenstein phase p(theta) at the surface hit (raw, grayscale). Reproduces scatter phenomenon where a light beam appears brighter looking toward the emitter (forward scatter), dimmer across/behind.",
     };
 
     static readonly int[] Values = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };

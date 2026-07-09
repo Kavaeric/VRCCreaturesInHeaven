@@ -1,4 +1,5 @@
-// Diamond - Beam sub-module (round profile)
+// DiamondBeamRound.shader
+//
 // A volumetric light shaft for stage spotlight fixtures: a circular emitter and a
 // symmetric circular cone, like a spotlight.
 //
@@ -108,13 +109,12 @@ Shader "Diamond/BeamRound"
             #pragma multi_compile_instancing
 
             // The debug scaffolding (component-isolation modes and surface probe) is
-            // gated behind this keyword so the shipping variant compiles it out. Without
-            // it, _DebugMode is a dynamic uniform, so the compiler can't tell the debug
-            // branches are dead and computes every probe value per pixel even in Normal
-            // mode. Using shader_feature_local rather than multi_compile means only the
-            // variants materials actually use get built: a material left at mode 0 never
-            // references DIAMOND_DEBUG and is stripped from the build. The debug-mode
-            // drawer toggles the keyword with the dropdown.
+            // gated behind this keyword so it's not compiled in the production version.
+            //
+            // Using shader_feature_local rather than multi_compile means only the
+            // variants materials actually use get built, i.e. a material left at mode
+            // 0 never references DIAMOND_DEBUG and is stripped from the build.
+            // The debug-mode drawer toggles the keyword with the dropdown.
             #pragma shader_feature_local DIAMOND_DEBUG
 
             // --- Circular shape definitions -------------------------------
@@ -257,10 +257,8 @@ Shader "Diamond/BeamRound"
             // The lateral diffusion rate DIAMOND_SCATTER_K is defined in
             // DiamondBeamCommon.cginc, shared with the vertex bounding box.
 
-            // How the beam's edge softness works
-            // -----------------------------------
             // Brightness across the beam's cross-section is one soft-edged profile.
-            // The natural coordinate is the normalized radius u = r / R(d), where R(d)
+            // The natural coordinate is the normalised radius u = r / R(d), where R(d)
             // is the cone radius at depth d: u = 0 on the axis, u = 1 at the cone wall.
             //
             // The softness itself is measured in world-space metres, not in u. The
@@ -342,7 +340,7 @@ Shader "Diamond/BeamRound"
             // cosTheta is dot(lightTravelDir, viewDir) with both in beam space. Light
             // fans out from the cone apex, so lightTravelDir is normalize(p - apex)
             // rather than a fixed axis, which matters for wide cones. The 1/4pi keeps
-            // the function normalized (it integrates to 1 over the sphere) and is a
+            // the function normalised (it integrates to 1 over the sphere) and is a
             // constant scale that _BeamIntensity absorbs.
             float DiamondHGPhase(float cosTheta, float g)
             {
@@ -352,7 +350,7 @@ Shader "Diamond/BeamRound"
                 return (1.0 / (4.0 * UNITY_PI)) * (1.0 - g2) * rsqrt(denom * denom * denom);
             }
 
-            fixed4 frag(v2f i) : SV_Target
+            half4 frag(v2f i) : SV_Target
             {
                 UNITY_SETUP_INSTANCE_ID(i);
 
@@ -363,10 +361,10 @@ Shader "Diamond/BeamRound"
                 // check the box is neither clipping the halo nor wastefully large. The
                 // beam itself isn't visible in this mode.
                 if (_DebugMode > 7.5 && _DebugMode < 8.5)
-                    return fixed4(0.05, 0.0, 0.0, 1.0);
+                    return half4(0.05, 0.0, 0.0, 1.0);
               #endif
 
-                float3 cubeLocalScale = UNITY_ACCESS_INSTANCED_PROP(Props, _CubeLocalScale).xyz;
+                float3 cubeLocalScale = UNITY_ACCESS_INSTANCED_PROP(Props, _CubeLocalScale);
                 float4 instColor      = UNITY_ACCESS_INSTANCED_PROP(Props, _Color);
                 float  beamIntensity  = UNITY_ACCESS_INSTANCED_PROP(Props, _BeamIntensity);
                 float  emitterWidth   = UNITY_ACCESS_INSTANCED_PROP(Props, _EmitterWidth);
@@ -460,7 +458,7 @@ Shader "Diamond/BeamRound"
                 float edgeProfile = DiamondEdgeProfile(uLat, edgeW);
 
                 // HG phase at the exit hit. The direction to the camera is exactly
-                // -rayDirection (the sample is in front of the camera, ray normalized).
+                // -rayDirection (the sample is in front of the camera, ray normalised).
                 float3 lightDirExit = normalize(exitPt - beamApex);
                 float  cosThetaExit = dot(lightDirExit, -rayDirection);
                 float  hgPhase      = DiamondHGPhase(cosThetaExit, _Anisotropy);
@@ -510,6 +508,26 @@ Shader "Diamond/BeamRound"
                 float dAxisIntegral = 0.0;   // depth-only factors, for debug mode 5
                 float beamIntegral  = 0.0;   // full brightness, mode 0
 
+                // Henyey-Greenstein constants that don't vary along the chord. g is the
+                // uniform _Anisotropy, so (1 - g^2)/4pi and g^2 are the same at every
+                // substep; hoisting them out leaves only the per-point denominator in the
+                // loop. hgTwoG is the 2g of the (1 + g^2 - 2g cosTheta) denominator.
+                float hgG      = _Anisotropy;
+                float hgG2     = hgG * hgG;
+                float hgNum    = (1.0 - hgG2) * (1.0 / (4.0 * UNITY_PI));
+                float hgOnePlus = 1.0 + hgG2;
+                float hgTwoG   = 2.0 * hgG;
+
+                // Beer-Lambert extinction is exp(-haze*d) with d affine in the substep
+                // index, so along the chord it's a geometric progression: a base at the
+                // first midpoint times a fixed per-step ratio. This replaces one exp per
+                // substep with a single exp plus a multiply. dExt tracks exp(-haze*p.y);
+                // inside the beam p.y is in [0, beamLength], matching the loop's max(p.y,0).
+                float extBaseY  = rayOrigin.y + rayDirection.y * (tEntry + 0.5 * stepLen);
+                float extStepY  = rayDirection.y * stepLen;
+                float fExt      = exp(-haze * extBaseY);   // extinction at first midpoint
+                float extRatio  = exp(-haze * extStepY);   // multiply per substep
+
                 [unroll]
                 for (int si = 0; si < DIAMOND_DAXIS_STEPS; si++)
                 {
@@ -523,8 +541,9 @@ Shader "Diamond/BeamRound"
                     float fFalloff = (r0*r0) / max(rad*rad, 1e-12);
 
                     // Beer-Lambert extinction: light is absorbed and scattered out of the
-                    // beam as it travels through haze.
-                    float fExt = exp(-haze * d);
+                    // beam as it travels through haze. fExt is carried as a running
+                    // geometric progression (see the exp setup above) and advanced by
+                    // extRatio at the end of each substep, so there's no per-step exp.
 
                     // Far-cap fade: dissolve the last stretch of the beam instead of
                     // ending it in a hard disc.
@@ -559,11 +578,21 @@ Shader "Diamond/BeamRound"
                     // so its travel direction is normalize(p - apex) and changes along the
                     // chord, which is why the phase is evaluated per point. The direction
                     // to the camera is exactly -rayDirection (every sample is in front of
-                    // the camera and the ray is normalized), so it needs no normalize.
-                    float3 lightDirHere = normalize(p - beamApex);
-                    float  phaseHere    = DiamondHGPhase(dot(lightDirHere, -rayDirection), _Anisotropy);
+                    // the camera and the ray is normalised), so it needs no normalize.
+                    //
+                    // Inlined from DiamondHGPhase with its uniform terms (hgNum, hgOnePlus,
+                    // hgTwoG) hoisted above the loop. The per-point cosTheta is
+                    // dot(normalize(lightVec), -rd) = dot(lightVec, -rd) * rsqrt(|lightVec|^2),
+                    // folding the normalize into one rsqrt shared with the length.
+                    float3 lightVec  = p - beamApex;
+                    float  lightDot  = dot(lightVec, -rayDirection);
+                    float  cosTheta  = lightDot * rsqrt(max(dot(lightVec, lightVec), 1e-12));
+                    float  hgDenom   = max(hgOnePlus - hgTwoG * cosTheta, 1e-6);
+                    float  phaseHere = hgNum * rsqrt(hgDenom * hgDenom * hgDenom);
 
                     beamIntegral += dOnly * fLat * fFluxNorm * phaseHere;
+
+                    fExt *= extRatio;   // advance extinction to the next substep midpoint
                 }
                 dAxisIntegral *= stepLen;   // midpoint rule: sum times substep width
                 beamIntegral  *= stepLen;
@@ -575,21 +604,21 @@ Shader "Diamond/BeamRound"
                 // own, since it's the smallest value and a "< 1.5" bound would catch it
                 // too. Mode 8 (vertex bounds) returns from the top of the function.
                 if (_DebugMode < 0.5)                             // 0: the real beam
-                    return fixed4(instColor.rgb * beamIntegral * beamIntensity, 1);
-                if (_DebugMode < 1.5)   return fixed4(segLen.xxx * 0.1, 1);          // 1: segment length
-                if (_DebugMode < 2.5)   return fixed4(geometricFalloff.xxx, 1);      // 2: geometric falloff
-                if (_DebugMode < 3.5)   return fixed4(extinction.xxx, 1);            // 3: distance extinction
-                if (_DebugMode < 4.5)   return fixed4(farFade.xxx, 1);               // 4: far-cap fade
-                if (_DebugMode < 5.5)   return fixed4((dAxisIntegral).xxx, 1);       // 5: depth-only integral
-                if (_DebugMode < 6.5)   return fixed4(uLat.xxx, 1);                  // 6: lateral coordinate u
-                if (_DebugMode < 7.5)   return fixed4(edgeProfile.xxx, 1);           // 7: lateral edge
-                if (_DebugMode < 9.5)   return fixed4(hgPhase.xxx, 1);               // 9: HG phase
+                    return half4(instColor.rgb * beamIntegral * beamIntensity, 1);
+                if (_DebugMode < 1.5)   return half4(segLen.xxx * 0.1, 1);          // 1: segment length
+                if (_DebugMode < 2.5)   return half4(geometricFalloff.xxx, 1);      // 2: geometric falloff
+                if (_DebugMode < 3.5)   return half4(extinction.xxx, 1);            // 3: distance extinction
+                if (_DebugMode < 4.5)   return half4(farFade.xxx, 1);               // 4: far-cap fade
+                if (_DebugMode < 5.5)   return half4((dAxisIntegral).xxx, 1);       // 5: depth-only integral
+                if (_DebugMode < 6.5)   return half4(uLat.xxx, 1);                  // 6: lateral coordinate u
+                if (_DebugMode < 7.5)   return half4(edgeProfile.xxx, 1);           // 7: lateral edge
+                if (_DebugMode < 9.5)   return half4(hgPhase.xxx, 1);               // 9: HG phase
               #endif // DIAMOND_DEBUG
 
                 // Shipping path, and the fallback for any out-of-range debug value: the
                 // real beam. dAxisIntegral feeds only debug mode 5, so it (and its
                 // accumulation in the loop) is dead-stripped from the shipping variant.
-                return fixed4(instColor.rgb * beamIntegral * beamIntensity, 1);
+                return half4(instColor.rgb * beamIntegral * beamIntensity, 1);
             }
 
             ENDCG

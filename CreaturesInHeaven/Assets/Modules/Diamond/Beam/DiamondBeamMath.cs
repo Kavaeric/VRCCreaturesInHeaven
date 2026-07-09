@@ -41,6 +41,47 @@ public static class DiamondBeamMath
         return Mathf.PI * radius * radius;
     }
 
+    // The lateral diffusion rate. Mirror of DIAMOND_SCATTER_K in
+    // DiamondBeamCommon.cginc: the scale that both spill sources grow by per
+    // metre of depth. Keep in lockstep with the shader.
+    public const float ScatterK = 1.0f;
+
+    // Worst-case lateral half-extent of the beam at its far cap, along one axis.
+    // Mirror of the per-axis half-width ExpandUnitCubeToFrustumBounds computes in
+    // DiamondBeamCommon.cginc, so the CPU-side renderer bounds enclose exactly the
+    // geometry the vertex shader rasterises. Keep the two in lockstep.
+    //
+    // The half-extent is the emitter half-size plus, over the max beam length,
+    // the geometric spread, the lateral spill (defocus + haze scatter, combined
+    // in quadrature the way the shader does), and the shear lean:
+    //
+    //   emitterHalf + (spread + spillSpread + |shear|) * maxLen
+    //
+    // Worst case on focus (fully defocused, rate = spread) so the bound never
+    // undersizes regardless of the animated _Focus. haze/strength/shear are
+    // material-level, so callers pass the material's values.
+    //
+    //   emitterHalf   - emitter size on this axis / 2
+    //   spreadTan     - worst-case geometric spread on this axis (tan half-angle)
+    //   shear         - |shear| on this axis (0 for the round profile)
+    //   haze          - material _HazeDensity
+    //   scatterStr    - material _ScatterStrength (0..1)
+    //   maxLen        - worst-case beam length (_BeamLengthMax)
+    public static float LateralHalfExtent(float emitterHalf, float spreadTan, float shear,
+        float haze, float scatterStr, float maxLen)
+    {
+        maxLen = Mathf.Max(maxLen, 0f);
+
+        // Haze-scatter spill rate (per metre), matching the shader's scatterRate.
+        float scatterRate = ScatterK * Mathf.Max(haze, 0f) * Mathf.Clamp01(scatterStr);
+        // Focus spill worst case is the spread itself (focus = 0 -> rate = spread),
+        // combined with scatter in quadrature exactly as the shader's spillSpread.
+        float focusRate  = ScatterK * Mathf.Max(spreadTan, 0f);
+        float spillSpread = Mathf.Sqrt(focusRate * focusRate + scatterRate * scatterRate);
+
+        return emitterHalf + (Mathf.Max(spreadTan, 0f) + spillSpread + Mathf.Abs(shear)) * maxLen;
+    }
+
     // Finds the distance at which beam density falls below the cutoff threshold,
     // for a ROUND cone. Mirror of DIAMOND_DERIVE_BEAM_LENGTH: same 8-iteration
     // bisection against the same density formula, so C# and the shader agree on

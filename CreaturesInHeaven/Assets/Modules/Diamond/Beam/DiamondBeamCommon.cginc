@@ -1,8 +1,9 @@
 // DiamondBeamCommon.cginc
 //
 // Profile-independent code shared by every beam shape.
-// Each concrete beam shader (DiamondBeam = rect, DiamondBeamRound = round)
-// includes this file and supplies only the parts that differ between shapes:
+//
+// Each concrete beam shader includes this file and supplies only the parts that
+// differ between shapes:
 //
 //   * the ray/volume side-wall intersection (planes for rect, a quadric for round)
 //   * the cross-section area used for the inverse-square geometric falloff
@@ -227,6 +228,28 @@ float3 ExpandUnitCubeToFrustumBounds(float3 unitVertex,
     float maxLen = max(_BeamLengthMax, 0.0);
     float yFrac  = unitVertex.y + 0.5;   // 0 at near cap, 1 at far cap
 
+#ifdef DIAMOND_CONSERVATIVE_BOX
+    // Debug/build-in-progress escape hatch: a giant constant box that cannot
+    // possibly clip the beam, so a too-tight bound can't be mistaken for a frag
+    // bug while a shader's passes are still being brought up. A shape shader
+    // #defines DIAMOND_CONSERVATIVE_BOX before including this file to opt in; the
+    // finished shapes leave it undefined and get the tight taper below. Sized to
+    // the worst-case far half-width on every axis and held constant top to bottom
+    // (no taper), extended by a safety margin. Wasteful on overdraw by design --
+    // it exists only to take the vertex box out of the equation.
+    float scatterRateC  = DIAMOND_SCATTER_K * max(_HazeDensity, 0.0) * saturate(_ScatterStrength);
+    float spillSpreadXC = sqrt(spreadX*spreadX * (DIAMOND_SCATTER_K*DIAMOND_SCATTER_K) + scatterRateC*scatterRateC);
+    float spillSpreadZC = sqrt(spreadZ*spreadZ * (DIAMOND_SCATTER_K*DIAMOND_SCATTER_K) + scatterRateC*scatterRateC);
+    float halfWidthC  = emitterWidth  * 0.5 + (spreadX + spillSpreadXC + abs(_ShearX)) * maxLen + 1.0;
+    float halfHeightC = emitterHeight * 0.5 + (spreadZ + spillSpreadZC + abs(_ShearZ)) * maxLen + 1.0;
+
+    float3 boxC;
+    boxC.x = unitVertex.x * 2.0 * halfWidthC;
+    boxC.y = yFrac * maxLen;
+    boxC.z = unitVertex.z * 2.0 * halfHeightC;
+    return boxC;
+#else
+
     // Worst-case extra spread per metre from lateral spill (focus plus haze scatter),
     // matching the frag's spillSpread. Focus scales with the cone's own spread, and at
     // its worst (focus = 0) the rate equals the spread, so the focus term is per-axis
@@ -245,6 +268,7 @@ float3 ExpandUnitCubeToFrustumBounds(float3 unitVertex,
     beamSpace.y = yFrac * maxLen;   // 0 .. _BeamLengthMax
     beamSpace.z = unitVertex.z * 2.0 * halfHeight;
     return beamSpace;
+#endif // DIAMOND_CONSERVATIVE_BOX
 }
 
 // --- Ray / interval helpers (cap planes; round side wall is a quadric) --------

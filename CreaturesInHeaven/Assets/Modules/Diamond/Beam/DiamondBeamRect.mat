@@ -61,24 +61,26 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _Anisotropy: 0.6
     - _AtmosphericScale: 10
     - _BeamCutoffThreshold: 0.00001
-    - _BeamIntensity: 1
+    - _BeamIntensity: 2
     - _BeamLength: 15
     - _BeamLengthMax: 50
     - _BeamStart: 0
     - _Brightness: 5
     - _BumpScale: 1
     - _Cutoff: 0.5
-    - _DebugMode: 4
+    - _DebugMode: 0
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
-    - _EdgeSoftness: 5
+    - _EdgeSoftness: 0
     - _EmitterHeight: 1
     - _EmitterWidth: 1
-    - _FarFade: 0.15
+    - _FarFade: 0.2
     - _FarZ: 2
     - _FluxCap: 999
+    - _Focus: 0.5
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
@@ -91,6 +93,7 @@ Material:
     - _OcclusionStrength: 1
     - _Pan: 0
     - _Parallax: 0.02
+    - _ScatterStrength: 0.485
     - _ScatteringFactor: 0.05
     - _ScatteringStrength: 0.5
     - _ShearX: 0

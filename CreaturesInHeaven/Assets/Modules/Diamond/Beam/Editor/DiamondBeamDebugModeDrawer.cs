@@ -11,7 +11,7 @@ using UnityEditor;
 //   [DiamondBeamDebugMode] _DebugMode ("Debug Mode", Float) = 0
 //
 // Keep Names/Descriptions in sync with the debug dispatch chain in the shader's
-// frag function (see DiamondBeamRound.shader / DiamondBeam.shader).
+// frag function (see DiamondBeamRound.shader / DiamondBeamRect.shader).
 public class DiamondBeamDebugModeDrawer : MaterialPropertyDrawer
 {
     static readonly string[] Names =
@@ -21,7 +21,7 @@ public class DiamondBeamDebugModeDrawer : MaterialPropertyDrawer
         "2 Geometric falloff",
         "3 Haze extinction",
         "4 Far cap fade",
-        "5 D-Axis Integral",
+        "5 D-axis integral",
         "6 Lateral u",
         "7 Lateral edge",
         "8 Vertex bounds",

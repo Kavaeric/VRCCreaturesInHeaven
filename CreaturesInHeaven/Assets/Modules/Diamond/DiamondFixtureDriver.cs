@@ -74,10 +74,17 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
     // Material-level values that widen the beam's lateral spill, mirrored for
     // renderer-bounds sizing so the culling AABB encloses the vertex shader's
     // expanded box (see DiamondBeamMath.LateralHalfExtent). Worst-case defaults;
-    // override per fixture if the beam material differs. Shear is 0 for round.
+    // override per fixture if the beam material differs.
     public float MaxHazeDensity     = 0.05f;
     public float MaxScatterStrength = 1f;
-    public float MaxShear           = 0f;
+
+    // Per-axis shear lean (_ShearX / _ShearZ), a sideways displacement per metre
+    // of depth. The rect shader can lean the beam off-axis, pushing the far cap
+    // a long way sideways (shear * MaxBeamLength metres), so the culling AABB must
+    // account for it per axis. Round has no shear (both stay 0). Mirrored from the
+    // material by DiamondFixtureDefinition.SyncEmitterSize.
+    public float MaxShearX          = 0f;
+    public float MaxShearZ          = 0f;
 
     // Material _CubeLocalScale: the counter-scale the beam is authored against.
     // The vertex shader renders in "beam space" (world metres) then divides by
@@ -120,12 +127,14 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
         // (DiamondBeamMath.LateralHalfExtent, mirror of ExpandUnitCubeToFrustumBounds),
         // so the culling AABB is guaranteed to enclose the rasterised geometry
         // instead of relying on a hand-tuned margin that could undersize it when
-        // spill grows. Round is symmetric, so both axes use the same spread/shear.
+        // spill grows. Spread is symmetric (X = Z) until per-axis spread is wired,
+        // but shear is genuinely per-axis (rect can lean each axis independently;
+        // round leaves both 0).
         float halfLateralX = DiamondBeamMath.LateralHalfExtent(
-            EmitterSize.x * 0.5f, MaxSpreadTan, MaxShear,
+            EmitterSize.x * 0.5f, MaxSpreadTan, MaxShearX,
             MaxHazeDensity, MaxScatterStrength, MaxBeamLength);
         float halfLateralZ = DiamondBeamMath.LateralHalfExtent(
-            EmitterSize.y * 0.5f, MaxSpreadTan, MaxShear,
+            EmitterSize.y * 0.5f, MaxSpreadTan, MaxShearZ,
             MaxHazeDensity, MaxScatterStrength, MaxBeamLength);
 
         // Beam-space AABB (world metres): beam fires along +Y from 0 to MaxBeamLength.

@@ -5,8 +5,7 @@
 //
 // The shape-independent machinery lives in DiamondBeamCommon.cginc. This file adds
 // only the circular specifics: an analytic cone (quadric) side-wall intersection, a
-// circular cross-section area (pi*r^2), and a radial edge softness. The rectangular
-// counterpart is DiamondBeam.shader.
+// circular cross-section area (pi*r^2), and a radial edge softness.
 //
 // The cone is symmetric by construction: one spread value (_SpreadX, animated via
 // BeamProps.localEulerAngles.x) drives it. The emitter is a circle of radius
@@ -21,7 +20,7 @@ Shader "Diamond/BeamRound"
     Properties
     {
         // Emitter diameter, in world-space units (metres). Radius = this / 2.
-        _EmitterWidth  ("Emitter Diameter", Float) = 0.5
+        _EmitterWidth  ("Emitter diameter", Float) = 0.5
 
         // Cone half-angle, expressed as tan(half-angle): the radial widening
         // per unit length. Symmetric, so only X is used.
@@ -34,10 +33,17 @@ Shader "Diamond/BeamRound"
         //
         // Shear is genuinely unsupported here: a sheared circular cone is an oblique
         // quadric, which breaks the cheap analytic intersection this profile relies on.
-        [HideInInspector] _EmitterHeight ("Emitter Height (unused)", Float) = 0.5
+        [HideInInspector] _EmitterHeight ("Emitter height (unused)", Float) = 0.5
         [HideInInspector] _SpreadZ ("Spread Z (unused)", Float) = 0.0
         [HideInInspector] _ShearX ("Shear X (unsupported)", Float) = 0.0
         [HideInInspector] _ShearZ ("Shear Z (unsupported)", Float) = 0.0
+
+        _BeamCutoffThreshold ("Beam cutoff threshold", Float) = 0.0001
+        _BeamLengthMax ("Beam length max (metres)", Float) = 50
+        _CubeLocalScale ("Cube local scale (compensation)", Vector) = (1, 1, 1, 0)
+        _Color ("Color", Color) = (1, 1, 1, 1)
+        _BeamIntensity ("Intensity", Float) = 1.0
+        _HazeDensity ("Haze density (1/m)", Float) = 0.05
 
         // Lateral scattering: how strongly haze softens the beam edge with
         // distance. The edge is crisp at the emitter and blurs progressively toward
@@ -47,22 +53,7 @@ Shader "Diamond/BeamRound"
         // At the default 0.5 and typical venue haze (~0.03), the edge softens
         // visibly across a normal throw without ever dissolving into a centre-only
         // glow. Raise toward 1 for heavier-atmosphere looks.
-        _ScatterStrength ("Lateral Scatter Strength", Range(0,1)) = 0.5
-
-        // Anisotropy (the g parameter of the Henyey-Greenstein phase function):
-        // how forward-biased the haze scatters light toward the eye. This is what
-        // makes the beam brighter when you look toward the emitter than across it.
-        //   0        isotropic (even in all directions; a flat, view-independent look)
-        //   0 to 1   forward scatter, like real haze and fog (around 0.6 to 0.8)
-        //   -1 to 0  back scatter (unusual; brightest seen from behind the light)
-        _Anisotropy ("Anisotropy (HG g)", Range(-0.95, 0.95)) = 0.6
-
-        _BeamCutoffThreshold ("Beam Cutoff Threshold", Float) = 0.0001
-        _BeamLengthMax ("Beam Length Max (metres)", Float) = 50
-        _CubeLocalScale ("Cube Local Scale (compensation)", Vector) = (1, 1, 1, 0)
-        _Color ("Color", Color) = (1, 1, 1, 1)
-        _BeamIntensity ("Intensity", Float) = 1.0
-        _HazeDensity ("Haze Density (1/m)", Float) = 0.05
+        _ScatterStrength ("Lateral scatter strength", Range(0,1)) = 0.5
 
         // Focus: how fast the cone defocuses with distance, as a fraction of its
         // own spread angle. The beam is sharp at the emitter and spreads more toward
@@ -74,11 +65,19 @@ Shader "Diamond/BeamRound"
         // widen, so focus has no effect on it. See DiamondFocusSpill in the frag.
         _Focus ("Focus", Range(0,1)) = 1.0
 
+        // Anisotropy (the g parameter of the Henyey-Greenstein phase function):
+        // how forward-biased the haze scatters light toward the eye. This is what
+        // makes the beam brighter when you look toward the emitter than across it.
+        //   0        isotropic (even in all directions; a flat, view-independent look)
+        //   0 to 1   forward scatter, like real haze and fog (around 0.6 to 0.8)
+        //   -1 to 0  back scatter (unusual; brightest seen from behind the light)
+        _Anisotropy ("Anisotropy (HG g)", Range(-0.95, 0.95)) = 0.6
+
         // Far-cap fade: fraction of the (auto-derived) beam length over which the
         // beam fades smoothly to zero approaching its far end, so it dissolves
         // instead of ending in a hard-clipped disc. 0 = hard cap; 0.15 = last 15%
         // fades. Range 0..1.
-        _FarFade ("Far Cap Fade (fraction)", Range(0,1)) = 0.15
+        _FarFade ("Far cap fade (fraction)", Range(0,1)) = 0.15
 
         // Debug visualisation for various components (plain Float; the
         // [DiamondBeamDebugMode] drawer gives a named dropdown). Keep in sync with
@@ -87,7 +86,7 @@ Shader "Diamond/BeamRound"
         //   1 RaymarchDepth    5 DAxisIntegral   9 HGPhase
         //   2 GeometricFalloff 6 LateralU
         //   3 HazeExtinction   7 LateralEdge
-        [DiamondBeamDebugMode] _DebugMode ("Debug Mode", Float) = 0
+        [DiamondBeamDebugMode] _DebugMode ("Debug mode", Float) = 0
     }
 
     SubShader

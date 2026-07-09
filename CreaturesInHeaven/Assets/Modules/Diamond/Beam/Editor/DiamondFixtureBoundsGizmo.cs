@@ -24,10 +24,10 @@ public static class DiamondFixtureBoundsGizmo
         // along +Y from y=0 to y=MaxBeamLength, so the box is centred halfway up
         // and sized by the shared lateral-extent formula on each axis.
         float halfX = DiamondBeamMath.LateralHalfExtent(
-            driver.EmitterSize.x * 0.5f, driver.MaxSpreadTan, driver.MaxShear,
+            driver.EmitterSize.x * 0.5f, driver.MaxSpreadTan, driver.MaxShearX,
             driver.MaxHazeDensity, driver.MaxScatterStrength, driver.MaxBeamLength);
         float halfZ = DiamondBeamMath.LateralHalfExtent(
-            driver.EmitterSize.y * 0.5f, driver.MaxSpreadTan, driver.MaxShear,
+            driver.EmitterSize.y * 0.5f, driver.MaxSpreadTan, driver.MaxShearZ,
             driver.MaxHazeDensity, driver.MaxScatterStrength, driver.MaxBeamLength);
 
         // Beam-space box (world metres), then divided by the cube counter-scale

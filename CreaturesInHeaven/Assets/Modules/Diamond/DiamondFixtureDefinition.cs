@@ -98,6 +98,12 @@ public class DiamondFixtureDefinition : MonoBehaviour
                 driver.MaxHazeDensity = beamMat.GetFloat("_HazeDensity");
             if (beamMat.HasProperty("_ScatterStrength"))
                 driver.MaxScatterStrength = beamMat.GetFloat("_ScatterStrength");
+            // Per-axis shear lean. Only the rect shader declares these; round has
+            // no shear, so HasProperty leaves the driver's values at 0 for round.
+            if (beamMat.HasProperty("_ShearX"))
+                driver.MaxShearX = beamMat.GetFloat("_ShearX");
+            if (beamMat.HasProperty("_ShearZ"))
+                driver.MaxShearZ = beamMat.GetFloat("_ShearZ");
             if (beamMat.HasProperty("_CubeLocalScale"))
             {
                 // Beam-space -> object-space counter-scale. The bounds math divides

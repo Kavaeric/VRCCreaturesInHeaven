@@ -2,8 +2,9 @@
 using UnityEngine;
 
 // Mirrors animated Diamond fixture state to a Bakery light each editor update.
-// Sibling to DiamondFixtureDefinition and DiamondFixtureDriver on the fixture root.
-// Runs in edit mode so the Bakery light tracks the fixture as the animator scrubs.
+// Sibling to DiamondFixtureDefinition on the fixture root. Runs in edit mode so
+// the Bakery light tracks the fixture as the animator scrubs. Reads the fixture's
+// colour/emitter/renderer off DiamondFixtureDefinition (the driver is retired).
 [ExecuteAlways]
 public class DiamondBakeryDriver : MonoBehaviour
 {
@@ -22,7 +23,7 @@ public class DiamondBakeryDriver : MonoBehaviour
     {
         if (Light == null || LampProps == null) return;
 
-        var   fixture = GetComponent<DiamondFixtureDriver>();
+        var   fixture = GetComponent<DiamondFixtureDefinition>();
         Color colour  = fixture != null ? fixture.EmissionColor : Color.white;
 
         // Flux-conserving intensity: as the cone opens (spread grows), the same
@@ -52,7 +53,7 @@ public class DiamondBakeryDriver : MonoBehaviour
     // each baked frame is a flipbook cell of animated lighting. No-op unless the
     // light is a cone with BeamProps assigned and the fixture has a beam
     // renderer to read the (material-level) haze/cutoff/max-length from.
-    void UpdateRange(DiamondFixtureDriver fixture)
+    void UpdateRange(DiamondFixtureDefinition fixture)
     {
         if (BeamProps == null) return;
         if (!(Light is BakeryPointLight point)) return;
@@ -63,8 +64,8 @@ public class DiamondBakeryDriver : MonoBehaviour
         if (mat == null) return;
 
         // Round emitter: FixtureWidth is the diameter, so radius is half of it.
-        // EmitterSize is mirrored from the profile by SyncEmitterSize.
-        float emitterRadius = fixture.EmitterSize.x * 0.5f;
+        // FixtureEmitterSize is derived from the profile on the Definition.
+        float emitterRadius = fixture.FixtureEmitterSize.x * 0.5f;
         float spreadTan     = BeamProps.localEulerAngles.x;
 
         // What drives the POOL's reach is the lamp brightness (the actual

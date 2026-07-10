@@ -28,8 +28,9 @@ public static class DiamondFixtureMapPreview
 
         foreach (var def in definitions)
         {
-            var driver = def.GetComponent<DiamondFixtureDriver>();
-            if (driver == null || driver.LampProps == null || driver.HeadRenderer == null) continue;
+            // The object graph lives on DiamondFixtureDefinition now (the driver is
+            // retired), so read the refs straight off def.
+            if (def.LampProps == null || def.HeadRenderer == null) continue;
 
             int id = def.GetInstanceID();
             if (!_headBlocks.TryGetValue(id, out var headBlock))
@@ -43,15 +44,15 @@ public static class DiamondFixtureMapPreview
                 _beamBlocks[id] = beamBlock;
             }
 
-            if (!driver.LampProps.gameObject.activeSelf)
+            if (!def.LampProps.gameObject.activeSelf)
             {
                 headBlock.SetColor("_EmissionColor", Color.black);
-                driver.HeadRenderer.SetPropertyBlock(headBlock);
+                def.HeadRenderer.SetPropertyBlock(headBlock);
 
-                if (driver.BeamRenderer != null)
+                if (def.BeamRenderer != null)
                 {
                     beamBlock.SetColor("_Color", Color.clear);
-                    driver.BeamRenderer.SetPropertyBlock(beamBlock);
+                    def.BeamRenderer.SetPropertyBlock(beamBlock);
                 }
                 continue;
             }
@@ -60,35 +61,35 @@ public static class DiamondFixtureMapPreview
                 ? DiamondFixtureDefinition.BlackbodyToRGB(def.ColourTemperature)
                 : def.EmissionColor;
 
-            float linearBrightness = driver.LampProps.localPosition.y;
+            float linearBrightness = def.LampProps.localPosition.y;
             // BeamProps is optional -- fixtures without a beam shaft just won't
             // have one wired up, in which case spread/intensity stay at defaults.
-            float spread        = driver.BeamProps != null ? driver.BeamProps.localEulerAngles.x : 0f;
-            float beamIntensity = driver.BeamProps != null ? driver.BeamProps.localScale.y       : 1f;
+            float spread        = def.BeamProps != null ? def.BeamProps.localEulerAngles.x : 0f;
+            float beamIntensity = def.BeamProps != null ? def.BeamProps.localScale.y       : 1f;
             Color drivenColour  = emission * linearBrightness;
 
             headBlock.SetColor("_EmissionColor", drivenColour);
-            driver.HeadRenderer.SetPropertyBlock(headBlock);
+            def.HeadRenderer.SetPropertyBlock(headBlock);
 
             // Mirror onto the beam shaft: brightness-modulated colour, animated
             // intensity, animated spread (stored as tan(half-angle)), and the
-            // emitter dimensions from the driver (kept in sync with the profile
-            // by DiamondFixtureDefinition.SyncEmitterSize).
-            if (driver.BeamRenderer != null)
+            // emitter dimensions from the profile (via def.FixtureEmitterSize).
+            if (def.BeamRenderer != null)
             {
+                Vector2 emitter = def.FixtureEmitterSize;
                 beamBlock.SetColor("_Color", drivenColour);
-                beamBlock.SetFloat("_EmitterWidth",  driver.EmitterSize.x);
-                beamBlock.SetFloat("_EmitterHeight", driver.EmitterSize.y);
+                beamBlock.SetFloat("_EmitterWidth",  emitter.x);
+                beamBlock.SetFloat("_EmitterHeight", emitter.y);
                 beamBlock.SetFloat("_BeamIntensity", beamIntensity);
                 beamBlock.SetFloat("_SpreadX",       spread);
 
-                // Match the runtime driver: round (symmetric) beams use the
+                // Match the runtime manager: round (symmetric) beams use the
                 // BeamRound shader, which reads only _SpreadX. Only rect beams
                 // need _SpreadZ.
-                if (!driver.SymmetricBeam)
+                if (!def.SymmetricBeam)
                     beamBlock.SetFloat("_SpreadZ",   spread);
 
-                driver.BeamRenderer.SetPropertyBlock(beamBlock);
+                def.BeamRenderer.SetPropertyBlock(beamBlock);
             }
         }
     }

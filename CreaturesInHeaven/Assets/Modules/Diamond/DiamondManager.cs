@@ -88,6 +88,14 @@ public class DiamondManager : UdonSharpBehaviour
     private MaterialPropertyBlock[] _headBlocks;
     private MaterialPropertyBlock[] _beamBlocks;
 
+    // --- Cached lamp GameObjects -------------------------------------
+    // LampProps[i].gameObject, resolved once in Start. The steady-state read
+    // path checks activeSelf every frame for every fixture; reading it as
+    // lamp.gameObject.activeSelf is TWO extern calls (.gameObject, then
+    // .activeSelf). Caching the GameObject makes it one. At ~570 fixtures every
+    // frame that's ~570 externs removed from the always-paid floor.
+    private GameObject[] _lampObjects;
+
     // --- Cached shader property IDs ----------------------------------
     // Resolved once in Start via VRCShader.PropertyToID and reused every frame.
     // This is the key to the loop being allocation-free: the string-keyed
@@ -141,8 +149,9 @@ public class DiamondManager : UdonSharpBehaviour
 
         int count = LampProps == null ? 0 : LampProps.Length;
 
-        _headBlocks = new MaterialPropertyBlock[count];
-        _beamBlocks = new MaterialPropertyBlock[count];
+        _headBlocks  = new MaterialPropertyBlock[count];
+        _beamBlocks  = new MaterialPropertyBlock[count];
+        _lampObjects = new GameObject[count];
 
         _cacheValid        = new bool[count];
         _lastLampActive    = new bool[count];
@@ -156,6 +165,11 @@ public class DiamondManager : UdonSharpBehaviour
             _headBlocks[i] = new MaterialPropertyBlock();
             _beamBlocks[i] = new MaterialPropertyBlock();
             _cacheValid[i] = false;
+
+            // Cache the lamp's GameObject so the per-frame activeSelf read is a
+            // single extern instead of lamp.gameObject.activeSelf (two).
+            Transform lampT = LampProps == null ? null : LampProps[i];
+            _lampObjects[i] = lampT == null ? null : lampT.gameObject;
 
             // Seed the static emitter size into the per-fixture beam block once.
             // It isn't serialized on the renderer, so it must be re-applied at
@@ -188,7 +202,8 @@ public class DiamondManager : UdonSharpBehaviour
             // Read the raw animated inputs once, exactly as the old driver did.
             // These are the only channels the animator drives per frame;
             // everything applied below is a deterministic function of them.
-            bool    lampActive    = lamp.gameObject.activeSelf;
+            // activeSelf comes off the cached GameObject (one extern, not two).
+            bool    lampActive    = _lampObjects[i].activeSelf;
             float   brightness    = lamp.localPosition.y;
             Vector3 colour        = lamp.localScale;
             float   spread        = 0f;

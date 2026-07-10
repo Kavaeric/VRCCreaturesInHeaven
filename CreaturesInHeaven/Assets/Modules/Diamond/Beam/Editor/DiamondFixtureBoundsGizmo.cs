@@ -1,10 +1,14 @@
 using UnityEditor;
 using UnityEngine;
 
-// Editor-only scene-view gizmo that draws a DiamondFixtureDriver's beam culling
-// bounds as a wireframe box. This is the same AABB the driver writes to
-// BeamRenderer.bounds in ApplyBeamRendererBounds. Used for checking the bound
-// neither clips the visible beam nor wastefully oversizes the culling silhouette.
+// Editor-only scene-view gizmo that draws a fixture's beam culling bounds as a
+// wireframe box. This is the same AABB the bake writes to BeamRenderer.bounds in
+// DiamondFixtureDefinition.ComputeBeamBounds. Used for checking the bound neither
+// clips the visible beam nor wastefully oversizes the culling silhouette.
+//
+// Reads the worst-case bounds scalars off DiamondFixtureDefinition (the same
+// source ComputeBeamBounds uses), so the gizmo and the baked bounds agree. Used
+// to target DiamondFixtureDriver; repointed to Definition when the driver retired.
 public static class DiamondFixtureBoundsGizmo
 {
     private static bool s_ShowBounds = false;
@@ -16,35 +20,36 @@ public static class DiamondFixtureBoundsGizmo
     }
 
     [DrawGizmo(GizmoType.Selected | GizmoType.NonSelected)]
-    static void DrawBeamBounds(DiamondFixtureDriver driver, GizmoType gizmoType)
+    static void DrawBeamBounds(DiamondFixtureDefinition def, GizmoType gizmoType)
     {
-        if (!s_ShowBounds || driver.BeamRenderer == null) return;
+        if (!s_ShowBounds || def.BeamRenderer == null) return;
 
-        // Local-space AABB, mirroring ApplyBeamRendererBounds: the beam fires
-        // along +Y from y=0 to y=MaxBeamLength, so the box is centred halfway up
-        // and sized by the shared lateral-extent formula on each axis.
+        // Local-space AABB, mirroring ComputeBeamBounds: the beam fires along +Y
+        // from y=0 to y=MaxBeamLength, so the box is centred halfway up and sized
+        // by the shared lateral-extent formula on each axis.
+        Vector2 emitter = def.FixtureEmitterSize;
         float halfX = DiamondBeamMath.LateralHalfExtent(
-            driver.EmitterSize.x * 0.5f, driver.MaxSpreadTan, driver.MaxShearX,
-            driver.MaxHazeDensity, driver.MaxScatterStrength, driver.MaxBeamLength);
+            emitter.x * 0.5f, def.MaxSpreadTan, def.MaxShearX,
+            def.MaxHazeDensity, def.MaxScatterStrength, def.MaxBeamLength);
         float halfZ = DiamondBeamMath.LateralHalfExtent(
-            driver.EmitterSize.y * 0.5f, driver.MaxSpreadTan, driver.MaxShearZ,
-            driver.MaxHazeDensity, driver.MaxScatterStrength, driver.MaxBeamLength);
+            emitter.y * 0.5f, def.MaxSpreadTan, def.MaxShearZ,
+            def.MaxHazeDensity, def.MaxScatterStrength, def.MaxBeamLength);
 
         // Beam-space box (world metres), then divided by the cube counter-scale
         // into object space so localToWorld re-applies the cube's localScale and
-        // cancels it -- mirroring both DiamondBeamVert and ApplyBeamRendererBounds.
+        // cancels it -- mirroring both DiamondBeamVert and ComputeBeamBounds.
         // Without this the box comes out scaled by the counter-scale (a 50 m beam
         // drawn at 5 m when the scale is 0.1).
-        Vector3 cs = driver.SafeCubeLocalScale();
-        Vector3 center = new Vector3(0f, driver.MaxBeamLength * 0.5f / cs.y, 0f);
+        Vector3 cs = def.SafeCubeLocalScale();
+        Vector3 center = new Vector3(0f, def.MaxBeamLength * 0.5f / cs.y, 0f);
         Vector3 size   = new Vector3(
-            halfX * 2f / cs.x, driver.MaxBeamLength / cs.y, halfZ * 2f / cs.z);
+            halfX * 2f / cs.x, def.MaxBeamLength / cs.y, halfZ * 2f / cs.z);
 
         Matrix4x4 prevMatrix = Gizmos.matrix;
         Color     prevColor  = Gizmos.color;
 
         bool selected = (gizmoType & GizmoType.Selected) != 0;
-        var t = driver.BeamRenderer.transform;
+        var t = def.BeamRenderer.transform;
 
         // (1) The tight local box, drawn under the renderer's matrix so it follows
         // the fixture's position/rotation/scale. This is what should enclose the

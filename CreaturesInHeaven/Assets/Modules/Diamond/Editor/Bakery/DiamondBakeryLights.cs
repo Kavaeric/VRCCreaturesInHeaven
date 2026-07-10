@@ -42,10 +42,11 @@ public static class DiamondBakeryLights
                 continue;
             }
 
-            var driver = go.GetComponent<DiamondFixtureDriver>();
-            if (driver == null || driver.Head == null)
+            // The object graph lives on DiamondFixtureDefinition now (the runtime
+            // driver is retired), so read Head/LampProps/BeamProps off def.
+            if (def.Head == null)
             {
-                Debug.LogWarning($"[Diamond] {go.name}: FixtureDriver or Head not found. Skipped.", go);
+                Debug.LogWarning($"[Diamond] {go.name}: Head not found on FixtureDefinition. Skipped.", go);
                 skipped++;
                 continue;
             }
@@ -53,22 +54,22 @@ public static class DiamondBakeryLights
             // Create the light child under Head.
             var lightGO = new GameObject("Bakery light");
             Undo.RegisterCreatedObjectUndo(lightGO, "Add Bakery lights");
-            lightGO.transform.SetParent(driver.Head, false);
+            lightGO.transform.SetParent(def.Head, false);
             lightGO.transform.localPosition = profile.BakeryLightOffset;
 
             // Add the appropriate Bakery light component.
             Component bakeryLight = AddBakeryLight(lightGO, profile);
 
-            // Add the driver sibling on the fixture root.
+            // Add the Bakery driver sibling on the fixture root.
             var bakeryDriver = Undo.AddComponent<DiamondBakeryDriver>(go);
             bakeryDriver.Light           = bakeryLight;
-            bakeryDriver.LampProps       = driver.LampProps;
+            bakeryDriver.LampProps       = def.LampProps;
             bakeryDriver.BrightnessScale = profile.BakeryBrightnessScale;
 
             // Spot fixtures: let the cone angle track animated spread. Harmless
             // for point/mesh (the driver no-ops unless the light is a cone).
             if (profile.BakeryLightType == DiamondBakeryLightType.Spot)
-                bakeryDriver.BeamProps = driver.BeamProps;
+                bakeryDriver.BeamProps = def.BeamProps;
 
             Undo.CollapseUndoOperations(group);
             added++;

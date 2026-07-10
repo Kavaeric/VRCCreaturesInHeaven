@@ -14,8 +14,11 @@ using UnityEngine.UIElements;
 // Open via: Tools > Fixture Properties
 public class DiamondEWinFixtureProperties : EditorWindow
 {
-    private List<(DiamondFixtureDefinition def, DiamondFixtureDriver driver, DiamondFixtureProfile profile)> _selection
-        = new List<(DiamondFixtureDefinition, DiamondFixtureDriver, DiamondFixtureProfile)>();
+    // The object graph (LampProps/BeamProps/Head) lives on DiamondFixtureDefinition
+    // now that the driver is retired, so the selection tuple carries just the
+    // definition and its profile.
+    private List<(DiamondFixtureDefinition def, DiamondFixtureProfile profile)> _selection
+        = new List<(DiamondFixtureDefinition, DiamondFixtureProfile)>();
 
     // UI elements
     private VisualElement _noSelectionHelp;
@@ -142,67 +145,67 @@ public class DiamondEWinFixtureProperties : EditorWindow
     {
         _onToggle.RegisterValueChangedCallback(e =>
         {
-            foreach (var (_, driver, _) in _selection)
+            foreach (var (def, _) in _selection)
             {
-                Undo.RecordObject(driver.LampProps.gameObject, "Fixture On/Off");
-                driver.LampProps.gameObject.SetActive(e.newValue);
+                Undo.RecordObject(def.LampProps.gameObject, "Fixture On/Off");
+                def.LampProps.gameObject.SetActive(e.newValue);
             }
         });
 
         _colourModeField.RegisterValueChangedCallback(e =>
         {
             var mode = (DiamondFixtureDefinition.ColourMode)e.newValue;
-            foreach (var (def, _, _) in _selection)
+            foreach (var (def, _) in _selection)
             {
                 Undo.RecordObject(def, "Fixture Colour Mode");
                 def.Colour = mode;
-                def.SyncDriverColour();
+                def.SyncColour();
             }
             RefreshColourUI();
         });
 
         _colourTemperatureField.RegisterValueChangedCallback(e =>
         {
-            foreach (var (def, _, _) in _selection)
+            foreach (var (def, _) in _selection)
             {
                 Undo.RecordObject(def, "Fixture Colour Temperature");
                 def.ColourTemperature = e.newValue;
-                def.SyncDriverColour();
+                def.SyncColour();
             }
             RefreshColourUI();
         });
 
         _emissionColourField.RegisterCallback<ChangeEvent<Color>>(e =>
         {
-            foreach (var (def, _, _) in _selection)
+            foreach (var (def, _) in _selection)
             {
                 Undo.RecordObject(def, "Fixture Emission Colour");
                 def.EmissionColor = e.newValue;
-                def.SyncDriverColour();
+                def.SyncColour();
             }
         });
 
         _brightnessFloatField.RegisterValueChangedCallback(e =>
         {
             _brightnessSlider.SetValueWithoutNotify(e.newValue);
-            foreach (var (_, driver, _) in _selection)
+            foreach (var (def, _) in _selection)
             {
-                Undo.RecordObject(driver.LampProps, "Fixture Brightness");
-                var pos = driver.LampProps.localPosition;
+                Undo.RecordObject(def.LampProps, "Fixture Brightness");
+                var pos = def.LampProps.localPosition;
                 pos.y = e.newValue;
-                driver.LampProps.localPosition = pos;
+                def.LampProps.localPosition = pos;
             }
         });
 
         _brightnessSlider.RegisterValueChangedCallback(e =>
         {
             _brightnessFloatField.SetValueWithoutNotify(e.newValue);
-            foreach (var (_, driver, _) in _selection)
+            foreach (var (def, _) in _selection)
             {
-                Undo.RecordObject(driver.LampProps, "Fixture Brightness");
-                var pos = driver.LampProps.localPosition;
+                Undo.RecordObject(def.LampProps, "Fixture Brightness");
+                var pos = def.LampProps.localPosition;
                 pos.y = e.newValue;
-                driver.LampProps.localPosition = pos;
+                def.LampProps.localPosition = pos;
             }
         });
 
@@ -213,13 +216,13 @@ public class DiamondEWinFixtureProperties : EditorWindow
         {
             _spreadSlider.SetValueWithoutNotify(e.newValue);
             float tan = DiamondFixtureDefinition.SpreadDegreesToTan(e.newValue);
-            foreach (var (_, driver, profile) in _selection)
+            foreach (var (def, profile) in _selection)
             {
                 if (!profile.HasSpread) continue;
-                Undo.RecordObject(driver.BeamProps, "Fixture Spread");
-                var euler = driver.BeamProps.localEulerAngles;
+                Undo.RecordObject(def.BeamProps, "Fixture Spread");
+                var euler = def.BeamProps.localEulerAngles;
                 euler.x = tan;
-                driver.BeamProps.localEulerAngles = euler;
+                def.BeamProps.localEulerAngles = euler;
             }
         });
 
@@ -227,25 +230,25 @@ public class DiamondEWinFixtureProperties : EditorWindow
         {
             _spreadFloatField.SetValueWithoutNotify(e.newValue);
             float tan = DiamondFixtureDefinition.SpreadDegreesToTan(e.newValue);
-            foreach (var (_, driver, profile) in _selection)
+            foreach (var (def, profile) in _selection)
             {
                 if (!profile.HasSpread) continue;
-                Undo.RecordObject(driver.BeamProps, "Fixture Spread");
-                var euler = driver.BeamProps.localEulerAngles;
+                Undo.RecordObject(def.BeamProps, "Fixture Spread");
+                var euler = def.BeamProps.localEulerAngles;
                 euler.x = tan;
-                driver.BeamProps.localEulerAngles = euler;
+                def.BeamProps.localEulerAngles = euler;
             }
         });
 
         _beamIntensityField.RegisterValueChangedCallback(e =>
         {
-            foreach (var (_, driver, profile) in _selection)
+            foreach (var (def, profile) in _selection)
             {
                 if (!profile.HasBeam) continue;
-                Undo.RecordObject(driver.BeamProps, "Fixture Beam Intensity");
-                var scale = driver.BeamProps.localScale;
+                Undo.RecordObject(def.BeamProps, "Fixture Beam Intensity");
+                var scale = def.BeamProps.localScale;
                 scale.y = e.newValue;
-                driver.BeamProps.localScale = scale;
+                def.BeamProps.localScale = scale;
             }
         });
 
@@ -334,12 +337,12 @@ public class DiamondEWinFixtureProperties : EditorWindow
 
     private void SetAxisRotation(int component, float value)
     {
-        foreach (var (_, driver, profile) in _selection)
+        foreach (var (def, profile) in _selection)
         {
             var axis = component == 0 ? profile.AxisX : component == 1 ? profile.AxisY : profile.AxisZ;
             if (!axis.Enabled) continue;
 
-            var head = driver.Head;
+            var head = def.Head;
             if (head == null) continue;
             Undo.RecordObject(head, "Fixture Rotation");
             var euler = head.localEulerAngles;
@@ -356,7 +359,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
         RefreshColourUI();
 
         // Update brightness (LampProps.localPosition.y)
-        var brightnessValues = _selection.Select(s => s.driver.LampProps.localPosition.y).Distinct().ToList();
+        var brightnessValues = _selection.Select(s => s.def.LampProps.localPosition.y).Distinct().ToList();
         if (brightnessValues.Count == 1)
         {
             if (!Mathf.Approximately(_brightnessSlider.value, brightnessValues[0]))
@@ -372,7 +375,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
         if (anyHasSpread)
         {
             var spreadCapable = _selection.Where(s => s.profile.HasSpread).ToList();
-            var spreadValues = spreadCapable.Select(s => s.driver.BeamProps.localEulerAngles.x).Distinct().ToList();
+            var spreadValues = spreadCapable.Select(s => s.def.BeamProps.localEulerAngles.x).Distinct().ToList();
             if (spreadValues.Count == 1)
             {
                 float degrees = DiamondFixtureDefinition.SpreadTanToDegrees(spreadValues[0]);
@@ -389,7 +392,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
         if (anyHasBeam)
         {
             var beamCapable = _selection.Where(s => s.profile.HasBeam).ToList();
-            var beamValues = beamCapable.Select(s => s.driver.BeamProps.localScale.y).Distinct().ToList();
+            var beamValues = beamCapable.Select(s => s.def.BeamProps.localScale.y).Distinct().ToList();
             if (beamValues.Count == 1)
             {
                 if (!Mathf.Approximately(_beamIntensityField.value, beamValues[0]))
@@ -404,7 +407,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
         if (anyAxisXEnabled)
         {
             var axisXCapable = _selection.Where(s => s.profile.AxisX.Enabled).ToList();
-            var axisXValues = axisXCapable.Select(s => NormalizeAngle(s.driver.Head.localEulerAngles[0])).Distinct().ToList();
+            var axisXValues = axisXCapable.Select(s => NormalizeAngle(s.def.Head.localEulerAngles[0])).Distinct().ToList();
             if (axisXValues.Count == 1)
             {
                 if (!Mathf.Approximately(_axisXSlider.value, axisXValues[0]))
@@ -419,7 +422,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
         if (anyAxisYEnabled)
         {
             var axisYCapable = _selection.Where(s => s.profile.AxisY.Enabled).ToList();
-            var axisYValues = axisYCapable.Select(s => NormalizeAngle(s.driver.Head.localEulerAngles[1])).Distinct().ToList();
+            var axisYValues = axisYCapable.Select(s => NormalizeAngle(s.def.Head.localEulerAngles[1])).Distinct().ToList();
             if (axisYValues.Count == 1)
             {
                 if (!Mathf.Approximately(_axisYSlider.value, axisYValues[0]))
@@ -434,7 +437,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
         if (anyAxisZEnabled)
         {
             var axisZCapable = _selection.Where(s => s.profile.AxisZ.Enabled).ToList();
-            var axisZValues = axisZCapable.Select(s => NormalizeAngle(s.driver.Head.localEulerAngles[2])).Distinct().ToList();
+            var axisZValues = axisZCapable.Select(s => NormalizeAngle(s.def.Head.localEulerAngles[2])).Distinct().ToList();
             if (axisZValues.Count == 1)
             {
                 if (!Mathf.Approximately(_axisZSlider.value, axisZValues[0]))
@@ -471,22 +474,21 @@ public class DiamondEWinFixtureProperties : EditorWindow
             var def = obj.GetComponent<DiamondFixtureDefinition>();
             if (def == null) continue;
 
-            var driver = def.GetComponent<DiamondFixtureDriver>();
             var profile = def.Profile;
 
-            if (driver == null || profile == null)
+            if (profile == null)
             {
                 invalidCount++;
                 continue;
             }
 
-            _selection.Add((def, driver, profile));
+            _selection.Add((def, profile));
         }
 
         if (_selection.Count == 0)
         {
             if (invalidCount > 0)
-                ShowError($"{invalidCount} fixture(s) selected but incomplete (missing driver or profile).");
+                ShowError($"{invalidCount} fixture(s) selected but incomplete (missing profile).");
             else
                 ShowNoSelection();
             return;
@@ -539,7 +541,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
         }
 
         // Update on toggle - show blank if mixed
-        var onStates = _selection.Select(s => s.driver.LampProps.gameObject.activeSelf).Distinct().ToList();
+        var onStates = _selection.Select(s => s.def.LampProps.gameObject.activeSelf).Distinct().ToList();
         if (onStates.Count == 1)
         {
             _onToggle.SetValueWithoutNotify(onStates[0]);
@@ -568,7 +570,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
         _brightnessSlider.lowValue = minBrightness;
         _brightnessSlider.highValue = maxBrightness;
 
-        var brightnessValues = _selection.Select(s => s.driver.LampProps.localPosition.y).Distinct().ToList();
+        var brightnessValues = _selection.Select(s => s.def.LampProps.localPosition.y).Distinct().ToList();
         if (brightnessValues.Count == 1)
         {
             _brightnessSlider.SetValueWithoutNotify(brightnessValues[0]);
@@ -591,7 +593,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
             var spreadCapable = _selection.Where(s => s.profile.HasSpread).ToList();
             _spreadSlider.lowValue  = spreadCapable.Min(s => s.profile.SpreadMinDegrees);
             _spreadSlider.highValue = spreadCapable.Max(s => s.profile.SpreadMaxDegrees);
-            var spreadValues = spreadCapable.Select(s => s.driver.BeamProps.localEulerAngles.x).Distinct().ToList();
+            var spreadValues = spreadCapable.Select(s => s.def.BeamProps.localEulerAngles.x).Distinct().ToList();
             if (spreadValues.Count == 1)
             {
                 float degrees = DiamondFixtureDefinition.SpreadTanToDegrees(spreadValues[0]);
@@ -619,7 +621,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
             _beamIntensityField.style.display = DisplayStyle.Flex;
 
             var beamCapable = _selection.Where(s => s.profile.HasBeam).ToList();
-            var beamValues = beamCapable.Select(s => s.driver.BeamProps.localScale.y).Distinct().ToList();
+            var beamValues = beamCapable.Select(s => s.def.BeamProps.localScale.y).Distinct().ToList();
             if (beamValues.Count == 1)
             {
                 _beamIntensityField.SetValueWithoutNotify(beamValues[0]);
@@ -648,7 +650,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
             var axisXCapable = _selection.Where(s => s.profile.AxisX.Enabled).ToList();
             _axisXSlider.lowValue = axisXCapable.Min(s => s.profile.AxisX.Min);
             _axisXSlider.highValue = axisXCapable.Max(s => s.profile.AxisX.Max);
-            var axisXValues = axisXCapable.Select(s => NormalizeAngle(s.driver.Head.localEulerAngles[0])).Distinct().ToList();
+            var axisXValues = axisXCapable.Select(s => NormalizeAngle(s.def.Head.localEulerAngles[0])).Distinct().ToList();
             if (axisXValues.Count == 1)
             {
                 _axisXSlider.SetValueWithoutNotify(axisXValues[0]);
@@ -673,7 +675,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
             var axisYCapable = _selection.Where(s => s.profile.AxisY.Enabled).ToList();
             _axisYSlider.lowValue = axisYCapable.Min(s => s.profile.AxisY.Min);
             _axisYSlider.highValue = axisYCapable.Max(s => s.profile.AxisY.Max);
-            var axisYValues = axisYCapable.Select(s => NormalizeAngle(s.driver.Head.localEulerAngles[1])).Distinct().ToList();
+            var axisYValues = axisYCapable.Select(s => NormalizeAngle(s.def.Head.localEulerAngles[1])).Distinct().ToList();
             if (axisYValues.Count == 1)
             {
                 _axisYSlider.SetValueWithoutNotify(axisYValues[0]);
@@ -698,7 +700,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
             var axisZCapable = _selection.Where(s => s.profile.AxisZ.Enabled).ToList();
             _axisZSlider.lowValue = axisZCapable.Min(s => s.profile.AxisZ.Min);
             _axisZSlider.highValue = axisZCapable.Max(s => s.profile.AxisZ.Max);
-            var axisZValues = axisZCapable.Select(s => NormalizeAngle(s.driver.Head.localEulerAngles[2])).Distinct().ToList();
+            var axisZValues = axisZCapable.Select(s => NormalizeAngle(s.def.Head.localEulerAngles[2])).Distinct().ToList();
             if (axisZValues.Count == 1)
             {
                 _axisZSlider.SetValueWithoutNotify(axisZValues[0]);

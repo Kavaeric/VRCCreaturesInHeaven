@@ -81,8 +81,7 @@ public class DiamondEWinFixtureMap : EditorWindow
 
     private List<FixtureEntry>         _fixtures            = new();
     private List<UnityEngine.Object>   _fixtureObjects      = new();  // resolved scene objects, parallel to _fixtures (null if unresolved)
-    private List<UnityEngine.Object>   _fixtureDefinitions  = new();  // resolved FixtureDefinition components
-    private List<UnityEngine.Object>   _fixtureDrivers      = new();  // resolved FixtureDriver components
+    private List<UnityEngine.Object>   _fixtureDefinitions  = new();  // resolved FixtureDefinition components (also the object-graph source)
     private List<GroupEntry>           _groups              = new();
     private string                     _mapPath             = "";
     private Theme                      _theme               = Theme.Default();
@@ -436,20 +435,17 @@ public class DiamondEWinFixtureMap : EditorWindow
     {
         _fixtureObjects = new List<UnityEngine.Object>(_fixtures.Count);
         _fixtureDefinitions = new List<UnityEngine.Object>(_fixtures.Count);
-        _fixtureDrivers = new List<UnityEngine.Object>(_fixtures.Count);
 
-        // Find all FixtureDefinition and FixtureDriver components in the scene.
+        // Find all FixtureDefinition components in the scene. Definition is the
+        // object-graph source now (the driver is retired), and every fixture has
+        // one on its root, so it's the only lookup needed.
         var allDefinitions = FindObjectsByType<DiamondFixtureDefinition>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        var allDrivers = FindObjectsByType<DiamondFixtureDriver>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 
         // Build lookup by GameObject.
         var definitionsByGameObject = new Dictionary<GameObject, DiamondFixtureDefinition>(allDefinitions.Length);
-        var driversByGameObject = new Dictionary<GameObject, DiamondFixtureDriver>(allDrivers.Length);
 
         foreach (var def in allDefinitions)
             definitionsByGameObject[def.gameObject] = def;
-        foreach (var drv in allDrivers)
-            driversByGameObject[drv.gameObject] = drv;
 
         // Build a map of GlobalObjectId to sceneObject via reverse lookup from known objects.
         // This avoids slow GlobalObjectIdentifierToObjectSlow calls entirely.
@@ -463,14 +459,6 @@ public class DiamondEWinFixtureMap : EditorWindow
                 globalIdCache[gidStr] = def.gameObject;
         }
 
-        // Also cache FixtureDriver scene objects.
-        foreach (var drv in allDrivers)
-        {
-            string gidStr = GlobalObjectId.GetGlobalObjectIdSlow(drv.gameObject).ToString();
-            if (!globalIdCache.ContainsKey(gidStr))
-                globalIdCache[gidStr] = drv.gameObject;
-        }
-
         // Match fixtures by looking up their GlobalObjectId string in the cache.
         for (int i = 0; i < _fixtures.Count; i++)
         {
@@ -482,18 +470,12 @@ public class DiamondEWinFixtureMap : EditorWindow
 
             _fixtureObjects.Add(sceneObj);
 
-            // Match components by the scene object's GameObject.
+            // Match the Definition component by the scene object's GameObject.
             DiamondFixtureDefinition def = null;
-            DiamondFixtureDriver drv = null;
-
             if (sceneObj is GameObject go)
-            {
                 definitionsByGameObject.TryGetValue(go, out def);
-                driversByGameObject.TryGetValue(go, out drv);
-            }
 
             _fixtureDefinitions.Add(def);
-            _fixtureDrivers.Add(drv);
         }
     }
 
@@ -806,14 +788,13 @@ public class DiamondEWinFixtureMap : EditorWindow
             var fl = _fixtureLayouts[i];
             var obj = _fixtureObjects[i];
             var definition = _fixtureDefinitions[i];
-            var driver = _fixtureDrivers[i];
             bool selected = obj != null && selectionSet.Contains(obj);
 
-            DrawFixtureNode(f, fl, definition, driver, selected);
+            DrawFixtureNode(f, fl, definition, selected);
         }
     }
 
-    private void DrawFixtureNode(FixtureEntry fixture, FixtureLayout layout, UnityEngine.Object definition, UnityEngine.Object driver, bool selected)
+    private void DrawFixtureNode(FixtureEntry fixture, FixtureLayout layout, UnityEngine.Object definition, bool selected)
     {
         bool round = fixture.Shape == DiamondFixtureMapLayout.NodeShape.Round;
 
@@ -863,9 +844,8 @@ public class DiamondEWinFixtureMap : EditorWindow
             GUI.Label(labelRect, fixture.name, _nodeLabelStyle);
         }
 
-        if (driver == null || definition == null) return;
+        if (definition == null) return;
 
-        var driverTyped = (DiamondFixtureDriver)driver;
         var definitionTyped = (DiamondFixtureDefinition)definition;
 
         // Resolve emission color, handling blackbody mode.
@@ -873,11 +853,12 @@ public class DiamondEWinFixtureMap : EditorWindow
         if (definitionTyped.Colour == DiamondFixtureDefinition.ColourMode.Blackbody)
             emissionColor = DiamondFixtureDefinition.BlackbodyToRGB(definitionTyped.ColourTemperature);
 
-        // Get brightness normalised to max brightness.
+        // Get brightness normalised to max brightness. LampProps lives on the
+        // Definition now (the driver is retired).
         float brightness = 0f;
-        if (driverTyped.LampProps != null)
+        if (definitionTyped.LampProps != null && definitionTyped.Profile != null)
         {
-            float value = driverTyped.LampProps.localPosition.y;
+            float value = definitionTyped.LampProps.localPosition.y;
             brightness = Mathf.InverseLerp(0f, definitionTyped.Profile.BrightnessMax, value);
         }
 
@@ -1088,12 +1069,13 @@ public class DiamondEWinFixtureMap : EditorWindow
                 continue;
             }
 
-            // Root not selected: check the driver's head/props objects.
-            var driver = i < _fixtureDrivers.Count ? _fixtureDrivers[i] as DiamondFixtureDriver : null;
-            if (driver == null) continue;
-            if ((driver.Head      != null && selectionSet.Contains(driver.Head.gameObject)) ||
-                (driver.LampProps != null && selectionSet.Contains(driver.LampProps.gameObject)) ||
-                (driver.BeamProps != null && selectionSet.Contains(driver.BeamProps.gameObject)))
+            // Root not selected: check the fixture's head/props objects (on the
+            // Definition now that the driver is retired).
+            var def = i < _fixtureDefinitions.Count ? _fixtureDefinitions[i] as DiamondFixtureDefinition : null;
+            if (def == null) continue;
+            if ((def.Head      != null && selectionSet.Contains(def.Head.gameObject)) ||
+                (def.LampProps != null && selectionSet.Contains(def.LampProps.gameObject)) ||
+                (def.BeamProps != null && selectionSet.Contains(def.BeamProps.gameObject)))
                 result.Add(i);
         }
         return result;
@@ -1138,17 +1120,17 @@ public class DiamondEWinFixtureMap : EditorWindow
 
         if (_selectionIncludesFixtureHead || _selectionIncludesLampProps || _selectionIncludesBeamProps)
         {
-            if (fixtureIndex < _fixtureDrivers.Count)
+            if (fixtureIndex < _fixtureDefinitions.Count)
             {
-                var driver = _fixtureDrivers[fixtureIndex] as DiamondFixtureDriver;
-                if (driver != null)
+                var def = _fixtureDefinitions[fixtureIndex] as DiamondFixtureDefinition;
+                if (def != null)
                 {
-                    if (_selectionIncludesFixtureHead && driver.Head != null)
-                        outList.Add(driver.Head.gameObject);
-                    if (_selectionIncludesLampProps && driver.LampProps != null)
-                        outList.Add(driver.LampProps.gameObject);
-                    if (_selectionIncludesBeamProps && driver.BeamProps != null)
-                        outList.Add(driver.BeamProps.gameObject);
+                    if (_selectionIncludesFixtureHead && def.Head != null)
+                        outList.Add(def.Head.gameObject);
+                    if (_selectionIncludesLampProps && def.LampProps != null)
+                        outList.Add(def.LampProps.gameObject);
+                    if (_selectionIncludesBeamProps && def.BeamProps != null)
+                        outList.Add(def.BeamProps.gameObject);
                 }
             }
         }

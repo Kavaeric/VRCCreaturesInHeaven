@@ -54,21 +54,14 @@ public class DiamondEInsFixtureDefinition : Editor
         EditorGUILayout.PropertyField(serializedObject.FindProperty("BeamRenderer"));
         serializedObject.ApplyModifiedProperties();
 
-        // Bail early if any selected fixture is missing a driver or profile.
-        bool anyMissingDriver  = false;
+        // Bail early if any selected fixture is missing a profile. (The driver is
+        // retired -- the object graph the controls edit lives on Definition now,
+        // so there's no driver to require.)
         bool anyMissingProfile = false;
         foreach (var t in targets)
         {
             var d = (DiamondFixtureDefinition)t;
-            if (d.GetComponent<DiamondFixtureDriver>() == null) anyMissingDriver  = true;
-            if (d.Profile == null)                       anyMissingProfile = true;
-        }
-
-        if (anyMissingDriver)
-        {
-            EditorGUILayout.HelpBox("One or more selected fixtures have no FixtureDriver.", MessageType.Warning);
-            serializedObject.ApplyModifiedProperties();
-            return;
+            if (d.Profile == null) anyMissingProfile = true;
         }
 
         if (anyMissingProfile)
@@ -127,21 +120,19 @@ public class DiamondEInsFixtureDefinition : Editor
             foreach (var t in targets)
             {
                 var d = (DiamondFixtureDefinition)t;
-                var driver = d.GetComponent<DiamondFixtureDriver>();
-                if (driver == null) continue;
-                if (driver.LampProps != null) Undo.RecordObject(driver.LampProps, "Reset to Profile Defaults");
-                if (driver.BeamProps != null) Undo.RecordObject(driver.BeamProps, "Reset to Profile Defaults");
-                if (driver.Head      != null) Undo.RecordObject(driver.Head,      "Reset to Profile Defaults");
+                if (d.LampProps != null) Undo.RecordObject(d.LampProps, "Reset to Profile Defaults");
+                if (d.BeamProps != null) Undo.RecordObject(d.BeamProps, "Reset to Profile Defaults");
+                if (d.Head      != null) Undo.RecordObject(d.Head,      "Reset to Profile Defaults");
                 d.ApplyProfileDefaults();
             }
         }
 
         // On/Off toggle. Show mixed-value indicator if not unanimous.
-        bool firstOn = ((DiamondFixtureDefinition)targets[0]).GetComponent<DiamondFixtureDriver>().LampProps.gameObject.activeSelf;
+        bool firstOn = ((DiamondFixtureDefinition)targets[0]).LampProps.gameObject.activeSelf;
         bool mixedOn = false;
         foreach (var t in targets)
         {
-            var lp = ((DiamondFixtureDefinition)t).GetComponent<DiamondFixtureDriver>().LampProps;
+            var lp = ((DiamondFixtureDefinition)t).LampProps;
             if (lp == null) { mixedOn = true; break; }
             if (lp.gameObject.activeSelf != firstOn) { mixedOn = true; break; }
         }
@@ -154,7 +145,7 @@ public class DiamondEInsFixtureDefinition : Editor
         {
             foreach (var t in targets)
             {
-                var lp = ((DiamondFixtureDefinition)t).GetComponent<DiamondFixtureDriver>().LampProps;
+                var lp = ((DiamondFixtureDefinition)t).LampProps;
                 if (lp == null) continue;
                 Undo.RecordObject(lp.gameObject, "Fixture On/Off");
                 lp.gameObject.SetActive(on);
@@ -162,14 +153,14 @@ public class DiamondEInsFixtureDefinition : Editor
         }
 
         // Brightness: display in gamma space, store linear in LampProps.localPosition.y.
-        var firstDriver = ((DiamondFixtureDefinition)targets[0]).GetComponent<DiamondFixtureDriver>();
-        float firstBrightnessGamma = firstDriver.LampProps != null
-            ? Mathf.LinearToGammaSpace(firstDriver.LampProps.localPosition.y) : 0f;
+        var firstDef = (DiamondFixtureDefinition)targets[0];
+        float firstBrightnessGamma = firstDef.LampProps != null
+            ? Mathf.LinearToGammaSpace(firstDef.LampProps.localPosition.y) : 0f;
 
         bool mixedBrightness = false;
         foreach (var t in targets)
         {
-            var lp = ((DiamondFixtureDefinition)t).GetComponent<DiamondFixtureDriver>().LampProps;
+            var lp = ((DiamondFixtureDefinition)t).LampProps;
             if (lp == null) { mixedBrightness = true; break; }
             if (!Mathf.Approximately(Mathf.LinearToGammaSpace(lp.localPosition.y), firstBrightnessGamma))
                 mixedBrightness = true;
@@ -184,7 +175,7 @@ public class DiamondEInsFixtureDefinition : Editor
             float newLinear = Mathf.GammaToLinearSpace(newGamma);
             foreach (var t in targets)
             {
-                var lp = ((DiamondFixtureDefinition)t).GetComponent<DiamondFixtureDriver>().LampProps;
+                var lp = ((DiamondFixtureDefinition)t).LampProps;
                 if (lp == null) continue;
                 Undo.RecordObject(lp, "Fixture Brightness");
                 var pos = lp.localPosition; pos.y = newLinear; lp.localPosition = pos;
@@ -196,12 +187,12 @@ public class DiamondEInsFixtureDefinition : Editor
             // Spread is stored as tan(half-angle) on BeamProps.localEulerAngles.x
             // (rotation, not scale, so it doesn't bundle with beam intensity in
             // the animator) but presented as full cone degrees in the UI.
-            float firstSpreadTan     = firstDriver.BeamProps != null ? firstDriver.BeamProps.localEulerAngles.x : 0f;
+            float firstSpreadTan     = firstDef.BeamProps != null ? firstDef.BeamProps.localEulerAngles.x : 0f;
             float firstSpreadDegrees = DiamondFixtureDefinition.SpreadTanToDegrees(firstSpreadTan);
             bool mixedSpread = false;
             foreach (var t in targets)
             {
-                var bp = ((DiamondFixtureDefinition)t).GetComponent<DiamondFixtureDriver>().BeamProps;
+                var bp = ((DiamondFixtureDefinition)t).BeamProps;
                 if (bp == null) { mixedSpread = true; break; }
                 if (!Mathf.Approximately(bp.localEulerAngles.x, firstSpreadTan)) mixedSpread = true;
             }
@@ -216,7 +207,7 @@ public class DiamondEInsFixtureDefinition : Editor
                 float newTan = DiamondFixtureDefinition.SpreadDegreesToTan(newDegrees);
                 foreach (var t in targets)
                 {
-                    var bp = ((DiamondFixtureDefinition)t).GetComponent<DiamondFixtureDriver>().BeamProps;
+                    var bp = ((DiamondFixtureDefinition)t).BeamProps;
                     if (bp == null) continue;
                     Undo.RecordObject(bp, "Fixture Spread");
                     var euler = bp.localEulerAngles; euler.x = newTan; bp.localEulerAngles = euler;
@@ -229,11 +220,11 @@ public class DiamondEInsFixtureDefinition : Editor
             // Beam Intensity lives on BeamProps.localScale.y. No clamp -- this
             // represents air/fog density (haze multiplier), not a fixture-internal
             // value.
-            float firstBeam = firstDriver.BeamProps != null ? firstDriver.BeamProps.localScale.y : 0f;
+            float firstBeam = firstDef.BeamProps != null ? firstDef.BeamProps.localScale.y : 0f;
             bool mixedBeam = false;
             foreach (var t in targets)
             {
-                var bp = ((DiamondFixtureDefinition)t).GetComponent<DiamondFixtureDriver>().BeamProps;
+                var bp = ((DiamondFixtureDefinition)t).BeamProps;
                 if (bp == null) { mixedBeam = true; break; }
                 if (!Mathf.Approximately(bp.localScale.y, firstBeam)) mixedBeam = true;
             }
@@ -246,7 +237,7 @@ public class DiamondEInsFixtureDefinition : Editor
             {
                 foreach (var t in targets)
                 {
-                    var bp = ((DiamondFixtureDefinition)t).GetComponent<DiamondFixtureDriver>().BeamProps;
+                    var bp = ((DiamondFixtureDefinition)t).BeamProps;
                     if (bp == null) continue;
                     Undo.RecordObject(bp, "Fixture Beam Intensity");
                     var s = bp.localScale; s.y = newBeam; bp.localScale = s;
@@ -271,10 +262,10 @@ public class DiamondEInsFixtureDefinition : Editor
     {
         if (!axis.Enabled) return;
 
-        var firstHead = ((DiamondFixtureDefinition)targets[0]).GetComponent<DiamondFixtureDriver>().Head;
+        var firstHead = ((DiamondFixtureDefinition)targets[0]).Head;
         if (firstHead == null)
         {
-            EditorGUILayout.HelpBox("Head not assigned on FixtureDriver.", MessageType.Warning);
+            EditorGUILayout.HelpBox("Head not assigned on the fixture.", MessageType.Warning);
             return;
         }
 
@@ -282,7 +273,7 @@ public class DiamondEInsFixtureDefinition : Editor
         bool mixed = false;
         foreach (var t in targets)
         {
-            var h = ((DiamondFixtureDefinition)t).GetComponent<DiamondFixtureDriver>().Head;
+            var h = ((DiamondFixtureDefinition)t).Head;
             if (h == null) { mixed = true; break; }
             if (!Mathf.Approximately(NormaliseAngle(h.localEulerAngles[component]), firstVal)) mixed = true;
         }
@@ -295,7 +286,7 @@ public class DiamondEInsFixtureDefinition : Editor
         {
             foreach (var t in targets)
             {
-                var h = ((DiamondFixtureDefinition)t).GetComponent<DiamondFixtureDriver>().Head;
+                var h = ((DiamondFixtureDefinition)t).Head;
                 if (h == null) continue;
                 Undo.RecordObject(h, "Fixture Rotation");
                 var euler = h.localEulerAngles;

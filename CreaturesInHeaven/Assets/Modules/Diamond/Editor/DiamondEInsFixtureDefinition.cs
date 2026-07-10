@@ -40,6 +40,20 @@ public class DiamondEInsFixtureDefinition : Editor
         EditorGUILayout.LabelField("Fixture", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(serializedObject.FindProperty("DisplayName"), new GUIContent("Display name"));
 
+        // --- Object graph references ---------------------------------
+        // The per-fixture references the manager bakes from. These live on
+        // DiamondFixtureDefinition now (not the driver), so they're drawn here
+        // and wired per-prefab. Kept above the driver/profile early-outs below so
+        // they're always visible for wiring, even before a profile is assigned.
+        EditorGUILayout.Space(4);
+        EditorGUILayout.LabelField("References", EditorStyles.boldLabel);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("Head"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("LampProps"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("BeamProps"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("HeadRenderer"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("BeamRenderer"));
+        serializedObject.ApplyModifiedProperties();
+
         // Bail early if any selected fixture is missing a driver or profile.
         bool anyMissingDriver  = false;
         bool anyMissingProfile = false;

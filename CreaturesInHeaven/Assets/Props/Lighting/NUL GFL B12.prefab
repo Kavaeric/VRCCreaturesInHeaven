@@ -108,7 +108,7 @@ Transform:
   m_GameObject: {fileID: 5683261914588696374}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -140,7 +140,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0.0003810136, y: 0, z: 0, w: 0.99999994}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0, y: 0.1, z: 0}
+  m_LocalScale: {x: 0, y: 1, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1305038497409783678}
@@ -283,6 +283,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   DisplayName: 
   Profile: {fileID: 11400000, guid: bc0aea0f0ce6acb43aafbe38821a4adf, type: 2}
+  Head: {fileID: 8708718316436788733}
+  LampProps: {fileID: 3683907717810278853}
+  BeamProps: {fileID: 3909274399151128820}
+  HeadRenderer: {fileID: 6042516975229323470}
+  BeamRenderer: {fileID: 6916292504349618127}
   EmissionColor: {r: 1, g: 1, b: 1, a: 1}
   Colour: 0
   ColourTemperature: 6500
@@ -293,7 +298,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1826136212522503620}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0a7ad00ca42955a409989b61cd014cea, type: 3}
   m_Name: 
@@ -330,7 +335,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1826136212522503620}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 45115577ef41a5b4ca741ed302693907, type: 3}
   m_Name: 

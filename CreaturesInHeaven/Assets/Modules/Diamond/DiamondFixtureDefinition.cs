@@ -24,6 +24,29 @@ public class DiamondFixtureDefinition : MonoBehaviour
     // Profile asset describing this fixture type's capabilities and limits.
     public DiamondFixtureProfile Profile;
 
+    // --- Fixture object graph ----------------------------------------
+    // The per-fixture references the manager bakes into its arrays. These used
+    // to live only on DiamondFixtureDriver; they live here now so the bake (and
+    // edit-time tooling) can read the object graph without a runtime driver.
+    // Populated per-prefab in the inspector.
+
+    // The moving-head child. The animator keys its localRotation directly.
+    public Transform Head;
+
+    // Proxy transform: localPosition.y = brightness, localScale.xyz = emission
+    // colour (RGB), gameObject.activeSelf = on/off.
+    public Transform LampProps;
+
+    // Proxy transform: localEulerAngles.x = spread (tan half-angle),
+    // localScale.y = beam intensity. Null for beamless fixtures.
+    public Transform BeamProps;
+
+    // Renderer whose _EmissionColor is driven by brightness*colour.
+    public Renderer HeadRenderer;
+
+    // Renderer on the volumetric beam cube. Null for beamless fixtures.
+    public Renderer BeamRenderer;
+
     // Emission colour for this fixture. Written to FixtureDriver.EmissionColor so
     // it is available at runtime without FixtureDefinition being present.
     [ColorUsage(showAlpha: false, hdr: true)]
@@ -38,13 +61,13 @@ public class DiamondFixtureDefinition : MonoBehaviour
 
     private void OnEnable()
     {
-        SyncEmitterSize();
+        SyncFixtureEmitterSize();
         SyncDriverColour();
     }
 
     private void OnValidate()
     {
-        SyncEmitterSize();
+        SyncFixtureEmitterSize();
         SyncDriverColour();
     }
 
@@ -72,7 +95,101 @@ public class DiamondFixtureDefinition : MonoBehaviour
         }
     }
 
-    public void SyncEmitterSize()
+    // --- Bake-facing derived values ----------------------------------
+    // These are what the manager bakes into its arrays. They derive from the
+    // profile and beam material -- the same sources SyncEmitterSize mirrored onto
+    // the driver -- so the bake can read them straight off Definition, no driver.
+
+    // Emitter size for the beam (_EmitterWidth / _EmitterHeight), from the profile.
+    public Vector2 FixtureEmitterSize =>
+        Profile != null ? new Vector2(Profile.FixtureWidth, Profile.FixtureHeight) : Vector2.one;
+
+    // True for round (symmetric-cone) fixtures using the BeamRound shader, which
+    // reads only _SpreadX. The manager uses this to skip the unused _SpreadZ write.
+    public bool SymmetricBeam =>
+        Profile != null && Profile.Shape == DiamondFixtureProfile.BeamShape.Round;
+
+    // Computes and writes the beam renderer's worst-case culling bounds, reading
+    // the sizing scalars straight from the profile and beam material. This is the
+    // driver's old ApplyBeamRendererBounds, sourced from profile/material rather
+    // than mirrored driver fields, so it needs no driver. Safe in edit mode.
+    // Unlike a property block, Renderer.bounds is serialized, so this persists.
+    public void ComputeBeamBounds()
+    {
+        if (BeamRenderer == null) return;
+
+        // Worst-case sizing scalars. Spread comes from the profile (max cone);
+        // the rest come from the beam material, matching what SyncEmitterSize
+        // mirrored onto the driver. Defaults match the shader/driver fallbacks.
+        float maxSpreadTan     = (Profile != null && Profile.HasSpread)
+            ? SpreadDegreesToTan(Profile.SpreadMaxDegrees) : 1f;
+        float maxBeamLength    = 50f;
+        float maxHazeDensity   = 0.05f;
+        float maxScatterStr    = 1f;
+        float maxShearX        = 0f;
+        float maxShearZ        = 0f;
+        Vector3 cubeLocalScale = Vector3.one * 0.1f;
+
+        var beamMat = BeamRenderer.sharedMaterial;
+        if (beamMat != null)
+        {
+            if (beamMat.HasProperty("_BeamLengthMax"))   maxBeamLength  = beamMat.GetFloat("_BeamLengthMax");
+            if (beamMat.HasProperty("_HazeDensity"))     maxHazeDensity = beamMat.GetFloat("_HazeDensity");
+            if (beamMat.HasProperty("_ScatterStrength")) maxScatterStr  = beamMat.GetFloat("_ScatterStrength");
+            if (beamMat.HasProperty("_ShearX"))          maxShearX      = beamMat.GetFloat("_ShearX");
+            if (beamMat.HasProperty("_ShearZ"))          maxShearZ      = beamMat.GetFloat("_ShearZ");
+            if (beamMat.HasProperty("_CubeLocalScale"))
+            {
+                Vector4 v = beamMat.GetVector("_CubeLocalScale");
+                cubeLocalScale = new Vector3(v.x, v.y, v.z);
+            }
+        }
+
+        Vector2 emitter = FixtureEmitterSize;
+
+        // Lateral half-extent at the far cap (mirror of the vertex shader's box
+        // inflation, via DiamondBeamMath.LateralHalfExtent). Spread is symmetric
+        // (X = Z); shear is genuinely per-axis (round leaves both 0).
+        float halfLateralX = DiamondBeamMath.LateralHalfExtent(
+            emitter.x * 0.5f, maxSpreadTan, maxShearX,
+            maxHazeDensity, maxScatterStr, maxBeamLength);
+        float halfLateralZ = DiamondBeamMath.LateralHalfExtent(
+            emitter.y * 0.5f, maxSpreadTan, maxShearZ,
+            maxHazeDensity, maxScatterStr, maxBeamLength);
+
+        // Beam-space AABB (world metres): beam fires along +Y, 0..maxBeamLength.
+        Vector3 beamCenter = new Vector3(0f, maxBeamLength * 0.5f, 0f);
+        Vector3 beamSize   = new Vector3(halfLateralX * 2f, maxBeamLength, halfLateralZ * 2f);
+
+        // Beam space -> object space by dividing out the cube's counter-scale,
+        // exactly as DiamondBeamVert does; localToWorld re-applies it, cancelling.
+        Vector3 cs = SafeScale(cubeLocalScale);
+        Vector3 center = new Vector3(beamCenter.x / cs.x, beamCenter.y / cs.y, beamCenter.z / cs.z);
+        Vector3 size   = new Vector3(beamSize.x   / cs.x, beamSize.y   / cs.y, beamSize.z   / cs.z);
+        Bounds localBounds = new Bounds(center, size);
+
+        // Renderer.bounds is world space; transform through the beam renderer's
+        // own transform (the mesh's), not the fixture root.
+        var t = BeamRenderer.transform;
+        Vector3 worldCenter  = t.TransformPoint(localBounds.center);
+        Vector3 worldExtents = t.TransformVector(localBounds.extents);
+        worldExtents = new Vector3(Mathf.Abs(worldExtents.x), Mathf.Abs(worldExtents.y), Mathf.Abs(worldExtents.z));
+
+        BeamRenderer.bounds = new Bounds(worldCenter, worldExtents * 2f);
+    }
+
+    // Scale with any zero/near-zero component replaced by 1, so the beam-space ->
+    // object-space divide can't blow up. A zero counter-scale is a misconfig;
+    // treating it as 1 fails safe (box stays beam-sized) rather than infinite.
+    private static Vector3 SafeScale(Vector3 s)
+    {
+        return new Vector3(
+            Mathf.Abs(s.x) < 1e-6f ? 1f : s.x,
+            Mathf.Abs(s.y) < 1e-6f ? 1f : s.y,
+            Mathf.Abs(s.z) < 1e-6f ? 1f : s.z);
+    }
+
+    public void SyncFixtureEmitterSize()
     {
         var driver = GetComponent<DiamondFixtureDriver>();
         if (driver == null || Profile == null) return;

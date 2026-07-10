@@ -1,6 +1,9 @@
 # Diamond fixture manager: restructuring plan
 
-**Status:** proposal, under review, not yet accepted, not yet implemented.
+**Status:** accepted and in progress. Stage 1 (manager runtime + driver replacement) is
+complete and profiler-verified. Stage 2 (editor tooling) and Stage 3 (FixtureMap / stable
+identity) remain. `DiamondFixtureDriver` is disabled at runtime but not yet deleted — it's
+still read by edit-time tooling (see the retirement note below).
 
 ## Background
 
@@ -156,27 +159,41 @@ no observable pass/fail; the test *is* a fixture lighting correctly from the arr
 
 Build the manager's arrays and the per-entity read/apply loop together.
 
-[1] **Arrays (object graph).** The manager holds one aligned array per reference channel:
+[X] **Arrays (object graph).** The manager holds one aligned array per reference channel:
     `Transform[] lampProps`, `Transform[] beamProps`, `Transform[] heads`,
     `Renderer[] headRenderers`, `Renderer[] beamRenderers` (plus the fixture root and
     scene-identity string, needed by stage 3), and the one baked runtime scalar
     `bool[] symmetricBeam`. Parallel arrays (not an array of a `[Serializable]` config struct)
     because Udon can't read fields off `[Serializable]` class/struct array elements. Emission
     colour and the animated channels are **not** stored — they come from proxies.
-[2] **Loop.** One `Update()` iterates `i`, reads the proxy transforms for fixture `i`, and
+[X] **Loop.** One `Update()` iterates `i`, reads the proxy transforms for fixture `i`, and
     applies them to the head/beam `MaterialPropertyBlock`s. Per-fixture dirty-check and
     `SetActive` guard are retained, cached in per-fixture state arrays (e.g.
     `bool[] cacheValid`, `float[] lastBrightness`, …), so an unchanged fixture skips its
     property-block writes and beam toggle.
-[3] **Bounds (bake-time, not runtime).** The culling AABB is set once, so compute it at bake
+[X] **Bounds (bake-time, not runtime).** The culling AABB is set once, so compute it at bake
     time — reading the worst-case scalars from `Definition`/material then — and write it to each
     `Renderer.bounds`. No bounds scalars live on the manager at runtime.
-[4] **Populate (interim).** A minimal edit-time bake that crawls the manager root for fixtures and
+[X] **Populate (interim).** A minimal edit-time bake that crawls the manager root for fixtures and
     fills the arrays. Can be crude at this stage — the point is to get data in so the loop can
     be tested; the robust identity/index scheme is stage 3's concern.
-[5] **Exit criterion (the whole point of this milestone):** an existing animation clip plays
+[X] **Exit criterion (the whole point of this milestone):** an existing animation clip plays
     through the manager with visually correct lighting, validated against the proxy-transform
     values the clip produces. Then verify in the profiler that `ManagedUpdate` drops to ~1.
+
+**Result (measured).** `UdonBehaviour.ManagedUpdate()` block, driving sequence 1:
+
+- Before: **~7.3 ms across ~570 instances** (per-fixture drivers).
+- After collapsing to one loop: 5.35 ms in 9 instances — dispatch gone, but the cost
+  *relocated* into the manager's single `Update()`, where a per-frame `GC.Alloc` spike appeared.
+- Root cause of the spike: the string-keyed `MaterialPropertyBlock.SetColor/SetFloat` overloads
+  marshal their string every call. Fixed by caching IDs once via `VRCShader.PropertyToID` and
+  using the `int` overloads. Final: **2.41 ms**, alloc spike gone.
+
+Two-part lesson worth keeping: collapsing dispatch *relocated* the cost rather than removing it;
+the actual reduction came from killing per-frame allocation. The architecture change was the
+prerequisite that made the allocation fix reachable at all — with 570 separate behaviours there
+was no single place to cache the IDs.
 
 ### Stage 2 — Editor / inspector tooling
 
@@ -185,6 +202,24 @@ write fixture state from the manager's arrays by index. Expected to be a small c
 tools already read material and object properties directly off each fixture object; the added
 work is resolving a selected fixture to its manager index and reading/writing there. Verify
 per-fixture editing still works.
+
+> **Driver retirement note.** `DiamondFixtureDriver`'s *runtime* role is already gone — it's
+> disabled on the fixtures, which is the state the 2.41 ms result was measured in, so there is
+> no remaining runtime cost to chase. But the component is **not deleted**, because five
+> edit-time subsystems still read fields/helpers that live only on it:
+>
+> - `DiamondEInsFixtureDefinition` (inspector sliders) — reads `LampProps`/`BeamProps`/`Head`.
+> - `DiamondFixtureMapPreview` (scene preview) — reads refs + `EmitterSize`/`SymmetricBeam`.
+> - `DiamondEWinFixtureMap`, `DiamondEWinFixtureProperties` (map/property windows) — driver lookup.
+> - `DiamondFixtureBoundsGizmo` — reads the driver's bounds scalars (`MaxSpreadTan`,
+>   `MaxShear*`, `MaxHazeDensity`, `CubeLocalScale`, `SafeCubeLocalScale()`), which were
+>   *inlined* into `Definition.ComputeBeamBounds` rather than exposed as fields.
+> - `DiamondBakeryDriver` (`#if BAKERY_INCLUDED`) — reads `EmissionColor`/`EmitterSize`/`BeamRenderer`.
+>
+> Deleting the driver means repointing all of these to `DiamondFixtureDefinition` (and
+> re-exposing the bounds scalars it needs). That's the substance of Stage 2 plus the Bakery
+> path — deferred deliberately so the runtime win could be banked without risking the authoring
+> and bake tooling.
 
 ### Stage 3 — FixtureMap centralisation + stable identity
 

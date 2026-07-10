@@ -7,16 +7,18 @@ using UnityEngine;
 // localRotation directly. This script reads those each frame and applies
 // brightness/collimation via MaterialPropertyBlock to preserve batching.
 //
-// Animatable channels are split across TWO transforms, each using a DIFFERENT
+// Animatable channels are split across two transforms, each using a different
 // Unity property, so the animator records them as fully independent curves
 // rather than bundling them as a single Vector3 keyframe.
 //
 // _LampProps:
 //   .localPosition.y    - Brightness (emissive multiplier, HDR range 0..2).
 //                         Stored on position, not scale, so that localScale
-//                         remains free to carry an RGB colour vector (each
-//                         component independently keyable, and bundling is
-//                         desirable for colour fades).
+//                         remains free to carry the RGB colour vector.
+//   .localScale.xyz     - Emission colour (RGB, HDR: components may exceed 1).
+//                         Bundled as one Vector3 so colour fades key cleanly.
+//                         FixtureDefinition seeds this at edit time. Blackbody
+//                         values get converted to RGB.
 //   .gameObject.activeSelf - On/off.
 //
 // _BeamProps:
@@ -25,8 +27,7 @@ using UnityEngine;
 //                         scale, so it doesn't bundle with intensity.)
 //   .localScale.y       - Beam intensity (volumetric shaft brightness; haze).
 //
-// Free slots on _LampProps: localScale.xyz (reserved for future RGB colour),
-// localPosition.x/z, localEulerAngles.xyz.
+// Free slots on _LampProps: localPosition.x/z, localEulerAngles.xyz.
 // Free slots on _BeamProps: localEulerAngles.y/z, localScale.x/z,
 // localPosition.xyz -- eight more independent floats.
 public class DiamondFixtureDriver : UdonSharpBehaviour
@@ -62,7 +63,7 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
 
     // Worst-case spread (as tan(half-angle)) used for renderer-bounds sizing.
     // Mirrored from the FixtureProfile by DiamondFixtureDefinition.SyncBounds.
-    // Defaults to tan(45 degrees) = 1.0 -- a sane 90-degree max cone.
+    // Defaults to tan(45 degrees) = 1.0, or a 90-degree max cone.
     public float MaxSpreadTan = 1f;
 
     // Worst-case beam length (metres) used for renderer-bounds sizing.
@@ -95,8 +96,10 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
     // Mirrored from the material; defaults match the material's 0.1.
     public Vector3 CubeLocalScale = Vector3.one * 0.1f;
 
-    // Base emission colour. Set via FixtureDefinition in the editor; not animated.
-    // Brightness (from LampProps) is applied as a multiplier on top of this.
+    // Edit-time seed for the emission colour. FixtureDefinition writes this into
+    // LampProps.localScale (the runtime colour source) as the fixture's rest
+    // colour; the driver does NOT read this field at runtime. Kept so the
+    // authored/blackbody colour has somewhere to live in the inspector.
     public Color EmissionColor = Color.white;
 
     private MaterialPropertyBlock _propBlock;
@@ -114,11 +117,12 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
     //
     // _cacheValid is false until the first Update applies once, so the initial
     // state is always written regardless of what the fields happen to hold.
-    private bool  _cacheValid = false;
-    private bool  _lastLampActive;
-    private float _lastBrightness;
-    private float _lastSpread;
-    private float _lastBeamIntensity;
+    private bool    _cacheValid = false;
+    private bool    _lastLampActive;
+    private float   _lastBrightness;
+    private Vector3 _lastColour;
+    private float   _lastSpread;
+    private float   _lastBeamIntensity;
 
     // --- Lifecycle ---------------------------------------------------
 
@@ -226,11 +230,12 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
 
         // Read the raw animated inputs once. These are the only channels the
         // animator drives per frame; everything else the driver applies is a
-        // deterministic function of them (plus the non-animated EmissionColor).
-        bool  lampActive    = LampProps.gameObject.activeSelf;
-        float brightness    = LampProps.localPosition.y;
-        float spread        = 0f;
-        float beamIntensity = 1f;
+        // deterministic function of them.
+        bool    lampActive    = LampProps.gameObject.activeSelf;
+        float   brightness    = LampProps.localPosition.y;
+        Vector3 colour        = LampProps.localScale;
+        float   spread        = 0f;
+        float   beamIntensity = 1f;
         if (BeamProps != null)
         {
             spread        = BeamProps.localEulerAngles.x;
@@ -243,6 +248,7 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
         if (_cacheValid
             && lampActive    == _lastLampActive
             && brightness    == _lastBrightness
+            && colour        == _lastColour
             && spread        == _lastSpread
             && beamIntensity == _lastBeamIntensity)
         {
@@ -251,11 +257,12 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
 
         _lastLampActive    = lampActive;
         _lastBrightness    = brightness;
+        _lastColour        = colour;
         _lastSpread        = spread;
         _lastBeamIntensity = beamIntensity;
         _cacheValid        = true;
 
-        ApplyMaterialProperties(brightness, spread, beamIntensity);
+        ApplyMaterialProperties(brightness, colour, spread, beamIntensity);
     }
 
     // --- Application -------------------------------------------------
@@ -275,8 +282,9 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
             return true;
         }
 
-        // So is if the set colour is black.
-        if (EmissionColor == Color.black)
+        // So is if the animated colour (LampProps.localScale) is black.
+        Vector3 colour = LampProps.localScale;
+        if (colour.x == 0f && colour.y == 0f && colour.z == 0f)
         {
             return true;
         }
@@ -286,7 +294,9 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
 
     // Applies the driven state to the renderers. Inputs are read once in Update
     // and passed in so the dirty-check and the apply agree on the same values.
-    private void ApplyMaterialProperties(float brightness, float spread, float beamIntensity)
+    // Colour comes from LampProps.localScale (RGB); the driver has no static
+    // colour source at runtime.
+    private void ApplyMaterialProperties(float brightness, Vector3 colour, float spread, float beamIntensity)
     {
         if (HeadRenderer == null || LampProps == null)
         {
@@ -313,7 +323,9 @@ public class DiamondFixtureDriver : UdonSharpBehaviour
             return;
         }
 
-        Color drivenColour = EmissionColor * brightness;
+        // Colour is the animated RGB from LampProps.localScale, scaled by
+        // brightness. Alpha is 1; the shader's emission ignores it.
+        Color drivenColour = new Color(colour.x, colour.y, colour.z, 1f) * brightness;
 
         _propBlock.SetColor("_EmissionColor", drivenColour);
         HeadRenderer.SetPropertyBlock(_propBlock);

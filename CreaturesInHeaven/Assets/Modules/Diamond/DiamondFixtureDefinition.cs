@@ -53,10 +53,23 @@ public class DiamondFixtureDefinition : MonoBehaviour
         var driver = GetComponent<DiamondFixtureDriver>();
         if (driver == null) return;
 
-        // Resolve emission colour: blackbody overrides the RGB picker.
-        driver.EmissionColor = Colour == ColourMode.Blackbody
+        // Resolve emission colour: blackbody overrides the RGB picker. Blackbody
+        // is resolved to RGB here, at edit time, so the runtime is Kelvin-agnostic.
+        Color resolved = Colour == ColourMode.Blackbody
             ? BlackbodyToRGB(ColourTemperature)
             : EmissionColor;
+
+        // Seed the inspector field (edit-time record of the authored colour).
+        driver.EmissionColor = resolved;
+
+        // Seed the runtime colour source: LampProps.localScale carries the RGB
+        // the driver reads each frame. This sets the fixture's rest colour;
+        // animation clips key localScale to override it at runtime. Written as
+        // the raw RGB (HDR components pass through localScale unclamped).
+        if (driver.LampProps != null)
+        {
+            driver.LampProps.localScale = new Vector3(resolved.r, resolved.g, resolved.b);
+        }
     }
 
     public void SyncEmitterSize()

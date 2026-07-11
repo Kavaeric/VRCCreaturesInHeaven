@@ -14234,6 +14234,37 @@ MeshRenderer:
     type: 3}
   m_PrefabInstance: {fileID: 8540628123787896002}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &597312824
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 597312825}
+  m_Layer: 0
+  m_Name: ConcourseBeamIntensityMult
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &597312825
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 597312824}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 545783740}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &597793227 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3828134438865754198, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -16716,9 +16747,18 @@ MonoBehaviour:
   - {fileID: 1318703389}
   - {fileID: 2023202769}
   SymmetricBeam: 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001010101010101010101000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010101010101010101010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000101010101010101010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001010101010101010101
+  AnimateHaze: 0
   HazeDensity: 0.05
+  HazeProxy: {fileID: 0}
+  AnimateScatter: 0
   ScatterStrength: 1
+  ScatterProxy: {fileID: 0}
+  AnimateAnisotropy: 0
   Anisotropy: 0
+  AnisotropyProxy: {fileID: 0}
+  AnimateBeamIntensityScale: 0
+  BeamIntensityScale: 1
+  BeamIntensityScaleProxy: {fileID: 0}
 --- !u!114 &607371162
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -35700,6 +35740,37 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 549930592}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1517925484
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1517925485}
+  m_Layer: 0
+  m_Name: ConcourseHaze
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1517925485
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1517925484}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.03, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 545783740}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1518394008 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5086014532233584671, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
@@ -53223,9 +53294,18 @@ MonoBehaviour:
   - {fileID: 1696258558}
   - {fileID: 1123222002}
   SymmetricBeam: 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010101010101010101010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000101010101010101010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001010101010101010101000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010101010101010101010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000101010101010101010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001010101010101010101
+  AnimateHaze: 1
   HazeDensity: 0.03
+  HazeProxy: {fileID: 1517925485}
+  AnimateScatter: 0
   ScatterStrength: 0.5
-  Anisotropy: 0.6
+  ScatterProxy: {fileID: 0}
+  AnimateAnisotropy: 0
+  Anisotropy: 0.5
+  AnisotropyProxy: {fileID: 0}
+  AnimateBeamIntensityScale: 1
+  BeamIntensityScale: 1
+  BeamIntensityScaleProxy: {fileID: 597312825}
 --- !u!114 &2142511936
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -70709,7 +70789,15 @@ PrefabInstance:
         type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 8470050063308764015, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1517925485}
+    - targetCorrespondingSourceObject: {fileID: 8470050063308764015, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 597312825}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 2118095829012593134, guid: 29a0eec2eda4d6841bdd1c2b89f45514,
         type: 3}

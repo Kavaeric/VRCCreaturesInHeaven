@@ -351,19 +351,27 @@ exists precisely so the single bake is stable and repeatable across re-runs.
   scene (a fixture moved but not re-baked). The map already tolerates unresolved fixtures; the
   same "re-bake to refresh" affordance the map's Reload button implies should stay obvious.
 
-## Manager-wide atmosphere (folds into the loop, next up)
+## Manager-wide atmosphere + beam-intensity master
 
-Haze density, anisotropy (Henyey–Greenstein *g*), and scatter strength are properties of the
-room's *air*, not the individual fixture, but today they live per-material (`_HazeDensity`,
-`_ScatterStrength`, `_Anisotropy`). In the data-oriented model they become manager-level values
-applied uniformly across all fixtures — physically correct, and cheap because a change is *one*
-value pushed across the beam blocks rather than N independent per-fixture values.
+Four manager-wide scalars: haze density, anisotropy (Henyey–Greenstein *g*), scatter strength,
+and a beam-intensity master scale. The first three are properties of the room's *air*, not the
+individual fixture, but today they live per-material (`_HazeDensity`, `_ScatterStrength`,
+`_Anisotropy`). In the data-oriented model they become manager-level values applied uniformly
+across all fixtures — physically correct, and cheap because a change is *one* value pushed across
+the beam blocks rather than N independent per-fixture values. The fourth restores the old
+shader-level beam-intensity multiplier as a single manager knob.
 
-**Design decision: per-parameter animate toggles, not a global mode.** Each of the three
+**Status: static path shipped, animated path designed.** The static case for all four is done —
+`HazeDensity` / `ScatterStrength` / `Anisotropy` / `BeamIntensityScale` are serialized floats on
+`DiamondManager`, seeded into every beam block once in `Start()` (the first three as their own
+shader keys, the fourth folded into the per-frame `_BeamIntensity` write as a multiplier). Zero
+per-frame cost. The animated path below is the next increment.
+
+**Design decision: per-parameter animate toggles, not a global mode.** Each of the four
 parameters is independently either static or animated, because in practice they aren't used the
-same way — only **haze** is animated today; scatter and anisotropy are set-and-forget. A global
-"animate atmosphere" switch would force the two static channels to pay the animated path's cost
-for no reason. So each parameter gets its own `bool animate<Param>`:
+same way — only **haze** is animated today; the rest are set-and-forget. A global "animate
+atmosphere" switch would force the static channels to pay the animated path's cost for no reason.
+So each parameter gets its own `bool animate<Param>`:
 
 - **Static (`animate == false`)** — a serialized **float** on the manager, written to every beam
   block **once in `Start()`** and never touched again. **Zero per-frame cost.** This is the path
@@ -373,16 +381,39 @@ for no reason. So each parameter gets its own `bool animate<Param>`:
   section. Same convention as the per-fixture proxy channels, one level up. This is also the
   DMX/MIDI-friendly path — external control just writes the proxy.
 
+**Proxy mapping: one proxy object per animated parameter, one axis each.** The four parameters
+are *unrelated scalars* — there's no grouping where they always animate together. That matters
+because **a Vector3 transform channel keys as a unit**: you can't keyframe `localScale.x` without
+also keying `y` and `z`. (This is why per-fixture RGB colour *can* share `LampProps.localScale.xyz`
+— r/g/b always move together as "colour" — but unrelated scalars can't.) Packing several
+parameters into one proxy's `position.xyz` would force animating one to key the others, silently
+breaking the "independent per-parameter toggle" promise. So each **animated** parameter gets its
+**own** proxy GameObject and reads a **single axis** (`localPosition.y`, matching the brightness
+convention and dodging rotation's gimbal quirks + scale's zero/negative gotchas). Static
+parameters have *no* proxy — just their float. Objects are cheap and only exist for params that
+actually animate (haze today).
+
 **Inspector UX.** The `animate` bool swaps which field the inspector shows: unticked exposes a
-**float field** (the static value); ticked swaps it for a **GameObject/Transform reference** (the
+**float field** (the static value); ticked swaps it for a **Transform reference** (that param's
 proxy). A small custom-editor concern, consistent with how the rest of the Diamond tooling
 projects UI onto data.
 
-**Per-parameter dirty-check.** Each animated channel keeps its own `_last<Param>` and skips the
-N-write when the value is unchanged this frame — same rationale as the per-fixture dirty-check.
-The per-frame cost of an animated channel is therefore just *one float compare* until it actually
-moves; the N-write only fires on a real change. With only haze animated, that's one compare per
-frame in the shared section, and the full N-write burst only when haze is actually ramping.
+**Per-parameter dirty-check.** Each animated channel keeps its own `_last<Param>` and skips its
+work when the value is unchanged this frame — same rationale as the per-fixture dirty-check. The
+per-frame cost of an animated channel is just *one bool check + one proxy read + one float compare*
+until it actually moves. The read happens in `Update()`'s **shared section — once per frame total,
+not per fixture.** Only the N-fixture write fires on a real change.
+
+**Two kinds of animated write — the intensity master is special.** The three atmosphere params
+each own a *shared shader key* (`_HazeDensity` etc.) independent of the per-fixture loop, so when
+one changes the manager pushes *just that key* to every beam block and re-`SetPropertyBlock`s,
+preserving the per-fixture keys already there (the emitter-size-seed coexistence guarantee). But
+`BeamIntensityScale` is a **multiplier** on each fixture's *animated* `_BeamIntensity`
+(`final = animatedIntensity * scale`), which is computed per-fixture — there's no single shared
+key to push. So its animated path is different: on a scale change, **invalidate the per-fixture
+dirty-check cache** (`_cacheValid` all `false`) so every fixture recomputes `_BeamIntensity` next
+frame through the normal `ApplyFixture` path. This reuses the existing apply rather than
+duplicating a multiply-and-push, and the N-recompute only fires when the scale actually moves.
 
 **Beam-block coexistence.** The atmosphere write and the per-fixture spread/intensity/colour
 writes both target each fixture's **beam** `MaterialPropertyBlock`. They must set *distinct* keys

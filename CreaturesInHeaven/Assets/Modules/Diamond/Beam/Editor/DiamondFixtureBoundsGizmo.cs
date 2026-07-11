@@ -27,13 +27,22 @@ public static class DiamondFixtureBoundsGizmo
         // Local-space AABB, mirroring ComputeBeamBounds: the beam fires along +Y
         // from y=0 to y=MaxBeamLength, so the box is centred halfway up and sized
         // by the shared lateral-extent formula on each axis.
+        //
+        // Haze/scatter take the manager's ceiling when that parameter is animated,
+        // exactly as the bake does -- otherwise the gizmo would draw the material-
+        // sized box while the bake wrote the (larger) ceiling-sized one, and future
+        // you would be confused about why the beam spills past the drawn bounds.
+        var manager = def.GetComponentInParent<DiamondManager>();
+        float maxHaze    = EffectiveMax(manager != null && manager.AnimateHaze,    manager != null ? manager.MaxHazeDensity     : 0f, def.MaxHazeDensity);
+        float maxScatter = EffectiveMax(manager != null && manager.AnimateScatter, manager != null ? manager.MaxScatterStrength : 0f, def.MaxScatterStrength);
+
         Vector2 emitter = def.FixtureEmitterSize;
         float halfX = DiamondBeamMath.LateralHalfExtent(
             emitter.x * 0.5f, def.MaxSpreadTan, def.MaxShearX,
-            def.MaxHazeDensity, def.MaxScatterStrength, def.MaxBeamLength);
+            maxHaze, maxScatter, def.MaxBeamLength);
         float halfZ = DiamondBeamMath.LateralHalfExtent(
             emitter.y * 0.5f, def.MaxSpreadTan, def.MaxShearZ,
-            def.MaxHazeDensity, def.MaxScatterStrength, def.MaxBeamLength);
+            maxHaze, maxScatter, def.MaxBeamLength);
 
         // Beam-space box (world metres), then divided by the cube counter-scale
         // into object space so localToWorld re-applies the cube's localScale and
@@ -78,4 +87,11 @@ public static class DiamondFixtureBoundsGizmo
         Gizmos.matrix = prevMatrix;
         Gizmos.color  = prevColor;
     }
+
+    // The max haze/scatter the bounds are sized to: the manager's ceiling when the
+    // parameter is animated, else the material value. Mirrors the bake's -1/ceiling
+    // rule (DiamondManagerDefinition.BakeFixtures), so the gizmo matches what the
+    // bake wrote.
+    private static float EffectiveMax(bool animated, float ceiling, float material)
+        => animated ? ceiling : material;
 }

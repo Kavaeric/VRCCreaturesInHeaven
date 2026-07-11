@@ -131,6 +131,13 @@ public class DiamondManagerDefinition : MonoBehaviour
             centreZ = (minZ + maxZ) * 0.5f;
         }
 
+        // Bounds ceilings for animated atmosphere. When haze/scatter animate, the
+        // culling AABB must be sized to the manager's runtime max (the ceiling the
+        // proxy is clamped to), not the material's static value. A static param
+        // passes -1 so ComputeBeamBounds uses the material, as before.
+        float hazeCeiling    = manager.AnimateHaze    ? manager.MaxHazeDensity     : -1f;
+        float scatterCeiling = manager.AnimateScatter ? manager.MaxScatterStrength : -1f;
+
         int missing = 0;
         for (int i = 0; i < count; i++)
         {
@@ -191,8 +198,9 @@ public class DiamondManagerDefinition : MonoBehaviour
             // Bake the beam's worst-case culling bounds once, here, so the runtime
             // loop never touches bounds. Unlike the property block, Renderer.bounds
             // IS serialized, so this one does persist into play. Definition computes
-            // it from the profile/material directly; safe in edit mode.
-            def.ComputeBeamBounds();
+            // it from the profile/material directly; safe in edit mode. The manager
+            // ceilings size the AABB for animated haze/scatter (else -1 = material).
+            def.ComputeBeamBounds(hazeCeiling, scatterCeiling);
         }
 
         // Capture groups by identity. Members are stored as GlobalObjectId strings

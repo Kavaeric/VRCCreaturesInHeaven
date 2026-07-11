@@ -77,7 +77,7 @@ public class DiamondManager : UdonSharpBehaviour
     // Baked per-fixture runtime flag: true for round (symmetric-cone) fixtures
     // using the BeamRound shader, which reads only _SpreadX. When set, the loop
     // skips the _SpreadZ write the round shader would ignore. This is the only
-    // genuinely-baked runtime scalar -- everything else animated comes from the
+    // genuinely-baked runtime scalar. Everything else animated comes from the
     // proxies, everything else static is edit-time-only.
     public bool[] SymmetricBeam;
 
@@ -87,37 +87,55 @@ public class DiamondManager : UdonSharpBehaviour
     // on the manager rather than per-material so they can be controlled centrally.
     //
     // Each parameter is independently static or animated (see DIAMOND-MANAGER.md).
-    // STATIC PATH ONLY for now: the value below is a serialized float written to
-    // every beam block once in Start() and never touched again -- zero per-frame
-    // cost. The animated path (an `animate` bool that swaps this float for a proxy
-    // transform read in Update, plus a per-parameter dirty-check and a max-haze
-    // bounds ceiling) is the next increment and is deliberately NOT wired yet.
     //
     // These seed the same shader floats the beam material used to hold
     // (_HazeDensity / _ScatterStrength / _Anisotropy); once written into the block
     // in Start they override the material's serialized values for that renderer.
-    public float HazeDensity     = 0.03f;
-    public float ScatterStrength = 0.5f;
-    public float Anisotropy      = 0.5f;
 
-    // --- Beam intensity master scale ---------------------------------
-    // Blanket multiplier on the animated beam-shaft intensity (_BeamIntensity),
-    // restoring the old shader-level multiplier -- now a single manager field
-    // rather than a per-material shader parameter, since the manager drives every
-    // beam. Scales ONLY the volumetric shaft, not the head/pool emission, so it's
-    // a "how thick do the visible shafts read" knob, not a master dim.
-    //
-    // Static: folded into the per-frame _BeamIntensity write (see ApplyFixture),
-    // so it costs nothing extra -- it rides the SetFloat we already pay. The
-    // dirty-check stays keyed on the animated value alone, which is correct as
-    // long as this scale is author-time only.
-    //
-    // CAVEAT: because unchanged fixtures skip their apply, changing this at
-    // RUNTIME won't take effect on a fixture until its animated intensity next
-    // moves. Fine for an authored knob; if it ever needs to be live, invalidate
-    // the dirty-check cache on change (set _cacheValid all false) so every fixture
-    // re-applies. Default 1 = no-op.
+    // Each parameter: Animate toggle, static float (used when off), and proxy
+    // transform (used when on). Every proxy is read on ONE axis, localPosition.y --
+    // one scalar per object so unrelated params never share a Vector3 (which keys
+    // as a unit) and their Animate toggles stay independent.
+
+    // Off: HazeDensity float. On: HazeProxy.localPosition.y -> _HazeDensity.
+    public bool AnimateHaze;
+    public float HazeDensity = 0.03f;
+    public Transform HazeProxy;
+
+    [Space]
+
+    // Off: ScatterStrength float. On: ScatterProxy.localPosition.y -> _ScatterStrength.
+    public bool AnimateScatter;
+    public float ScatterStrength = 0.5f;
+    public Transform ScatterProxy;
+
+    [Space]
+
+    // Bounds ceilings for the two animated params that widen the beam's lateral
+    // spill. The culling AABB is baked once (edit time), so if animated haze/scatter
+    // can exceed the value the bounds were sized for, the beam spills past the AABB
+    // and gets frustum-culled. These are the MAX the animated value may reach: the
+    // bake sizes bounds to them (when the matching Animate<X> is on), and the
+    // runtime CLAMPS the proxy read to them, so runtime can never exceed the baked
+    // worst case. Only consulted for an animated param; a static one sizes bounds
+    // from its own float. Re-bake after changing a ceiling.
+    public float MaxHazeDensity     = 0.15f;
+    public float MaxScatterStrength = 1f;
+
+    [Space]
+
+    // Off: Anisotropy float. On: AnisotropyProxy.localPosition.y -> _Anisotropy.
+    public bool AnimateAnisotropy;
+    public float Anisotropy = 0.5f;
+    public Transform AnisotropyProxy;
+
+    [Space]
+
+    // Off: BeamIntensityScale float. On: BeamIntensityScaleProxy.localPosition.y.
+    // Multiplier on per-fixture _BeamIntensity, not its own shader key.
+    public bool AnimateBeamIntensityScale;
     public float BeamIntensityScale = 1f;
+    public Transform BeamIntensityScaleProxy;
 
     // --- Per-fixture property blocks ---------------------------------
     // One MaterialPropertyBlock per fixture per renderer, allocated once in
@@ -130,8 +148,7 @@ public class DiamondManager : UdonSharpBehaviour
     // LampProps[i].gameObject, resolved once in Start. The steady-state read
     // path checks activeSelf every frame for every fixture; reading it as
     // lamp.gameObject.activeSelf is TWO extern calls (.gameObject, then
-    // .activeSelf). Caching the GameObject makes it one. At ~570 fixtures every
-    // frame that's ~570 externs removed from the always-paid floor.
+    // .activeSelf). Caching the GameObject makes it one.
     private GameObject[] _lampObjects;
 
     // --- Cached shader property IDs ----------------------------------
@@ -171,6 +188,16 @@ public class DiamondManager : UdonSharpBehaviour
     private Vector3[] _lastColour;
     private float[]   _lastSpread;
     private float[]   _lastBeamIntensity;
+
+    // --- Manager-wide animated-channel dirty-check -------------------
+    // Last-applied value per animated manager parameter, so the shared section
+    // skips its work when a value is unchanged. Only meaningful when the matching
+    // Animate<Param> bool is set. Seeded false so the first frame always applies.
+    private bool  _atmoCacheValid;
+    private float _lastHaze;
+    private float _lastScatter;
+    private float _lastAnisotropy;
+    private float _lastBeamIntensityScale;
 
     // --- Lifecycle ---------------------------------------------------
 
@@ -223,13 +250,11 @@ public class DiamondManager : UdonSharpBehaviour
             // Beamless fixtures (null beam renderer) just never get the block.
             //
             //   Emitter size   -- per-fixture static (from the bake).
-            //   Atmosphere     -- manager-wide static (haze/scatter/anisotropy),
-            //                     one shared value across all fixtures. Written on
-            //                     the same block, in the same SetPropertyBlock, so
-            //                     it costs no extra externs per fixture. When the
-            //                     animated haze path lands, haze moves out of this
-            //                     seed into the Update loop; scatter/anisotropy stay
-            //                     here as long as they're static.
+            //   Atmosphere     -- manager-wide, seeded here ONLY if static. An
+            //                     animated param is owned by the Update shared
+            //                     section (which pushes its proxy value on the
+            //                     first frame), so seeding it here would just be
+            //                     an immediately-overwritten write.
             Renderer beamRenderer = BeamRenderers == null ? null : BeamRenderers[i];
             if (beamRenderer != null)
             {
@@ -239,9 +264,9 @@ public class DiamondManager : UdonSharpBehaviour
                     _beamBlocks[i].SetFloat(_idEmitterHeight, FixtureEmitterSizes[i].y);
                 }
 
-                _beamBlocks[i].SetFloat(_idHazeDensity,     HazeDensity);
-                _beamBlocks[i].SetFloat(_idScatterStrength, ScatterStrength);
-                _beamBlocks[i].SetFloat(_idAnisotropy,      Anisotropy);
+                if (!AnimateHaze)       _beamBlocks[i].SetFloat(_idHazeDensity,     HazeDensity);
+                if (!AnimateScatter)    _beamBlocks[i].SetFloat(_idScatterStrength, ScatterStrength);
+                if (!AnimateAnisotropy) _beamBlocks[i].SetFloat(_idAnisotropy,      Anisotropy);
 
                 beamRenderer.SetPropertyBlock(_beamBlocks[i]);
             }
@@ -255,6 +280,13 @@ public class DiamondManager : UdonSharpBehaviour
         if (LampProps == null) return;
 
         int count = LampProps.Length;
+
+        // Manager-wide animated channels, handled ONCE per frame (not per fixture)
+        // before the per-fixture loop. Must run first so an intensity-scale change
+        // invalidates the per-fixture cache in time for the loop below to recompute
+        // this same frame.
+        ApplyAnimatedManagerChannels(count);
+
         for (int i = 0; i < count; i++)
         {
             Transform lamp = LampProps[i];
@@ -298,6 +330,81 @@ public class DiamondManager : UdonSharpBehaviour
 
             ApplyFixture(i, lampActive, brightness, colour, spread, beamIntensity);
         }
+    }
+
+    // --- Manager-wide animated channels ------------------------------
+
+    // Reads the animated manager-wide proxies once per frame (the shared section)
+    // and applies any that changed. Cheap when idle: for each animated parameter,
+    // a bool check + one proxy read + one float compare, and nothing more until the
+    // value actually moves. Only a real change fans out across the N fixtures.
+    //
+    // Two kinds of write:
+    //   - Haze/scatter/anisotropy each own a shared shader key: on change, push
+    //     just that key onto every beam block (preserving the per-fixture keys
+    //     already there) and re-SetPropertyBlock.
+    //   - BeamIntensityScale is a per-fixture multiplier (final _BeamIntensity =
+    //     animated * scale), so there's no single key to push. On change, invalidate
+    //     the per-fixture dirty-check cache so the loop below recomputes each
+    //     fixture's _BeamIntensity through the normal ApplyFixture path.
+    //
+    // _atmoCacheValid guards the first frame: false until the first read, so an
+    // animated channel always applies once regardless of its authored float.
+    private void ApplyAnimatedManagerChannels(int count)
+    {
+        // Read the current animated values (only where the proxy exists).
+        float haze       = (AnimateHaze              && HazeProxy               != null) ? HazeProxy.localPosition.y               : HazeDensity;
+        float scatter    = (AnimateScatter           && ScatterProxy            != null) ? ScatterProxy.localPosition.y            : ScatterStrength;
+        float aniso      = (AnimateAnisotropy        && AnisotropyProxy         != null) ? AnisotropyProxy.localPosition.y         : Anisotropy;
+        float intScale   = (AnimateBeamIntensityScale && BeamIntensityScaleProxy != null) ? BeamIntensityScaleProxy.localPosition.y : BeamIntensityScale;
+
+        // Clamp animated haze/scatter to the ceilings the bounds were baked to, so
+        // a proxy overshoot can't spill the beam past its (edit-time) culling AABB.
+        // Only clamp when animated -- a static value sizes its own bounds and needs
+        // no cap. Floor at 0 too, since a negative proxy read is meaningless here.
+        if (AnimateHaze)    haze    = Mathf.Clamp(haze,    0f, MaxHazeDensity);
+        if (AnimateScatter) scatter = Mathf.Clamp(scatter, 0f, MaxScatterStrength);
+
+        // First frame: seed the last-values and apply once. After that, only the
+        // channels that actually moved do any work.
+        bool first = !_atmoCacheValid;
+
+        bool hazeChanged    = AnimateHaze              && (first || haze     != _lastHaze);
+        bool scatterChanged = AnimateScatter           && (first || scatter  != _lastScatter);
+        bool anisoChanged   = AnimateAnisotropy        && (first || aniso    != _lastAnisotropy);
+        bool intChanged     = AnimateBeamIntensityScale && (first || intScale != _lastBeamIntensityScale);
+
+        // Push any changed shared-key atmosphere param across all beam blocks.
+        if (hazeChanged || scatterChanged || anisoChanged)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                Renderer beamRenderer = BeamRenderers[i];
+                if (beamRenderer == null) continue;
+
+                MaterialPropertyBlock beamBlock = _beamBlocks[i];
+                if (hazeChanged)    beamBlock.SetFloat(_idHazeDensity,     haze);
+                if (scatterChanged) beamBlock.SetFloat(_idScatterStrength, scatter);
+                if (anisoChanged)   beamBlock.SetFloat(_idAnisotropy,      aniso);
+                beamRenderer.SetPropertyBlock(beamBlock);
+            }
+        }
+
+        // A beam-intensity-scale change can't be pushed as a shared key -- the final
+        // value is per-fixture. Apply it by making the value current, then forcing
+        // every fixture to recompute in the loop below (this frame).
+        if (intChanged)
+        {
+            BeamIntensityScale = intScale;
+            for (int i = 0; i < count; i++)
+                _cacheValid[i] = false;
+        }
+
+        _lastHaze               = haze;
+        _lastScatter            = scatter;
+        _lastAnisotropy         = aniso;
+        _lastBeamIntensityScale = intScale;
+        _atmoCacheValid         = true;
     }
 
     // --- Application -------------------------------------------------

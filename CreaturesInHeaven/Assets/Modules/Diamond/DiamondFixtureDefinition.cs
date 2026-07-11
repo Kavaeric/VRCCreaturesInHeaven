@@ -172,16 +172,24 @@ public class DiamondFixtureDefinition : MonoBehaviour
     // driver's old ApplyBeamRendererBounds, sourced from profile/material rather
     // than mirrored driver fields, so it needs no driver. Safe in edit mode.
     // Unlike a property block, Renderer.bounds is serialized, so this persists.
-    public void ComputeBeamBounds()
+    //
+    // hazeCeiling / scatterStrengthCeiling override the material-sourced max haze
+    // and scatter when >= 0. The manager passes its animated-parameter ceilings so
+    // the AABB is sized to the runtime max, not the material's static value (which
+    // is only a starting point once the parameter animates). Pass a negative value
+    // (the default) to use the material -- correct for a static parameter.
+    public void ComputeBeamBounds(float hazeCeiling = -1f, float scatterStrengthCeiling = -1f)
     {
         if (BeamRenderer == null) return;
 
         // Worst-case sizing scalars, read from the shared bounds-scalar properties
-        // above so the bake and the gizmo can never diverge.
+        // above so the bake and the gizmo can never diverge. Haze and scatter take
+        // the manager's ceiling instead when one is supplied (>= 0), so animated
+        // atmosphere sizes the AABB to its runtime max rather than the material.
         float maxSpreadTan     = MaxSpreadTan;
         float maxBeamLength    = MaxBeamLength;
-        float maxHazeDensity   = MaxHazeDensity;
-        float maxScatterStr    = MaxScatterStrength;
+        float maxHazeDensity   = hazeCeiling           >= 0f ? hazeCeiling           : MaxHazeDensity;
+        float maxScatterStr    = scatterStrengthCeiling >= 0f ? scatterStrengthCeiling : MaxScatterStrength;
         float maxShearX        = MaxShearX;
         float maxShearZ        = MaxShearZ;
         Vector3 cubeLocalScale = CubeLocalScale;

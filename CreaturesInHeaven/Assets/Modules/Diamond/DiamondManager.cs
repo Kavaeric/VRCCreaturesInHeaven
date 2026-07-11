@@ -81,6 +81,44 @@ public class DiamondManager : UdonSharpBehaviour
     // proxies, everything else static is edit-time-only.
     public bool[] SymmetricBeam;
 
+    // --- Manager-wide atmosphere -------------------------------------
+    // Haze density, scatter strength, and anisotropy are properties of the room's
+    // air, not the fixture -- one value shared across every beam. They live here
+    // on the manager rather than per-material so they can be controlled centrally.
+    //
+    // Each parameter is independently static or animated (see DIAMOND-MANAGER.md).
+    // STATIC PATH ONLY for now: the value below is a serialized float written to
+    // every beam block once in Start() and never touched again -- zero per-frame
+    // cost. The animated path (an `animate` bool that swaps this float for a proxy
+    // transform read in Update, plus a per-parameter dirty-check and a max-haze
+    // bounds ceiling) is the next increment and is deliberately NOT wired yet.
+    //
+    // These seed the same shader floats the beam material used to hold
+    // (_HazeDensity / _ScatterStrength / _Anisotropy); once written into the block
+    // in Start they override the material's serialized values for that renderer.
+    public float HazeDensity     = 0.03f;
+    public float ScatterStrength = 0.5f;
+    public float Anisotropy      = 0.5f;
+
+    // --- Beam intensity master scale ---------------------------------
+    // Blanket multiplier on the animated beam-shaft intensity (_BeamIntensity),
+    // restoring the old shader-level multiplier -- now a single manager field
+    // rather than a per-material shader parameter, since the manager drives every
+    // beam. Scales ONLY the volumetric shaft, not the head/pool emission, so it's
+    // a "how thick do the visible shafts read" knob, not a master dim.
+    //
+    // Static: folded into the per-frame _BeamIntensity write (see ApplyFixture),
+    // so it costs nothing extra -- it rides the SetFloat we already pay. The
+    // dirty-check stays keyed on the animated value alone, which is correct as
+    // long as this scale is author-time only.
+    //
+    // CAVEAT: because unchanged fixtures skip their apply, changing this at
+    // RUNTIME won't take effect on a fixture until its animated intensity next
+    // moves. Fine for an authored knob; if it ever needs to be live, invalidate
+    // the dirty-check cache on change (set _cacheValid all false) so every fixture
+    // re-applies. Default 1 = no-op.
+    public float BeamIntensityScale = 1f;
+
     // --- Per-fixture property blocks ---------------------------------
     // One MaterialPropertyBlock per fixture per renderer, allocated once in
     // Start. Reused every frame so we never churn allocations. Index-aligned
@@ -109,6 +147,9 @@ public class DiamondManager : UdonSharpBehaviour
     private int _idSpreadZ;
     private int _idEmitterWidth;
     private int _idEmitterHeight;
+    private int _idHazeDensity;
+    private int _idScatterStrength;
+    private int _idAnisotropy;
 
     // Reused "off" colour so the dark path constructs nothing per frame.
     private Color _black;
@@ -144,6 +185,9 @@ public class DiamondManager : UdonSharpBehaviour
         _idSpreadZ       = VRCShader.PropertyToID("_SpreadZ");
         _idEmitterWidth  = VRCShader.PropertyToID("_EmitterWidth");
         _idEmitterHeight = VRCShader.PropertyToID("_EmitterHeight");
+        _idHazeDensity     = VRCShader.PropertyToID("_HazeDensity");
+        _idScatterStrength = VRCShader.PropertyToID("_ScatterStrength");
+        _idAnisotropy      = VRCShader.PropertyToID("_Anisotropy");
 
         _black = new Color(0f, 0f, 0f, 0f);
 
@@ -171,17 +215,34 @@ public class DiamondManager : UdonSharpBehaviour
             Transform lampT = LampProps == null ? null : LampProps[i];
             _lampObjects[i] = lampT == null ? null : lampT.gameObject;
 
-            // Seed the static emitter size into the per-fixture beam block once.
-            // It isn't serialized on the renderer, so it must be re-applied at
-            // runtime; writing it here (rather than each Update) means every later
-            // per-frame SetPropertyBlock(beamBlock) preserves it, since the loop
-            // only ever sets *other* keys on this same block. Beamless fixtures
-            // (null beam renderer) just never get the block applied.
+            // Seed the static per-fixture and manager-wide values into the beam
+            // block once. Neither is serialized on the renderer, so both must be
+            // re-applied at runtime; writing them here (rather than each Update)
+            // means every later per-frame SetPropertyBlock(beamBlock) preserves
+            // them, since the loop only ever sets *other* keys on this same block.
+            // Beamless fixtures (null beam renderer) just never get the block.
+            //
+            //   Emitter size   -- per-fixture static (from the bake).
+            //   Atmosphere     -- manager-wide static (haze/scatter/anisotropy),
+            //                     one shared value across all fixtures. Written on
+            //                     the same block, in the same SetPropertyBlock, so
+            //                     it costs no extra externs per fixture. When the
+            //                     animated haze path lands, haze moves out of this
+            //                     seed into the Update loop; scatter/anisotropy stay
+            //                     here as long as they're static.
             Renderer beamRenderer = BeamRenderers == null ? null : BeamRenderers[i];
-            if (beamRenderer != null && FixtureEmitterSizes != null)
+            if (beamRenderer != null)
             {
-                _beamBlocks[i].SetFloat(_idEmitterWidth,  FixtureEmitterSizes[i].x);
-                _beamBlocks[i].SetFloat(_idEmitterHeight, FixtureEmitterSizes[i].y);
+                if (FixtureEmitterSizes != null)
+                {
+                    _beamBlocks[i].SetFloat(_idEmitterWidth,  FixtureEmitterSizes[i].x);
+                    _beamBlocks[i].SetFloat(_idEmitterHeight, FixtureEmitterSizes[i].y);
+                }
+
+                _beamBlocks[i].SetFloat(_idHazeDensity,     HazeDensity);
+                _beamBlocks[i].SetFloat(_idScatterStrength, ScatterStrength);
+                _beamBlocks[i].SetFloat(_idAnisotropy,      Anisotropy);
+
                 beamRenderer.SetPropertyBlock(_beamBlocks[i]);
             }
         }
@@ -302,7 +363,9 @@ public class DiamondManager : UdonSharpBehaviour
             if (!beamRenderer.gameObject.activeSelf)
                 beamRenderer.gameObject.SetActive(true);
             beamBlock.SetColor(_idColor, drivenColour);
-            beamBlock.SetFloat(_idBeamIntensity, beamIntensity);
+            // Blanket master scale on the shaft intensity (default 1 = no-op).
+            // Folds into the write we already pay; see BeamIntensityScale.
+            beamBlock.SetFloat(_idBeamIntensity, beamIntensity * BeamIntensityScale);
             beamBlock.SetFloat(_idSpreadX, spread);
 
             // Round fixtures use the BeamRound shader, which reads only _SpreadX.

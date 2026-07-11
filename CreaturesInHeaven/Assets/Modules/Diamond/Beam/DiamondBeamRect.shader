@@ -37,7 +37,7 @@ Shader "Diamond/BeamRect"
         _CubeLocalScale ("Cube local scale (compensation)", Vector) = (1, 1, 1, 0)
         _Color ("Color", Color) = (1, 1, 1, 1)
         _BeamIntensity ("Intensity", Float) = 1.0
-        _HazeDensity ("Haze density (1/m)", Float) = 0.05
+        _HazeDensity ("Haze density (1/m)", Float) = 0.03
 
         // Lateral scattering: how strongly haze softens the beam edge with
         // distance. The edge is crisp at the emitter and blurs progressively toward
@@ -65,9 +65,9 @@ Shader "Diamond/BeamRect"
         // how forward-biased the haze scatters light toward the eye. This is what
         // makes the beam brighter when you look toward the emitter than across it.
         //   0        isotropic (even in all directions; a flat, view-independent look)
-        //   0 to 1   forward scatter, like real haze and fog (around 0.6 to 0.8)
+        //   0 to 1   forward scatter, like real haze and fog (around 0.5 to 0.8)
         //   -1 to 0  back scatter (unusual; brightest seen from behind the light)
-        _Anisotropy ("Anisotropy (HG g)", Range(-0.95, 0.95)) = 0.6
+        _Anisotropy ("Anisotropy (HG g)", Range(-0.95, 0.95)) = 0.5
 
         // Far-cap fade: fraction of the (auto-derived) beam length over which the
         // beam fades smoothly to zero approaching its far end, so it dissolves

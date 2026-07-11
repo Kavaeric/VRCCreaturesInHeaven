@@ -351,28 +351,65 @@ exists precisely so the single bake is stable and repeatable across re-runs.
   scene (a fixture moved but not re-baked). The map already tolerates unresolved fixtures; the
   same "re-bake to refresh" affordance the map's Reload button implies should stay obvious.
 
-## Manager-wide atmosphere (folds into the loop, post-milestone)
+## Manager-wide atmosphere (folds into the loop, next up)
 
 Haze density, anisotropy (Henyey–Greenstein *g*), and scatter strength are properties of the
 room's *air*, not the individual fixture, but today they live per-material (`_HazeDensity`,
 `_ScatterStrength`, `_Anisotropy`). In the data-oriented model they become manager-level values
-applied uniformly across all fixtures — physically correct and nearly free (one value shared
-across all `i`). Two ways to feed them, mapping to "does this ever change *during* playback?":
+applied uniformly across all fixtures — physically correct, and cheap because a change is *one*
+value pushed across the beam blocks rather than N independent per-fixture values.
 
-- **Flat, set once at Start.** A serialized float on the manager, applied across the manager at
-  startup. Cheapest; right if atmosphere is a static per-scene property.
-- **Animatable (proxy on the manager).** Give the manager its *own* proxy transforms and read them in
-  the loop's shared (non-per-fixture) section, applying across all fixtures that frame. Same
-  pattern as per-fixture channels, one level up — and the DMX/MIDI-friendly path, since
-  external control just writes the proxy.
+**Design decision: per-parameter animate toggles, not a global mode.** Each of the three
+parameters is independently either static or animated, because in practice they aren't used the
+same way — only **haze** is animated today; scatter and anisotropy are set-and-forget. A global
+"animate atmosphere" switch would force the two static channels to pay the animated path's cost
+for no reason. So each parameter gets its own `bool animate<Param>`:
 
-A hazier climax is exactly the kind of thing this world would want, so the animatable path is
-the more future-proof default — but starting flat and upgrading to a proxy later is trivial,
-so the choice can be deferred.
+- **Static (`animate == false`)** — a serialized **float** on the manager, written to every beam
+  block **once in `Start()`** and never touched again. **Zero per-frame cost.** This is the path
+  scatter and anisotropy take.
+- **Animated (`animate == true`)** — a **proxy `Transform`** on the manager carrying the value on
+  one axis (e.g. `hazeProxy.localPosition.y`), read in `Update()`'s shared (non-per-fixture)
+  section. Same convention as the per-fixture proxy channels, one level up. This is also the
+  DMX/MIDI-friendly path — external control just writes the proxy.
 
-- **Bounds implication.** The culling AABB is sized from worst-case haze/scatter. If the manager
-  drives atmosphere at runtime, the bake-time bounds (stage 1) must be sized to the manager's
-  **maximum allowed** atmosphere, or a raised haze spills past the AABB and gets culled.
+**Inspector UX.** The `animate` bool swaps which field the inspector shows: unticked exposes a
+**float field** (the static value); ticked swaps it for a **GameObject/Transform reference** (the
+proxy). A small custom-editor concern, consistent with how the rest of the Diamond tooling
+projects UI onto data.
+
+**Per-parameter dirty-check.** Each animated channel keeps its own `_last<Param>` and skips the
+N-write when the value is unchanged this frame — same rationale as the per-fixture dirty-check.
+The per-frame cost of an animated channel is therefore just *one float compare* until it actually
+moves; the N-write only fires on a real change. With only haze animated, that's one compare per
+frame in the shared section, and the full N-write burst only when haze is actually ramping.
+
+**Beam-block coexistence.** The atmosphere write and the per-fixture spread/intensity/colour
+writes both target each fixture's **beam** `MaterialPropertyBlock`. They must set *distinct* keys
+on the same block and re-`SetPropertyBlock` without clobbering each other — the same pattern the
+`Start()` emitter-size seed already relies on (write one key, later writes preserve it because they
+only touch other keys). Ordering matters: whichever writes last must have the other's keys already
+present on the block.
+
+### Bounds ceiling — the one genuinely new piece of data
+
+The culling AABB is sized from worst-case haze/scatter at bake time (stage 1). Today
+`DiamondFixtureDefinition.MaxHazeDensity` reads `_HazeDensity` straight off the **beam material** —
+one number doing double duty as *both* the shader's live value *and* the bounds' worst case,
+which works only because haze never changes.
+
+**Animating haze breaks that coupling.** The material's `_HazeDensity` becomes just a *starting*
+value; the real worst case is whatever ceiling the animation can reach. So:
+
+- The manager needs an explicit **max-haze ceiling** (a serialized float) that the animated haze
+  value is **clamped to** at runtime, and that **`ComputeBeamBounds` reads instead of the
+  material** when haze is animated. Without it, a raised haze spills past the baked AABB and the
+  beam gets culled mid-climax.
+- This is the only new *authored* datum the feature adds. The float/proxy value, the dirty-check
+  state, and the N-write are all mechanical. When wiring this, `MaxHazeDensity` (and the analogous
+  scatter/anisotropy getters if they ever animate) must switch their source from "material float"
+  to "manager ceiling" for any animated parameter, so the bake and the shader can't disagree —
+  exactly the single-source-of-truth discipline stage 2 applied to the beam-bounds scalars.
 
 ## Future hooks (noted, not designed here)
 

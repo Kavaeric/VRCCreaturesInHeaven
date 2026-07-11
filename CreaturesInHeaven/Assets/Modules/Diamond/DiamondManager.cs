@@ -188,7 +188,13 @@ public class DiamondManager : UdonSharpBehaviour
     private bool[]    _cacheValid;
     private bool[]    _lastLampActive;
     private float[]   _lastBrightness;
-    private Vector3[] _lastColour;
+    // Colour cached as three float arrays, not a Vector3[]. A Vector3 == compare is
+    // an Udon extern that boxes both operands (one extra heap alloc per fixture per
+    // frame); comparing the components as floats boxes nothing. Reading colour.x/.y/.z
+    // off the already-boxed 'colour' local is free -- the box happened at the read.
+    private float[]   _lastColourX;
+    private float[]   _lastColourY;
+    private float[]   _lastColourZ;
     private float[]   _lastZoom;
     private float[]   _lastFocus;
     private float[]   _lastBeamIntensity;
@@ -232,7 +238,9 @@ public class DiamondManager : UdonSharpBehaviour
         _cacheValid        = new bool[count];
         _lastLampActive    = new bool[count];
         _lastBrightness    = new float[count];
-        _lastColour        = new Vector3[count];
+        _lastColourX       = new float[count];
+        _lastColourY       = new float[count];
+        _lastColourZ       = new float[count];
         _lastZoom          = new float[count];
         _lastFocus         = new float[count];
         _lastBeamIntensity = new float[count];
@@ -302,14 +310,33 @@ public class DiamondManager : UdonSharpBehaviour
             // These are the only channels the animator drives per frame;
             // everything applied below is a deterministic function of them.
             // activeSelf comes off the cached GameObject (one extern, not two).
+            //
+            // Performance floor (profiled): each transform.local* read below is a
+            // Vector3-returning extern that Udon boxes onto its heap. Boxing is per
+            // extern CALL, not per component (.y is free once boxed), so up to 6
+            // boxes/fixture/frame -- the entire per-frame GC.Alloc baseline. Reading
+            // fewer transforms is the only lever, but the proxy-per-channel layout is
+            // a deliberate authoring choice, so we eat the boxes rather than repack.
+            // A real fix means rethinking how the animator drives fixtures.
             bool    lampActive    = _lampObjects[i].activeSelf;
             float   brightness    = lamp.localPosition.y;
             Vector3 colour        = lamp.localScale;
-            float   zoom          = 0f;
-            float   focus         = 1f;
-            float   beamIntensity = 1f;
 
-            Transform beam = BeamProps[i];
+            // Decide off-ness from lamp data alone, before touching the beam proxy.
+            // A dark fixture forces the beam to _black and never applies its
+            // zoom/focus/intensity, so reading them would just box three Vector3s
+            // for nothing. This is the one lever that reduces boxed reads without
+            // repacking the proxy layout: skip the beam reads entirely when off.
+            bool off = IsLightOff(lampActive, brightness, colour);
+
+            float zoom          = 0f;
+            float focus         = 1f;
+            float beamIntensity = 1f;
+
+            // Only read the beam proxy (3 boxed Vector3 externs) when the light is
+            // actually on. Off fixtures skip all three, and in a show where many
+            // fixtures are dark at once, that's the bulk of the per-frame boxing.
+            Transform beam = off ? null : BeamProps[i];
             if (beam != null)
             {
                 zoom          = beam.localEulerAngles.x;
@@ -317,28 +344,51 @@ public class DiamondManager : UdonSharpBehaviour
                 beamIntensity = beam.localScale.y;
             }
 
-            // Skip the whole apply when nothing the animator drives has moved
-            // since last frame. _cacheValid[i] guarantees the first apply.
-            if (_cacheValid[i]
-                && lampActive    == _lastLampActive[i]
-                && brightness    == _lastBrightness[i]
-                && colour        == _lastColour[i]
-                && zoom          == _lastZoom[i]
-                && focus         == _lastFocus[i]
-                && beamIntensity == _lastBeamIntensity[i])
+            // Dirty-check. An off fixture compares only the values it actually read
+            // (lampActive/brightness/colour) plus the off-state itself: its beam
+            // channels weren't read, so they must not participate in the compare or
+            // we'd test a stale local against last frame's value. An on fixture
+            // compares everything, as before. _cacheValid[i] guarantees first apply.
+            //
+            // _lastLampActive doubles as the "was off last frame" record: an off
+            // fixture writes lampActive (false when !active) but the off-state is
+            // fully captured by re-deriving off from the stored lamp values, so a
+            // still-off, still-same-colour fixture short-circuits here.
+            bool unchanged = _cacheValid[i]
+                && lampActive == _lastLampActive[i]
+                && brightness == _lastBrightness[i]
+                && colour.x   == _lastColourX[i]
+                && colour.y   == _lastColourY[i]
+                && colour.z   == _lastColourZ[i];
+            if (unchanged && !off)
             {
-                continue;
+                // On and lamp unchanged: still must check the beam channels, since
+                // those can move while the lamp holds steady (e.g. a zoom sweep).
+                unchanged = zoom          == _lastZoom[i]
+                         && focus         == _lastFocus[i]
+                         && beamIntensity == _lastBeamIntensity[i];
             }
+            if (unchanged)
+                continue;
 
             _lastLampActive[i]    = lampActive;
             _lastBrightness[i]    = brightness;
-            _lastColour[i]        = colour;
-            _lastZoom[i]          = zoom;
-            _lastFocus[i]         = focus;
-            _lastBeamIntensity[i] = beamIntensity;
+            _lastColourX[i]       = colour.x;
+            _lastColourY[i]       = colour.y;
+            _lastColourZ[i]       = colour.z;
+            // Only overwrite the cached beam channels when we actually read them.
+            // Leaving them untouched for an off fixture is correct: they're not
+            // compared while off, and when the fixture next turns on it's a lamp
+            // change (off -> on), so the dirty-check already forces a fresh apply.
+            if (!off)
+            {
+                _lastZoom[i]          = zoom;
+                _lastFocus[i]         = focus;
+                _lastBeamIntensity[i] = beamIntensity;
+            }
             _cacheValid[i]        = true;
 
-            ApplyFixture(i, lampActive, brightness, colour, zoom, focus, beamIntensity);
+            ApplyFixture(i, off, brightness, colour, zoom, focus, beamIntensity);
         }
     }
 
@@ -370,7 +420,7 @@ public class DiamondManager : UdonSharpBehaviour
 
         // Clamp animated haze/scatter to the ceilings the bounds were baked to, so
         // a proxy overshoot can't spill the beam past its (edit-time) culling AABB.
-        // Only clamp when animated -- a static value sizes its own bounds and needs
+        // Only clamp when animated: a static value sizes its own bounds and needs
         // no cap. Floor at 0 too, since a negative proxy read is meaningless here.
         if (AnimateHaze)    haze    = Mathf.Clamp(haze,    0f, MaxHazeDensity);
         if (AnimateScatter) scatter = Mathf.Clamp(scatter, 0f, MaxScatterStrength);
@@ -433,7 +483,9 @@ public class DiamondManager : UdonSharpBehaviour
 
     // Applies the driven state for fixture i to its renderers. Mirrors the old
     // DiamondFixtureDriver.ApplyMaterialProperties, but indexed into the arrays.
-    private void ApplyFixture(int i, bool lampActive, float brightness, Vector3 colour, float zoom, float focus, float beamIntensity)
+    // 'off' is computed by the caller (from lamp data alone) and passed in, so we
+    // don't re-derive it here -- the caller uses it to gate the beam reads too.
+    private void ApplyFixture(int i, bool off, float brightness, Vector3 colour, float zoom, float focus, float beamIntensity)
     {
         Renderer headRenderer = HeadRenderers[i];
         if (headRenderer == null)
@@ -446,7 +498,7 @@ public class DiamondManager : UdonSharpBehaviour
         Renderer beamRenderer = BeamRenderers[i];
         MaterialPropertyBlock beamBlock = _beamBlocks[i];
 
-        if (IsLightOff(lampActive, brightness, colour))
+        if (off)
         {
             headBlock.SetColor(_idEmissionColor, _black);
             headRenderer.SetPropertyBlock(headBlock);

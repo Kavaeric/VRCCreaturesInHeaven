@@ -2,10 +2,16 @@
 using UnityEditor;
 using UnityEngine;
 
+// RETIRED (DIAMOND-MANAGER.md, stage 3). The fixture map is now baked on-script
+// onto DiamondManagerDefinition (DiamondManagerDefinition.BakeFixtures) and read
+// live by DiamondEWinFixtureMap -- there is no FixtureMap.json anymore. This
+// window (and its DiamondFixtureMapWriter) are kept only as a reference for how
+// the JSON crawl/serialisation worked. Its menu item is disabled so nobody
+// accidentally generates a now-ignored JSON file; re-enable the [MenuItem]
+// below only if you deliberately want the old JSON export back.
+//
 // Editor window that crawls a chosen hierarchy root for FixtureDefinition components
 // and writes a FixtureMap.json to the specified path.
-//
-// Open via: Window > Lighting > Generate Fixture Map
 public class DiamondEWinGenerateMap : EditorWindow
 {
     private GameObject _root;
@@ -15,7 +21,9 @@ public class DiamondEWinGenerateMap : EditorWindow
     // Project-relative path assembled from the folder and filename fields.
     private string OutputPath => $"{_outputFolder.TrimEnd('/', '\\')}/{_outputFileName}";
 
-    [MenuItem("Tools/Diamond/Generate fixture map...")]
+    // Menu item disabled: retired path (see header). Left in place, commented,
+    // so the wiring is still visible for reference.
+    // [MenuItem("Tools/Diamond/Generate fixture map...")]
     private static void Open() => GetWindow<DiamondEWinGenerateMap>("Generate fixture map");
 
     private void OnGUI()

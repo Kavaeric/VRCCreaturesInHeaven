@@ -1,9 +1,15 @@
 # Diamond fixture manager: restructuring plan
 
 **Status:** accepted and in progress. Stage 1 (manager runtime + driver replacement) is
-complete and profiler-verified. Stage 2 (editor tooling) and Stage 3 (FixtureMap / stable
-identity) remain. `DiamondFixtureDriver` is disabled at runtime but not yet deleted — it's
-still read by edit-time tooling (see the retirement note below).
+complete and profiler-verified. Stage 2 (editor tooling) is complete: all edit-time tooling
+is repointed off `DiamondFixtureDriver` onto `DiamondFixtureDefinition`. Stage 3 (FixtureMap
+centralisation + stable identity) is **complete**: the fixture map is baked on-script onto
+`DiamondManagerDefinition` and read live by the map window; the JSON path is retired. All five
+stage-3 migration steps are done and verified in-editor (bake, map draw, selection, live
+animation). Two now-dead subsystems are **kept in the repo deliberately** as reference: the
+per-fixture `DiamondFixtureDriver` (apply/dirty-check/bounds math) and the JSON map path
+(`DiamondFixtureMapWriter` / `DiamondEWinGenerateMap`, marked `RETIRED` with its menu item
+disabled). What remains is post-milestone: manager-wide atmosphere and the future hooks.
 
 ## Background
 
@@ -195,31 +201,47 @@ the actual reduction came from killing per-frame allocation. The architecture ch
 prerequisite that made the allocation fix reachable at all — with 570 separate behaviours there
 was no single place to cache the IDs.
 
-### Stage 2 — Editor / inspector tooling
+### Stage 2 — Editor / inspector tooling ✅ complete
 
-The custom inspectors and property windows (`DiamondEWinFixtureProperties`, etc.) read and
-write fixture state from the manager's arrays by index. Expected to be a small change: these
-tools already read material and object properties directly off each fixture object; the added
-work is resolving a selected fixture to its manager index and reading/writing there. Verify
-per-fixture editing still works.
+The custom inspectors and property windows read and write fixture state through
+`DiamondFixtureDefinition`, which is now the single owner of the per-fixture object graph
+(`Head`, `LampProps`, `BeamProps`, `HeadRenderer`, `BeamRenderer`) and the source of all
+derived values. Every edit-time consumer was repointed off `DiamondFixtureDriver`; the driver
+is now dead code.
 
-> **Driver retirement note.** `DiamondFixtureDriver`'s *runtime* role is already gone — it's
-> disabled on the fixtures, which is the state the 2.41 ms result was measured in, so there is
-> no remaining runtime cost to chase. But the component is **not deleted**, because five
-> edit-time subsystems still read fields/helpers that live only on it:
->
-> - `DiamondEInsFixtureDefinition` (inspector sliders) — reads `LampProps`/`BeamProps`/`Head`.
-> - `DiamondFixtureMapPreview` (scene preview) — reads refs + `EmitterSize`/`SymmetricBeam`.
-> - `DiamondEWinFixtureMap`, `DiamondEWinFixtureProperties` (map/property windows) — driver lookup.
-> - `DiamondFixtureBoundsGizmo` — reads the driver's bounds scalars (`MaxSpreadTan`,
->   `MaxShear*`, `MaxHazeDensity`, `CubeLocalScale`, `SafeCubeLocalScale()`), which were
->   *inlined* into `Definition.ComputeBeamBounds` rather than exposed as fields.
-> - `DiamondBakeryDriver` (`#if BAKERY_INCLUDED`) — reads `EmissionColor`/`EmitterSize`/`BeamRenderer`.
->
-> Deleting the driver means repointing all of these to `DiamondFixtureDefinition` (and
-> re-exposing the bounds scalars it needs). That's the substance of Stage 2 plus the Bakery
-> path — deferred deliberately so the runtime win could be banked without risking the authoring
-> and bake tooling.
+**What was done:**
+
+- **Exposed the bounds scalars on `DiamondFixtureDefinition`** as public properties
+  (`MaxSpreadTan`, `MaxBeamLength`, `MaxHazeDensity`, `MaxScatterStrength`, `MaxShearX/Z`,
+  `CubeLocalScale`, `SafeCubeLocalScale()`), derived from the profile + beam material.
+  `ComputeBeamBounds` now consumes these same properties, so the bake and the gizmo read one
+  source and can't disagree. This was the only consumer that needed genuinely new API rather
+  than a reference swap.
+- **De-drivered `Definition`'s own authoring methods.** `SyncColour` (renamed from
+  `SyncDriverColour`), `SyncFixtureEmitterSize`, and `ApplyProfileDefaults` write the
+  Definition's own proxy transforms directly. The edit-time emitter-size property-block push
+  (was `driver.ApplyBeamEmitterSize`) is inlined into `SyncFixtureEmitterSize`.
+- **Repointed all consumers** (six, not five — a Bakery-side one was behind `#if
+  BAKERY_INCLUDED` and missed the first audit):
+  - `DiamondEInsFixtureDefinition` — reads `target` directly (it's already a Definition); the
+    "no driver" warning path removed.
+  - `DiamondFixtureMapPreview` — refs + `FixtureEmitterSize`/`SymmetricBeam` off `def`.
+  - `DiamondEWinFixtureMap` — dropped the `_fixtureDrivers` parallel list entirely; graph read
+    off `_fixtureDefinitions`. (Added a `Profile != null` guard on the brightness read — the
+    old path implicitly relied on the driver's presence and could NRE otherwise.)
+  - `DiamondEWinFixtureProperties` — selection tuple `(def, driver, profile)` → `(def, profile)`.
+  - `DiamondFixtureBoundsGizmo` — `[DrawGizmo]` retargeted to `Definition`; reads the new
+    scalar API.
+  - `DiamondBakeryDriver` + `DiamondBakeryLights` (`#if BAKERY_INCLUDED`) — read
+    `EmissionColor`/`FixtureEmitterSize`/`BeamRenderer`/graph off `Definition`.
+
+> **Driver retirement note (updated).** `DiamondFixtureDriver` is now **fully dead code** —
+> nothing reads it at runtime (disabled on fixtures, the state the 2.41 ms result was measured
+> in) or at edit time (all six consumers above are repointed). It is **kept in the repo
+> deliberately**, not deleted, as a reference for how the per-fixture apply, dirty-check, and
+> bounds math were implemented (its comments carry a lot of hard-won detail). If it's ever
+> actually removed, the cleanup is: delete `DiamondFixtureDriver.cs` (+ `.meta` + the compiled
+> `.asset`) and strip the now-inert `DiamondFixtureDriver` component off the fixture prefabs.
 
 ### Stage 3 — FixtureMap centralisation + stable identity
 
@@ -227,12 +249,107 @@ Fold FixtureMap data onto the manager, and solve index stability: the main new s
 of the SoA layout. Once fixture `i` is described by N parallel arrays, they must stay
 index-aligned forever; adding/removing/reordering a fixture must move every array in
 lockstep. The fixture map already hit this and stores group members by `GlobalObjectId`, not
-index, because regen reassigns indices. So:
+index, because regen reassigns indices.
 
-- Give each fixture a **stable identity** (GlobalObjectId / GUID) and a stable identity→index
-  mapping; rebuild the arrays atomically from that on bake.
-- Store the FixtureMap either as an **associated sidecar file** keyed by identity, or
-  **serialised directly** into a manager script. (Open decision — see below.)
+**Decisions made** (were open questions):
+
+- **Storage: on-script serialisation, not a sidecar file.** No floating `FixtureMap.json` /
+  `.selections.json` to manage; the data lives in the scene on the manager objects and diffs
+  with the scene.
+- **Layout data lives on `DiamondManagerDefinition`, not `DiamondManager`.** The Definition is
+  edit-time-only (stripped at build), so the map's presentation data (position/size/yaw/shape)
+  and groups never ship into the runtime build. `DiamondManager` keeps only its lean runtime
+  arrays. The map window reads the Definition.
+
+#### The core realisation: two crawls become one
+
+Today there are **two independent crawls** that each `GetComponentsInChildren<DiamondFixtureDefinition>()`
+and each record a `GlobalObjectId`, but produce **separately-ordered index spaces**:
+
+1. `DiamondManagerDefinition.BakeFixtures` → the manager's runtime graph arrays (renderers,
+   proxies, emitter sizes, `symmetricBeam`, `sceneIds`).
+2. `DiamondFixtureMapWriter.Write` → `FixtureMap.json`: the *presentation* data the runtime
+   doesn't need (XZ position, node size, yaw, shape) plus groups as index lists, consumed by
+   `DiamondEWinFixtureMap`.
+
+Nothing guarantees these agree on "fixture `i`". Stage 3 makes them **one bake, one crawl, one
+identity→index map**, so a single "fixture `i`" means the same row to the runtime loop, the map
+window, the bounds bake, and every group. That unification *is* the stage — the identity scheme
+exists precisely so the single bake is stable and repeatable across re-runs.
+
+#### Data model after the fold
+
+- **`DiamondManager` (runtime, Udon)** — unchanged in spirit. Keeps the lean runtime arrays it
+  has today (`LampProps`, `BeamProps`, `Heads`, `HeadRenderers`, `BeamRenderers`,
+  `SymmetricBeam`, `FixtureEmitterSizes`, `SceneIds`, `Fixtures`). No layout data.
+- **`DiamondManagerDefinition` (edit-time, stripped)** — grows the map's baked record:
+  per-fixture layout arrays (`mapPositions`, `mapSizes`, `mapYaw`, `mapShape` — index-aligned
+  with the manager's arrays and each other), the **groups** (members stored by identity, not
+  index, so a re-bake can't misassign them — mirroring how the map already persists selection
+  groups by GID), and the persisted **selection groups** (also by identity). The single
+  `BakeFixtures` produces all of it in one crawl.
+
+#### The identity → index scheme
+
+- Each fixture's stable identity is its `GlobalObjectId` string (already recorded on both sides
+  today — `DiamondManagerDefinition.cs` and `FixtureEntry.sceneObject`).
+- The bake builds **one** ordered list of fixtures (the crawl), assigns index `i` = position in
+  that list, and writes `SceneIds[i]` alongside every other array. Index is derived from
+  identity order, not the reverse.
+- Anything stored *across* bakes (groups, selection groups) is keyed by identity string and
+  resolved to the current index at load time — exactly the translation
+  `DiamondEWinFixtureMap.LoadSelectionGroups` already does at the JSON boundary. That code moves
+  from "file boundary" to "read-from-Definition boundary" but the pattern is identical.
+- **Atomic rebuild:** a re-bake rebuilds *every* parallel array from the single crawl in one
+  pass (as `BakeFixtures` already does for the runtime arrays). No array is ever edited in
+  isolation, so they can't drift out of alignment.
+
+#### Migration steps
+
+- [X] **Extend the bake.** Layout capture (yaw via a copied `ComputeMapYaw`, XZ→canvas position
+      centred on the rig bbox, node size/shape from profile) is folded into
+      `DiamondManagerDefinition.BakeFixtures`, writing `MapNames`/`MapPositions`/`MapSizes`/
+      `MapYaw`/`MapRound` on the Definition index-aligned with the runtime arrays. One crawl feeds
+      both. *(Verified: bake reports correct fixture + group counts, arrays populate.)*
+- [X] **Move groups onto the bake.** `BakeGroups` captures `DiamondFixtureGroupDefinition`
+      membership as `BakedGroup` records on the Definition, members stored by GlobalObjectId (not
+      index). Done in the same bake pass.
+- [X] **Repoint the map window.** `DiamondEWinFixtureMap` takes a `DiamondManagerDefinition`
+      picker (an `ObjectField` in the UXML) instead of a JSON file. `LoadFromManager` synthesises
+      the `FixtureEntry` list from the baked `Map*` arrays (so the layout math is untouched) and
+      reads scene objects/definitions straight off `manager.Fixtures[]` — the GID re-resolution
+      dance is gone (live references now). Identity→index resolution survives as one
+      `BuildSceneIdToIndex` helper. *(Verified: map draws, selection + live state animation work.)*
+- [X] **Move selection-group persistence onto the Definition.** The `.selections.json` sidecar is
+      replaced by `DiamondManagerDefinition.SelectionGroups` (by identity); `SaveSelectionGroups`/
+      `LoadSelectionGroups` read/write it via `Undo.RecordObject` + `SetDirty`.
+- [X] **Retire the JSON path.** `DiamondFixtureMapWriter`, `DiamondEWinGenerateMap`, and the JSON
+      parse/serialisation types in `DiamondFixtureMapLayout` (`ParseMap`/`MapWrapper`/
+      `SerialisedSelectionGroup`/`SelectionGroupFile`) are now dead. **Kept as reference** (per the
+      driver precedent), but each is marked `RETIRED` and — critically — the generate window's
+      `[MenuItem]` is **commented out**, so nobody can accidentally generate a now-ignored JSON
+      file. The layout *math* (`ComputeLogicalLayout`, `SweepAxis`, etc.) stays live.
+
+> **JSON-path retirement note.** Unlike the driver (inert once disconnected), the generate window
+> had a live Tools-menu entry, so "keep as reference" required neutralising that entry, not just
+> leaving the file. If the old JSON export is ever wanted back, re-enable the commented `[MenuItem]`
+> in `DiamondEWinGenerateMap`. Full deletion (if ever): remove `DiamondFixtureMapWriter.cs` +
+> `DiamondEWinGenerateMap.cs` (+ `.meta`s) and strip the retired JSON types from
+> `DiamondFixtureMapLayout`.
+
+#### Sharp edges
+
+- **`GlobalObjectId` cost.** `GetGlobalObjectIdSlow` is slow (the map deliberately avoids
+  `...ToObjectSlow` by building a reverse cache). Fine at bake time (manual, infrequent), but
+  the bake now calls it for every fixture in one pass — acceptable, and no worse than the two
+  separate crawls did combined.
+- **Two Definitions, one component name.** `DiamondFixtureDefinition` (per-fixture) and
+  `DiamondManagerDefinition` (per-manager) are distinct; the map window keys off the *manager's*
+  Definition to get the fixture list, then reads each fixture's own `DiamondFixtureDefinition`
+  for graph details. Keep the two roles clear in the window code.
+- **Stale bake vs live scene.** Because the bake is manual, the Definition's layout can lag the
+  scene (a fixture moved but not re-baked). The map already tolerates unresolved fixtures; the
+  same "re-bake to refresh" affordance the map's Reload button implies should stay obvious.
 
 ## Manager-wide atmosphere (folds into the loop, post-milestone)
 
@@ -301,9 +418,10 @@ The data-oriented substrate is the enabler for these; none are designed yet:
   a hazy room and a clear one, or godrays with different scatter than a stage rig in the same
   scene), atmosphere may want to live on *groups* rather than the manager root. Worth deciding
   before the atmosphere work hardens.
-- **FixtureMap storage.** Sidecar file keyed by fixture identity, or serialised directly into
-  a manager script? Sidecar keeps the scene light and diffs cleanly; in-script keeps everything
-  in one place but bloats the manager object.
+- ~~**FixtureMap storage.** Sidecar file keyed by fixture identity, or serialised directly into
+  a manager script?~~ **Resolved (stage 3):** serialised on-script, on `DiamondManagerDefinition`
+  (edit-time, build-stripped) so no layout data ships into the runtime build and there are no
+  floating JSON/sidecar files to manage. See stage 3.
 
 ## Suggested stopping point
 

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using FixtureEntry       = DiamondFixtureMapLayout.FixtureEntry;
@@ -9,8 +10,6 @@ using GroupEntry         = DiamondFixtureMapLayout.GroupEntry;
 using FixtureLayout      = DiamondFixtureMapLayout.FixtureLayout;
 using GroupLayout        = DiamondFixtureMapLayout.GroupLayout;
 using SelectionGroup     = DiamondFixtureMapLayout.SelectionGroup;
-using SerialisedSelectionGroup = DiamondFixtureMapLayout.SerialisedSelectionGroup;
-using SelectionGroupFile    = DiamondFixtureMapLayout.SelectionGroupFile;
 
 // Graphical fixture map window. Displays fixtures loaded from a FixtureMap.json
 // (produced by DiamondEWinGenerateMap) as labelled nodes on a 2D canvas.
@@ -83,7 +82,15 @@ public class DiamondEWinFixtureMap : EditorWindow
     private List<UnityEngine.Object>   _fixtureObjects      = new();  // resolved scene objects, parallel to _fixtures (null if unresolved)
     private List<UnityEngine.Object>   _fixtureDefinitions  = new();  // resolved FixtureDefinition components (also the object-graph source)
     private List<GroupEntry>           _groups              = new();
-    private string                     _mapPath             = "";
+
+    // The manager whose baked fixture map this window displays. The map data
+    // (fixtures, layout, groups) is baked onto DiamondManagerDefinition by
+    // DiamondManagerDefinition.BakeFixtures -- the on-script replacement for the
+    // old FixtureMap.json (see DIAMOND-MANAGER.md, stage 3). The window reads it
+    // directly; there is no file to load.
+    private DiamondManagerDefinition   _managerDef          = null;
+    private ObjectField                _managerField;
+
     private Theme                      _theme               = Theme.Default();
 
     // Live update debouncing (30fps = ~33ms per frame)
@@ -154,9 +161,6 @@ public class DiamondEWinFixtureMap : EditorWindow
     // Minimum margin from canvas edge to outermost node centre.
     private const float CanvasPadding = 20f;
 
-    // Selection groups file extension
-    private string SelectionsPath => string.IsNullOrEmpty(_mapPath) ? null : _mapPath + ".selections.json";
-
     // Tunable layout parameters: bound to footer fields.
     private float _minGap                   = 0.1f;
     private float _gapCompressionK          = 4f;
@@ -222,7 +226,16 @@ public class DiamondEWinFixtureMap : EditorWindow
         _canvas.onGUIHandler = DrawCanvas;
         _canvas.RegisterCallback<GeometryChangedEvent>(_ => UpdateViewport());
 
-        rootVisualElement.Q<Button>("load-btn").clicked   += PromptLoad;
+        // The window's input is a manager reference now, not a JSON path: the map
+        // is baked onto a DiamondManagerDefinition. The ObjectField lives in the
+        // UXML; wire its type (which UXML can't express for a custom component)
+        // and change handler here.
+        _managerField = rootVisualElement.Q<ObjectField>("manager-field");
+        _managerField.objectType        = typeof(DiamondManagerDefinition);
+        _managerField.allowSceneObjects = true;
+        _managerField.SetValueWithoutNotify(_managerDef);
+        _managerField.RegisterValueChangedCallback(e => SetManager(e.newValue as DiamondManagerDefinition));
+
         rootVisualElement.Q<Button>("reload-btn").clicked += Reload;
 
         var viewSettingsPanel = rootVisualElement.Q<VisualElement>("view-settings-panel");
@@ -288,27 +301,42 @@ public class DiamondEWinFixtureMap : EditorWindow
 
         LoadTheme();
 
-        // Restore last-used path across domain reloads.
-        string saved = EditorPrefs.GetString("EditorFixtureMap.lastPath", "");
-        if (!string.IsNullOrEmpty(saved) && File.Exists(saved))
-            LoadFrom(saved);
+        // Restore the last-used manager across domain reloads. It's a scene
+        // object, so we persist its GlobalObjectId string and resolve it back.
+        string savedGid = EditorPrefs.GetString("EditorFixtureMap.lastManagerGid", "");
+        if (!string.IsNullOrEmpty(savedGid) &&
+            GlobalObjectId.TryParse(savedGid, out var gid))
+        {
+            var obj = GlobalObjectId.GlobalObjectIdentifierToObjectSlow(gid) as GameObject;
+            var def = obj != null ? obj.GetComponent<DiamondManagerDefinition>() : null;
+            if (def != null)
+            {
+                _managerField.SetValueWithoutNotify(def);
+                SetManager(def);
+            }
+        }
     }
 
     // --- Loading -----------------------------------------------------
 
-    private void PromptLoad()
+    // Points the window at a manager and rebuilds the view from its baked map.
+    // The single entry point for changing the source (picker, domain-reload
+    // restore, reload button all route through here).
+    private void SetManager(DiamondManagerDefinition def)
     {
-        string dir  = string.IsNullOrEmpty(_mapPath) ? "Assets" : Path.GetDirectoryName(_mapPath);
-        string path = EditorUtility.OpenFilePanel("Open Fixture Map", dir, "json");
-        if (!string.IsNullOrEmpty(path))
-            LoadFrom(path);
+        _managerDef = def;
+
+        // Persist the choice by identity so it survives domain reloads.
+        EditorPrefs.SetString("EditorFixtureMap.lastManagerGid",
+            def != null ? GlobalObjectId.GetGlobalObjectIdSlow(def.gameObject).ToString() : "");
+
+        LoadFromManager();
     }
 
     private void Reload()
     {
         LoadTheme();
-        if (!string.IsNullOrEmpty(_mapPath))
-            LoadFrom(_mapPath);
+        LoadFromManager();
     }
 
     private void LoadTheme()
@@ -328,156 +356,184 @@ public class DiamondEWinFixtureMap : EditorWindow
         }
     }
 
-    private void LoadFrom(string absolutePath)
+    // Rebuilds the whole view from the currently-selected manager's baked map.
+    // Replaces the old JSON load: the fixture list, layout, scene objects, and
+    // groups all come off DiamondManagerDefinition (and its sibling
+    // DiamondManager) directly, so there is no file parse and no GID
+    // re-resolution -- the scene references are live on the manager's arrays.
+    private void LoadFromManager()
     {
-        try
+        _fixtures           = new List<FixtureEntry>();
+        _fixtureObjects     = new List<UnityEngine.Object>();
+        _fixtureDefinitions = new List<UnityEngine.Object>();
+        _groups             = new List<GroupEntry>();
+
+        if (_managerDef == null)
         {
-            string json = File.ReadAllText(absolutePath);
-            DiamondFixtureMapLayout.ParseMap(json, out _fixtures, out _groups);
-
-            _mapPath  = absolutePath;
-            EditorPrefs.SetString("EditorFixtureMap.lastPath", absolutePath);
-
-            string projectRelative = DiamondFixtureMapLayout.ToProjectRelative(absolutePath);
-            _pathLabel.text = projectRelative ?? absolutePath;
-            ResolveSceneObjects();
-
-            _zoom = 1f;
-            _panOffset = Vector2.zero;
-            ComputeLogicalLayout();
-            UpdateViewport();
-
-            LoadSelectionGroups();
-            RefreshSgList();
-
-            _canvas.MarkDirtyRepaint();
+            _pathLabel.text = "No manager selected";
         }
-        catch (Exception ex)
+        else
         {
-            Debug.LogError($"  [Diamond] Failed to load {absolutePath}: {ex.Message}");
+            var manager = _managerDef.GetComponent<DiamondManager>();
+            if (manager == null)
+            {
+                _pathLabel.text = $"{_managerDef.name}: no DiamondManager sibling";
+                Debug.LogWarning($"[Diamond] '{_managerDef.name}' has no DiamondManager to read fixtures from.", _managerDef);
+            }
+            else
+            {
+                _pathLabel.text = string.IsNullOrEmpty(_managerDef.DisplayName)
+                    ? _managerDef.name : _managerDef.DisplayName;
+
+                BuildFixturesFromManager(manager);
+                BuildGroupsFromDefinition();
+            }
+        }
+
+        _zoom = 1f;
+        _panOffset = Vector2.zero;
+        ComputeLogicalLayout();
+        UpdateViewport();
+
+        LoadSelectionGroups();
+        RefreshSgList();
+
+        _canvas.MarkDirtyRepaint();
+    }
+
+    // Synthesises the FixtureEntry list (which the layout math consumes) and the
+    // parallel scene-object / definition lists from the manager's baked arrays.
+    // The manager's Fixtures[] already holds live scene references index-aligned
+    // with the Definition's Map* arrays, so no GID resolution is needed here.
+    private void BuildFixturesFromManager(DiamondManager manager)
+    {
+        int count = manager.Fixtures != null ? manager.Fixtures.Length : 0;
+
+        _fixtures           = new List<FixtureEntry>(count);
+        _fixtureObjects     = new List<UnityEngine.Object>(count);
+        _fixtureDefinitions = new List<UnityEngine.Object>(count);
+
+        for (int i = 0; i < count; i++)
+        {
+            GameObject go = manager.Fixtures[i];
+
+            // Rebuild a FixtureEntry from the baked layout arrays on the
+            // Definition. Guarded reads: a stale or partial bake shouldn't throw.
+            _fixtures.Add(new FixtureEntry
+            {
+                name        = MapArray(_managerDef.MapNames, i, go != null ? go.name : $"Fixture {i}"),
+                sceneObject = MapArray(manager.SceneIds, i, ""),
+                shape       = MapArray(_managerDef.MapRound, i, false) ? "round" : "rect",
+                position    = ToFixturePos(MapArray(_managerDef.MapPositions, i, Vector2.zero)),
+                size        = ToFixturePos(MapArray(_managerDef.MapSizes, i, Vector2.zero)),
+                yaw         = MapArray(_managerDef.MapYaw, i, 0f),
+            });
+
+            _fixtureObjects.Add(go);
+            _fixtureDefinitions.Add(go != null ? go.GetComponent<DiamondFixtureDefinition>() : null);
         }
     }
 
-    // Persist groups by each member's stable GlobalObjectId (FixtureEntry.sceneObject)
-    // rather than its array index. Indices are reassigned whenever the map is regenerated,
-    // so index-based groups would silently point at the wrong fixtures after a rebuild;
-    // GIDs are tied to the GameObject and survive regeneration. Runtime groups stay
-    // index-based — we only translate index -> GID here at the file boundary.
+    // Rebuilds the display groups from the Definition's baked group list. Members
+    // are stored by identity (GlobalObjectId), so resolve each to its current
+    // fixture index via the manager's SceneIds. Dropped if it no longer maps.
+    private void BuildGroupsFromDefinition()
+    {
+        _groups = new List<GroupEntry>();
+        if (_managerDef.Groups == null) return;
+
+        var indexBySceneId = BuildSceneIdToIndex();
+
+        foreach (var g in _managerDef.Groups)
+        {
+            var indices = new List<int>();
+            if (g.memberIds != null)
+                foreach (string id in g.memberIds)
+                    if (indexBySceneId.TryGetValue(id, out int idx))
+                        indices.Add(idx);
+
+            _groups.Add(new GroupEntry { name = g.name, sceneObject = g.sceneId, fixtures = indices });
+        }
+    }
+
+    // GlobalObjectId string -> current fixture index, from the synthesised
+    // _fixtures. The single translation point groups/selections resolve against.
+    private Dictionary<string, int> BuildSceneIdToIndex()
+    {
+        var map = new Dictionary<string, int>(_fixtures.Count);
+        for (int i = 0; i < _fixtures.Count; i++)
+        {
+            string id = _fixtures[i].sceneObject;
+            if (!string.IsNullOrEmpty(id) && !map.ContainsKey(id))
+                map[id] = i;
+        }
+        return map;
+    }
+
+    // Persist selection groups onto the Definition, by member identity
+    // (GlobalObjectId) rather than array index -- indices are reassigned on every
+    // re-bake, so index-based groups would silently point at the wrong fixtures.
+    // This replaces the old .selections.json sidecar: the data now lives on the
+    // Definition and diffs with the scene.
     private void SaveSelectionGroups()
     {
-        string path = SelectionsPath;
-        if (path == null) return;
+        if (_managerDef == null) return;
 
-        var selectionGroups = new List<SerialisedSelectionGroup>(_selectionGroups.Count);
+        var persisted = new List<DiamondManagerDefinition.SelectionGroup>(_selectionGroups.Count);
         foreach (var g in _selectionGroups)
         {
-            var gids = new List<string>();
+            var ids = new List<string>();
             if (g.fixtures != null)
             {
                 foreach (int idx in g.fixtures)
                 {
-                    // Drop indices that no longer resolve or have no stable GID.
                     if (idx < 0 || idx >= _fixtures.Count) continue;
-                    string gid = _fixtures[idx].sceneObject;
-                    if (!string.IsNullOrEmpty(gid)) gids.Add(gid);
+                    string id = _fixtures[idx].sceneObject;
+                    if (!string.IsNullOrEmpty(id)) ids.Add(id);
                 }
             }
-            selectionGroups.Add(new SerialisedSelectionGroup { name = g.name, fixtureGids = gids });
+            persisted.Add(new DiamondManagerDefinition.SelectionGroup { name = g.name, memberIds = ids });
         }
 
-        try { File.WriteAllText(path, JsonUtility.ToJson(new SelectionGroupFile { groups = selectionGroups }, prettyPrint: true)); }
-        catch (Exception ex) { Debug.LogWarning($"[Diamond] Could not save selections: {ex.Message}"); }
+        Undo.RecordObject(_managerDef, "Edit fixture selection groups");
+        _managerDef.SelectionGroups = persisted;
+        EditorUtility.SetDirty(_managerDef);
     }
 
-    // Loads groups and resolves their stored GIDs to current array indices, dropping any
-    // fixture that no longer exists in the map.
-    //
-    // Requires _fixtures (and _fixtures[*].sceneObject) to be populated first; LoadFrom calls
-    // ParseMap and ResolveSceneObjects before this.
+    // Loads selection groups off the Definition and resolves their stored member
+    // identities to current fixture indices, dropping any that no longer map.
+    // Requires _fixtures to be populated first (LoadFromManager builds it before
+    // calling this).
     private void LoadSelectionGroups()
     {
         _selectionGroups    = new();
         _selectedGroupIndex = -1;
-        string path = SelectionsPath;
-        if (path == null || !File.Exists(path)) return;
-        try
+        if (_managerDef == null || _managerDef.SelectionGroups == null) return;
+
+        var indexBySceneId = BuildSceneIdToIndex();
+
+        foreach (var pg in _managerDef.SelectionGroups)
         {
-            var file = JsonUtility.FromJson<SelectionGroupFile>(File.ReadAllText(path));
-            var persistGroups = file.groups ?? new List<SerialisedSelectionGroup>();
+            var indices = new List<int>();
+            if (pg.memberIds != null)
+                foreach (string id in pg.memberIds)
+                    if (indexBySceneId.TryGetValue(id, out int idx))
+                        indices.Add(idx);
 
-            // GID -> current index lookup, built once from the freshly parsed map.
-            var indexByGid = new Dictionary<string, int>(_fixtures.Count);
-            for (int i = 0; i < _fixtures.Count; i++)
-            {
-                string gid = _fixtures[i].sceneObject;
-                if (!string.IsNullOrEmpty(gid) && !indexByGid.ContainsKey(gid))
-                    indexByGid[gid] = i;
-            }
-
-            foreach (var pg in persistGroups)
-            {
-                var indices = new List<int>();
-                if (pg.fixtureGids != null)
-                    foreach (string gid in pg.fixtureGids)
-                        if (indexByGid.TryGetValue(gid, out int idx))
-                            indices.Add(idx);
-
-                _selectionGroups.Add(new SelectionGroup { name = pg.name, fixtures = indices });
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.LogWarning($"[Diamond] Could not load selections: {ex.Message}");
+            _selectionGroups.Add(new SelectionGroup { name = pg.name, fixtures = indices });
         }
     }
 
-    private void ResolveSceneObjects()
-    {
-        _fixtureObjects = new List<UnityEngine.Object>(_fixtures.Count);
-        _fixtureDefinitions = new List<UnityEngine.Object>(_fixtures.Count);
+    // --- Baked-array helpers ------------------------------------------
 
-        // Find all FixtureDefinition components in the scene. Definition is the
-        // object-graph source now (the driver is retired), and every fixture has
-        // one on its root, so it's the only lookup needed.
-        var allDefinitions = FindObjectsByType<DiamondFixtureDefinition>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+    // Safe indexed read: returns fallback if the array is null or i is out of
+    // range. Guards against a stale/partial bake where a Map* array is shorter
+    // than Fixtures[] (or absent on an older manager not yet re-baked).
+    private static T MapArray<T>(T[] array, int i, T fallback)
+        => (array != null && i >= 0 && i < array.Length) ? array[i] : fallback;
 
-        // Build lookup by GameObject.
-        var definitionsByGameObject = new Dictionary<GameObject, DiamondFixtureDefinition>(allDefinitions.Length);
-
-        foreach (var def in allDefinitions)
-            definitionsByGameObject[def.gameObject] = def;
-
-        // Build a map of GlobalObjectId to sceneObject via reverse lookup from known objects.
-        // This avoids slow GlobalObjectIdentifierToObjectSlow calls entirely.
-        var globalIdCache = new Dictionary<string, UnityEngine.Object>();
-
-        // Cache all FixtureDefinition scene objects by their GlobalObjectId string.
-        foreach (var def in allDefinitions)
-        {
-            string gidStr = GlobalObjectId.GetGlobalObjectIdSlow(def.gameObject).ToString();
-            if (!globalIdCache.ContainsKey(gidStr))
-                globalIdCache[gidStr] = def.gameObject;
-        }
-
-        // Match fixtures by looking up their GlobalObjectId string in the cache.
-        for (int i = 0; i < _fixtures.Count; i++)
-        {
-            var f = _fixtures[i];
-            UnityEngine.Object sceneObj = null;
-
-            if (!string.IsNullOrEmpty(f.sceneObject) && globalIdCache.TryGetValue(f.sceneObject, out var cached))
-                sceneObj = cached;
-
-            _fixtureObjects.Add(sceneObj);
-
-            // Match the Definition component by the scene object's GameObject.
-            DiamondFixtureDefinition def = null;
-            if (sceneObj is GameObject go)
-                definitionsByGameObject.TryGetValue(go, out def);
-
-            _fixtureDefinitions.Add(def);
-        }
-    }
+    private static DiamondFixtureMapLayout.FixturePosition ToFixturePos(Vector2 v)
+        => new DiamondFixtureMapLayout.FixturePosition { x = v.x, y = v.y };
 
     // --- Layout ------------------------------------------------------
 

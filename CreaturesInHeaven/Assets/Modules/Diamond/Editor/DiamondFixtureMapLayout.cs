@@ -53,9 +53,11 @@ public static class DiamondFixtureMapLayout
         public List<int> fixtures;
     }
 
-    // On-disk form of a selection group. Members are stored as stable GlobalObjectId strings
-    // (FixtureEntry.sceneObject) rather than array indices, since indices are reassigned
-    // whenever the map is regenerated.
+    // RETIRED (DIAMOND-MANAGER.md, stage 3). On-disk form of a selection group,
+    // for the old FixtureMap.json.selections.json sidecar. Selection groups now
+    // persist on DiamondManagerDefinition (DiamondManagerDefinition.SelectionGroup),
+    // still keyed by GlobalObjectId. Kept only as a reference for the old format;
+    // nothing reads these types now.
     [Serializable]
     public struct SerialisedSelectionGroup
     {
@@ -91,7 +93,12 @@ public static class DiamondFixtureMapLayout
         public Rect                logicalBounds;
     }
 
-    // --- JSON parsing ------------------------------------------------
+    // --- JSON parsing (RETIRED) --------------------------------------
+    // RETIRED (DIAMOND-MANAGER.md, stage 3). The map is no longer loaded from
+    // FixtureMap.json -- DiamondEWinFixtureMap reads it live off the manager's
+    // baked arrays. ParseMap/MapWrapper are kept only as a reference for the old
+    // JSON format; nothing calls ParseMap now. The layout math below
+    // (ComputeLogicalLayout and its helpers) is still live and shared.
 
     [Serializable]
     private struct MapWrapper

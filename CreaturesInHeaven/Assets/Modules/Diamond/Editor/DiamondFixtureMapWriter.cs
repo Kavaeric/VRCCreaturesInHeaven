@@ -4,8 +4,14 @@ using System.Text;
 using UnityEditor;
 using UnityEngine;
 
+// RETIRED (DIAMOND-MANAGER.md, stage 3). Superseded by
+// DiamondManagerDefinition.BakeFixtures, which bakes the same fixture-map data
+// on-script (no JSON file). The yaw math (GetMapYaw) was copied into the bake, so
+// nothing unique is lost here. Kept only as a reference for the old JSON
+// serialisation format; nothing calls it now (its only caller,
+// DiamondEWinGenerateMap, has its menu item disabled).
+//
 // Serialises a fixture hierarchy to a FixtureMap.json file.
-// No UI dependencies; called by DiamondEWinGenerateMap.
 public static class DiamondFixtureMapWriter
 {
     // Crawls fixtures and groups under the given root, writes the JSON to outputPath,

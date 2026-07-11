@@ -3,9 +3,12 @@
     <Style src="project://database/Assets/Modules/Diamond/Editor/EditorFixtureMap.uss?fileID=7433441132597879392&amp;guid=30383f93acab33e42aba5ac646f53ad8&amp;type=3#EditorFixtureMap" />
     <ui:VisualElement class="col grow p-2 h-1f1">
         <ui:VisualElement class="row items-center">
-            <uie:ObjectField name="manager-field" label="Manager" class="shrink-0" tooltip="The Diamond manager whose baked fixture map to display." />
-            <ui:VisualElement class="w-2" />
-            <ui:Label name="map-path-label" text="No manager selected" class="text-sm text-muted grow" />
+            <ui:VisualElement class="row items-center">
+                <ui:Label text="Manager" class="text-sm font-bold" for="manager-field" />
+                <ui:VisualElement class="w-1" />
+                <uie:ObjectField name="manager-field" class="w-60" tooltip="The Diamond manager whose baked fixture map to display." />
+            </ui:VisualElement>
+            <ui:VisualElement class="grow" />
             <ui:Button name="view-settings-btn" text="View settings…" class="btn-sm shrink-0" />
             <ui:VisualElement class="w-1" />
             <ui:Button name="reload-btn" text="↺" class="btn-icon-sm shrink-0" tooltip="Reload this panel" />

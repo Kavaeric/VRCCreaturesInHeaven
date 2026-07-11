@@ -66,7 +66,7 @@ public static class DiamondBakeryLights
             bakeryDriver.LampProps       = def.LampProps;
             bakeryDriver.BrightnessScale = profile.BakeryBrightnessScale;
 
-            // Spot fixtures: let the cone angle track animated spread. Harmless
+            // Spot fixtures: let the cone angle track animated zoom. Harmless
             // for point/mesh (the driver no-ops unless the light is a cone).
             if (profile.BakeryLightType == DiamondBakeryLightType.Spot)
                 bakeryDriver.BeamProps = def.BeamProps;
@@ -112,11 +112,11 @@ public static class DiamondBakeryLights
                 // should probably be a controllable parameter of a Diamond fixture.
                 spot.innerAngle = 50f;
 
-                // Cone full-angle from the profile's spread, if it has one.
+                // Cone full-angle from the profile's zoom, if it has one.
                 // Bakery's `angle` is the full cone angle in degrees -- the same
-                // convention the profile's SpreadDefaultDegrees uses.
-                if (profile.HasSpread)
-                    spot.angle = profile.SpreadDefaultDegrees;
+                // convention the profile's ZoomDefaultDegrees uses.
+                if (profile.HasZoom)
+                    spot.angle = profile.ZoomDefaultDegrees;
 
                 return spot;
             }

@@ -7,9 +7,9 @@
 // only the circular specifics: an analytic cone (quadric) side-wall intersection, a
 // circular cross-section area (pi*r^2), and a radial edge softness.
 //
-// The cone is symmetric by construction: one spread value (_SpreadX, animated via
+// The cone is symmetric by construction: one zoom value (_ZoomX, animated via
 // BeamProps.localEulerAngles.x) drives it. The emitter is a circle of radius
-// _EmitterWidth/2, so _EmitterHeight and _SpreadZ go unused. Shear is unsupported
+// _EmitterWidth/2, so _EmitterHeight and _ZoomZ go unused. Shear is unsupported
 // (a sheared circular cone is oblique and breaks the analytic intersection).
 //
 // The mesh should be a unit cube (corners at +/-0.5); the vertex shader expands it
@@ -24,7 +24,7 @@ Shader "Diamond/BeamRound"
 
         // Cone half-angle, expressed as tan(half-angle): the radial widening
         // per unit length. Symmetric, so only X is used.
-        _SpreadX ("Spread (tan of half angle)", Float) = 0.0
+        _ZoomX ("Zoom (tan of half angle)", Float) = 0.0
 
         // --- Unsupported by the round profile ------------------------------
         // These are declared so the shared cginc and one MaterialPropertyBlock can
@@ -34,7 +34,7 @@ Shader "Diamond/BeamRound"
         // Shear is genuinely unsupported here: a sheared circular cone is an oblique
         // quadric, which breaks the cheap analytic intersection this profile relies on.
         [HideInInspector] _EmitterHeight ("Emitter height (unused)", Float) = 0.5
-        [HideInInspector] _SpreadZ ("Spread Z (unused)", Float) = 0.0
+        [HideInInspector] _ZoomZ ("Zoom Z (unused)", Float) = 0.0
         [HideInInspector] _ShearX ("Shear X (unsupported)", Float) = 0.0
         [HideInInspector] _ShearZ ("Shear Z (unsupported)", Float) = 0.0
 
@@ -56,12 +56,12 @@ Shader "Diamond/BeamRound"
         _ScatterStrength ("Lateral scatter strength", Range(0,1)) = 0.5
 
         // Focus: how fast the cone defocuses with distance, as a fraction of its
-        // own spread angle. The beam is sharp at the emitter and spreads more toward
+        // own zoom angle. The beam is sharp at the emitter and spreads more toward
         // the far end.
         //   1  perfectly collimated (crisp; only haze softens the edge)
         //   0  defocuses to twice the cone's half-angle by the far end
-        // Because the rate scales with the spread, narrow and wide beams defocus by
-        // the same proportion. A perfectly collimated beam (spread 0) has no angle to
+        // Because the rate scales with the zoom, narrow and wide beams defocus by
+        // the same proportion. A perfectly collimated beam (zoom 0) has no angle to
         // widen, so focus has no effect on it. See DiamondFocusSpill in the frag.
         _Focus ("Focus", Range(0,1)) = 1.0
 
@@ -117,18 +117,18 @@ Shader "Diamond/BeamRound"
             #pragma shader_feature_local DIAMOND_DEBUG
 
             // --- Circular shape definitions -------------------------------
-            // Cross-section is a disc of radius r(d) = R0 + spread*d, where R0
+            // Cross-section is a disc of radius r(d) = R0 + zoom*d, where R0
             // is the emitter radius (= emitterWidth/2). Area = pi*r^2. The
             // DERIVE_BEAM_LENGTH macro evaluates these where emitterWidth and
-            // spreadX are locals.
+            // zoomX are locals.
             #define DIAMOND_RADIUS0        (emitterWidth * 0.5)
             #define DIAMOND_EMITTER_AREA   (UNITY_PI * DIAMOND_RADIUS0 * DIAMOND_RADIUS0)
-            #define DIAMOND_CROSS_AREA(d)  (UNITY_PI * (DIAMOND_RADIUS0 + spreadX * (d)) * (DIAMOND_RADIUS0 + spreadX * (d)))
+            #define DIAMOND_CROSS_AREA(d)  (UNITY_PI * (DIAMOND_RADIUS0 + zoomX * (d)) * (DIAMOND_RADIUS0 + zoomX * (d)))
 
             // Bounding box is a square that contains the circle: both axes use
-            // the single (symmetric) spread.
-            #define DIAMOND_BOUNDS_SPREAD_X spreadX
-            #define DIAMOND_BOUNDS_SPREAD_Z spreadX
+            // the single (symmetric) zoom.
+            #define DIAMOND_BOUNDS_ZOOM_X zoomX
+            #define DIAMOND_BOUNDS_ZOOM_Z zoomX
 
             #include "DiamondBeamCommon.cginc"
 
@@ -292,22 +292,22 @@ Shader "Diamond/BeamRound"
 
             // Focus contributes a second edge blur that also grows with distance, but
             // without a haze term, so a lamp defocuses even in perfectly clear air. Its
-            // rate scales with the cone's own spread rather than an absolute amount of
+            // rate scales with the cone's own zoom rather than an absolute amount of
             // metres:
-            //   spill_focus = (1 - _Focus) * spreadX * d.
-            // Scaling by spreadX is what makes focus feel consistent across beam widths.
+            //   spill_focus = (1 - _Focus) * zoomX * d.
+            // Scaling by zoomX is what makes focus feel consistent across beam widths.
             // An absolute rate would blow a narrow beam out to a huge angle while barely
             // touching a wide one, because the eye reads defocus as a fraction of the
             // cone's own angle. With this rate, narrow and wide beams defocus by the same
             // proportion:
             //   _Focus = 1  gives rate 0 (crisp wall at R(d))
-            //   _Focus = 0  gives rate spreadX, putting the edge at R(d) + spreadX*d,
+            //   _Focus = 0  gives rate zoomX, putting the edge at R(d) + zoomX*d,
             //               i.e. twice the cone's half-angle.
-            // A perfectly collimated beam (spreadX = 0) has no angle to widen, so focus
+            // A perfectly collimated beam (zoomX = 0) has no angle to widen, so focus
             // does nothing to it; haze scatter still softens its edge.
-            float DiamondFocusSpill(float focusF, float spreadX, float d)
+            float DiamondFocusSpill(float focusF, float zoomX, float d)
             {
-                float rate = (1.0 - saturate(focusF)) * max(spreadX, 0.0);
+                float rate = (1.0 - saturate(focusF)) * max(zoomX, 0.0);
                 return DIAMOND_SCATTER_K * rate * max(d, 0.0);
             }
 
@@ -316,9 +316,9 @@ Shader "Diamond/BeamRound"
             // stack), giving one metric spill; dividing by the cone radius converts it to
             // the profile's u coordinate. Adding the spills in metres before the divide is
             // what keeps the lit edge at R(d) + spill_m, straight rather than bowed.
-            float DiamondEdgeWidth(float focusF, float spreadX, float haze, float d, float strength, float radiusAtD)
+            float DiamondEdgeWidth(float focusF, float zoomX, float haze, float d, float strength, float radiusAtD)
             {
-                float focusSpill   = DiamondFocusSpill(focusF, spreadX, d);
+                float focusSpill   = DiamondFocusSpill(focusF, zoomX, d);
                 float scatterSpill = DiamondScatterSpill(haze, d, strength);
                 float spillMetres  = sqrt(focusSpill*focusSpill + scatterSpill*scatterSpill);
                 return spillMetres / max(radiusAtD, 1e-6);   // metres to u coordinate
@@ -367,7 +367,8 @@ Shader "Diamond/BeamRound"
                 float4 instColor      = UNITY_ACCESS_INSTANCED_PROP(Props, _Color);
                 float  beamIntensity  = UNITY_ACCESS_INSTANCED_PROP(Props, _BeamIntensity);
                 float  emitterWidth   = UNITY_ACCESS_INSTANCED_PROP(Props, _EmitterWidth);
-                float  spreadX        = UNITY_ACCESS_INSTANCED_PROP(Props, _SpreadX);
+                float  zoomX        = UNITY_ACCESS_INSTANCED_PROP(Props, _ZoomX);
+                float  focusF       = saturate(UNITY_ACCESS_INSTANCED_PROP(Props, _Focus));
 
                 // beamLength is derived once in vert and passed down (constant per
                 // instance), no per-pixel bisection here. See v2f.beamLength.
@@ -401,15 +402,15 @@ Shader "Diamond/BeamRound"
                 // cone wall (focus and haze both widen it), so the clip has to enclose
                 // that spill or it would slice the halo off. Because each spill is
                 // linear in depth and zero at the emitter, the spilled edge is itself a
-                // cone: same emitter radius, just a steeper spread. So we widen the clip
-                // by adding the combined spill rate to the spread, rather than scaling
+                // cone: same emitter radius, just a steeper zoom. So we widen the clip
+                // by adding the combined spill rate to the zoom, rather than scaling
                 // the whole cone (which would over-widen near the source). The edge
                 // profile fades to zero before this widened wall, so nothing hard-clips.
-                float focusRate    = DIAMOND_SCATTER_K * (1.0 - saturate(_Focus)) * max(spreadX, 0.0);
+                float focusRate    = DIAMOND_SCATTER_K * (1.0 - focusF) * max(zoomX, 0.0);
                 float scatterRate  = DIAMOND_SCATTER_K * max(_HazeDensity, 0.0) * saturate(_ScatterStrength);
                 float spillSpread  = sqrt(focusRate*focusRate + scatterRate*scatterRate);
                 float coneLo, coneHi;
-                if (!ConeInterval(rayOrigin, rayDirection, r0, spreadX + spillSpread, coneLo, coneHi))
+                if (!ConeInterval(rayOrigin, rayDirection, r0, zoomX + spillSpread, coneLo, coneHi))
                     discard;
                 tEntry = max(tEntry, coneLo);
                 tExit  = min(tExit,  coneHi);
@@ -433,8 +434,8 @@ Shader "Diamond/BeamRound"
                 float haze      = max(_HazeDensity, 0.0);                    // loop extinction
                 float fadeStart = beamLength * (1.0 - saturate(_FarFade));   // loop far-fade
                 // Cone apex: light fans out from here, so it seeds the HG light dir in
-                // the loop. y = -r0/spread (apex of the quadric); origin if collimated.
-                float3 beamApex = float3(0.0, (abs(spreadX) > 1e-6) ? (-r0 / spreadX) : 0.0, 0.0);
+                // the loop. y = -r0/zoom (apex of the quadric); origin if collimated.
+                float3 beamApex = float3(0.0, (abs(zoomX) > 1e-6) ? (-r0 / zoomX) : 0.0, 0.0);
 
               #ifdef DIAMOND_DEBUG
                 // Surface probe (debug only). Each per-component debug mode samples its
@@ -448,12 +449,11 @@ Shader "Diamond/BeamRound"
                 float3 exitPt  = rayOrigin + rayDirection * tExit;
                 float  exitD   = max(exitPt.y, 0.0);
                 float  exitR   = length(exitPt.xz);             // radial distance from axis
-                float  exitRad = r0 + spreadX * exitD;          // cone radius R(d)
+                float  exitRad = r0 + zoomX * exitD;          // cone radius R(d)
                 float  uLat    = exitR / max(exitRad, 1e-6);    // 0 axis, 1 wall, more is spill
 
-                // Lateral edge.
-                float focusF      = saturate(_Focus);
-                float edgeW       = DiamondEdgeWidth(focusF, spreadX, _HazeDensity, exitD, _ScatterStrength, exitRad);
+                // Lateral edge. focusF is read once per fragment at the top of frag.
+                float edgeW       = DiamondEdgeWidth(focusF, zoomX, _HazeDensity, exitD, _ScatterStrength, exitRad);
                 float edgeProfile = DiamondEdgeProfile(uLat, edgeW);
 
                 // HG phase at the exit hit. The direction to the camera is exactly
@@ -463,7 +463,7 @@ Shader "Diamond/BeamRound"
                 float  hgPhase      = DiamondHGPhase(cosThetaExit, _Anisotropy);
 
                 // Geometric falloff at the entry point.
-                float radius      = r0 + spreadX * dist;
+                float radius      = r0 + zoomX * dist;
                 float crossArea   = UNITY_PI * radius * radius;
                 float emitterArea = UNITY_PI * r0 * r0;
                 float geometricFalloff = emitterArea / max(crossArea, 1e-6);
@@ -536,7 +536,7 @@ Shader "Diamond/BeamRound"
 
                     // Geometric falloff: the cone widens with depth, spreading a fixed
                     // emitter flux over a larger disc, so brightness drops as (r0/R(d))^2.
-                    float rad = r0 + spreadX * d;
+                    float rad = r0 + zoomX * d;
                     float fFalloff = (r0*r0) / max(rad*rad, 1e-12);
 
                     // Beer-Lambert extinction: light is absorbed and scattered out of the

@@ -9,11 +9,11 @@ using UnityEngine;
 //   1. Holds fixture metadata (DisplayName, FixtureProfile) for the fixture map tool.
 //
 //   2. In edit mode, DiamondFixtureMapPreview (editor library) drives material preview
-//      so brightness, spread, and beam-intensity changes on LampProps/BeamProps are
+//      so brightness, zoom, and beam-intensity changes on LampProps/BeamProps are
 //      visible in the scene.
 //
 //   3. Exposes friendly controls in the inspector that alias to LampProps.localPosition.y
-//      (brightness), BeamProps.localEulerAngles.x (spread), BeamProps.localScale.y
+//      (brightness), BeamProps.localEulerAngles.x (zoom), BeamProps.localScale.y
 //      (beam intensity), and Head.localEulerAngles (rotation). Which controls appear
 //      is determined by the FixtureProfile. When animated, those underlying properties
 //      are what gets keyframed.
@@ -41,8 +41,11 @@ public class DiamondFixtureDefinition : MonoBehaviour
     // colour (RGB), gameObject.activeSelf = on/off.
     public Transform LampProps;
 
-    // Proxy transform: localEulerAngles.x = spread (tan half-angle),
-    // localScale.y = beam intensity. Null for beamless fixtures.
+    // Proxy transform: localEulerAngles.x = zoom (tan half-angle),
+    // localPosition.y = focus (0-1, direct pass-through -- no conversion,
+    // unlike zoom's tan/degrees split; kept off the zoom Vector3 so the two can
+    // be keyed independently), localScale.y = beam intensity. Null for beamless
+    // fixtures.
     public Transform BeamProps;
 
     // Renderer whose _EmissionColor is driven by brightness*colour.
@@ -109,21 +112,21 @@ public class DiamondFixtureDefinition : MonoBehaviour
         Profile != null ? new Vector2(Profile.FixtureWidth, Profile.FixtureHeight) : Vector2.one;
 
     // True for round (symmetric-cone) fixtures using the BeamRound shader, which
-    // reads only _SpreadX. The manager uses this to skip the unused _SpreadZ write.
+    // reads only _ZoomX. The manager uses this to skip the unused _ZoomZ write.
     public bool SymmetricBeam =>
         Profile != null && Profile.Shape == DiamondFixtureProfile.BeamShape.Round;
 
     // --- Worst-case bounds scalars -----------------------------------
     // The scalars that size the beam's culling AABB. These used to be mirrored
-    // fields on DiamondFixtureDriver (MaxSpreadTan, MaxShear*, CubeLocalScale, ...);
+    // fields on DiamondFixtureDriver (MaxZoomTan, MaxShear*, CubeLocalScale, ...);
     // they're derived here straight from the profile and beam material instead,
     // so both ComputeBeamBounds (the bake) and DiamondFixtureBoundsGizmo (the
     // scene-view gizmo) read one source and can't disagree. Defaults match the
     // shader/driver fallbacks for a fixture with no beam material assigned yet.
 
-    // Worst-case spread (tan half-angle), from the profile's max cone.
-    public float MaxSpreadTan =>
-        (Profile != null && Profile.HasSpread) ? SpreadDegreesToTan(Profile.SpreadMaxDegrees) : 1f;
+    // Worst-case zoom (tan half-angle), from the profile's max cone.
+    public float MaxZoomTan =>
+        (Profile != null && Profile.HasZoom) ? ZoomDegreesToTan(Profile.ZoomMaxDegrees) : 1f;
 
     // Worst-case beam length (metres). From the beam material's _BeamLengthMax.
     public float MaxBeamLength => BeamMatFloat("_BeamLengthMax", 50f);
@@ -186,7 +189,7 @@ public class DiamondFixtureDefinition : MonoBehaviour
         // above so the bake and the gizmo can never diverge. Haze and scatter take
         // the manager's ceiling instead when one is supplied (>= 0), so animated
         // atmosphere sizes the AABB to its runtime max rather than the material.
-        float maxSpreadTan     = MaxSpreadTan;
+        float maxZoomTan       = MaxZoomTan;
         float maxBeamLength    = MaxBeamLength;
         float maxHazeDensity   = hazeCeiling           >= 0f ? hazeCeiling           : MaxHazeDensity;
         float maxScatterStr    = scatterStrengthCeiling >= 0f ? scatterStrengthCeiling : MaxScatterStrength;
@@ -197,13 +200,13 @@ public class DiamondFixtureDefinition : MonoBehaviour
         Vector2 emitter = FixtureEmitterSize;
 
         // Lateral half-extent at the far cap (mirror of the vertex shader's box
-        // inflation, via DiamondBeamMath.LateralHalfExtent). Spread is symmetric
+        // inflation, via DiamondBeamMath.LateralHalfExtent). Zoom is symmetric
         // (X = Z); shear is genuinely per-axis (round leaves both 0).
         float halfLateralX = DiamondBeamMath.LateralHalfExtent(
-            emitter.x * 0.5f, maxSpreadTan, maxShearX,
+            emitter.x * 0.5f, maxZoomTan, maxShearX,
             maxHazeDensity, maxScatterStr, maxBeamLength);
         float halfLateralZ = DiamondBeamMath.LateralHalfExtent(
-            emitter.y * 0.5f, maxSpreadTan, maxShearZ,
+            emitter.y * 0.5f, maxZoomTan, maxShearZ,
             maxHazeDensity, maxScatterStr, maxBeamLength);
 
         // Beam-space AABB (world metres): beam fires along +Y, 0..maxBeamLength.
@@ -259,14 +262,14 @@ public class DiamondFixtureDefinition : MonoBehaviour
         BeamRenderer.SetPropertyBlock(_emitterBlock);
 
         // Recompute the culling bounds from the profile/material. The worst-case
-        // spread, shear, haze, and cube-scale scalars are all read inside
+        // zoom, shear, haze, and cube-scale scalars are all read inside
         // ComputeBeamBounds off the shared bounds-scalar properties, so there's
         // nothing to mirror onto a driver anymore.
         ComputeBeamBounds();
     }
 
     // Writes the profile's default values to every programmable channel on the
-    // fixture (brightness, spread, beam intensity, head rotation). Intended to
+    // fixture (brightness, zoom, beam intensity, head rotation). Intended to
     // be invoked manually via the inspector "Reset to Profile Defaults" button
     // -- never auto-fires, so animator-authored curves never get clobbered.
     //
@@ -289,11 +292,11 @@ public class DiamondFixtureDefinition : MonoBehaviour
             LampProps.localPosition = pos;
         }
 
-        // Spread: convert the profile's default degrees to tan(half-angle).
-        if (Profile.HasSpread && BeamProps != null)
+        // Zoom: convert the profile's default degrees to tan(half-angle).
+        if (Profile.HasZoom && BeamProps != null)
         {
             var euler = BeamProps.localEulerAngles;
-            euler.x = SpreadDegreesToTan(Profile.SpreadDefaultDegrees);
+            euler.x = ZoomDegreesToTan(Profile.ZoomDefaultDegrees);
             BeamProps.localEulerAngles = euler;
         }
 
@@ -303,6 +306,15 @@ public class DiamondFixtureDefinition : MonoBehaviour
             var s = BeamProps.localScale;
             s.y = 1f;
             BeamProps.localScale = s;
+        }
+
+        // Focus: reset to the profile's default. Carried on localPosition.y
+        // (its own Vector3), so it can be keyed independently of zoom.
+        if (Profile.HasFocus && BeamProps != null)
+        {
+            var pos = BeamProps.localPosition;
+            pos.y = Profile.FocusDefault;
+            BeamProps.localPosition = pos;
         }
 
         // Head rotation: stub each enabled axis at the midpoint of its range
@@ -317,20 +329,20 @@ public class DiamondFixtureDefinition : MonoBehaviour
         }
     }
 
-    // --- Spread conversion ------------------------------------------------
+    // --- Zoom conversion ------------------------------------------------
     //
-    // Spread is stored on BeamProps.localEulerAngles.x as tan(half-angle) -- the
-    // value the beam shader's _SpreadX/_SpreadZ use directly. The user-facing
+    // Zoom is stored on BeamProps.localEulerAngles.x as tan(half-angle) -- the
+    // value the beam shader's _ZoomX/_ZoomZ use directly. The user-facing
     // value is the FULL cone angle in degrees (stage-lighting convention: a
     // "30 degree fixture" is 30 degrees tip-to-tip across the cone). These
     // helpers convert at the UI boundary so the per-frame path does no trig.
 
-    public static float SpreadDegreesToTan(float fullConeDegrees)
+    public static float ZoomDegreesToTan(float fullConeDegrees)
     {
         return Mathf.Tan(fullConeDegrees * 0.5f * Mathf.Deg2Rad);
     }
 
-    public static float SpreadTanToDegrees(float tan)
+    public static float ZoomTanToDegrees(float tan)
     {
         return Mathf.Atan(tan) * 2f * Mathf.Rad2Deg;
     }

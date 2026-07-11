@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 // Describes the capabilities and limits of a fixture type.
 // Assign one profile asset per fixture type; all fixtures of that type share it.
@@ -49,19 +50,32 @@ public class DiamondFixtureProfile : ScriptableObject
     public float BrightnessMin;
     public float BrightnessMax;
 
-    public bool HasSpread;
+    [FormerlySerializedAs("HasSpread")]
+    public bool HasZoom;
 
-    // Spread range in degrees (full cone angle). Clamps the editor UI to the
-    // fixture's physical capabilities. SpreadDefault is what the inspector
+    // Zoom range in degrees (full cone angle). Clamps the editor UI to the
+    // fixture's physical capabilities. ZoomDefault is what the inspector
     // resets to and what new fixtures sit at when the profile is assigned.
-    // Only meaningful when HasSpread is true.
-    public float SpreadMinDegrees     = 0f;
-    public float SpreadMaxDegrees     = 90f;
-    public float SpreadDefaultDegrees = 30f;
+    // Only meaningful when HasZoom is true.
+    [FormerlySerializedAs("SpreadMinDegrees")]
+    public float ZoomMinDegrees     = 0f;
+    [FormerlySerializedAs("SpreadMaxDegrees")]
+    public float ZoomMaxDegrees     = 90f;
+    [FormerlySerializedAs("SpreadDefaultDegrees")]
+    public float ZoomDefaultDegrees = 30f;
 
     // Whether this fixture has a visible volumetric beam shaft.
     // Gates the "Beam Intensity" control in the FixtureDefinition inspector.
     public bool HasBeam;
+
+    // Whether this fixture's beam has a programmable focus control. Gates the
+    // "Focus" control in the FixtureDefinition inspector. FocusDefault is what
+    // the inspector resets to and what new fixtures sit at when the profile is
+    // assigned; 1 (fully collimated) matches the shader's Range(0,1) default.
+    // Focus is 0-1 direct pass-through (no unit conversion like Zoom's
+    // tan/degrees), so there's no Min/Max pair to author.
+    public bool HasFocus;
+    public float FocusDefault = 1f;
 
     // --- Bakery light ---------------------------------------------------
 

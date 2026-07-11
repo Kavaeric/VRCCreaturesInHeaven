@@ -31,12 +31,12 @@ public static class DiamondBeamMath
     }
 
     // Cross-section area of a round cone at a given distance from the emitter.
-    // radius grows by spread (tan of half-angle) per metre. Mirror of the
+    // radius grows by zoom (tan of half-angle) per metre. Mirror of the
     // DIAMOND_CROSS_AREA expression in DiamondBeamRound.shader (without the
     // soft-edge term, which only dilutes the visible halo, not the length).
-    static float RoundCrossArea(float distance, float emitterRadius, float spreadTan)
+    static float RoundCrossArea(float distance, float emitterRadius, float zoomTan)
     {
-        float radius = emitterRadius + spreadTan * distance;
+        float radius = emitterRadius + zoomTan * distance;
         return Mathf.PI * radius * radius;
     }
 
@@ -51,34 +51,34 @@ public static class DiamondBeamMath
     // geometry the vertex shader rasterises. Keep the two in lockstep.
     //
     // The half-extent is the emitter half-size plus, over the max beam length,
-    // the geometric spread, the lateral spill (defocus + haze scatter, combined
+    // the geometric zoom, the lateral spill (defocus + haze scatter, combined
     // in quadrature the way the shader does), and the shear lean:
     //
-    //   emitterHalf + (spread + spillSpread + |shear|) * maxLen
+    //   emitterHalf + (zoom + spillSpread + |shear|) * maxLen
     //
-    // Worst case on focus (fully defocused, rate = spread) so the bound never
+    // Worst case on focus (fully defocused, rate = zoom) so the bound never
     // undersizes regardless of the animated _Focus. haze/strength/shear are
     // material-level, so callers pass the material's values.
     //
     //   emitterHalf   - emitter size on this axis / 2
-    //   spreadTan     - worst-case geometric spread on this axis (tan half-angle)
+    //   zoomTan       - worst-case geometric zoom on this axis (tan half-angle)
     //   shear         - |shear| on this axis (0 for the round profile)
     //   haze          - material _HazeDensity
     //   scatterStr    - material _ScatterStrength (0..1)
     //   maxLen        - worst-case beam length (_BeamLengthMax)
-    public static float LateralHalfExtent(float emitterHalf, float spreadTan, float shear,
+    public static float LateralHalfExtent(float emitterHalf, float zoomTan, float shear,
         float haze, float scatterStr, float maxLen)
     {
         maxLen = Mathf.Max(maxLen, 0f);
 
         // Haze-scatter spill rate (per metre), matching the shader's scatterRate.
         float scatterRate = ScatterK * Mathf.Max(haze, 0f) * Mathf.Clamp01(scatterStr);
-        // Focus spill worst case is the spread itself (focus = 0 -> rate = spread),
+        // Focus spill worst case is the zoom itself (focus = 0 -> rate = zoom),
         // combined with scatter in quadrature exactly as the shader's spillSpread.
-        float focusRate  = ScatterK * Mathf.Max(spreadTan, 0f);
+        float focusRate  = ScatterK * Mathf.Max(zoomTan, 0f);
         float spillSpread = Mathf.Sqrt(focusRate * focusRate + scatterRate * scatterRate);
 
-        return emitterHalf + (Mathf.Max(spreadTan, 0f) + spillSpread + Mathf.Abs(shear)) * maxLen;
+        return emitterHalf + (Mathf.Max(zoomTan, 0f) + spillSpread + Mathf.Abs(shear)) * maxLen;
     }
 
     // Finds the distance at which beam density falls below the cutoff threshold,
@@ -87,21 +87,21 @@ public static class DiamondBeamMath
     // where the beam ends.
     //
     //   emitterRadius    - emitter diameter / 2 (FixtureWidth * 0.5)
-    //   spreadTan        - tan(half-angle), i.e. BeamProps.localEulerAngles.x
+    //   zoomTan          - tan(half-angle), i.e. BeamProps.localEulerAngles.x
     //   beamIntensity    - animated beam intensity (BeamProps.localScale.y)
     //   haze             - material _HazeDensity
     //   cutoffThreshold  - material _BeamCutoffThreshold
     //   beamLengthMax    - material _BeamLengthMax (hard cap)
-    public static float DeriveRoundBeamLength(float emitterRadius, float spreadTan,
+    public static float DeriveRoundBeamLength(float emitterRadius, float zoomTan,
         float beamIntensity, float haze, float cutoffThreshold, float beamLengthMax)
     {
         float threshold = Mathf.Max(cutoffThreshold, 1e-5f);
         float intensity = Mathf.Max(beamIntensity, 0f);
         haze            = Mathf.Max(haze, 1e-5f);
-        float emArea    = RoundCrossArea(0f, emitterRadius, spreadTan);
+        float emArea    = RoundCrossArea(0f, emitterRadius, zoomTan);
 
         float DensityAt(float d) =>
-            BeamDensityAtDistance(d, RoundCrossArea(d, emitterRadius, spreadTan), emArea, intensity, haze);
+            BeamDensityAtDistance(d, RoundCrossArea(d, emitterRadius, zoomTan), emArea, intensity, haze);
 
         // Below threshold right at the emitter: no visible beam.
         if (DensityAt(0f) <= threshold)

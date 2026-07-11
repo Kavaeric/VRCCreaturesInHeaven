@@ -28,7 +28,8 @@ using VRC.SDKBase;
 //   lampProps[i].localPosition.y     - Brightness (emissive multiplier).
 //   lampProps[i].localScale.xyz      - Emission colour (RGB, HDR).
 //   lampProps[i].gameObject.activeSelf - On/off.
-//   beamProps[i].localEulerAngles.x  - Beam spread, as tan(half-angle).
+//   beamProps[i].localEulerAngles.x  - Beam zoom, as tan(half-angle).
+//   beamProps[i].localPosition.y     - Beam focus, 0-1 direct pass-through.
 //   beamProps[i].localScale.y        - Beam intensity.
 //   heads[i].localRotation           - Head aim (keyed directly, not read here).
 public class DiamondManager : UdonSharpBehaviour
@@ -60,8 +61,9 @@ public class DiamondManager : UdonSharpBehaviour
     // (localScale.xyz), and on/off (gameObject.activeSelf).
     public Transform[] LampProps;
 
-    // Proxy transform carrying spread (localEulerAngles.x) and beam intensity
-    // (localScale.y). May contain nulls for fixtures with no beam.
+    // Proxy transform carrying zoom (localEulerAngles.x), focus
+    // (localPosition.y), and beam intensity (localScale.y). May contain
+    // nulls for fixtures with no beam.
     public Transform[] BeamProps;
 
     // The moving-head child. Keyed directly by the animator; the manager does
@@ -75,8 +77,8 @@ public class DiamondManager : UdonSharpBehaviour
     public Renderer[] BeamRenderers;
 
     // Baked per-fixture runtime flag: true for round (symmetric-cone) fixtures
-    // using the BeamRound shader, which reads only _SpreadX. When set, the loop
-    // skips the _SpreadZ write the round shader would ignore. This is the only
+    // using the BeamRound shader, which reads only _ZoomX. When set, the loop
+    // skips the _ZoomZ write the round shader would ignore. This is the only
     // genuinely-baked runtime scalar. Everything else animated comes from the
     // proxies, everything else static is edit-time-only.
     public bool[] SymmetricBeam;
@@ -160,8 +162,9 @@ public class DiamondManager : UdonSharpBehaviour
     private int _idEmissionColor;
     private int _idColor;
     private int _idBeamIntensity;
-    private int _idSpreadX;
-    private int _idSpreadZ;
+    private int _idZoomX;
+    private int _idZoomZ;
+    private int _idFocus;
     private int _idEmitterWidth;
     private int _idEmitterHeight;
     private int _idHazeDensity;
@@ -186,7 +189,8 @@ public class DiamondManager : UdonSharpBehaviour
     private bool[]    _lastLampActive;
     private float[]   _lastBrightness;
     private Vector3[] _lastColour;
-    private float[]   _lastSpread;
+    private float[]   _lastZoom;
+    private float[]   _lastFocus;
     private float[]   _lastBeamIntensity;
 
     // --- Manager-wide animated-channel dirty-check -------------------
@@ -208,8 +212,9 @@ public class DiamondManager : UdonSharpBehaviour
         _idEmissionColor = VRCShader.PropertyToID("_EmissionColor");
         _idColor         = VRCShader.PropertyToID("_Color");
         _idBeamIntensity = VRCShader.PropertyToID("_BeamIntensity");
-        _idSpreadX       = VRCShader.PropertyToID("_SpreadX");
-        _idSpreadZ       = VRCShader.PropertyToID("_SpreadZ");
+        _idZoomX         = VRCShader.PropertyToID("_ZoomX");
+        _idZoomZ         = VRCShader.PropertyToID("_ZoomZ");
+        _idFocus         = VRCShader.PropertyToID("_Focus");
         _idEmitterWidth  = VRCShader.PropertyToID("_EmitterWidth");
         _idEmitterHeight = VRCShader.PropertyToID("_EmitterHeight");
         _idHazeDensity     = VRCShader.PropertyToID("_HazeDensity");
@@ -228,7 +233,8 @@ public class DiamondManager : UdonSharpBehaviour
         _lastLampActive    = new bool[count];
         _lastBrightness    = new float[count];
         _lastColour        = new Vector3[count];
-        _lastSpread        = new float[count];
+        _lastZoom          = new float[count];
+        _lastFocus         = new float[count];
         _lastBeamIntensity = new float[count];
 
         for (int i = 0; i < count; i++)
@@ -299,13 +305,15 @@ public class DiamondManager : UdonSharpBehaviour
             bool    lampActive    = _lampObjects[i].activeSelf;
             float   brightness    = lamp.localPosition.y;
             Vector3 colour        = lamp.localScale;
-            float   spread        = 0f;
+            float   zoom          = 0f;
+            float   focus         = 1f;
             float   beamIntensity = 1f;
 
             Transform beam = BeamProps[i];
             if (beam != null)
             {
-                spread        = beam.localEulerAngles.x;
+                zoom          = beam.localEulerAngles.x;
+                focus         = beam.localPosition.y;
                 beamIntensity = beam.localScale.y;
             }
 
@@ -315,7 +323,8 @@ public class DiamondManager : UdonSharpBehaviour
                 && lampActive    == _lastLampActive[i]
                 && brightness    == _lastBrightness[i]
                 && colour        == _lastColour[i]
-                && spread        == _lastSpread[i]
+                && zoom          == _lastZoom[i]
+                && focus         == _lastFocus[i]
                 && beamIntensity == _lastBeamIntensity[i])
             {
                 continue;
@@ -324,11 +333,12 @@ public class DiamondManager : UdonSharpBehaviour
             _lastLampActive[i]    = lampActive;
             _lastBrightness[i]    = brightness;
             _lastColour[i]        = colour;
-            _lastSpread[i]        = spread;
+            _lastZoom[i]          = zoom;
+            _lastFocus[i]         = focus;
             _lastBeamIntensity[i] = beamIntensity;
             _cacheValid[i]        = true;
 
-            ApplyFixture(i, lampActive, brightness, colour, spread, beamIntensity);
+            ApplyFixture(i, lampActive, brightness, colour, zoom, focus, beamIntensity);
         }
     }
 
@@ -423,7 +433,7 @@ public class DiamondManager : UdonSharpBehaviour
 
     // Applies the driven state for fixture i to its renderers. Mirrors the old
     // DiamondFixtureDriver.ApplyMaterialProperties, but indexed into the arrays.
-    private void ApplyFixture(int i, bool lampActive, float brightness, Vector3 colour, float spread, float beamIntensity)
+    private void ApplyFixture(int i, bool lampActive, float brightness, Vector3 colour, float zoom, float focus, float beamIntensity)
     {
         Renderer headRenderer = HeadRenderers[i];
         if (headRenderer == null)
@@ -462,8 +472,10 @@ public class DiamondManager : UdonSharpBehaviour
         headBlock.SetColor(_idEmissionColor, drivenColour);
         headRenderer.SetPropertyBlock(headBlock);
 
-        // Mirror brightness-modulated colour, animated intensity, and spread
-        // onto the beam shaft. Spread is symmetric (X = Z) for a square cone.
+        // Mirror brightness-modulated colour, animated intensity, zoom, and
+        // focus onto the beam shaft. Zoom is symmetric (X = Z) for a square
+        // cone. Focus is a single instanced shader property, same on both
+        // shapes -- no X/Z split needed.
         if (beamRenderer != null)
         {
             // See note above: guard the toggle so we don't re-activate every frame.
@@ -473,13 +485,14 @@ public class DiamondManager : UdonSharpBehaviour
             // Blanket master scale on the shaft intensity (default 1 = no-op).
             // Folds into the write we already pay; see BeamIntensityScale.
             beamBlock.SetFloat(_idBeamIntensity, beamIntensity * BeamIntensityScale);
-            beamBlock.SetFloat(_idSpreadX, spread);
+            beamBlock.SetFloat(_idZoomX, zoom);
+            beamBlock.SetFloat(_idFocus, focus);
 
-            // Round fixtures use the BeamRound shader, which reads only _SpreadX.
-            // Rect fixtures need _SpreadZ too (here mirrored from _SpreadX for a
+            // Round fixtures use the BeamRound shader, which reads only _ZoomX.
+            // Rect fixtures need _ZoomZ too (here mirrored from _ZoomX for a
             // symmetric square cone).
             if (!SymmetricBeam[i])
-                beamBlock.SetFloat(_idSpreadZ, spread);
+                beamBlock.SetFloat(_idZoomZ, zoom);
 
             beamRenderer.SetPropertyBlock(beamBlock);
         }

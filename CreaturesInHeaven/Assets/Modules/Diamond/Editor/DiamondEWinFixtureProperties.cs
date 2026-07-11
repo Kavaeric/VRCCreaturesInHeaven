@@ -39,9 +39,12 @@ public class DiamondEWinFixtureProperties : EditorWindow
     private ColorField _emissionColourField;
     private FloatField _brightnessFloatField;
     private Slider _brightnessSlider;
-    private Label _spreadPlaceholder;
-    private FloatField _spreadFloatField;
-    private Slider _spreadSlider;
+    private Label _zoomPlaceholder;
+    private FloatField _zoomFloatField;
+    private Slider _zoomSlider;
+    private Label _focusPlaceholder;
+    private FloatField _focusFloatField;
+    private Slider _focusSlider;
     private Label _beamIntensityPlaceholder;
     private FloatField _beamIntensityField;
     private Label _rotationPlaceholder;
@@ -121,9 +124,12 @@ public class DiamondEWinFixtureProperties : EditorWindow
         _emissionColourField = rootVisualElement.Q<ColorField>("emission-colour-field");
         _brightnessFloatField = rootVisualElement.Q<FloatField>("brightness-float-field");
         _brightnessSlider = rootVisualElement.Q<Slider>("brightness-slider");
-        _spreadPlaceholder = rootVisualElement.Q<Label>("spread-placeholder");
-        _spreadFloatField = rootVisualElement.Q<FloatField>("spread-float-field");
-        _spreadSlider = rootVisualElement.Q<Slider>("spread-slider");
+        _zoomPlaceholder = rootVisualElement.Q<Label>("zoom-placeholder");
+        _zoomFloatField = rootVisualElement.Q<FloatField>("zoom-float-field");
+        _zoomSlider = rootVisualElement.Q<Slider>("zoom-slider");
+        _focusPlaceholder = rootVisualElement.Q<Label>("focus-placeholder");
+        _focusFloatField = rootVisualElement.Q<FloatField>("focus-float-field");
+        _focusSlider = rootVisualElement.Q<Slider>("focus-slider");
         _beamIntensityPlaceholder = rootVisualElement.Q<Label>("beam-intensity-placeholder");
         _beamIntensityField = rootVisualElement.Q<FloatField>("beam-intensity-field");
         _rotationPlaceholder = rootVisualElement.Q<Label>("rotation-placeholder");
@@ -209,34 +215,63 @@ public class DiamondEWinFixtureProperties : EditorWindow
             }
         });
 
-        // Spread UI is in degrees (full cone); storage is tan(half-angle) on
+        // Zoom UI is in degrees (full cone); storage is tan(half-angle) on
         // BeamProps.localEulerAngles.x (rotation, not scale, so it doesn't
         // bundle with beam intensity in the animator).
-        _spreadFloatField.RegisterValueChangedCallback(e =>
+        _zoomFloatField.RegisterValueChangedCallback(e =>
         {
-            _spreadSlider.SetValueWithoutNotify(e.newValue);
-            float tan = DiamondFixtureDefinition.SpreadDegreesToTan(e.newValue);
+            _zoomSlider.SetValueWithoutNotify(e.newValue);
+            float tan = DiamondFixtureDefinition.ZoomDegreesToTan(e.newValue);
             foreach (var (def, profile) in _selection)
             {
-                if (!profile.HasSpread) continue;
-                Undo.RecordObject(def.BeamProps, "Fixture Spread");
+                if (!profile.HasZoom) continue;
+                Undo.RecordObject(def.BeamProps, "Fixture Zoom");
                 var euler = def.BeamProps.localEulerAngles;
                 euler.x = tan;
                 def.BeamProps.localEulerAngles = euler;
             }
         });
 
-        _spreadSlider.RegisterValueChangedCallback(e =>
+        _zoomSlider.RegisterValueChangedCallback(e =>
         {
-            _spreadFloatField.SetValueWithoutNotify(e.newValue);
-            float tan = DiamondFixtureDefinition.SpreadDegreesToTan(e.newValue);
+            _zoomFloatField.SetValueWithoutNotify(e.newValue);
+            float tan = DiamondFixtureDefinition.ZoomDegreesToTan(e.newValue);
             foreach (var (def, profile) in _selection)
             {
-                if (!profile.HasSpread) continue;
-                Undo.RecordObject(def.BeamProps, "Fixture Spread");
+                if (!profile.HasZoom) continue;
+                Undo.RecordObject(def.BeamProps, "Fixture Zoom");
                 var euler = def.BeamProps.localEulerAngles;
                 euler.x = tan;
                 def.BeamProps.localEulerAngles = euler;
+            }
+        });
+
+        // Focus is a direct 0-1 pass-through on BeamProps.localPosition.y -- its
+        // own Vector3 (kept off the zoom rotation so the two key independently),
+        // and no unit conversion, unlike zoom's tan/degrees split.
+        _focusFloatField.RegisterValueChangedCallback(e =>
+        {
+            _focusSlider.SetValueWithoutNotify(e.newValue);
+            foreach (var (def, profile) in _selection)
+            {
+                if (!profile.HasFocus) continue;
+                Undo.RecordObject(def.BeamProps, "Fixture Focus");
+                var pos = def.BeamProps.localPosition;
+                pos.y = e.newValue;
+                def.BeamProps.localPosition = pos;
+            }
+        });
+
+        _focusSlider.RegisterValueChangedCallback(e =>
+        {
+            _focusFloatField.SetValueWithoutNotify(e.newValue);
+            foreach (var (def, profile) in _selection)
+            {
+                if (!profile.HasFocus) continue;
+                Undo.RecordObject(def.BeamProps, "Fixture Focus");
+                var pos = def.BeamProps.localPosition;
+                pos.y = e.newValue;
+                def.BeamProps.localPosition = pos;
             }
         });
 
@@ -302,13 +337,14 @@ public class DiamondEWinFixtureProperties : EditorWindow
             var allSameTemp = _selection.All(s => Mathf.Approximately(s.def.ColourTemperature, firstDef.ColourTemperature));
             if (allSameTemp)
             {
+                _colourTemperatureField.showMixedValue = false;
                 _colourTemperatureField.value = firstDef.ColourTemperature;
                 Color preview = DiamondFixtureDefinition.BlackbodyToRGB(firstDef.ColourTemperature);
                 _colourPreviewField.value = preview;
             }
             else
             {
-                _colourTemperatureField.SetValueWithoutNotify(0);
+                _colourTemperatureField.showMixedValue = true;
             }
         }
         else if (allSameMode && firstDef.Colour == DiamondFixtureDefinition.ColourMode.RGB)
@@ -320,11 +356,12 @@ public class DiamondEWinFixtureProperties : EditorWindow
             var allSameColor = _selection.All(s => s.def.EmissionColor == firstDef.EmissionColor);
             if (allSameColor)
             {
+                _emissionColourField.showMixedValue = false;
                 _emissionColourField.value = firstDef.EmissionColor;
             }
             else
             {
-                _emissionColourField.SetValueWithoutNotify(Color.black);
+                _emissionColourField.showMixedValue = true;
             }
         }
         else
@@ -360,31 +397,28 @@ public class DiamondEWinFixtureProperties : EditorWindow
 
         // Update brightness (LampProps.localPosition.y)
         var brightnessValues = _selection.Select(s => s.def.LampProps.localPosition.y).Distinct().ToList();
-        if (brightnessValues.Count == 1)
+        SetFieldValues(_brightnessFloatField, _brightnessSlider, brightnessValues);
+
+        // Update zoom (storage is tan(half-angle) on BeamProps.localEulerAngles.x;
+        // UI is full cone degrees, so distinct AFTER converting -- two tans that
+        // round to the same displayed degree should read as "not mixed").
+        bool anyHasZoom = _selection.Any(s => s.profile.HasZoom);
+        if (anyHasZoom)
         {
-            if (!Mathf.Approximately(_brightnessSlider.value, brightnessValues[0]))
-            {
-                _brightnessSlider.SetValueWithoutNotify(brightnessValues[0]);
-                _brightnessFloatField.SetValueWithoutNotify(brightnessValues[0]);
-            }
+            var zoomCapable = _selection.Where(s => s.profile.HasZoom).ToList();
+            var zoomValues = zoomCapable
+                .Select(s => DiamondFixtureDefinition.ZoomTanToDegrees(s.def.BeamProps.localEulerAngles.x))
+                .Distinct().ToList();
+            SetFieldValues(_zoomFloatField, _zoomSlider, zoomValues);
         }
 
-        // Update spread (storage is tan(half-angle) on BeamProps.localEulerAngles.x;
-        // UI is full cone degrees).
-        bool anyHasSpread = _selection.Any(s => s.profile.HasSpread);
-        if (anyHasSpread)
+        // Update focus (BeamProps.localPosition.y, direct 0-1 pass-through)
+        bool anyHasFocus = _selection.Any(s => s.profile.HasFocus);
+        if (anyHasFocus)
         {
-            var spreadCapable = _selection.Where(s => s.profile.HasSpread).ToList();
-            var spreadValues = spreadCapable.Select(s => s.def.BeamProps.localEulerAngles.x).Distinct().ToList();
-            if (spreadValues.Count == 1)
-            {
-                float degrees = DiamondFixtureDefinition.SpreadTanToDegrees(spreadValues[0]);
-                if (!Mathf.Approximately(_spreadSlider.value, degrees))
-                {
-                    _spreadSlider.SetValueWithoutNotify(degrees);
-                    _spreadFloatField.SetValueWithoutNotify(degrees);
-                }
-            }
+            var focusCapable = _selection.Where(s => s.profile.HasFocus).ToList();
+            var focusValues = focusCapable.Select(s => s.def.BeamProps.localPosition.y).Distinct().ToList();
+            SetFieldValues(_focusFloatField, _focusSlider, focusValues);
         }
 
         // Update beam intensity (BeamProps.localScale.y)
@@ -393,13 +427,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
         {
             var beamCapable = _selection.Where(s => s.profile.HasBeam).ToList();
             var beamValues = beamCapable.Select(s => s.def.BeamProps.localScale.y).Distinct().ToList();
-            if (beamValues.Count == 1)
-            {
-                if (!Mathf.Approximately(_beamIntensityField.value, beamValues[0]))
-                {
-                    _beamIntensityField.SetValueWithoutNotify(beamValues[0]);
-                }
-            }
+            SetFieldValues(_beamIntensityField, beamValues);
         }
 
         // Update rotations
@@ -408,14 +436,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
         {
             var axisXCapable = _selection.Where(s => s.profile.AxisX.Enabled).ToList();
             var axisXValues = axisXCapable.Select(s => NormalizeAngle(s.def.Head.localEulerAngles[0])).Distinct().ToList();
-            if (axisXValues.Count == 1)
-            {
-                if (!Mathf.Approximately(_axisXSlider.value, axisXValues[0]))
-                {
-                    _axisXSlider.SetValueWithoutNotify(axisXValues[0]);
-                    _axisXFloatField.SetValueWithoutNotify(axisXValues[0]);
-                }
-            }
+            SetFieldValues(_axisXFloatField, _axisXSlider, axisXValues);
         }
 
         bool anyAxisYEnabled = _selection.Any(s => s.profile.AxisY.Enabled);
@@ -423,14 +444,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
         {
             var axisYCapable = _selection.Where(s => s.profile.AxisY.Enabled).ToList();
             var axisYValues = axisYCapable.Select(s => NormalizeAngle(s.def.Head.localEulerAngles[1])).Distinct().ToList();
-            if (axisYValues.Count == 1)
-            {
-                if (!Mathf.Approximately(_axisYSlider.value, axisYValues[0]))
-                {
-                    _axisYSlider.SetValueWithoutNotify(axisYValues[0]);
-                    _axisYFloatField.SetValueWithoutNotify(axisYValues[0]);
-                }
-            }
+            SetFieldValues(_axisYFloatField, _axisYSlider, axisYValues);
         }
 
         bool anyAxisZEnabled = _selection.Any(s => s.profile.AxisZ.Enabled);
@@ -438,14 +452,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
         {
             var axisZCapable = _selection.Where(s => s.profile.AxisZ.Enabled).ToList();
             var axisZValues = axisZCapable.Select(s => NormalizeAngle(s.def.Head.localEulerAngles[2])).Distinct().ToList();
-            if (axisZValues.Count == 1)
-            {
-                if (!Mathf.Approximately(_axisZSlider.value, axisZValues[0]))
-                {
-                    _axisZSlider.SetValueWithoutNotify(axisZValues[0]);
-                    _axisZFloatField.SetValueWithoutNotify(axisZValues[0]);
-                }
-            }
+            SetFieldValues(_axisZFloatField, _axisZSlider, axisZValues);
         }
 
         Repaint();
@@ -540,26 +547,28 @@ public class DiamondEWinFixtureProperties : EditorWindow
             _fixtureName.text = $"{_selection.Count} fixtures selected";
         }
 
-        // Update on toggle - show blank if mixed
+        // Update on toggle - show the mixed dash if the selection disagrees
         var onStates = _selection.Select(s => s.def.LampProps.gameObject.activeSelf).Distinct().ToList();
         if (onStates.Count == 1)
         {
+            _onToggle.showMixedValue = false;
             _onToggle.SetValueWithoutNotify(onStates[0]);
         }
         else
         {
-            _onToggle.SetValueWithoutNotify(false);
+            _onToggle.showMixedValue = true;
         }
 
         // Update colour mode and controls
         var colorModes = _selection.Select(s => s.def.Colour).Distinct().ToList();
         if (colorModes.Count == 1)
         {
+            _colourModeField.showMixedValue = false;
             _colourModeField.SetValueWithoutNotify(colorModes[0]);
         }
         else
         {
-            _colourModeField.SetValueWithoutNotify(null);
+            _colourModeField.showMixedValue = true;
         }
         RefreshColourUI();
 
@@ -571,46 +580,48 @@ public class DiamondEWinFixtureProperties : EditorWindow
         _brightnessSlider.highValue = maxBrightness;
 
         var brightnessValues = _selection.Select(s => s.def.LampProps.localPosition.y).Distinct().ToList();
-        if (brightnessValues.Count == 1)
+        SetFieldValues(_brightnessFloatField, _brightnessSlider, brightnessValues);
+
+        // Zoom - show only if any fixture has it
+        bool anyHasZoom = _selection.Any(s => s.profile.HasZoom);
+        if (anyHasZoom)
         {
-            _brightnessSlider.SetValueWithoutNotify(brightnessValues[0]);
-            _brightnessFloatField.SetValueWithoutNotify(brightnessValues[0]);
+            _zoomPlaceholder.style.display = DisplayStyle.None;
+            _zoomFloatField.style.display = DisplayStyle.Flex;
+            _zoomSlider.style.display = DisplayStyle.Flex;
+
+            var zoomCapable = _selection.Where(s => s.profile.HasZoom).ToList();
+            _zoomSlider.lowValue  = zoomCapable.Min(s => s.profile.ZoomMinDegrees);
+            _zoomSlider.highValue = zoomCapable.Max(s => s.profile.ZoomMaxDegrees);
+            var zoomValues = zoomCapable
+                .Select(s => DiamondFixtureDefinition.ZoomTanToDegrees(s.def.BeamProps.localEulerAngles.x))
+                .Distinct().ToList();
+            SetFieldValues(_zoomFloatField, _zoomSlider, zoomValues);
         }
         else
         {
-            _brightnessSlider.SetValueWithoutNotify(0);
-            _brightnessFloatField.SetValueWithoutNotify(0);
+            _zoomPlaceholder.style.display = DisplayStyle.Flex;
+            _zoomFloatField.style.display = DisplayStyle.None;
+            _zoomSlider.style.display = DisplayStyle.None;
         }
 
-        // Spread - show only if any fixture has it
-        bool anyHasSpread = _selection.Any(s => s.profile.HasSpread);
-        if (anyHasSpread)
+        // Focus - show only if any fixture has a programmable focus control.
+        bool anyHasFocus = _selection.Any(s => s.profile.HasFocus);
+        if (anyHasFocus)
         {
-            _spreadPlaceholder.style.display = DisplayStyle.None;
-            _spreadFloatField.style.display = DisplayStyle.Flex;
-            _spreadSlider.style.display = DisplayStyle.Flex;
+            _focusPlaceholder.style.display = DisplayStyle.None;
+            _focusFloatField.style.display = DisplayStyle.Flex;
+            _focusSlider.style.display = DisplayStyle.Flex;
 
-            var spreadCapable = _selection.Where(s => s.profile.HasSpread).ToList();
-            _spreadSlider.lowValue  = spreadCapable.Min(s => s.profile.SpreadMinDegrees);
-            _spreadSlider.highValue = spreadCapable.Max(s => s.profile.SpreadMaxDegrees);
-            var spreadValues = spreadCapable.Select(s => s.def.BeamProps.localEulerAngles.x).Distinct().ToList();
-            if (spreadValues.Count == 1)
-            {
-                float degrees = DiamondFixtureDefinition.SpreadTanToDegrees(spreadValues[0]);
-                _spreadSlider.SetValueWithoutNotify(degrees);
-                _spreadFloatField.SetValueWithoutNotify(degrees);
-            }
-            else
-            {
-                _spreadSlider.SetValueWithoutNotify(0);
-                _spreadFloatField.SetValueWithoutNotify(0);
-            }
+            var focusCapable = _selection.Where(s => s.profile.HasFocus).ToList();
+            var focusValues = focusCapable.Select(s => s.def.BeamProps.localPosition.y).Distinct().ToList();
+            SetFieldValues(_focusFloatField, _focusSlider, focusValues);
         }
         else
         {
-            _spreadPlaceholder.style.display = DisplayStyle.Flex;
-            _spreadFloatField.style.display = DisplayStyle.None;
-            _spreadSlider.style.display = DisplayStyle.None;
+            _focusPlaceholder.style.display = DisplayStyle.Flex;
+            _focusFloatField.style.display = DisplayStyle.None;
+            _focusSlider.style.display = DisplayStyle.None;
         }
 
         // Beam intensity - show only if any fixture has a volumetric beam
@@ -622,14 +633,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
 
             var beamCapable = _selection.Where(s => s.profile.HasBeam).ToList();
             var beamValues = beamCapable.Select(s => s.def.BeamProps.localScale.y).Distinct().ToList();
-            if (beamValues.Count == 1)
-            {
-                _beamIntensityField.SetValueWithoutNotify(beamValues[0]);
-            }
-            else
-            {
-                _beamIntensityField.SetValueWithoutNotify(0);
-            }
+            SetFieldValues(_beamIntensityField, beamValues);
         }
         else
         {
@@ -651,16 +655,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
             _axisXSlider.lowValue = axisXCapable.Min(s => s.profile.AxisX.Min);
             _axisXSlider.highValue = axisXCapable.Max(s => s.profile.AxisX.Max);
             var axisXValues = axisXCapable.Select(s => NormalizeAngle(s.def.Head.localEulerAngles[0])).Distinct().ToList();
-            if (axisXValues.Count == 1)
-            {
-                _axisXSlider.SetValueWithoutNotify(axisXValues[0]);
-                _axisXFloatField.SetValueWithoutNotify(axisXValues[0]);
-            }
-            else
-            {
-                _axisXSlider.SetValueWithoutNotify(0);
-                _axisXFloatField.SetValueWithoutNotify(0);
-            }
+            SetFieldValues(_axisXFloatField, _axisXSlider, axisXValues);
         }
         else
         {
@@ -676,16 +671,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
             _axisYSlider.lowValue = axisYCapable.Min(s => s.profile.AxisY.Min);
             _axisYSlider.highValue = axisYCapable.Max(s => s.profile.AxisY.Max);
             var axisYValues = axisYCapable.Select(s => NormalizeAngle(s.def.Head.localEulerAngles[1])).Distinct().ToList();
-            if (axisYValues.Count == 1)
-            {
-                _axisYSlider.SetValueWithoutNotify(axisYValues[0]);
-                _axisYFloatField.SetValueWithoutNotify(axisYValues[0]);
-            }
-            else
-            {
-                _axisYSlider.SetValueWithoutNotify(0);
-                _axisYFloatField.SetValueWithoutNotify(0);
-            }
+            SetFieldValues(_axisYFloatField, _axisYSlider, axisYValues);
         }
         else
         {
@@ -701,16 +687,7 @@ public class DiamondEWinFixtureProperties : EditorWindow
             _axisZSlider.lowValue = axisZCapable.Min(s => s.profile.AxisZ.Min);
             _axisZSlider.highValue = axisZCapable.Max(s => s.profile.AxisZ.Max);
             var axisZValues = axisZCapable.Select(s => NormalizeAngle(s.def.Head.localEulerAngles[2])).Distinct().ToList();
-            if (axisZValues.Count == 1)
-            {
-                _axisZSlider.SetValueWithoutNotify(axisZValues[0]);
-                _axisZFloatField.SetValueWithoutNotify(axisZValues[0]);
-            }
-            else
-            {
-                _axisZSlider.SetValueWithoutNotify(0);
-                _axisZFloatField.SetValueWithoutNotify(0);
-            }
+            SetFieldValues(_axisZFloatField, _axisZSlider, axisZValues);
         }
         else
         {
@@ -723,5 +700,49 @@ public class DiamondEWinFixtureProperties : EditorWindow
         angle %= 360f;
         if (angle > 180f) angle -= 360f;
         return angle;
+    }
+
+    // Pushes a set of per-fixture values into a float field + slider pair,
+    // showing Unity's standard mixed-value dash when the selection disagrees
+    // instead of silently picking 0 or the last value. Typing/dragging still
+    // applies one value to every selected fixture (via the field's own
+    // RegisterValueChangedCallback) and implicitly clears the mixed state on
+    // the next refresh, once all fixtures agree.
+    //
+    // Does not touch display (Flex/None) or slider bounds -- callers that need
+    // a placeholder swap or per-selection lowValue/highValue keep doing that
+    // themselves around this call; it only owns the value/showMixedValue pair.
+    private static void SetFieldValues(FloatField field, Slider slider, List<float> distinctValues)
+    {
+        if (distinctValues.Count == 1)
+        {
+            field.showMixedValue = false;
+            slider.showMixedValue = false;
+            if (!Mathf.Approximately(field.value, distinctValues[0]))
+            {
+                field.SetValueWithoutNotify(distinctValues[0]);
+                slider.SetValueWithoutNotify(distinctValues[0]);
+            }
+        }
+        else
+        {
+            field.showMixedValue = true;
+            slider.showMixedValue = true;
+        }
+    }
+
+    // Slider-less counterpart (e.g. Beam Intensity, which is unbounded).
+    private static void SetFieldValues(FloatField field, List<float> distinctValues)
+    {
+        if (distinctValues.Count == 1)
+        {
+            field.showMixedValue = false;
+            if (!Mathf.Approximately(field.value, distinctValues[0]))
+                field.SetValueWithoutNotify(distinctValues[0]);
+        }
+        else
+        {
+            field.showMixedValue = true;
+        }
     }
 }

@@ -182,34 +182,34 @@ public class DiamondEInsFixtureDefinition : Editor
             }
         }
 
-        if (p.HasSpread)
+        if (p.HasZoom)
         {
-            // Spread is stored as tan(half-angle) on BeamProps.localEulerAngles.x
+            // Zoom is stored as tan(half-angle) on BeamProps.localEulerAngles.x
             // (rotation, not scale, so it doesn't bundle with beam intensity in
             // the animator) but presented as full cone degrees in the UI.
-            float firstSpreadTan     = firstDef.BeamProps != null ? firstDef.BeamProps.localEulerAngles.x : 0f;
-            float firstSpreadDegrees = DiamondFixtureDefinition.SpreadTanToDegrees(firstSpreadTan);
-            bool mixedSpread = false;
+            float firstZoomTan     = firstDef.BeamProps != null ? firstDef.BeamProps.localEulerAngles.x : 0f;
+            float firstZoomDegrees = DiamondFixtureDefinition.ZoomTanToDegrees(firstZoomTan);
+            bool mixedZoom = false;
             foreach (var t in targets)
             {
                 var bp = ((DiamondFixtureDefinition)t).BeamProps;
-                if (bp == null) { mixedSpread = true; break; }
-                if (!Mathf.Approximately(bp.localEulerAngles.x, firstSpreadTan)) mixedSpread = true;
+                if (bp == null) { mixedZoom = true; break; }
+                if (!Mathf.Approximately(bp.localEulerAngles.x, firstZoomTan)) mixedZoom = true;
             }
 
-            EditorGUI.showMixedValue = mixedSpread;
+            EditorGUI.showMixedValue = mixedZoom;
             EditorGUI.BeginChangeCheck();
-            float newDegrees = EditorGUILayout.Slider("Spread (degrees)", firstSpreadDegrees,
-                p.SpreadMinDegrees, p.SpreadMaxDegrees);
+            float newDegrees = EditorGUILayout.Slider("Zoom (degrees)", firstZoomDegrees,
+                p.ZoomMinDegrees, p.ZoomMaxDegrees);
             EditorGUI.showMixedValue = false;
             if (EditorGUI.EndChangeCheck())
             {
-                float newTan = DiamondFixtureDefinition.SpreadDegreesToTan(newDegrees);
+                float newTan = DiamondFixtureDefinition.ZoomDegreesToTan(newDegrees);
                 foreach (var t in targets)
                 {
                     var bp = ((DiamondFixtureDefinition)t).BeamProps;
                     if (bp == null) continue;
-                    Undo.RecordObject(bp, "Fixture Spread");
+                    Undo.RecordObject(bp, "Fixture Zoom");
                     var euler = bp.localEulerAngles; euler.x = newTan; bp.localEulerAngles = euler;
                 }
             }

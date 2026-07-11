@@ -48,32 +48,36 @@ float  _FarFade;
 float  _ScatterStrength;
 float  _Anisotropy;
 
-// Focus: how fast the cone defocuses with distance, as a fraction of its own spread.
+// --- Per-instance properties -------------------------------------------------
+// Pushed by DiamondFixtureDriver via a MaterialPropertyBlock so each fixture
+// can vary independently. _ZoomX/_ZoomZ are animated (via
+// BeamProps.localEulerAngles.x), stored as tan(half-angle) so the shader uses
+// them directly. The round shader only reads _ZoomX (symmetric cone) but the
+// driver writes both, and _ZoomZ is simply ignored there.
+//
+// Focus: how fast the cone defocuses with distance, as a fraction of its own zoom.
 // Sharp at the emitter, spreading more toward the far end.
 //   1 = perfectly collimated: crisp edge, only haze softens it across the throw.
 //   0 = defocuses to twice the cone's half-angle by the far end.
 // The focus spill is measured in metres, grows linearly with depth, and scales with
-// the spread: spill_focus = K*(1-_Focus)*spreadX*d. It combines in quadrature with
+// the zoom: spill_focus = K*(1-_Focus)*zoomX*d. It combines in quadrature with
 // the haze scatter spill and is then divided by the cone radius to give the edge
 // profile's width (see DiamondFocusSpill and DiamondEdgeWidth in the frag). Scaling
-// by the spread is what makes defocus feel consistent across beam widths: narrow and
+// by the zoom is what makes defocus feel consistent across beam widths: narrow and
 // wide beams defocus by the same proportion, instead of a narrow beam blowing out to
-// a huge angle. A collimated beam (spreadX = 0) has no angle to widen, so focus does
+// a huge angle. A collimated beam (zoomX = 0) has no angle to widen, so focus does
 // nothing to it, though haze scatter still softens its edge. Because the spill is
 // zero at the emitter and added in metres to the wall, the source stays at radius r0.
-float  _Focus;
-
-// --- Per-instance properties -------------------------------------------------
-// Pushed by DiamondFixtureDriver via a MaterialPropertyBlock so each fixture
-// can vary independently. _SpreadX/_SpreadZ are animated (via
-// BeamProps.localEulerAngles.x), stored as tan(half-angle) so the shader uses
-// them directly. The round shader only reads _SpreadX (symmetric cone) but the
-// driver writes both, and _SpreadZ is simply ignored there.
+// Per-instance (not material-level) so each fixture can animate focus independently
+// without breaking GPU instancing -- a plain global float is shared by every
+// instance in a batch, so a per-fixture MaterialPropertyBlock write would either
+// silently desync instances sharing a material or break the batch.
 UNITY_INSTANCING_BUFFER_START(Props)
     UNITY_DEFINE_INSTANCED_PROP(float,  _EmitterWidth)
     UNITY_DEFINE_INSTANCED_PROP(float,  _EmitterHeight)
-    UNITY_DEFINE_INSTANCED_PROP(float,  _SpreadX)
-    UNITY_DEFINE_INSTANCED_PROP(float,  _SpreadZ)
+    UNITY_DEFINE_INSTANCED_PROP(float,  _ZoomX)
+    UNITY_DEFINE_INSTANCED_PROP(float,  _ZoomZ)
+    UNITY_DEFINE_INSTANCED_PROP(float,  _Focus)
     UNITY_DEFINE_INSTANCED_PROP(float4, _Color)
     UNITY_DEFINE_INSTANCED_PROP(float3, _CubeLocalScale)
     UNITY_DEFINE_INSTANCED_PROP(float,  _BeamIntensity)
@@ -160,7 +164,7 @@ float BeamDensityAtDistance(float distance, float crossArea, float emitterArea,
 // Both vert and frag call this so they agree on where the beam ends.
 //
 // Shape shaders define DIAMOND_CROSS_AREA(distance) and DIAMOND_EMITTER_AREA as
-// expressions in terms of the locals already in scope (emitter dims, spread).
+// expressions in terms of the locals already in scope (emitter dims, zoom).
 #define DIAMOND_DERIVE_BEAM_LENGTH(outLength)                                   \
 {                                                                              \
     float _threshold = max(_BeamCutoffThreshold, 1e-5);                        \
@@ -190,15 +194,15 @@ float BeamDensityAtDistance(float distance, float crossArea, float emitterArea,
 // Maps a unit-cube vertex to a bounding box in beam space (world units, +Y along
 // beam, origin at emitter centre) that guarantees to contain the beam in every
 // configuration. A circular cone fits inside the same box as a square one of
-// equal spread, so both shapes share this (round passes its single spread twice).
+// equal zoom, so both shapes share this (round passes its single zoom twice).
 //
-// Tapered: since both the geometric spread and the lateral spill grow linearly
+// Tapered: since both the geometric zoom and the lateral spill grow linearly
 // with depth, the true worst-case cross-section is itself linear in Y, so the
 // near cap can be as tight as the emitter instead of matching the far cap's
 // width. Lerping half-width by unitVertex.y (0 at the near cap, 1 at the far
 // cap) reproduces that taper exactly with the same 8-vertex cube topology --
 // no extra vertices, just a per-vertex Y-dependent width. This is the main
-// overdraw saving for narrow-emitter / wide-spread fixtures, where the old
+// overdraw saving for narrow-emitter / wide-zoom fixtures, where the old
 // constant-width box wasted a large fraction of its cross-section as empty
 // margin near the source.
 //
@@ -207,7 +211,7 @@ float BeamDensityAtDistance(float distance, float crossArea, float emitterArea,
 //   Lateral (X/Z): interpolated from the emitter half-size at y=0 to the worst-case
 //               far-cap half-width at y=beamLength:
 //               emitter half-size
-//             + (geometric spread + lateral spill spread) * y
+//             + (geometric zoom + lateral spill spread) * y
 //             + shear lean * y
 //
 // The lateral spill (defocus + haze scatter) is an additive metric amount that
@@ -223,7 +227,7 @@ float BeamDensityAtDistance(float distance, float crossArea, float emitterArea,
 //   z in [-0.5, +0.5] -> Z side of the box
 float3 ExpandUnitCubeToFrustumBounds(float3 unitVertex,
     float emitterWidth, float emitterHeight,
-    float spreadX, float spreadZ, float beamLength)
+    float zoomX, float zoomZ, float beamLength)
 {
     float maxLen = max(_BeamLengthMax, 0.0);
     float yFrac  = unitVertex.y + 0.5;   // 0 at near cap, 1 at far cap
@@ -238,10 +242,10 @@ float3 ExpandUnitCubeToFrustumBounds(float3 unitVertex,
     // (no taper), extended by a safety margin. Wasteful on overdraw by design --
     // it exists only to take the vertex box out of the equation.
     float scatterRateC  = DIAMOND_SCATTER_K * max(_HazeDensity, 0.0) * saturate(_ScatterStrength);
-    float spillSpreadXC = sqrt(spreadX*spreadX * (DIAMOND_SCATTER_K*DIAMOND_SCATTER_K) + scatterRateC*scatterRateC);
-    float spillSpreadZC = sqrt(spreadZ*spreadZ * (DIAMOND_SCATTER_K*DIAMOND_SCATTER_K) + scatterRateC*scatterRateC);
-    float halfWidthC  = emitterWidth  * 0.5 + (spreadX + spillSpreadXC + abs(_ShearX)) * maxLen + 1.0;
-    float halfHeightC = emitterHeight * 0.5 + (spreadZ + spillSpreadZC + abs(_ShearZ)) * maxLen + 1.0;
+    float spillSpreadXC = sqrt(zoomX*zoomX * (DIAMOND_SCATTER_K*DIAMOND_SCATTER_K) + scatterRateC*scatterRateC);
+    float spillSpreadZC = sqrt(zoomZ*zoomZ * (DIAMOND_SCATTER_K*DIAMOND_SCATTER_K) + scatterRateC*scatterRateC);
+    float halfWidthC  = emitterWidth  * 0.5 + (zoomX + spillSpreadXC + abs(_ShearX)) * maxLen + 1.0;
+    float halfHeightC = emitterHeight * 0.5 + (zoomZ + spillSpreadZC + abs(_ShearZ)) * maxLen + 1.0;
 
     float3 boxC;
     boxC.x = unitVertex.x * 2.0 * halfWidthC;
@@ -251,17 +255,17 @@ float3 ExpandUnitCubeToFrustumBounds(float3 unitVertex,
 #else
 
     // Worst-case extra spread per metre from lateral spill (focus plus haze scatter),
-    // matching the frag's spillSpread. Focus scales with the cone's own spread, and at
-    // its worst (focus = 0) the rate equals the spread, so the focus term is per-axis
+    // matching the frag's spillSpread. Focus scales with the cone's own zoom, and at
+    // its worst (focus = 0) the rate equals the zoom, so the focus term is per-axis
     // rather than a single absolute rate. Scatter is the same on both axes.
     float scatterRate  = DIAMOND_SCATTER_K * max(_HazeDensity, 0.0) * saturate(_ScatterStrength);
-    float spillSpreadX = sqrt(spreadX*spreadX * (DIAMOND_SCATTER_K*DIAMOND_SCATTER_K) + scatterRate*scatterRate);
-    float spillSpreadZ = sqrt(spreadZ*spreadZ * (DIAMOND_SCATTER_K*DIAMOND_SCATTER_K) + scatterRate*scatterRate);
+    float spillSpreadX = sqrt(zoomX*zoomX * (DIAMOND_SCATTER_K*DIAMOND_SCATTER_K) + scatterRate*scatterRate);
+    float spillSpreadZ = sqrt(zoomZ*zoomZ * (DIAMOND_SCATTER_K*DIAMOND_SCATTER_K) + scatterRate*scatterRate);
 
     // Half-extents at this vertex's depth (yFrac * maxLen metres from the emitter),
     // tapering from the emitter half-size up to the far-cap worst case.
-    float halfWidth  = emitterWidth  * 0.5 + (spreadX + spillSpreadX) * maxLen * yFrac + abs(_ShearX) * maxLen * yFrac;
-    float halfHeight = emitterHeight * 0.5 + (spreadZ + spillSpreadZ) * maxLen * yFrac + abs(_ShearZ) * maxLen * yFrac;
+    float halfWidth  = emitterWidth  * 0.5 + (zoomX + spillSpreadX) * maxLen * yFrac + abs(_ShearX) * maxLen * yFrac;
+    float halfHeight = emitterHeight * 0.5 + (zoomZ + spillSpreadZ) * maxLen * yFrac + abs(_ShearZ) * maxLen * yFrac;
 
     float3 beamSpace;
     beamSpace.x = unitVertex.x * 2.0 * halfWidth;
@@ -326,19 +330,19 @@ v2f DiamondBeamVert(appdata v)
 
     float emitterWidth  = UNITY_ACCESS_INSTANCED_PROP(Props, _EmitterWidth);
     float emitterHeight = UNITY_ACCESS_INSTANCED_PROP(Props, _EmitterHeight);
-    float spreadX       = UNITY_ACCESS_INSTANCED_PROP(Props, _SpreadX);
-    float spreadZ       = UNITY_ACCESS_INSTANCED_PROP(Props, _SpreadZ);
+    float zoomX         = UNITY_ACCESS_INSTANCED_PROP(Props, _ZoomX);
+    float zoomZ         = UNITY_ACCESS_INSTANCED_PROP(Props, _ZoomZ);
     float beamIntensity = UNITY_ACCESS_INSTANCED_PROP(Props, _BeamIntensity);
 
     float beamLength;
     DIAMOND_DERIVE_BEAM_LENGTH(beamLength);
 
-    // The round shader collapses to a symmetric cone: it #defines spreadZ to
-    // equal spreadX before including, so the bounding box is a square that
-    // contains the circle. (Rect uses the two independently.)
+    // The round shader collapses to a symmetric cone: its DIAMOND_BOUNDS_ZOOM_X/Z
+    // macros both resolve to zoomX (it ignores _ZoomZ), so the bounding box is a
+    // square that contains the circle. (Rect uses the two independently.)
     float3 beamSpace = ExpandUnitCubeToFrustumBounds(
         v.vertex.xyz, emitterWidth, emitterHeight,
-        DIAMOND_BOUNDS_SPREAD_X, DIAMOND_BOUNDS_SPREAD_Z, beamLength);
+        DIAMOND_BOUNDS_ZOOM_X, DIAMOND_BOUNDS_ZOOM_Z, beamLength);
 
     // The cube's transform applies its localScale on top via ObjectToWorld. To
     // make the rendered size independent of that scale, pre-divide by the

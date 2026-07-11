@@ -114,7 +114,6 @@ public class DiamondEWinFixtureMap : EditorWindow
 
     // Visual element refs
     private IMGUIContainer _canvas;
-    private Label          _pathLabel;
 
     // Selection includes state: which sub-objects of a fixture a selection grabs.
     private bool _selectionIncludesMainFixture = true;
@@ -219,8 +218,6 @@ public class DiamondEWinFixtureMap : EditorWindow
             return;
         }
         uxml.CloneTree(rootVisualElement);
-
-        _pathLabel = rootVisualElement.Q<Label>("map-path-label");
 
         _canvas = rootVisualElement.Q<IMGUIContainer>("canvas");
         _canvas.onGUIHandler = DrawCanvas;
@@ -368,23 +365,15 @@ public class DiamondEWinFixtureMap : EditorWindow
         _fixtureDefinitions = new List<UnityEngine.Object>();
         _groups             = new List<GroupEntry>();
 
-        if (_managerDef == null)
-        {
-            _pathLabel.text = "No manager selected";
-        }
-        else
+        if (_managerDef != null)
         {
             var manager = _managerDef.GetComponent<DiamondManager>();
             if (manager == null)
             {
-                _pathLabel.text = $"{_managerDef.name}: no DiamondManager sibling";
                 Debug.LogWarning($"[Diamond] '{_managerDef.name}' has no DiamondManager to read fixtures from.", _managerDef);
             }
             else
             {
-                _pathLabel.text = string.IsNullOrEmpty(_managerDef.DisplayName)
-                    ? _managerDef.name : _managerDef.DisplayName;
-
                 BuildFixturesFromManager(manager);
                 BuildGroupsFromDefinition();
             }

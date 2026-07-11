@@ -36,8 +36,8 @@ public class DiamondEInsFixtureProfile : Editor
             EditorGUILayout.PropertyField(serializedObject.FindProperty("FixtureWidth"),
                 new GUIContent("Emitter Diameter (m)", "Circular emitter diameter. Radius is half this."));
             EditorGUILayout.HelpBox(
-                "Round fixtures use a symmetric cone (single spread) and the Diamond/BeamRound shader. " +
-                "Height and Z-spread are ignored.", MessageType.None);
+                "Round fixtures use a symmetric cone (single zoom) and the Diamond/BeamRound shader. " +
+                "Height and Z-zoom are ignored.", MessageType.None);
         }
         else
         {
@@ -58,23 +58,31 @@ public class DiamondEInsFixtureProfile : Editor
         EditorGUILayout.PropertyField(serializedObject.FindProperty("BrightnessMin"), new GUIContent("Min"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("BrightnessMax"), new GUIContent("Max"));
 
-        // --- Spread --------------------------------------------------
+        // --- Zoom ----------------------------------------------------
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Beam", EditorStyles.boldLabel);
-        EditorGUILayout.PropertyField(serializedObject.FindProperty("HasSpread"), new GUIContent("Has Spread"));
-        if (p.HasSpread)
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("HasZoom"), new GUIContent("Has Zoom"));
+        if (p.HasZoom)
         {
-            // Spread is a full cone angle in degrees for both shapes; for round
+            // Zoom is a full cone angle in degrees for both shapes; for round
             // it's the symmetric cone, for rect it's the per-axis half-angle
             // convention the driver expands to a square cone.
-            string spreadLabel = round ? "Cone Angle (deg)" : "Spread (deg)";
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("SpreadMinDegrees"),     new GUIContent($"{spreadLabel} Min"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("SpreadMaxDegrees"),     new GUIContent($"{spreadLabel} Max"));
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("SpreadDefaultDegrees"), new GUIContent($"{spreadLabel} Default"));
+            string zoomLabel = round ? "Cone Angle (deg)" : "Zoom (deg)";
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("ZoomMinDegrees"),     new GUIContent($"{zoomLabel} Min"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("ZoomMaxDegrees"),     new GUIContent($"{zoomLabel} Max"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("ZoomDefaultDegrees"), new GUIContent($"{zoomLabel} Default"));
         }
 
         EditorGUILayout.PropertyField(serializedObject.FindProperty("HasBeam"),
             new GUIContent("Has Beam", "Whether this fixture has a visible volumetric beam shaft."));
+
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("HasFocus"),
+            new GUIContent("Has Focus", "Whether this fixture's beam has a programmable focus control."));
+        if (p.HasFocus)
+        {
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("FocusDefault"),
+                new GUIContent("Focus Default", "1 = fully collimated (crisp). 0 = fully defocused."));
+        }
 
 #if BAKERY_INCLUDED
         // --- Bakery --------------------------------------------------

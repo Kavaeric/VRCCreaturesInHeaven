@@ -76,14 +76,29 @@
                 <ui:VisualElement class="separator" />
                 <ui:VisualElement class="h-2" />
 
-                <!-- Spread (full cone angle, degrees) -->
-                <ui:VisualElement name="spread-control">
-                    <ui:Label class="font-bold" text="Spread (degrees)" />
+                <!-- Zoom (full cone angle, degrees) -->
+                <ui:VisualElement name="zoom-control">
+                    <ui:Label class="font-bold" text="Zoom (degrees)" />
                     <ui:VisualElement class="h-0p5" />
                     <ui:VisualElement class="row">
-                        <ui:Label name="spread-placeholder" text="Fixture does not have programmable spread." class="text-muted"/>
-                        <ui:FloatField name="spread-float-field" class="min-w-10" low-value="0" high-value="180" />
-                        <ui:Slider name="spread-slider" class="grow" low-value="0" high-value="180" />
+                        <ui:Label name="zoom-placeholder" text="Fixture does not have programmable zoom." class="text-muted"/>
+                        <ui:FloatField name="zoom-float-field" class="min-w-10" low-value="0" high-value="180" />
+                        <ui:Slider name="zoom-slider" class="grow" low-value="0" high-value="180" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:VisualElement class="h-2" />
+                <ui:VisualElement class="separator" />
+                <ui:VisualElement class="h-2" />
+
+                <!-- Focus (0-1, direct pass-through; 1 = collimated/crisp, 0 = fully defocused) -->
+                <ui:VisualElement name="focus-control">
+                    <ui:Label class="font-bold" text="Focus" />
+                    <ui:VisualElement class="h-0p5" />
+                    <ui:VisualElement class="row">
+                        <ui:Label name="focus-placeholder" text="Fixture does not have programmable focus." class="text-muted"/>
+                        <ui:FloatField name="focus-float-field" class="min-w-10" low-value="0" high-value="1" />
+                        <ui:Slider name="focus-slider" class="grow" low-value="0" high-value="1" />
                     </ui:VisualElement>
                 </ui:VisualElement>
 

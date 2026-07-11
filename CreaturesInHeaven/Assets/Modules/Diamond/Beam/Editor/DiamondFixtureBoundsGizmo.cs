@@ -38,10 +38,10 @@ public static class DiamondFixtureBoundsGizmo
 
         Vector2 emitter = def.FixtureEmitterSize;
         float halfX = DiamondBeamMath.LateralHalfExtent(
-            emitter.x * 0.5f, def.MaxSpreadTan, def.MaxShearX,
+            emitter.x * 0.5f, def.MaxZoomTan, def.MaxShearX,
             maxHaze, maxScatter, def.MaxBeamLength);
         float halfZ = DiamondBeamMath.LateralHalfExtent(
-            emitter.y * 0.5f, def.MaxSpreadTan, def.MaxShearZ,
+            emitter.y * 0.5f, def.MaxZoomTan, def.MaxShearZ,
             maxHaze, maxScatter, def.MaxBeamLength);
 
         // Beam-space box (world metres), then divided by the cube counter-scale

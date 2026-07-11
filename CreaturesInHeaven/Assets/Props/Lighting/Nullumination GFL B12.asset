@@ -33,11 +33,13 @@ MonoBehaviour:
   Shape: 0
   BrightnessMin: 0
   BrightnessMax: 2
-  HasSpread: 1
-  SpreadMinDegrees: 5
-  SpreadMaxDegrees: 160
-  SpreadDefaultDegrees: 20
+  HasZoom: 1
+  ZoomMinDegrees: 5
+  ZoomMaxDegrees: 160
+  ZoomDefaultDegrees: 20
   HasBeam: 1
+  HasFocus: 1
+  FocusDefault: 0.8
   BakeryLightType: 2
   BakeryBrightnessScale: 8
   BakeryLightOffset: {x: 0, y: 0.1, z: 0}

@@ -445,31 +445,53 @@ public class DiamondManager : UdonSharpBehaviour
             EnableLightshowKeyword();
     }
 
+    // --- Shared atmosphere resolution --------------------------------
+    // The single source of truth for turning the manager-wide atmosphere state into four
+    // concrete scalars. For each parameter: the proxy's localPosition.y when it's animated
+    // (and wired), else the static inspector float. Haze and scatter are clamped to their
+    // Max ceilings when animated, so a proxy overshoot can't spill the beam past the
+    // culling AABB the bake sized to that ceiling (a static value sizes its own bounds and
+    // needs no cap). Anisotropy and the master intensity scale have no bounds ceiling, so
+    // they pass through unclamped.
+    //
+    // Called by BOTH runtime paths (PushAnimatedAtmosphereGlobal in texture mode,
+    // ApplyAnimatedManagerChannels in the proxy fallback) AND the edit-mode preview
+    // (DiamondFixtureMapPreview.ResolveAtmo), so all three read atmosphere identically --
+    // the clamp rules live in exactly one place. Public for that editor call; in edit mode
+    // the behaviour runs as plain C#, so it's an ordinary method invocation, no Udon VM.
+    // Reads only manager fields and writes nothing (pure), so it's safe to call anywhere.
+    public void ResolveAtmosphere(out float haze, out float scatter, out float aniso, out float intensityScale)
+    {
+        haze           = (AnimateHaze               && HazeProxy               != null) ? HazeProxy.localPosition.y               : HazeDensity;
+        scatter        = (AnimateScatter            && ScatterProxy            != null) ? ScatterProxy.localPosition.y            : ScatterStrength;
+        aniso          = (AnimateAnisotropy         && AnisotropyProxy         != null) ? AnisotropyProxy.localPosition.y         : Anisotropy;
+        intensityScale = (AnimateBeamIntensityScale && BeamIntensityScaleProxy != null) ? BeamIntensityScaleProxy.localPosition.y : BeamIntensityScale;
+
+        if (AnimateHaze)    haze    = Mathf.Clamp(haze,    0f, MaxHazeDensity);
+        if (AnimateScatter) scatter = Mathf.Clamp(scatter, 0f, MaxScatterStrength);
+    }
+
     // Texture-mode atmosphere push. Static haze/scatter/aniso are seeded per-block in
     // Start (they override the material). Animated ones aren't in the block, so pushing
     // them as GLOBAL uniforms (one call each, not per-fixture) drives every beam at
     // once. Cheap, and only touches a param that actually animates.
     private void PushAnimatedAtmosphereGlobal()
     {
-        if (AnimateHaze && HazeProxy != null)
-        {
-            float haze = Mathf.Clamp(HazeProxy.localPosition.y, 0f, MaxHazeDensity);
-            VRCShader.SetGlobalFloat(_idHazeDensity, haze);
-        }
-        if (AnimateScatter && ScatterProxy != null)
-        {
-            float scatter = Mathf.Clamp(ScatterProxy.localPosition.y, 0f, MaxScatterStrength);
-            VRCShader.SetGlobalFloat(_idScatterStrength, scatter);
-        }
-        if (AnimateAnisotropy && AnisotropyProxy != null)
-            VRCShader.SetGlobalFloat(_idAnisotropy, AnisotropyProxy.localPosition.y);
+        // Values (incl. the haze/scatter clamp) come from the shared resolver. The push
+        // gates stay here: push only the animated params, and only when their proxy is
+        // wired -- a static param was already seeded (per-block for haze/scatter/aniso, as
+        // a global for the master scale) in Start, so re-pushing it would be redundant.
+        float haze, scatter, aniso, intensityScale;
+        ResolveAtmosphere(out haze, out scatter, out aniso, out intensityScale);
+
+        if (AnimateHaze               && HazeProxy               != null) VRCShader.SetGlobalFloat(_idHazeDensity,               haze);
+        if (AnimateScatter            && ScatterProxy            != null) VRCShader.SetGlobalFloat(_idScatterStrength,           scatter);
+        if (AnimateAnisotropy         && AnisotropyProxy         != null) VRCShader.SetGlobalFloat(_idAnisotropy,                aniso);
         // Master beam-intensity scale. The texture holds per-fixture beamIntensity; the
         // shader multiplies this global on top (matching the proxy path's per-fixture
-        // `beamIntensity * BeamIntensityScale`). Only pushed when animated -- the static
-        // value was seeded once in Start. Not clamped: like the proxy path, master scale
-        // has no bake ceiling (it's a straight multiply, not a bounds-baked param).
-        if (AnimateBeamIntensityScale && BeamIntensityScaleProxy != null)
-            VRCShader.SetGlobalFloat(_idBeamIntensityScaleGlobal, BeamIntensityScaleProxy.localPosition.y);
+        // `beamIntensity * BeamIntensityScale`). Not clamped: like the proxy path, master
+        // scale has no bake ceiling (it's a straight multiply, not a bounds-baked param).
+        if (AnimateBeamIntensityScale && BeamIntensityScaleProxy != null) VRCShader.SetGlobalFloat(_idBeamIntensityScaleGlobal, intensityScale);
     }
 
     // Enables DIAMOND_LIGHTSHOW_TEX on the beam and lamp-glow materials so their shaders
@@ -651,18 +673,11 @@ public class DiamondManager : UdonSharpBehaviour
     // animated channel always applies once regardless of its authored float.
     private void ApplyAnimatedManagerChannels(int count)
     {
-        // Read the current animated values (only where the proxy exists).
-        float haze       = (AnimateHaze              && HazeProxy               != null) ? HazeProxy.localPosition.y               : HazeDensity;
-        float scatter    = (AnimateScatter           && ScatterProxy            != null) ? ScatterProxy.localPosition.y            : ScatterStrength;
-        float aniso      = (AnimateAnisotropy        && AnisotropyProxy         != null) ? AnisotropyProxy.localPosition.y         : Anisotropy;
-        float intScale   = (AnimateBeamIntensityScale && BeamIntensityScaleProxy != null) ? BeamIntensityScaleProxy.localPosition.y : BeamIntensityScale;
-
-        // Clamp animated haze/scatter to the ceilings the bounds were baked to, so
-        // a proxy overshoot can't spill the beam past its (edit-time) culling AABB.
-        // Only clamp when animated: a static value sizes its own bounds and needs
-        // no cap. Floor at 0 too, since a negative proxy read is meaningless here.
-        if (AnimateHaze)    haze    = Mathf.Clamp(haze,    0f, MaxHazeDensity);
-        if (AnimateScatter) scatter = Mathf.Clamp(scatter, 0f, MaxScatterStrength);
+        // Resolve the current animated values (static-or-proxy, with the haze/scatter
+        // clamp) through the shared resolver, so this path and the texture path can't
+        // disagree on how atmosphere is read or clamped. Named intScale locally, as before.
+        float haze, scatter, aniso, intScale;
+        ResolveAtmosphere(out haze, out scatter, out aniso, out intScale);
 
         // First frame: seed the last-values and apply once. After that, only the
         // channels that actually moved do any work.

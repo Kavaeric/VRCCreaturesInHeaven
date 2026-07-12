@@ -181,15 +181,13 @@ public static class DiamondFixtureMapPreview
         if (_atmoCache.TryGetValue(key, out var cached))
             return cached;
 
-        float haze     = (manager.AnimateHaze       && manager.HazeProxy       != null) ? manager.HazeProxy.localPosition.y       : manager.HazeDensity;
-        float scatter  = (manager.AnimateScatter    && manager.ScatterProxy    != null) ? manager.ScatterProxy.localPosition.y    : manager.ScatterStrength;
-        float aniso    = (manager.AnimateAnisotropy && manager.AnisotropyProxy != null) ? manager.AnisotropyProxy.localPosition.y : manager.Anisotropy;
-        float intScale = (manager.AnimateBeamIntensityScale && manager.BeamIntensityScaleProxy != null) ? manager.BeamIntensityScaleProxy.localPosition.y : manager.BeamIntensityScale;
-
-        // Match the runtime clamp so the preview shows what the beam will actually
-        // reach, not an unclamped proxy overshoot.
-        if (manager.AnimateHaze)    haze    = Mathf.Clamp(haze,    0f, manager.MaxHazeDensity);
-        if (manager.AnimateScatter) scatter = Mathf.Clamp(scatter, 0f, manager.MaxScatterStrength);
+        // Resolve through the manager's own canonical resolver, so the preview reads
+        // atmosphere exactly the way the runtime does -- same static-or-proxy choice, same
+        // haze/scatter clamp -- instead of re-implementing (and drifting from) that logic
+        // here. In edit mode the UdonSharpBehaviour runs as plain C#, so this is a direct
+        // method call, no Udon VM. Single source of truth: DiamondManager.ResolveAtmosphere.
+        float haze, scatter, aniso, intScale;
+        manager.ResolveAtmosphere(out haze, out scatter, out aniso, out intScale);
 
         var atmo = new Atmo
         {

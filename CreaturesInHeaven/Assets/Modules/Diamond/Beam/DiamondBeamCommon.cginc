@@ -81,7 +81,34 @@ UNITY_INSTANCING_BUFFER_START(Props)
     UNITY_DEFINE_INSTANCED_PROP(float4, _Color)
     UNITY_DEFINE_INSTANCED_PROP(float3, _CubeLocalScale)
     UNITY_DEFINE_INSTANCED_PROP(float,  _BeamIntensity)
+    // Row of this fixture's colour texel in the baked lightshow texture, and the
+    // manager/show slot in the global frame array. Both are STATIC per fixture,
+    // seeded once at Start (never per frame). Only read when DIAMOND_LIGHTSHOW_TEX
+    // is enabled; harmless (unread) otherwise.
+    UNITY_DEFINE_INSTANCED_PROP(float,  _FixtureRow)
+    UNITY_DEFINE_INSTANCED_PROP(float,  _ShowIndex)
 UNITY_INSTANCING_BUFFER_END(Props)
+
+// --- Baked lightshow lookup (DIAMOND_LIGHTSHOW_TEX) ---------------------------
+// When enabled, the animated per-fixture values (_Color, _ZoomX/Z, _Focus,
+// _BeamIntensity) are read from a baked texture instead of the instancing buffer,
+// so DiamondManager never touches them per frame on the CPU. The texture globals,
+// addressing math, and frame lerp live in DiamondLightshowSample.cginc, shared
+// verbatim with the lamp-glow shader so the two can't drift. Here we add only
+// the beam-specific master-scale global.
+#include "../Lightshow/DiamondLightshowSample.cginc"
+
+#ifdef DIAMOND_LIGHTSHOW_TEX
+// Manager-wide master multiplier on beam intensity (the proxy path folds this into
+// _BeamIntensity per fixture as `beamIntensity * BeamIntensityScale`; here it's one
+// global the shader multiplies onto the texture-recovered intensity). Distinct from
+// _UdonDiamondLightshowBeamScale, which is the per-BAKE HDR de-scale, not an art knob.
+// The manager always seeds this in texture mode (>=0; 1 = no-op), so the shader can
+// use it directly -- a raw 0 here means "master off / all beams dark", which is a
+// legitimate authored value, not an unset sentinel. Beam-only (the lamp glow ignores
+// beam intensity), so it stays here rather than in the shared sampler include.
+float       _UdonDiamondBeamIntensityScale;
+#endif // DIAMOND_LIGHTSHOW_TEX
 
 struct appdata
 {
@@ -106,8 +133,36 @@ struct v2f
     // down, sparing the frag that per-pixel bisection. Interpolation is exact because
     // every vertex of an instance produces the same value.
     float  beamLength : TEXCOORD4;
+#ifdef DIAMOND_LIGHTSHOW_TEX
+    // Texture-sourced animated values, sampled once in vert (they're per-instance
+    // constants, like beamLength) and passed to frag. Interpolation is exact: every
+    // vertex of an instance samples the same frame/row, so these are flat across it.
+    //   xyzw = _Color.rgb, _BeamIntensity   (packed to save an interpolator)
+    //   xyz  = _ZoomX, _Focus, (_ZoomZ = _ZoomX for the beam bake)
+    float4 lsColorIntensity : TEXCOORD5;
+    float3 lsZoomFocus      : TEXCOORD6;
+#endif
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
+
+// --- Animated-value resolvers ------------------------------------------------
+// Each animated per-fixture value comes from either the baked texture (via the v2f,
+// sampled in vert) or the instancing buffer. Frag/vert read them through these so the
+// two paths differ in exactly one place. In the texture path _ZoomZ mirrors _ZoomX
+// (the bake stores a single zoom, matching the old ApplyFixture _ZoomZ = zoom write).
+#ifdef DIAMOND_LIGHTSHOW_TEX
+    #define DIAMOND_COLOR(i)      float4((i).lsColorIntensity.rgb, 1)
+    #define DIAMOND_INTENSITY(i)  ((i).lsColorIntensity.w)
+    #define DIAMOND_ZOOMX(i)      ((i).lsZoomFocus.x)
+    #define DIAMOND_ZOOMZ(i)      ((i).lsZoomFocus.x)
+    #define DIAMOND_FOCUS(i)      ((i).lsZoomFocus.y)
+#else
+    #define DIAMOND_COLOR(i)      UNITY_ACCESS_INSTANCED_PROP(Props, _Color)
+    #define DIAMOND_INTENSITY(i)  UNITY_ACCESS_INSTANCED_PROP(Props, _BeamIntensity)
+    #define DIAMOND_ZOOMX(i)      UNITY_ACCESS_INSTANCED_PROP(Props, _ZoomX)
+    #define DIAMOND_ZOOMZ(i)      UNITY_ACCESS_INSTANCED_PROP(Props, _ZoomZ)
+    #define DIAMOND_FOCUS(i)      UNITY_ACCESS_INSTANCED_PROP(Props, _Focus)
+#endif
 
 UNITY_DECLARE_DEPTH_TEXTURE(_CameraDepthTexture);
 
@@ -311,28 +366,56 @@ v2f DiamondBeamVert(appdata v)
     UNITY_SETUP_INSTANCE_ID(v);
     UNITY_TRANSFER_INSTANCE_ID(v, o);
 
+    // Resolve the animated per-fixture values. In the texture path these come from
+    // the baked lightshow (sampled once here, since they're per-instance constants)
+    // and are stashed in the v2f for the frag; otherwise they're instancing-buffer
+    // reads exactly as before.
+#ifdef DIAMOND_LIGHTSHOW_TEX
+    float  fixtureRow   = UNITY_ACCESS_INSTANCED_PROP(Props, _FixtureRow);
+    float  showIndex    = UNITY_ACCESS_INSTANCED_PROP(Props, _ShowIndex);
+    float4 lsColor; float lsZoom; float lsFocus; float lsIntensity;
+    DiamondSampleLightshow(fixtureRow, showIndex, lsColor, lsZoom, lsFocus, lsIntensity);
+
+    // Master beam-intensity scale (manager-wide). Folded in here -- the same place
+    // the proxy path bakes `beamIntensity * BeamIntensityScale` into _BeamIntensity --
+    // so it flows correctly through the early-out (a 0 master collapses the beam) and
+    // the beam-length derivation, matching the proxy path exactly.
+    lsIntensity *= _UdonDiamondBeamIntensityScale;
+
+    o.lsColorIntensity = float4(lsColor.rgb, lsIntensity);
+    o.lsZoomFocus      = float3(lsZoom, lsFocus, lsZoom);   // zoomZ mirrors zoomX
+
+    float  beamIntensity = lsIntensity;
+    float4 valColor      = lsColor;
+    float  zoomX         = lsZoom;
+    float  zoomZ         = lsZoom;
+#else
+    float  beamIntensity = UNITY_ACCESS_INSTANCED_PROP(Props, _BeamIntensity);
+    float4 valColor      = UNITY_ACCESS_INSTANCED_PROP(Props, _Color);
+    float  zoomX         = UNITY_ACCESS_INSTANCED_PROP(Props, _ZoomX);
+    float  zoomZ         = UNITY_ACCESS_INSTANCED_PROP(Props, _ZoomZ);
+#endif
+
     // Early-out: any of these conditions makes the beam contribute nothing
     // visible. Collapse every vertex to the clip-space origin so the triangle
     // gets culled before fragments are rasterised:
     //   * Zero haze -> nothing scatters light into the camera.
     //   * Zero beam intensity -> per-fixture brightness multiplier is off.
     //   * Black colour -> nothing to add via additive blending.
-    float earlyOutIntensity = UNITY_ACCESS_INSTANCED_PROP(Props, _BeamIntensity);
-    float4 earlyOutColor    = UNITY_ACCESS_INSTANCED_PROP(Props, _Color);
-    float  earlyOutColorMax = max(earlyOutColor.r, max(earlyOutColor.g, earlyOutColor.b));
-    if (_HazeDensity <= 1e-5 || earlyOutIntensity <= 1e-5 || earlyOutColorMax <= 1e-5)
+    float earlyOutColorMax = max(valColor.r, max(valColor.g, valColor.b));
+    if (_HazeDensity <= 1e-5 || beamIntensity <= 1e-5 || earlyOutColorMax <= 1e-5)
     {
         o.vertex = float4(0, 0, 0, 0);
         o.vertBeamSpace = 0; o.screenPos = 0; o.vertWorldSpace = 0; o.frustumCorrection = 0;
         o.beamLength = 0;
+    #ifdef DIAMOND_LIGHTSHOW_TEX
+        o.lsColorIntensity = 0; o.lsZoomFocus = 0;
+    #endif
         return o;
     }
 
     float emitterWidth  = UNITY_ACCESS_INSTANCED_PROP(Props, _EmitterWidth);
     float emitterHeight = UNITY_ACCESS_INSTANCED_PROP(Props, _EmitterHeight);
-    float zoomX         = UNITY_ACCESS_INSTANCED_PROP(Props, _ZoomX);
-    float zoomZ         = UNITY_ACCESS_INSTANCED_PROP(Props, _ZoomZ);
-    float beamIntensity = UNITY_ACCESS_INSTANCED_PROP(Props, _BeamIntensity);
 
     float beamLength;
     DIAMOND_DERIVE_BEAM_LENGTH(beamLength);

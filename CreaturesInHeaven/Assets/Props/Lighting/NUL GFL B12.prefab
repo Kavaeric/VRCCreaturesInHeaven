@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1393862620476769104}
   - component: {fileID: 1249005794028257536}
   - component: {fileID: 6916292504349618127}
-  m_Layer: 0
+  m_Layer: 28
   m_Name: DiamondBeam
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -218,6 +218,31 @@ PrefabInstance:
       propertyPath: m_ReceiveShadows
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -2720221069562527839, guid: 182e98e728d7d8d49bcda83b383758b7,
+        type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -2720221069562527839, guid: 182e98e728d7d8d49bcda83b383758b7,
+        type: 3}
+      propertyPath: m_ReceiveShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -2720221069562527839, guid: 182e98e728d7d8d49bcda83b383758b7,
+        type: 3}
+      propertyPath: m_LightProbeUsage
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -2720221069562527839, guid: 182e98e728d7d8d49bcda83b383758b7,
+        type: 3}
+      propertyPath: m_ReflectionProbeUsage
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -2720221069562527839, guid: 182e98e728d7d8d49bcda83b383758b7,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: dea802cf2e8ec034283dca01f416e8ea, type: 2}
     - target: {fileID: -1143285183937443612, guid: 182e98e728d7d8d49bcda83b383758b7,
         type: 3}
       propertyPath: m_Name
@@ -228,6 +253,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: NUL GFL B12
       objectReference: {fileID: 0}
+    - target: {fileID: 1345661803752923239, guid: 182e98e728d7d8d49bcda83b383758b7,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: dea802cf2e8ec034283dca01f416e8ea, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -249,6 +279,12 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 5763276548762046358}
   m_SourcePrefab: {fileID: 100100000, guid: 182e98e728d7d8d49bcda83b383758b7, type: 3}
+--- !u!23 &520751400690225394 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 1345661803752923239, guid: 182e98e728d7d8d49bcda83b383758b7,
+    type: 3}
+  m_PrefabInstance: {fileID: 1555664797673762965}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1305038497409783678 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 182e98e728d7d8d49bcda83b383758b7,
@@ -278,17 +314,11 @@ MonoBehaviour:
   Head: {fileID: 8708718316436788733}
   LampProps: {fileID: 3683907717810278853}
   BeamProps: {fileID: 3909274399151128820}
-  HeadRenderer: {fileID: 6042516975229323470}
+  HeadRenderer: {fileID: 520751400690225394}
   BeamRenderer: {fileID: 6916292504349618127}
   EmissionColor: {r: 1, g: 1, b: 1, a: 1}
   Colour: 0
   ColourTemperature: 6500
---- !u!23 &6042516975229323470 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: -4157524182732408741, guid: 182e98e728d7d8d49bcda83b383758b7,
-    type: 3}
-  m_PrefabInstance: {fileID: 1555664797673762965}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &8708718316436788733 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7876023681238672744, guid: 182e98e728d7d8d49bcda83b383758b7,

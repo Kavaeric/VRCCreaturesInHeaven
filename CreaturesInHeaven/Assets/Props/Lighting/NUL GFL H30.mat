@@ -13,11 +13,10 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - _BICUBIC_SAMPLING_ON
-  - _EMISSION_ON
   - _REFLECTIONS_ON
   - _SPECULAR_HIGHLIGHTS_ON
   m_InvalidKeywords: []
-  m_LightmapFlags: 0
+  m_LightmapFlags: 4
   m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: 2000
@@ -387,7 +386,7 @@ Material:
     - _ScatterIntensity: 1
     - _ScatterPow: 1
     - _ScatterShadow: 1
-    - _ShadingModel: 0
+    - _ShadingModel: 1
     - _SmoothnessTextureChannel: 0
     - _SmoothnessToggle: 0
     - _SpecularHighlightStrength: 1

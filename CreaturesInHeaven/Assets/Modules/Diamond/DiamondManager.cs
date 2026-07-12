@@ -83,6 +83,54 @@ public class DiamondManager : UdonSharpBehaviour
     // proxies, everything else static is edit-time-only.
     public bool[] SymmetricBeam;
 
+    // --- Baked lightshow descriptor ----------------------------------
+    // Written by the offline DiamondLightshowBaker (edit-time). At runtime the Start()
+    // shader-seed reads these to bind the bake texture and its packing constants onto
+    // each fixture's property block, so the fixtures sample their own row on the GPU
+    // instead of this manager reading proxy transforms per frame. Null LightshowTex =
+    // no bake yet; the manager falls back to the live proxy-read path (see Update()).
+    // See DIAMOND-GPU-ACCEL.md.
+
+    // The baked RGBA32 lookup texture: row = fixture index, column = frame *
+    // TexelsPerFixture + slot. Point-sampled; the shader lerps frames itself.
+    public Texture LightshowTex;
+
+    // Frames baked (columns / TexelsPerFixture). Maps the normalised [0,1] time to a
+    // frame column at runtime.
+    public int LightshowFrameCount;
+
+    // Fixtures baked (rows). Should equal LampProps.Length; a mismatch means the bake
+    // is stale and the manager should fall back to the proxy path.
+    public int LightshowFixtureCount;
+
+    // RGBA32 texels per fixture per frame (2 for the current channel set: colour texel
+    // + beam texel). The shader's column stride.
+    public int LightshowTexelsPerFixture;
+
+    // Per-bake HDR scales: the texture stores SDR [0,1]; the shader multiplies back.
+    // ColourScale = peak of (colour*brightness) across the show; BeamScale = peak beam
+    // intensity across the show. See DIAMOND-GPU-ACCEL.md open item #1.
+    public float LightshowColourScale = 1f;
+    public float LightshowBeamScale   = 1f;
+
+    // This manager's slot in the shared global _UdonDiamondLightshowFrames[] array
+    // (its show identity on the show-identity axis). Seeded into every fixture's
+    // block as _ShowIndex at Start; written each frame as
+    // _UdonDiamondLightshowFrames[ShowIndex]. Multiple concurrent managers each take
+    // a distinct slot. See DIAMOND-GPU-ACCEL.md "Addressing model" + open item #7.
+    public int ShowIndex;
+
+    // --- Time input (module-independent) -----------------------------
+    // The show's playback position comes from a normalised [0,1] Animator float param,
+    // NOT from Heartache -- Diamond must be usable standalone (see DIAMOND-GPU-ACCEL.md
+    // "Module independence"). Anything that drives an Animator float 0->1 (Heartache's
+    // existing _Time write, a plain clip lerp, a manual scrub) drives the show. When no
+    // param is set, the serialized Time field below is used (inspector-scrubbable).
+    public Animator AnimatorSource;
+    public string TimeParameter = "_Time";
+    [Range(0f, 1f)] public float Time;
+    private bool _hasTimeParam;
+
     // --- Manager-wide atmosphere -------------------------------------
     // Haze density, scatter strength, and anisotropy are properties of the room's
     // air, not the fixture -- one value shared across every beam. They live here
@@ -171,8 +219,36 @@ public class DiamondManager : UdonSharpBehaviour
     private int _idScatterStrength;
     private int _idAnisotropy;
 
+    // Texture-mode (baked lightshow) property IDs.
+    private int _idFixtureRow;
+    private int _idShowIndex;
+    private int _idLightshowTex;
+    private int _idLightshowTexelsPerFixture;
+    private int _idLightshowColourScale;
+    private int _idLightshowBeamScale;
+    private int _idLightshowFrameCount;
+    private int _idLightshowFrames;
+    // Manager-wide master beam-intensity scale, as a GLOBAL in texture mode (the proxy
+    // path folds it per-fixture into _BeamIntensity, but texture mode never touches the
+    // per-fixture blocks, so it rides as one global the shader multiplies in).
+    private int _idBeamIntensityScaleGlobal;
+
     // Reused "off" colour so the dark path constructs nothing per frame.
     private Color _black;
+
+    // --- Texture-mode (baked lightshow) state ------------------------
+    // True when a bake texture is assigned: the manager runs the O(1) frame-index
+    // path (Update just writes this manager's slot of the global frame array) and the
+    // per-fixture proxy loop is skipped entirely. False = fall back to the live proxy
+    // read path below, unchanged. Resolved once in Start.
+    private bool _textureMode;
+
+    // Reused global frame array so Update allocates nothing. Length covers this
+    // manager's slot; a single manager fills index ShowIndex. The shader's fixed-length
+    // _UdonDiamondLightshowFrames[DIAMOND_MAX_SHOWS] (=16, in DiamondLightshowSample.cginc)
+    // is the ceiling; a ShowIndex beyond that would read a clamped slot. (Multi-manager
+    // coordination is deferred -- see DIAMOND-GPU-ACCEL.md open item #7.)
+    private float[] _frames;
 
     // --- Per-fixture dirty-check cache -------------------------------
     // Same rationale as the old driver: the animator only moves a channel on a
@@ -227,9 +303,57 @@ public class DiamondManager : UdonSharpBehaviour
         _idScatterStrength = VRCShader.PropertyToID("_ScatterStrength");
         _idAnisotropy      = VRCShader.PropertyToID("_Anisotropy");
 
+        // Per-block properties (_FixtureRow/_ShowIndex) keep plain names -- they're set
+        // via MaterialPropertyBlock, not globals. The GLOBAL ones must start with _Udon:
+        // VRChat blocks Udon from setting any global shader property outside that
+        // namespace (SetGlobal* on a non-_Udon name throws at runtime). Prefixed with
+        // _UdonDiamondLightshow (not just _UdonLightshow) to avoid colliding with any
+        // other world/package's own _Udon-namespaced globals.
+        _idFixtureRow                = VRCShader.PropertyToID("_FixtureRow");
+        _idShowIndex                 = VRCShader.PropertyToID("_ShowIndex");
+        _idLightshowTex              = VRCShader.PropertyToID("_UdonDiamondLightshowTex");
+        _idLightshowTexelsPerFixture = VRCShader.PropertyToID("_UdonDiamondLightshowTexelsPerFixture");
+        _idLightshowColourScale      = VRCShader.PropertyToID("_UdonDiamondLightshowColourScale");
+        _idLightshowBeamScale        = VRCShader.PropertyToID("_UdonDiamondLightshowBeamScale");
+        _idLightshowFrameCount       = VRCShader.PropertyToID("_UdonDiamondLightshowFrameCount");
+        _idLightshowFrames           = VRCShader.PropertyToID("_UdonDiamondLightshowFrames");
+        _idBeamIntensityScaleGlobal  = VRCShader.PropertyToID("_UdonDiamondBeamIntensityScale");
+
         _black = new Color(0f, 0f, 0f, 0f);
 
+        // Texture mode: a baked lightshow texture is assigned AND its fixture count
+        // matches the current arrays (a stale bake falls back to the proxy path rather
+        // than mis-indexing). In texture mode the fixtures' shaders read their own row;
+        // the manager only pushes one global frame index per frame.
         int count = LampProps == null ? 0 : LampProps.Length;
+        _textureMode = LightshowTex != null
+                       && LightshowFixtureCount == count
+                       && LightshowFrameCount > 0;
+
+        if (_textureMode)
+        {
+            // The global scalars the shader unpack needs. Set once; constant for the show.
+            // Explicit (float) casts: Udon extern calls don't implicitly widen int->float.
+            VRCShader.SetGlobalTexture(_idLightshowTex, LightshowTex);
+            VRCShader.SetGlobalFloat(_idLightshowTexelsPerFixture, (float)LightshowTexelsPerFixture);
+            VRCShader.SetGlobalFloat(_idLightshowColourScale, LightshowColourScale);
+            VRCShader.SetGlobalFloat(_idLightshowBeamScale, LightshowBeamScale);
+            VRCShader.SetGlobalFloat(_idLightshowFrameCount, (float)LightshowFrameCount);
+
+            // Master beam-intensity scale as a global. Seed it here so the STATIC case
+            // (not animated -> the per-frame push skips it) has a valid value, and so
+            // frame 0 never renders with an unset (0 -> all beams dark) global. When
+            // animated, PushAnimatedAtmosphereGlobal overwrites it every frame.
+            VRCShader.SetGlobalFloat(_idBeamIntensityScaleGlobal, BeamIntensityScale);
+
+            // Global frame array sized to hold this manager's slot. One manager fills
+            // ShowIndex; a length of ShowIndex+1 is enough (the shader clamps its read).
+            _frames = new float[ShowIndex + 1];
+
+            // Resolve the time source once. Empty param name (or no animator) falls back
+            // to the serialized Time field.
+            _hasTimeParam = AnimatorSource != null && TimeParameter != null && TimeParameter != "";
+        }
 
         _headBlocks  = new MaterialPropertyBlock[count];
         _beamBlocks  = new MaterialPropertyBlock[count];
@@ -282,8 +406,100 @@ public class DiamondManager : UdonSharpBehaviour
                 if (!AnimateScatter)    _beamBlocks[i].SetFloat(_idScatterStrength, ScatterStrength);
                 if (!AnimateAnisotropy) _beamBlocks[i].SetFloat(_idAnisotropy,      Anisotropy);
 
+                // Texture mode: seed this fixture's static row + show slot into the
+                // beam block once. The shader reads these to fetch its own row from the
+                // bake texture every frame -- so the manager never drives colour/zoom/
+                // focus/intensity per fixture again.
+                if (_textureMode)
+                {
+                    _beamBlocks[i].SetFloat(_idFixtureRow, (float)i);
+                    _beamBlocks[i].SetFloat(_idShowIndex,  (float)ShowIndex);
+                }
+
                 beamRenderer.SetPropertyBlock(_beamBlocks[i]);
             }
+
+            // Texture mode: the lamp lens's glow pass (Diamond/LampGlow) reads the SAME
+            // row + show slot from the bake texture, so seed them into the head block
+            // once and apply it. This is what drives lamp glow in texture mode -- the
+            // per-fixture ApplyFixture head write (proxy path) never runs here, so
+            // without this the lamp would stay dark. Head renderer may be null / may
+            // carry a non-glow material (e.g. a fixture whose lens has no glow pass);
+            // seeding the block is harmless in that case (the props just go unread).
+            if (_textureMode)
+            {
+                Renderer headRenderer = HeadRenderers == null ? null : HeadRenderers[i];
+                if (headRenderer != null)
+                {
+                    _headBlocks[i].SetFloat(_idFixtureRow, (float)i);
+                    _headBlocks[i].SetFloat(_idShowIndex,  (float)ShowIndex);
+                    headRenderer.SetPropertyBlock(_headBlocks[i]);
+                }
+            }
+        }
+
+        // Texture mode: turn on the shader's baked-lightshow path on every beam
+        // material this manager owns. EnableKeyword on the shared material affects all
+        // instances; done once here. (The proxy fallback path leaves it off.)
+        if (_textureMode)
+            EnableLightshowKeyword();
+    }
+
+    // Texture-mode atmosphere push. Static haze/scatter/aniso are seeded per-block in
+    // Start (they override the material). Animated ones aren't in the block, so pushing
+    // them as GLOBAL uniforms (one call each, not per-fixture) drives every beam at
+    // once. Cheap, and only touches a param that actually animates.
+    private void PushAnimatedAtmosphereGlobal()
+    {
+        if (AnimateHaze && HazeProxy != null)
+        {
+            float haze = Mathf.Clamp(HazeProxy.localPosition.y, 0f, MaxHazeDensity);
+            VRCShader.SetGlobalFloat(_idHazeDensity, haze);
+        }
+        if (AnimateScatter && ScatterProxy != null)
+        {
+            float scatter = Mathf.Clamp(ScatterProxy.localPosition.y, 0f, MaxScatterStrength);
+            VRCShader.SetGlobalFloat(_idScatterStrength, scatter);
+        }
+        if (AnimateAnisotropy && AnisotropyProxy != null)
+            VRCShader.SetGlobalFloat(_idAnisotropy, AnisotropyProxy.localPosition.y);
+        // Master beam-intensity scale. The texture holds per-fixture beamIntensity; the
+        // shader multiplies this global on top (matching the proxy path's per-fixture
+        // `beamIntensity * BeamIntensityScale`). Only pushed when animated -- the static
+        // value was seeded once in Start. Not clamped: like the proxy path, master scale
+        // has no bake ceiling (it's a straight multiply, not a bounds-baked param).
+        if (AnimateBeamIntensityScale && BeamIntensityScaleProxy != null)
+            VRCShader.SetGlobalFloat(_idBeamIntensityScaleGlobal, BeamIntensityScaleProxy.localPosition.y);
+    }
+
+    // Enables DIAMOND_LIGHTSHOW_TEX on the beam and lamp-glow materials so their shaders
+    // take the texture-read path (play mode). Both shape shaders and DiamondLampGlow gate
+    // on this keyword; DiamondFixtureMapPreview forces it off in edit mode so the proxy
+    // preview path lights up instead. They never run at once, so whoever's active owns it.
+    //
+    // Uses sharedMaterials (plural) on the head renderer: the lamp lens carries two
+    // materials (its Mochie look + the Diamond glow), and .sharedMaterial would only reach
+    // the first. Enabling the keyword on a material whose shader doesn't declare it (e.g.
+    // Mochie) is a harmless no-op, so we don't need to identify which slot is the glow.
+    private void EnableLightshowKeyword()
+    {
+        SetLightshowKeywordOn(BeamRenderers);
+        SetLightshowKeywordOn(HeadRenderers);
+    }
+
+    private void SetLightshowKeywordOn(Renderer[] renderers)
+    {
+        if (renderers == null) return;
+        int n = renderers.Length;
+        for (int i = 0; i < n; i++)
+        {
+            Renderer r = renderers[i];
+            if (r == null) continue;
+            Material[] mats = r.sharedMaterials;   // may hold Mochie + Diamond glow
+            if (mats == null) continue;
+            int mc = mats.Length;
+            for (int j = 0; j < mc; j++)
+                if (mats[j] != null) mats[j].EnableKeyword("DIAMOND_LIGHTSHOW_TEX");
         }
     }
 
@@ -294,6 +510,29 @@ public class DiamondManager : UdonSharpBehaviour
         if (LampProps == null) return;
 
         int count = LampProps.Length;
+
+        // --- Texture mode: O(1) per frame --------------------------------
+        // The whole per-fixture apply now lives on the GPU (each beam samples its own
+        // row of the bake texture). All the manager does is publish the current frame
+        // column into its slot of the shared global array. No per-fixture loop, no
+        // proxy reads, no boxing -- this is the entire point of the rewrite.
+        if (_textureMode)
+        {
+            float t = _hasTimeParam ? AnimatorSource.GetFloat(TimeParameter) : Time;
+            // Normalised [0,1] -> continuous frame column. The shader lerps the two
+            // bracketing columns, so a fractional value is expected.
+            float frame = Mathf.Clamp01(t) * (float)(LightshowFrameCount - 1);
+            _frames[ShowIndex] = frame;
+            VRCShader.SetGlobalFloatArray(_idLightshowFrames, _frames);
+
+            // Animated manager-wide atmosphere still needs pushing, but it's a global
+            // uniform (same value for every beam), so it's ONE SetGlobalFloat per
+            // animated param per frame -- O(1), not a per-fixture fan-out. Static
+            // atmosphere was already seeded per-block in Start. (In this project none of
+            // these animate, so this is usually a no-op; kept for correctness.)
+            PushAnimatedAtmosphereGlobal();
+            return;
+        }
 
         // Manager-wide animated channels, handled ONCE per frame (not per fixture)
         // before the per-fixture loop. Must run first so an intensity-scale change

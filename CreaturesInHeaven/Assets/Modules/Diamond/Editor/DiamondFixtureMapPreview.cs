@@ -61,6 +61,15 @@ public static class DiamondFixtureMapPreview
 
             var atmo = ResolveAtmo(def);
 
+            // Force the texture-path keyword OFF in edit mode on this fixture's beam and
+            // lamp materials, so their shaders read the proxy values we're about to write
+            // (below) instead of the bake texture. Udon doesn't run in edit mode, so the
+            // texture path has no _UdonDiamondLightshowFrames to sample -- without this the
+            // beam and lamp glow freeze/blank while scrubbing. DiamondManager re-enables it
+            // in play. Idempotent, and DisableKeyword on a shader lacking it is a no-op.
+            SetLightshowKeyword(def.BeamRenderer, false);
+            SetLightshowKeyword(def.HeadRenderer, false);
+
             int id = def.GetInstanceID();
             if (!_headBlocks.TryGetValue(id, out var headBlock))
             {
@@ -135,6 +144,25 @@ public static class DiamondFixtureMapPreview
 
                 def.BeamRenderer.SetPropertyBlock(beamBlock);
             }
+        }
+    }
+
+    // Forces DIAMOND_LIGHTSHOW_TEX on/off across all of a renderer's shared materials
+    // (the lamp lens carries Mochie + the Diamond glow, so we check every slot). Guarded
+    // so we only touch a material whose state actually differs -- otherwise this would
+    // dirty the material asset every editor tick. A material whose shader doesn't declare
+    // the keyword just never reports it enabled, so the guard skips it.
+    private static void SetLightshowKeyword(Renderer r, bool on)
+    {
+        if (r == null) return;
+        var mats = r.sharedMaterials;
+        if (mats == null) return;
+        foreach (var m in mats)
+        {
+            if (m == null) continue;
+            if (m.IsKeywordEnabled("DIAMOND_LIGHTSHOW_TEX") == on) continue;
+            if (on) m.EnableKeyword("DIAMOND_LIGHTSHOW_TEX");
+            else    m.DisableKeyword("DIAMOND_LIGHTSHOW_TEX");
         }
     }
 

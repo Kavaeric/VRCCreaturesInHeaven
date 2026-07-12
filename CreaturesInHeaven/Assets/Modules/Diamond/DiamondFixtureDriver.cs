@@ -2,6 +2,9 @@ using System;
 using UdonSharp;
 using UnityEngine;
 
+// Deprecated. Kept around as reference for continuing work for DiamondManager.
+// Do not delete yet.
+
 // Runtime driver for a lighting fixture. Attach to the fixture root prefab.
 // The parent animator keys properties on two proxy transforms and the head's
 // localRotation directly. This script reads those each frame and applies

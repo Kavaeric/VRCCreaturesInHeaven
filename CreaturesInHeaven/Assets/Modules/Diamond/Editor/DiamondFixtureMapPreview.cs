@@ -7,22 +7,22 @@ using UnityEngine;
 // keeping DiamondFixtureDefinition itself free of any UnityEditor API.
 //
 // Each fixture is previewed through the render path its owning DiamondManager selects via
-// DiamondManager.PreviewMode (LiveProxy or BakedTexture -- an outright author choice, NOT
-// tied to the runtime DriveMode):
+// DiamondManager.PreviewMode (LiveProxy or BakedTexture, an outright author choice, not tied to
+// the runtime DriveMode):
 //
-//   LiveProxy    - read the animated proxy transforms and push driven colour/zoom/focus/
-//                  intensity into per-fixture MaterialPropertyBlocks, keyword forced OFF.
-//                  The original edit-mode preview; the only path that works without a bake.
-//   BakedTexture - bind the bake texture + globals, enable DIAMOND_LIGHTSHOW_TEX, and drive
-//                  the frame index from the manager's Time, so the scene view samples the
-//                  ACTUAL bake (bake-accuracy check). Mirrors DiamondManager.StartBakedTexture
-//                  / UpdateBakedTexture in editor C#. Udon doesn't run in edit mode, so nothing
-//                  else would seed those globals -- this is the only way to see a bake off-play.
+//   LiveProxy    Read the animated proxy transforms and push driven colour/zoom/focus/intensity
+//                into per-fixture MaterialPropertyBlocks, with the keyword forced off. The only
+//                path that works without a bake.
+//   BakedTexture Bind the bake texture and globals, enable DIAMOND_LIGHTSHOW_TEX, and drive the
+//                frame index from the manager's Time, so the scene view samples the actual bake
+//                as an accuracy check. Mirrors DiamondManager.StartBakedTexture and
+//                UpdateBakedTexture in editor C#. Udon doesn't run in edit mode, so nothing else
+//                would seed those globals; this is the only way to see a bake off-play.
 //
-// A BakedTexture request whose bake is missing/stale falls back to the LiveProxy preview (with
-// a one-shot console note) so the scene never goes dark mid-scrub -- unlike the runtime, which
-// deliberately errors + stays dark. The editor is a WYSIWYG surface, not the ship target, so a
-// visible fallback beats a black stage here.
+// A BakedTexture request whose bake is missing or stale previews dark (with a one-shot console
+// note), matching the runtime, rather than falling back to the proxy. The editor is a WYSIWYG
+// surface for verifying the bake, so a silent proxy fallback would defeat the point: it would
+// look like a working bake and let a broken one ship. The dark scene is the signal to re-bake.
 [InitializeOnLoad]
 public static class DiamondFixtureMapPreview
 {
@@ -52,23 +52,27 @@ public static class DiamondFixtureMapPreview
         public float Aniso;
         public float IntScale;
 
-        // True once this manager resolves to the baked preview AND its bake validated.
-        // When false, fixtures under it take the proxy preview (either PreviewMode ==
-        // LiveProxy, or a BakedTexture request whose bake was stale).
+        // True once this manager resolves to the baked preview and its bake validated. When
+        // false, fixtures under it take the proxy preview, unless WantsBaked is set (see below).
         public bool  UseBaked;
+        // True when PreviewMode is BakedTexture, regardless of whether the bake validated. A
+        // WantsBaked manager whose bake is invalid (UseBaked false) previews dark rather than
+        // falling back to the proxy, matching the runtime: a silent proxy fallback would hide a
+        // broken bake and let it ship looking fine.
+        public bool  WantsBaked;
         // Set the first time a fixture under this manager pushes its bake globals this tick,
         // so we don't re-push the show-wide globals once per fixture.
         public bool  GlobalsPushed;
     }
 
-    // Per-tick cache of resolved manager state, keyed by manager instance ID. Cleared at the
-    // top of each OnEditorUpdate. A "no manager" fixture is not cached (it just returns a
-    // HasManager=false state with IntScale 1 and UseBaked false -> proxy preview).
+    // Per-tick cache of resolved manager state, keyed by manager instance ID. Cleared at the top
+    // of each OnEditorUpdate. A "no manager" fixture is not cached; it just returns a
+    // HasManager=false state with IntScale 1 and UseBaked false, giving the proxy preview.
     private static readonly Dictionary<int, ManagerState> _managerCache = new();
 
-    // Managers we've already logged a stale-bake fallback for, so the BakedTexture->proxy
-    // fallback note fires once per manager rather than every editor tick. Keyed by instance
-    // ID; entries are pruned lazily when a manager's bake becomes valid again (see below).
+    // Managers we've already logged a stale-bake note for, so the BakedTexture-previews-dark note
+    // fires once per manager rather than every editor tick. Keyed by instance ID; entries are
+    // pruned lazily when a manager's bake becomes valid again (see below).
     private static readonly HashSet<int> _staleBakeLogged = new();
 
     static DiamondFixtureMapPreview()
@@ -83,21 +87,20 @@ public static class DiamondFixtureMapPreview
         var definitions = Object.FindObjectsByType<DiamondFixtureDefinition>(
             FindObjectsInactive.Include, FindObjectsSortMode.None);
 
-        // The atmosphere params (haze/scatter/anisotropy) and the beam-intensity
-        // master live on DiamondManager, not the fixture, so the runtime only
-        // applies them in Start/Update. In edit mode that never runs, so without
-        // this the beams show frozen material-default haze while everything else
-        // scrubs. A scene can have more than one manager, each owning its own
-        // fixture subtree, so we can't grab a single global manager. Each fixture
-        // must resolve its own via GetComponentInParent (as the bounds gizmo does).
-        // Manager param resolution is cached per manager for this tick so we only
-        // read its proxies once, not once per fixture under it.
+        // The atmosphere params (haze/scatter/anisotropy) and the beam-intensity master live on
+        // DiamondManager, not the fixture, so the runtime only applies them in Start/Update. In
+        // edit mode that never runs, so without this the beams show frozen material-default haze
+        // while everything else scrubs. A scene can have more than one manager, each owning its
+        // own fixture subtree, so we can't grab a single global manager: each fixture resolves
+        // its own via GetComponentInParent (as the bounds gizmo does). Manager param resolution
+        // is cached per manager for this tick so we read its proxies once, not once per fixture
+        // under it.
         _managerCache.Clear();
 
         foreach (var def in definitions)
         {
-            // The object graph lives on DiamondFixtureDefinition now (the driver is
-            // retired), so read the refs straight off def.
+            // The object graph lives on DiamondFixtureDefinition, so read the refs straight off
+            // def.
             if (def.LampProps == null || def.HeadRenderer == null) continue;
 
             var manager = def.GetComponentInParent<DiamondManager>();
@@ -117,26 +120,53 @@ public static class DiamondFixtureMapPreview
 
             if (state.UseBaked)
                 PreviewBaked(def, manager, state, headBlock, beamBlock);
+            else if (state.WantsBaked)
+                // BakedTexture requested but the bake is invalid: preview dark, don't fall
+                // back to the proxy (see ResolveManager).
+                PreviewDark(def, headBlock, beamBlock);
             else
                 PreviewProxy(def, state, headBlock, beamBlock);
         }
     }
 
     // -------------------------------------------------------------------------
-    //  LiveProxy preview -- read proxy transforms, push driven values per fixture.
-    //  The original edit-mode preview path. Keyword forced OFF so the shaders read
-    //  the block values below instead of a (nonexistent, in edit mode) bake sample.
+    //  Dark preview: a BakedTexture request whose bake is invalid. Blanks the
+    //  fixture instead of falling back to the proxy, so a broken bake reads as a
+    //  black scene here just as it goes dark at runtime, rather than being masked.
+    //  Keyword forced off so the blanked block values are what the shaders read.
+    // -------------------------------------------------------------------------
+    private static void PreviewDark(
+        DiamondFixtureDefinition def,
+        MaterialPropertyBlock headBlock, MaterialPropertyBlock beamBlock)
+    {
+        SetLightshowKeyword(def.BeamRenderer, false);
+        SetLightshowKeyword(def.HeadRenderer, false);
+
+        headBlock.SetColor("_EmissionColor", Color.black);
+        def.HeadRenderer.SetPropertyBlock(headBlock);
+
+        if (def.BeamRenderer != null)
+        {
+            beamBlock.SetColor("_Color", Color.clear);
+            def.BeamRenderer.SetPropertyBlock(beamBlock);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    //  LiveProxy preview: read proxy transforms, push driven values per fixture.
+    //  Keyword forced off so the shaders read the block values below instead of a
+    //  bake sample (which doesn't exist in edit mode).
     // -------------------------------------------------------------------------
     private static void PreviewProxy(
         DiamondFixtureDefinition def, ManagerState atmo,
         MaterialPropertyBlock headBlock, MaterialPropertyBlock beamBlock)
     {
-        // Force the texture-path keyword OFF in edit mode on this fixture's beam and
-        // lamp materials, so their shaders read the proxy values we're about to write
-        // (below) instead of the bake texture. Udon doesn't run in edit mode, so the
-        // texture path has no _UdonDiamondLightshowFrames to sample -- without this the
-        // beam and lamp glow freeze/blank while scrubbing. DiamondManager re-enables it
-        // in play. Idempotent, and DisableKeyword on a shader lacking it is a no-op.
+        // Force the texture-path keyword off in edit mode on this fixture's beam and lamp
+        // materials, so their shaders read the proxy values we're about to write below instead of
+        // the bake texture. Udon doesn't run in edit mode, so the texture path has no
+        // _UdonDiamondLightshowFrames to sample, and without this the beam and lamp glow
+        // freeze/blank while scrubbing. DiamondManager re-enables it in play. Idempotent, and
+        // DisableKeyword on a shader lacking it is a no-op.
         SetLightshowKeyword(def.BeamRenderer, false);
         SetLightshowKeyword(def.HeadRenderer, false);
 
@@ -158,8 +188,8 @@ public static class DiamondFixtureMapPreview
             : def.EmissionColor;
 
         float linearBrightness = def.LampProps.localPosition.y;
-        // BeamProps is optional -- fixtures without a beam shaft just won't
-        // have one wired up, in which case zoom/focus/intensity stay at defaults.
+        // BeamProps is optional: fixtures without a beam shaft don't have one wired up, in which
+        // case zoom/focus/intensity stay at defaults.
         float zoom          = def.BeamProps != null ? def.BeamProps.localEulerAngles.x : 0f;
         float focus         = def.BeamProps != null ? def.BeamProps.localPosition.y     : 1f;
         float beamIntensity = def.BeamProps != null ? def.BeamProps.localScale.y       : 1f;
@@ -168,25 +198,23 @@ public static class DiamondFixtureMapPreview
         headBlock.SetColor("_EmissionColor", drivenColour);
         def.HeadRenderer.SetPropertyBlock(headBlock);
 
-        // Mirror onto the beam shaft: brightness-modulated colour, animated
-        // intensity, animated zoom (stored as tan(half-angle)), animated
-        // focus (0-1 direct pass-through), and the emitter dimensions from
-        // the profile (via def.FixtureEmitterSize).
+        // Mirror onto the beam shaft: brightness-modulated colour, animated intensity, animated
+        // zoom (stored as tan(half-angle)), animated focus (0-1 direct pass-through), and the
+        // emitter dimensions from the profile (via def.FixtureEmitterSize).
         if (def.BeamRenderer != null)
         {
             Vector2 emitter = def.FixtureEmitterSize;
             beamBlock.SetColor("_Color", drivenColour);
             beamBlock.SetFloat("_EmitterWidth",  emitter.x);
             beamBlock.SetFloat("_EmitterHeight", emitter.y);
-            // BeamIntensityScale is a manager-wide multiplier on the shaft
-            // intensity, matching ApplyFixture's beamIntensity * BeamIntensityScale.
+            // BeamIntensityScale is a manager-wide multiplier on the shaft intensity, matching
+            // ApplyFixture's beamIntensity * BeamIntensityScale.
             beamBlock.SetFloat("_BeamIntensity", beamIntensity * atmo.IntScale);
             beamBlock.SetFloat("_ZoomX",         zoom);
             beamBlock.SetFloat("_Focus",         focus);
 
-            // Manager-wide atmosphere. Only written when this fixture has a
-            // manager in its parent chain; otherwise leave the material's
-            // serialized values alone.
+            // Manager-wide atmosphere. Only written when this fixture has a manager in its parent
+            // chain; otherwise leave the material's serialized values alone.
             if (atmo.HasManager)
             {
                 beamBlock.SetFloat("_HazeDensity",     atmo.Haze);
@@ -194,9 +222,8 @@ public static class DiamondFixtureMapPreview
                 beamBlock.SetFloat("_Anisotropy",      atmo.Aniso);
             }
 
-            // Match the runtime manager: round (symmetric) beams use the
-            // BeamRound shader, which reads only _ZoomX. Only rect beams
-            // need _ZoomZ.
+            // Match the runtime manager: round (symmetric) beams use the BeamRound shader, which
+            // reads only _ZoomX. Only rect beams need _ZoomZ.
             if (!def.SymmetricBeam)
                 beamBlock.SetFloat("_ZoomZ",     zoom);
 
@@ -205,51 +232,50 @@ public static class DiamondFixtureMapPreview
     }
 
     // -------------------------------------------------------------------------
-    //  BakedTexture preview -- sample the actual bake, exactly as the runtime GPU
+    //  BakedTexture preview: sample the actual bake, exactly as the runtime GPU
     //  path does, so the scene view verifies bake accuracy off-play. Mirrors
-    //  DiamondManager.StartBakedTexture (per-fixture _FixtureRow/_ShowIndex + emitter
-    //  seeding, keyword ON) and UpdateBakedTexture (frame index from Time). The
+    //  DiamondManager.StartBakedTexture (per-fixture _FixtureRow/_ShowIndex and emitter
+    //  seeding, keyword on) and UpdateBakedTexture (frame index from Time). The
     //  show-wide globals are pushed once per manager per tick (see PushBakeGlobals).
     // -------------------------------------------------------------------------
     private static void PreviewBaked(
         DiamondFixtureDefinition def, DiamondManager manager, ManagerState atmo,
         MaterialPropertyBlock headBlock, MaterialPropertyBlock beamBlock)
     {
-        // Turn the texture path ON (opposite of the proxy preview) so the shaders sample
-        // the bake instead of the per-fixture block colour. The block still carries
-        // _FixtureRow/_ShowIndex + emitter dims, which the baked shader reads.
+        // Turn the texture path on (opposite of the proxy preview) so the shaders sample the bake
+        // instead of the per-fixture block colour. The block still carries _FixtureRow/_ShowIndex
+        // and emitter dims, which the baked shader reads.
         SetLightshowKeyword(def.BeamRenderer, true);
         SetLightshowKeyword(def.HeadRenderer, true);
 
-        // Fixture row: the fixture's index in the manager's arrays IS its bake row. The
-        // runtime seeds `(float)i` from its Start loop; here we find i by matching the
-        // fixture's LampProps against the manager's LampProps array (the definition
-        // doesn't store its own index). Not found -> leave the fixture on defaults.
+        // Fixture row: the fixture's index in the manager's arrays is its bake row. The runtime
+        // seeds `(float)i` from its Start loop; here we find i by matching the fixture's LampProps
+        // against the manager's LampProps array, since the definition doesn't store its own index.
+        // Not found leaves the fixture on defaults.
         int row = FixtureRow(manager, def);
         if (row < 0) return;
 
         float showIndex = manager.ShowIndex;
 
-        // Head block: the lamp-glow pass samples the bake row + show slot, same as the
-        // runtime StartBakedTexture head seed.
+        // Head block: the lamp-glow pass samples the bake row and show slot, same as the runtime
+        // StartBakedTexture head seed.
         headBlock.SetFloat("_FixtureRow", row);
         headBlock.SetFloat("_ShowIndex",  showIndex);
         def.HeadRenderer.SetPropertyBlock(headBlock);
 
         if (def.BeamRenderer != null)
         {
-            // Beam block: bake row + show slot for the sample, plus the static emitter
-            // dims the shaft shader reads from the block regardless of path.
+            // Beam block: bake row and show slot for the sample, plus the static emitter dims the
+            // shaft shader reads from the block regardless of path.
             Vector2 emitter = def.FixtureEmitterSize;
             beamBlock.SetFloat("_FixtureRow",    row);
             beamBlock.SetFloat("_ShowIndex",     showIndex);
             beamBlock.SetFloat("_EmitterWidth",  emitter.x);
             beamBlock.SetFloat("_EmitterHeight", emitter.y);
 
-            // Static manager-wide atmosphere, seeded per-block exactly as the runtime does
-            // in StartBakedTexture (via the shared blocks StartShared built). Animated
-            // atmosphere is pushed as a global in PushBakeGlobals, matching
-            // PushAnimatedAtmosphereGlobal.
+            // Static manager-wide atmosphere, seeded per-block exactly as the runtime does in
+            // StartBakedTexture (via the shared blocks StartShared built). Animated atmosphere is
+            // pushed as a global in PushBakeGlobals, matching PushAnimatedAtmosphereGlobal.
             if (atmo.HasManager)
             {
                 beamBlock.SetFloat("_HazeDensity",     atmo.Haze);
@@ -273,12 +299,12 @@ public static class DiamondFixtureMapPreview
         return -1;
     }
 
-    // Pushes the show-wide bake globals for one manager: the bake texture + packing
-    // constants, the master beam-intensity scale, and this manager's frame column into its
-    // ShowIndex slot of the shared _frames array. Mirrors DiamondManager.StartBakedTexture's
-    // global seed + UpdateBakedTexture's frame publish. Called once per manager per tick
-    // (latched by ManagerState.GlobalsPushed). The per-fixture _FixtureRow/_ShowIndex are
-    // NOT set here -- those are per-block, done in PreviewBaked.
+    // Pushes the show-wide bake globals for one manager: the bake texture and packing constants,
+    // the master beam-intensity scale, and this manager's frame column into its ShowIndex slot of
+    // the shared _frames array. Mirrors DiamondManager.StartBakedTexture's global seed and
+    // UpdateBakedTexture's frame publish. Called once per manager per tick (latched by
+    // ManagerState.GlobalsPushed). The per-fixture _FixtureRow/_ShowIndex are per-block and set in
+    // PreviewBaked, not here.
     private static void PushBakeGlobals(DiamondManager manager)
     {
         Shader.SetGlobalTexture("_UdonDiamondLightshowTex", manager.LightshowTex);
@@ -300,11 +326,11 @@ public static class DiamondFixtureMapPreview
         Shader.SetGlobalFloatArray("_UdonDiamondLightshowFrames", _frames);
     }
 
-    // Forces DIAMOND_LIGHTSHOW_TEX on/off across all of a renderer's shared materials
-    // (the lamp lens carries Mochie + the Diamond glow, so we check every slot). Guarded
-    // so we only touch a material whose state actually differs -- otherwise this would
-    // dirty the material asset every editor tick. A material whose shader doesn't declare
-    // the keyword just never reports it enabled, so the guard skips it.
+    // Forces DIAMOND_LIGHTSHOW_TEX on or off across all of a renderer's shared materials (the
+    // lamp lens carries Mochie plus the Diamond glow, so we check every slot). Guarded so we only
+    // touch a material whose state actually differs; otherwise this would dirty the material asset
+    // every editor tick. A material whose shader doesn't declare the keyword never reports it
+    // enabled, so the guard skips it.
     private static void SetLightshowKeyword(Renderer r, bool on)
     {
         if (r == null) return;
@@ -319,11 +345,11 @@ public static class DiamondFixtureMapPreview
         }
     }
 
-    // Resolves a manager's per-tick state: its atmosphere (for the proxy preview), whether
-    // it should preview baked, and -- if baked -- pushes its show-wide bake globals once.
-    // Cached per manager for the current tick, so N fixtures under one manager only resolve
-    // it (and push its globals) once. Mirrors DiamondManager's static-vs-proxy atmosphere
-    // resolution and the runtime haze/scatter clamp via the manager's own resolver.
+    // Resolves a manager's per-tick state: its atmosphere (for the proxy preview), whether it
+    // should preview baked, and, if baked, pushes its show-wide bake globals once. Cached per
+    // manager for the current tick, so N fixtures under one manager only resolve it (and push its
+    // globals) once. Reads atmosphere through the manager's own resolver, matching the runtime's
+    // static-vs-proxy choice and haze/scatter clamp.
     private static ManagerState ResolveManager(DiamondManager manager)
     {
         if (manager == null)
@@ -333,31 +359,35 @@ public static class DiamondFixtureMapPreview
         if (_managerCache.TryGetValue(key, out var cached))
             return cached;
 
-        // Resolve through the manager's own canonical resolver, so the preview reads
-        // atmosphere exactly the way the runtime does -- same static-or-proxy choice, same
-        // haze/scatter clamp -- instead of re-implementing (and drifting from) that logic
-        // here. In edit mode the UdonSharpBehaviour runs as plain C#, so this is a direct
-        // method call, no Udon VM. Single source of truth: DiamondManager.ResolveAtmosphere.
+        // Resolve through the manager's own canonical resolver, so the preview reads atmosphere
+        // the way the runtime does (same static-or-proxy choice, same haze/scatter clamp) rather
+        // than re-implementing and drifting from it. In edit mode the UdonSharpBehaviour runs as
+        // plain C#, so this is a direct method call. Single source of truth:
+        // DiamondManager.ResolveAtmosphere.
         float haze, scatter, aniso, intScale;
         manager.ResolveAtmosphere(out haze, out scatter, out aniso, out intScale);
 
-        // Only BakedTexture (with a valid bake) takes the baked preview path; LiveProxy is
-        // the proxy preview. PreviewMode is an outright author choice -- it does NOT follow
-        // the runtime DriveMode.
+        // Only BakedTexture (with a valid bake) takes the baked preview path; LiveProxy is the
+        // proxy preview. PreviewMode is an outright author choice and does not follow the runtime
+        // DriveMode. Bake validity goes through the manager's own ValidateBake (which runs as
+        // plain C# in edit mode) rather than a copy here, so the preview can never disagree with
+        // the runtime on what a valid bake means.
         bool wantsBaked = manager.PreviewMode == DiamondPreviewMode.BakedTexture;
-        bool useBaked   = wantsBaked && BakeIsValid(manager);
+        bool useBaked   = wantsBaked && manager.ValidateBake();
 
-        // A BakedTexture request whose bake is missing/stale: fall back to the proxy preview
-        // and note it once. (Unlike the runtime, which errors + goes dark -- the editor is a
-        // preview surface, so a visible fallback is friendlier than a black scene.) Prune the
-        // "already logged" latch when the bake goes valid again, so a later break re-notifies.
+        // A BakedTexture request whose bake is missing or stale previews dark and notes it once,
+        // rather than falling back to the proxy. Matching the runtime here is deliberate: a silent
+        // proxy fallback would look like a working bake and let a broken one ship. The dark scene
+        // is the signal to re-bake. Prune the "already logged" latch when the bake goes valid
+        // again, so a later break re-notifies.
         if (wantsBaked && !useBaked)
         {
             if (_staleBakeLogged.Add(key))
-                Debug.LogWarning("[Diamond] " + manager.name + ": PreviewMode wants BakedTexture " +
+                Debug.LogError("[Diamond] " + manager.name + ": PreviewMode wants BakedTexture " +
                     "but the bake is missing or stale (no LightshowTex, LightshowFixtureCount != " +
-                    "fixture count, or LightshowFrameCount <= 0). Previewing LiveProxy instead. " +
-                    "Re-bake to preview the baked result.", manager);
+                    "fixture count, or LightshowFrameCount <= 0). Previewing dark, no proxy " +
+                    "fallback, so a broken bake isn't hidden. Re-bake to preview the baked result.",
+                    manager);
         }
         else
         {
@@ -375,19 +405,10 @@ public static class DiamondFixtureMapPreview
             Aniso         = aniso,
             IntScale      = intScale,
             UseBaked      = useBaked,
+            WantsBaked    = wantsBaked,
             GlobalsPushed = useBaked,   // PushBakeGlobals ran above for this manager
         };
         _managerCache[key] = state;
         return state;
-    }
-
-    // The same predicate DiamondManager.ValidateBake uses at runtime, re-checked here so the
-    // preview only takes the baked path when there's actually a valid, current bake to sample.
-    private static bool BakeIsValid(DiamondManager manager)
-    {
-        int count = manager.LampProps == null ? 0 : manager.LampProps.Length;
-        return manager.LightshowTex != null
-            && manager.LightshowFixtureCount == count
-            && manager.LightshowFrameCount > 0;
     }
 }

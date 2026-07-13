@@ -49,11 +49,11 @@ float  _ScatterStrength;
 float  _Anisotropy;
 
 // --- Per-instance properties -------------------------------------------------
-// Pushed by DiamondFixtureDriver via a MaterialPropertyBlock so each fixture
+// Pushed by DiamondManager via a MaterialPropertyBlock so each fixture
 // can vary independently. _ZoomX/_ZoomZ are animated (via
 // BeamProps.localEulerAngles.x), stored as tan(half-angle) so the shader uses
 // them directly. The round shader only reads _ZoomX (symmetric cone) but the
-// driver writes both, and _ZoomZ is simply ignored there.
+// manager writes both, and _ZoomZ is simply ignored there.
 //
 // Focus: how fast the cone defocuses with distance, as a fraction of its own zoom.
 // Sharp at the emitter, spreading more toward the far end.
@@ -82,9 +82,9 @@ UNITY_INSTANCING_BUFFER_START(Props)
     UNITY_DEFINE_INSTANCED_PROP(float3, _CubeLocalScale)
     UNITY_DEFINE_INSTANCED_PROP(float,  _BeamIntensity)
     // Row of this fixture's colour texel in the baked lightshow texture, and the
-    // manager/show slot in the global frame array. Both are STATIC per fixture,
-    // seeded once at Start (never per frame). Only read when DIAMOND_LIGHTSHOW_TEX
-    // is enabled; harmless (unread) otherwise.
+    // manager/show slot in the global frame array. Both are static per fixture, seeded
+    // once at Start rather than per frame. Only read when DIAMOND_LIGHTSHOW_TEX is
+    // enabled, and harmless (unread) otherwise.
     UNITY_DEFINE_INSTANCED_PROP(float,  _FixtureRow)
     UNITY_DEFINE_INSTANCED_PROP(float,  _ShowIndex)
 UNITY_INSTANCING_BUFFER_END(Props)
@@ -99,14 +99,14 @@ UNITY_INSTANCING_BUFFER_END(Props)
 #include "../Lightshow/DiamondLightshowSample.cginc"
 
 #ifdef DIAMOND_LIGHTSHOW_TEX
-// Manager-wide master multiplier on beam intensity (the proxy path folds this into
-// _BeamIntensity per fixture as `beamIntensity * BeamIntensityScale`; here it's one
-// global the shader multiplies onto the texture-recovered intensity). Distinct from
-// _UdonDiamondLightshowBeamScale, which is the per-BAKE HDR de-scale, not an art knob.
-// The manager always seeds this in texture mode (>=0; 1 = no-op), so the shader can
-// use it directly -- a raw 0 here means "master off / all beams dark", which is a
-// legitimate authored value, not an unset sentinel. Beam-only (the lamp glow ignores
-// beam intensity), so it stays here rather than in the shared sampler include.
+// Manager-wide master multiplier on beam intensity. The proxy path folds this into
+// _BeamIntensity per fixture as `beamIntensity * BeamIntensityScale`; here it's one global the
+// shader multiplies onto the texture-recovered intensity. Distinct from
+// _UdonDiamondLightshowBeamScale, which is the per-bake HDR de-scale, not an art knob. The
+// manager always seeds this in texture mode (>= 0, with 1 a no-op), so the shader can use it
+// directly: a raw 0 here means "master off, all beams dark", a legitimate authored value rather
+// than an unset sentinel. Beam-only (the lamp glow ignores beam intensity), so it stays here
+// rather than in the shared sampler include.
 float       _UdonDiamondBeamIntensityScale;
 #endif // DIAMOND_LIGHTSHOW_TEX
 
@@ -146,10 +146,10 @@ struct v2f
 };
 
 // --- Animated-value resolvers ------------------------------------------------
-// Each animated per-fixture value comes from either the baked texture (via the v2f,
-// sampled in vert) or the instancing buffer. Frag/vert read them through these so the
-// two paths differ in exactly one place. In the texture path _ZoomZ mirrors _ZoomX
-// (the bake stores a single zoom, matching the old ApplyFixture _ZoomZ = zoom write).
+// Each animated per-fixture value comes from either the baked texture (via the v2f, sampled in
+// vert) or the instancing buffer. Frag and vert read them through these macros so the two paths
+// differ in exactly one place. In the texture path _ZoomZ mirrors _ZoomX, since the bake stores
+// a single zoom and drives both axes from it for a symmetric cone.
 #ifdef DIAMOND_LIGHTSHOW_TEX
     #define DIAMOND_COLOR(i)      float4((i).lsColorIntensity.rgb, 1)
     #define DIAMOND_INTENSITY(i)  ((i).lsColorIntensity.w)
@@ -366,20 +366,18 @@ v2f DiamondBeamVert(appdata v)
     UNITY_SETUP_INSTANCE_ID(v);
     UNITY_TRANSFER_INSTANCE_ID(v, o);
 
-    // Resolve the animated per-fixture values. In the texture path these come from
-    // the baked lightshow (sampled once here, since they're per-instance constants)
-    // and are stashed in the v2f for the frag; otherwise they're instancing-buffer
-    // reads exactly as before.
+    // Resolve the animated per-fixture values. In the texture path these come from the baked
+    // lightshow (sampled once here, since they're per-instance constants) and are stashed in the
+    // v2f for the frag; otherwise they're instancing-buffer reads.
 #ifdef DIAMOND_LIGHTSHOW_TEX
     float  fixtureRow   = UNITY_ACCESS_INSTANCED_PROP(Props, _FixtureRow);
     float  showIndex    = UNITY_ACCESS_INSTANCED_PROP(Props, _ShowIndex);
     float4 lsColor; float lsZoom; float lsFocus; float lsIntensity;
     DiamondSampleLightshow(fixtureRow, showIndex, lsColor, lsZoom, lsFocus, lsIntensity);
 
-    // Master beam-intensity scale (manager-wide). Folded in here -- the same place
-    // the proxy path bakes `beamIntensity * BeamIntensityScale` into _BeamIntensity --
-    // so it flows correctly through the early-out (a 0 master collapses the beam) and
-    // the beam-length derivation, matching the proxy path exactly.
+    // Master beam-intensity scale (manager-wide), folded in here so it flows through the
+    // early-out (a 0 master collapses the beam) and the beam-length derivation. This matches the
+    // proxy path, which bakes `beamIntensity * BeamIntensityScale` into _BeamIntensity.
     lsIntensity *= _UdonDiamondBeamIntensityScale;
 
     o.lsColorIntensity = float4(lsColor.rgb, lsIntensity);

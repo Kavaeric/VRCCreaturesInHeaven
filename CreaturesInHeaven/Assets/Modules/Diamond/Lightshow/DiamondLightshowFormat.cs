@@ -1,15 +1,15 @@
 using UnityEngine;
 
-// Packing math for a baked Diamond lightshow texture. Shared by the baker (writes) and,
-// mirrored as plain serialized fields, by DiamondManager (reads at Start to seed the
-// shader). Kept editor-agnostic (plain C#, no UnityEditor) so a future runtime consumer
-// could reference the same constants if ever needed.
+// Packing math for a baked Diamond lightshow texture. Shared by the baker (which writes)
+// and, mirrored as plain serialized fields, by DiamondManager (which reads at Start to
+// seed the shader). Kept editor-agnostic (plain C#, no UnityEditor) so a future runtime
+// consumer could reference the same constants.
 //
-// Texture layout (RGBA32), VERTICAL-STACKED / interleaved:
-//   column = frame f            (a fixture's timeline runs horizontally, left-to-right)
+// Texture layout (RGBA32), vertical-stacked and interleaved:
+//   column = frame f            (a fixture's timeline runs horizontally, left to right)
 //   row    = fixture i * TexelsPerFixture + slot
-//            i.e. fixture i owns TexelsPerFixture adjacent rows; the shader reads a
-//            VERTICAL snippet of pixels at column f spanning those rows.
+//            Fixture i owns TexelsPerFixture adjacent rows, and the shader reads a vertical
+//            snippet of pixels at column f spanning those rows.
 //
 // For the current channel set, TexelsPerFixture = 2:
 //   row 2i   (slot 0, colour): (drivenColour.r, drivenColour.g, drivenColour.b, 1)
@@ -19,12 +19,12 @@ using UnityEngine;
 //            zoom = tan(half-angle) raw, focus = 0..1 raw,
 //            beamIntensity01 = beamIntensity / BeamScale into [0,1]. Beam-only.
 //
-// Why vertical-stack over side-by-side: width = frames (not frames*2), so the frame
-// axis doesn't hit Unity's 16384 cap until ~16384 frames (~4.5 min @ 60fps) instead of
-// ~8192. It also reads cleaner -- the even rows alone are the show's colour barcode.
+// Vertical-stacking rather than side-by-side keeps width = frames (not frames*2), so the
+// frame axis doesn't hit Unity's 16384 cap until ~16384 frames (~4.5 min at 60fps) instead
+// of ~8192. It also reads cleaner: the even rows alone are the show's colour barcode.
 //
-// HDR is carried by two per-bake scale scalars (ColourScale, BeamScale): the texture
-// stores SDR [0,1], the shader multiplies back. See DIAMOND-GPU-ACCEL.md open item #1.
+// HDR is carried by two per-bake scale scalars (ColourScale, BeamScale): the texture stores
+// SDR [0,1] and the shader multiplies back. See DIAMOND-GPU-ACCEL.md open item #1.
 public static class DiamondLightshowFormat
 {
     // Current channel set packs into this many RGBA32 rows per fixture.

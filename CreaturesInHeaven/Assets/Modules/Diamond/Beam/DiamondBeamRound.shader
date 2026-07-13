@@ -107,13 +107,11 @@ Shader "Diamond/BeamRound"
             #pragma target 5.0
             #pragma multi_compile_instancing
 
-            // Baked-lightshow path. When enabled, the animated per-fixture values
-            // (_Color/_ZoomX/_Focus/_BeamIntensity) are read from the baked lightshow
-            // texture instead of the instancing buffer, so DiamondManager never drives
-            // them per frame on the CPU. multi_compile_local (not shader_feature) so both
-            // variants always build and the keyword can be toggled at runtime/by the
-            // manager without depending on a material asset saving it.
-            #pragma multi_compile_local __ DIAMOND_LIGHTSHOW_TEX
+            // Baked-lightshow path is selected at runtime, not by a shader keyword: the
+            // _UdonDiamondLightshowEnabled uniform (DiamondBeamCommon.cginc) picks between the
+            // baked texture and the instancing buffer for the animated per-fixture values
+            // (_Color/_ZoomX/_Focus/_BeamIntensity). No multi_compile variant, so nothing has to
+            // toggle sticky material-asset state; the manager just sets one global at Start.
 
             // The debug scaffolding (component-isolation modes and surface probe) is
             // gated behind this keyword so it's not compiled in the production version.
@@ -371,9 +369,10 @@ Shader "Diamond/BeamRound"
                     return half4(0.05, 0.0, 0.0, 1.0);
               #endif
 
-                // Animated per-fixture values via the resolver macros: baked-texture
-                // lookup when DIAMOND_LIGHTSHOW_TEX is on, instancing buffer otherwise.
-                // Round reads only zoomX (symmetric cone); static props stay buffer reads.
+                // Animated per-fixture values via the resolver macros. The source (baked texture
+                // vs instancing buffer) was already selected in vert on _UdonDiamondLightshowEnabled
+                // and stashed in the v2f, so these are flat v2f reads here. Round reads only zoomX
+                // (symmetric cone); static props stay buffer reads.
                 float3 cubeLocalScale = UNITY_ACCESS_INSTANCED_PROP(Props, _CubeLocalScale);
                 float4 instColor      = DIAMOND_COLOR(i);
                 float  beamIntensity  = DIAMOND_INTENSITY(i);

@@ -6,14 +6,15 @@
 //
 // Usage: apply to a submesh of a lamp fixture model that sits atop the lens.
 //
-// Two paths, gated by DIAMOND_LIGHTSHOW_TEX (same keyword the beam shaders use):
-//   ON  (play mode) -- sample this fixture's colour row from the bake texture.
-//   OFF (edit mode) -- read a plain _EmissionColor, which DiamondFixtureMapPreview
-//                      writes from the live proxy transforms. This is what lets the
-//                      lamp glow prewview while scrubbing the clip in edit mode (Udon
-//                      doesn't run then, so the texture path has no frame to read).
-// DiamondManager forces the keyword on in play; DiamondFixtureMapPreview forces it off
-// in edit. They never run simultaneously, so the material's saved state doesn't matter.
+// Two paths, selected at runtime by the _UdonDiamondLightshowEnabled uniform (same selector the
+// beam shaders use), lerped in vert:
+//   1 (play mode) -- sample this fixture's colour row from the bake texture.
+//   0 (edit mode) -- read a plain _EmissionColor, which DiamondFixtureMapPreview writes from the
+//                    live proxy transforms. This is what lets the lamp glow preview while
+//                    scrubbing the clip in edit mode (Udon doesn't run then, so the texture path
+//                    has no frame to read).
+// DiamondManager sets the global to 1 in play; DiamondFixtureMapPreview sets it (0 or 1) in edit.
+// It's a global uniform, not saved material state, so there's no stale-keyword risk between them.
 Shader "Diamond/LampGlow"
 {
     Properties
@@ -26,7 +27,7 @@ Shader "Diamond/LampGlow"
         _ShowIndex  ("Show index", Float) = 0
 
         // Edit-mode preview glow (colour x brightness), written per-fixture by
-        // DiamondFixtureMapPreview. Only read when DIAMOND_LIGHTSHOW_TEX is off.
+        // DiamondFixtureMapPreview. Only selected when _UdonDiamondLightshowEnabled is 0.
         [HDR] _EmissionColor ("Emission (edit preview)", Color) = (0,0,0,1)
 
         // Overall glow multiplier (art control, per material). Lets the lens glow be
@@ -49,25 +50,25 @@ Shader "Diamond/LampGlow"
             #pragma fragment frag
             #pragma target 5.0
             #pragma multi_compile_instancing
-            // Same keyword the beam shaders use: ON = texture path, OFF = edit-preview
-            // (_EmissionColor) path. multi_compile_local so both variants always build
-            // and the keyword can be toggled at runtime / edit time.
-            #pragma multi_compile_local __ DIAMOND_LIGHTSHOW_TEX
+            // Same runtime selector the beam shaders use: _UdonDiamondLightshowEnabled == 1 =>
+            // texture path, 0 => proxy/edit-preview (_EmissionColor) path. A uniform, not a
+            // shader keyword, so nothing toggles sticky material state; the manager (and the
+            // editor preview) sets one global.
 
             #include "UnityCG.cginc"
 
             // Baked lightshow sampler: the texture globals, addressing math, and frame
             // lerp, shared verbatim with the beam shaders (DiamondBeamCommon.cginc also
             // includes this) so the lamp glow and the beam colour can't sample the show
-            // differently. Only the DIAMOND_LIGHTSHOW_TEX body compiles; the edit-preview
-            // path below is used when the keyword is off.
+            // differently. Always compiled; the runtime selector below picks whether its
+            // result is used.
             #include "../Lightshow/DiamondLightshowSample.cginc"
 
-#ifndef DIAMOND_LIGHTSHOW_TEX
-            // Edit-preview path: the glow colour comes straight from _EmissionColor,
-            // which is written from the live proxy transforms.
+            // Proxy/edit path: the glow colour comes straight from _EmissionColor, which is
+            // written from the live proxy transforms (by the manager at runtime, or the editor
+            // preview in edit mode). Always declared now; selected against the texture path on
+            // _UdonDiamondLightshowEnabled.
             float4    _EmissionColor;
-#endif
 
             UNITY_INSTANCING_BUFFER_START(Props)
                 UNITY_DEFINE_INSTANCED_PROP(float, _FixtureRow)
@@ -100,18 +101,20 @@ Shader "Diamond/LampGlow"
 
                 float glowScale = UNITY_ACCESS_INSTANCED_PROP(Props, _GlowScale);
 
-#ifdef DIAMOND_LIGHTSHOW_TEX
-                // Play mode: sample this fixture's colour row from the bake texture.
-                // DiamondSampleColour is the shared sampler (DiamondLightshowSample.cginc).
-                // This row is also read by DiamondBeam.
+                // Texture path: sample this fixture's colour row from the bake texture.
+                // DiamondSampleColour is the shared sampler (DiamondLightshowSample.cginc); this
+                // is the same row DiamondBeam reads. Always evaluated (a couple of texture Loads,
+                // cheap per-vertex), then selected against the proxy colour below.
                 float fixtureRow = UNITY_ACCESS_INSTANCED_PROP(Props, _FixtureRow);
                 float showIndex  = UNITY_ACCESS_INSTANCED_PROP(Props, _ShowIndex);
-                o.glow = DiamondSampleColour(fixtureRow, showIndex) * glowScale;
-#else
-                // Edit mode: DiamondFixtureMapPreview writes the driven colour (colour x
-                // brightness) into _EmissionColor from the live proxies.
-                o.glow = _EmissionColor.rgb * glowScale;
-#endif
+                float3 texGlow   = DiamondSampleColour(fixtureRow, showIndex);
+
+                // Proxy/edit path: the driven colour (colour x brightness) written into
+                // _EmissionColor from the live proxies. Selected on the runtime uniform: 1 =>
+                // texture, 0 => proxy. Branchless lerp, exact for a 0/1 selector.
+                float3 proxyGlow = _EmissionColor.rgb;
+
+                o.glow = lerp(proxyGlow, texGlow, _UdonDiamondLightshowEnabled) * glowScale;
                 return o;
             }
 

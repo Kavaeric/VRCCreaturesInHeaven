@@ -11,10 +11,12 @@ using UnityEngine;
 // the runtime DriveMode):
 //
 //   LiveProxy    Read the animated proxy transforms and push driven colour/zoom/focus/intensity
-//                into per-fixture MaterialPropertyBlocks, with the keyword forced off. The only
-//                path that works without a bake.
-//   BakedTexture Bind the bake texture and globals, enable DIAMOND_LIGHTSHOW_TEX, and drive the
-//                frame index from the manager's Time, so the scene view samples the actual bake
+//                into per-fixture MaterialPropertyBlocks, with the data-source selector
+//                (_UdonDiamondLightshowEnabled) forced to the proxy path per block. The only path
+//                that works without a bake.
+//   BakedTexture Bind the bake texture and globals, set the selector to the texture path per
+//                block, and drive the frame index from the manager's Time, so the scene view
+//                samples the actual bake
 //                as an accuracy check. Mirrors DiamondManager.StartBakedTexture and
 //                UpdateBakedTexture in editor C#. Udon doesn't run in edit mode, so nothing else
 //                would seed those globals; this is the only way to see a bake off-play.
@@ -133,20 +135,19 @@ public static class DiamondFixtureMapPreview
     //  Dark preview: a BakedTexture request whose bake is invalid. Blanks the
     //  fixture instead of falling back to the proxy, so a broken bake reads as a
     //  black scene here just as it goes dark at runtime, rather than being masked.
-    //  Keyword forced off so the blanked block values are what the shaders read.
+    //  Selector forced to the proxy path so the blanked block values are what the shaders read.
     // -------------------------------------------------------------------------
     private static void PreviewDark(
         DiamondFixtureDefinition def,
         MaterialPropertyBlock headBlock, MaterialPropertyBlock beamBlock)
     {
-        SetLightshowKeyword(def.BeamRenderer, false);
-        SetLightshowKeyword(def.HeadRenderer, false);
-
+        SetLightshowSelector(headBlock, false);
         headBlock.SetColor("_EmissionColor", Color.black);
         def.HeadRenderer.SetPropertyBlock(headBlock);
 
         if (def.BeamRenderer != null)
         {
+            SetLightshowSelector(beamBlock, false);
             beamBlock.SetColor("_Color", Color.clear);
             def.BeamRenderer.SetPropertyBlock(beamBlock);
         }
@@ -154,20 +155,22 @@ public static class DiamondFixtureMapPreview
 
     // -------------------------------------------------------------------------
     //  LiveProxy preview: read proxy transforms, push driven values per fixture.
-    //  Keyword forced off so the shaders read the block values below instead of a
-    //  bake sample (which doesn't exist in edit mode).
+    //  Selector forced to the proxy path so the shaders read the block values below
+    //  instead of a bake sample (which doesn't exist in edit mode).
     // -------------------------------------------------------------------------
     private static void PreviewProxy(
         DiamondFixtureDefinition def, ManagerState atmo,
         MaterialPropertyBlock headBlock, MaterialPropertyBlock beamBlock)
     {
-        // Force the texture-path keyword off in edit mode on this fixture's beam and lamp
-        // materials, so their shaders read the proxy values we're about to write below instead of
-        // the bake texture. Udon doesn't run in edit mode, so the texture path has no
-        // _UdonDiamondLightshowFrames to sample, and without this the beam and lamp glow
-        // freeze/blank while scrubbing. DiamondManager re-enables it in play.
-        SetLightshowKeyword(def.BeamRenderer, false);
-        SetLightshowKeyword(def.HeadRenderer, false);
+        // Force the data-source selector to the proxy path (0) on this fixture's blocks, so the
+        // shaders read the proxy values we're about to write below instead of the bake texture.
+        // Udon doesn't run in edit mode, so the texture path has no _UdonDiamondLightshowFrames to
+        // sample, and without this the beam and lamp glow freeze/blank while scrubbing. The block
+        // value shadows the scene-wide global per renderer, so this fixture stays on the proxy path
+        // even if a BakedTexture-previewing manager elsewhere set the global to 1 this tick.
+        SetLightshowSelector(headBlock, false);
+        if (def.BeamRenderer != null)
+            SetLightshowSelector(beamBlock, false);
 
         if (!def.LampProps.gameObject.activeSelf)
         {
@@ -234,30 +237,34 @@ public static class DiamondFixtureMapPreview
     //  BakedTexture preview: sample the actual bake, exactly as the runtime GPU
     //  path does, so the scene view verifies bake accuracy off-play. Mirrors
     //  DiamondManager.StartBakedTexture (per-fixture _FixtureRow/_ShowIndex and emitter
-    //  seeding, keyword on) and UpdateBakedTexture (frame index from Time). The
+    //  seeding, selector set to the texture path) and UpdateBakedTexture (frame index from Time). The
     //  show-wide globals are pushed once per manager per tick (see PushBakeGlobals).
     // -------------------------------------------------------------------------
     private static void PreviewBaked(
         DiamondFixtureDefinition def, DiamondManager manager, ManagerState atmo,
         MaterialPropertyBlock headBlock, MaterialPropertyBlock beamBlock)
     {
-        // Turn the texture path on (opposite of the proxy preview) so the shaders sample the bake
-        // instead of the per-fixture block colour. The block still carries _FixtureRow/_ShowIndex
-        // and emitter dims, which the baked shader reads.
-        SetLightshowKeyword(def.BeamRenderer, true);
-        SetLightshowKeyword(def.HeadRenderer, true);
-
         // Fixture row: the fixture's index in the manager's arrays is its bake row. The runtime
         // seeds `(float)i` from its Start loop; here we find i by matching the fixture's LampProps
         // against the manager's LampProps array, since the definition doesn't store its own index.
-        // Not found leaves the fixture on defaults.
+        // Not found leaves the fixture on defaults (and, since we return before stamping the
+        // selector below, on whatever data-source path it already had -- correct, as a not-found
+        // fixture isn't part of this manager's set).
         int row = FixtureRow(manager, def);
         if (row < 0) return;
 
         float showIndex = manager.ShowIndex;
 
+        // Turn the data-source selector to the texture path (opposite of the proxy preview) so the
+        // shaders sample the bake instead of the per-fixture block colour. Stamped into each block
+        // alongside the row/show seeds; the block value shadows the scene-wide global per renderer,
+        // so this fixture previews baked even while a LiveProxy-previewing manager elsewhere holds
+        // the global at 0 this tick. The block still carries _FixtureRow/_ShowIndex and emitter
+        // dims, which the baked shader reads.
+
         // Head block: the lamp-glow pass samples the bake row and show slot, same as the runtime
         // StartBakedTexture head seed.
+        SetLightshowSelector(headBlock, true);
         headBlock.SetFloat("_FixtureRow", row);
         headBlock.SetFloat("_ShowIndex",  showIndex);
         def.HeadRenderer.SetPropertyBlock(headBlock);
@@ -267,6 +274,7 @@ public static class DiamondFixtureMapPreview
             // Beam block: bake row and show slot for the sample, plus the static emitter dims the
             // shaft shader reads from the block regardless of path.
             Vector2 emitter = def.FixtureEmitterSize;
+            SetLightshowSelector(beamBlock, true);
             beamBlock.SetFloat("_FixtureRow",    row);
             beamBlock.SetFloat("_ShowIndex",     showIndex);
             beamBlock.SetFloat("_EmitterWidth",  emitter.x);
@@ -325,23 +333,20 @@ public static class DiamondFixtureMapPreview
         Shader.SetGlobalFloatArray("_UdonDiamondLightshowFrames", _frames);
     }
 
-    // Forces DIAMOND_LIGHTSHOW_TEX on or off across all of a renderer's shared materials (the
-    // lamp lens carries Mochie plus the Diamond glow, so we check every slot). Guarded so we only
-    // touch a material whose state actually differs; otherwise this would dirty the material asset
-    // every editor tick. A material whose shader doesn't declare the keyword never reports it
-    // enabled, so the guard skips it.
-    private static void SetLightshowKeyword(Renderer r, bool on)
+    // Writes the runtime data-source selector (_UdonDiamondLightshowEnabled) into a fixture's
+    // MaterialPropertyBlock: 1 => sample the bake texture, 0 => read the proxy block values. The
+    // shader reads this as a plain uniform, and a per-renderer block value shadows the scene-wide
+    // global for that renderer, so each fixture can preview its own manager's mode independently in
+    // the same editor tick. This per-fixture granularity is why the preview writes the block rather
+    // than the one global DiamondManager sets at runtime: two managers with different PreviewMode
+    // render together in edit mode, and a single global couldn't serve both. Not sticky material
+    // state (unlike the old DIAMOND_LIGHTSHOW_TEX keyword), so nothing dirties the material asset.
+    //
+    // The caller sets the block on the renderer after this (it's writing other keys into the same
+    // block anyway), so this only stamps the key; it doesn't SetPropertyBlock itself.
+    private static void SetLightshowSelector(MaterialPropertyBlock block, bool texturePath)
     {
-        if (r == null) return;
-        var mats = r.sharedMaterials;
-        if (mats == null) return;
-        foreach (var m in mats)
-        {
-            if (m == null) continue;
-            if (m.IsKeywordEnabled("DIAMOND_LIGHTSHOW_TEX") == on) continue;
-            if (on) m.EnableKeyword("DIAMOND_LIGHTSHOW_TEX");
-            else    m.DisableKeyword("DIAMOND_LIGHTSHOW_TEX");
-        }
+        block.SetFloat("_UdonDiamondLightshowEnabled", texturePath ? 1f : 0f);
     }
 
     // Resolves a manager's per-tick state: its atmosphere (for the proxy preview), whether it

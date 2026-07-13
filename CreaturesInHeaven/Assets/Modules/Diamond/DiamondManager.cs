@@ -51,10 +51,10 @@ public enum DiamondDriveMode { Static, LiveProxy, BakedTexture }
 // changing how it ships.
 //
 //   LiveProxy    The proxy preview: read the animated proxy transforms and push them into
-//                per-fixture blocks (keyword forced off). Also the only path that scrubs
-//                without a bake.
-//   BakedTexture The baked preview: bind the bake texture and globals, enable the
-//                DIAMOND_LIGHTSHOW_TEX keyword, and drive the frame index from Time, so the
+//                per-fixture blocks (data-source selector forced to the proxy path). Also the only
+//                path that scrubs without a bake.
+//   BakedTexture The baked preview: bind the bake texture and globals, set the data-source
+//                selector to the texture path, and drive the frame index from Time, so the
 //                scene view samples the actual bake.
 //
 // If a BakedTexture preview has no valid bake, the editor shows the proxy preview instead
@@ -251,6 +251,11 @@ public class DiamondManager : UdonSharpBehaviour
     // folds it per-fixture into _BeamIntensity, but BakedTexture never touches the per-fixture
     // blocks, so it rides as one global the shader multiplies in.
     private int _idBeamIntensityScaleGlobal;
+    // The global that selects the shader's data source: 1 = sample the bake texture, 0 = read the
+    // per-instance (proxy) values. Replaces the old DIAMOND_LIGHTSHOW_TEX material keyword. A
+    // global uniform rather than per-material keyword state, so there's no sticky material-asset
+    // flag to keep in sync: every DriveMode just sets this once at Start (see SetLightshowMode).
+    private int _idLightshowEnabled;
 
     // Reused "off" colour so the dark path constructs nothing per frame.
     private Color _black;
@@ -457,6 +462,7 @@ public class DiamondManager : UdonSharpBehaviour
         _idLightshowFrameCount       = VRCShader.PropertyToID("_UdonDiamondLightshowFrameCount");
         _idLightshowFrames           = VRCShader.PropertyToID("_UdonDiamondLightshowFrames");
         _idBeamIntensityScaleGlobal  = VRCShader.PropertyToID("_UdonDiamondBeamIntensityScale");
+        _idLightshowEnabled          = VRCShader.PropertyToID("_UdonDiamondLightshowEnabled");
 
         _black = new Color(0f, 0f, 0f, 0f);
 
@@ -635,10 +641,9 @@ public class DiamondManager : UdonSharpBehaviour
             }
         }
 
-        // Turn the shader's baked-lightshow path on for every beam and lamp-glow material this
-        // manager owns. EnableKeyword on the shared material affects all instances, so it's done
-        // once here.
-        SetLightshowKeyword(true);
+        // Select the shader's baked-texture path for every Diamond material at once. One global,
+        // set here for this manager's whole fixture set.
+        SetLightshowMode(true);
     }
 
     // BakedTexture per-frame body, O(1). The whole per-fixture apply lives on the GPU, where
@@ -685,46 +690,21 @@ public class DiamondManager : UdonSharpBehaviour
         if (AnimateBeamIntensityScale && BeamIntensityScaleProxy != null) VRCShader.SetGlobalFloat(_idBeamIntensityScaleGlobal, intensityScale);
     }
 
-    // Sets DIAMOND_LIGHTSHOW_TEX on or off on the beam and lamp-glow materials, so their
-    // shaders take (or leave) the texture-read path in play mode. Both shape shaders and
-    // DiamondLampGlow gate on this keyword; DiamondFixtureMapPreview forces it off in edit
-    // mode so the proxy preview lights up instead.
+    // Selects the shader's data source for every Diamond material at once: on => sample the bake
+    // texture, off => read the per-instance (proxy) values. Both shape shaders and DiamondLampGlow
+    // read this; DiamondFixtureMapPreview drives it off in edit mode so the proxy preview lights up
+    // instead.
     //
-    // This is a MATERIAL-level toggle, not per-instance: it's saved on the shared material
-    // asset, so whatever a manager last set it to persists until another manager (or the
-    // editor preview) changes it again. Every DriveMode must set it explicitly at Start
-    // (BakedTexture on, Static/LiveProxy off) rather than leaving it alone, or a fixture can
-    // inherit a stale "on" from a previous bake and try to sample a texture nothing is
-    // seeding, going dark with no error.
-    //
-    // Uses sharedMaterials (plural) on the head renderer, because the lamp lens carries two
-    // materials (its Mochie look and the Diamond glow) and .sharedMaterial would only reach the
-    // first. Setting the keyword on a material whose shader doesn't declare it (Mochie) is a
-    // harmless no-op, so we don't need to identify which slot is the glow.
-    private void SetLightshowKeyword(bool on)
+    // One SetGlobalFloat, not a per-material keyword walk. The source used to be a
+    // DIAMOND_LIGHTSHOW_TEX keyword saved on each shared material asset, which meant every manager
+    // had to loop its renderers' materials to toggle it, and a mode that didn't want the texture
+    // path had to explicitly turn it off or inherit a stale "on" from a previous bake (dark beams,
+    // no error). As a global uniform it's not saved on any asset and not sticky across a domain
+    // reload: it resets to 0 (the safe proxy default) and each DriveMode seeds it once at Start.
+    // Global, so it must be _Udon-namespaced (VRChat blocks Udon from writing other globals).
+    private void SetLightshowMode(bool texturePath)
     {
-        SetLightshowKeywordOn(BeamRenderers, on);
-        SetLightshowKeywordOn(HeadRenderers, on);
-    }
-
-    private void SetLightshowKeywordOn(Renderer[] renderers, bool on)
-    {
-        if (renderers == null) return;
-        int n = renderers.Length;
-        for (int i = 0; i < n; i++)
-        {
-            Renderer r = renderers[i];
-            if (r == null) continue;
-            Material[] mats = r.sharedMaterials;   // may hold Mochie + Diamond glow
-            if (mats == null) continue;
-            int mc = mats.Length;
-            for (int j = 0; j < mc; j++)
-            {
-                if (mats[j] == null) continue;
-                if (on) mats[j].EnableKeyword("DIAMOND_LIGHTSHOW_TEX");
-                else    mats[j].DisableKeyword("DIAMOND_LIGHTSHOW_TEX");
-            }
-        }
+        VRCShader.SetGlobalFloat(_idLightshowEnabled, texturePath ? 1f : 0f);
     }
 
     // ======================================================================
@@ -736,12 +716,13 @@ public class DiamondManager : UdonSharpBehaviour
 
     // LiveProxy init. StartShared already built the per-fixture blocks, cached the lamp
     // GameObjects, allocated the dirty-check arrays, and seeded static emitter and atmosphere.
-    // The only thing left is to make sure the shader reads this manager's per-fixture blocks
-    // instead of a bake texture: the keyword is material-level state, so it can be left "on"
-    // from a previous BakedTexture run and must be turned off explicitly.
+    // The only thing left is to point the shader at this manager's per-fixture blocks instead of a
+    // bake texture. The selector is a global uniform that resets to 0 on a domain reload, so on
+    // most runs this is already the value, but we set it explicitly so a BakedTexture manager that
+    // ran earlier this session (and set it to 1) can't leave the proxy path reading a stale texture.
     private void StartLiveProxy()
     {
-        SetLightshowKeyword(false);
+        SetLightshowMode(false);
     }
 
     // ======================================================================
@@ -751,14 +732,14 @@ public class DiamondManager : UdonSharpBehaviour
     //  step, and no per-frame Update cost at all (not even a dirty-check read).
     // ======================================================================
 
-    // Static init. Turns off the bake keyword (same reason as StartLiveProxy), then applies
-    // every fixture's current proxy state exactly once via the same read + IsLightOff +
-    // ApplyFixture path UpdateLiveProxy uses per frame. Manager-wide atmosphere is handled by
-    // StartShared already (seeded per-block for the static case); there is no animated-channel
-    // case here, since Static never re-reads anything after this.
+    // Static init. Selects the proxy path (same reason as StartLiveProxy), then applies every
+    // fixture's current proxy state exactly once via the same read + IsLightOff + ApplyFixture path
+    // UpdateLiveProxy uses per frame. Manager-wide atmosphere is handled by StartShared already
+    // (seeded per-block for the static case); there is no animated-channel case here, since Static
+    // never re-reads anything after this.
     private void StartStatic()
     {
-        SetLightshowKeyword(false);
+        SetLightshowMode(false);
 
         int count = LampProps.Length;
         for (int i = 0; i < count; i++)

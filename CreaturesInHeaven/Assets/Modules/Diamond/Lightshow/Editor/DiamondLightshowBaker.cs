@@ -250,9 +250,11 @@ public class DiamondLightshowBaker : EditorWindow
             // --- Write the descriptor onto the manager + definition ---
             WriteDescriptor(tex, frameCount, fixtureCount, colourPeak, beamPeak);
 
-            // Enable the shader keyword on the beam materials at edit time so the texture path
-            // is on the moment the bake exists. Persists on the material asset.
-            EnableLightshowKeyword();
+            // No keyword to enable here anymore: the texture-vs-proxy choice is a runtime global
+            // (_UdonDiamondLightshowEnabled), not sticky material state. Whether the scene view
+            // shows the freshly baked result is up to DiamondFixtureMapPreview, which drives that
+            // global from each manager's PreviewMode. Set a manager's PreviewMode to BakedTexture
+            // to preview the bake in edit mode.
 
             Cleanup(started);
 
@@ -321,44 +323,6 @@ public class DiamondLightshowBaker : EditorWindow
         }
 
         return AssetDatabase.LoadAssetAtPath<Texture2D>(assetPath);
-    }
-
-    // Enables DIAMOND_LIGHTSHOW_TEX on every distinct material the manager owns (beam and
-    // lamp-lens) at edit time, and marks them dirty so it saves onto the asset. Backs up the
-    // runtime EnableKeyword in DiamondManager.
-
-    // Matches the manager's runtime enable: both renderer arrays, and sharedMaterials (plural)
-    // since the lamp lens carries Mochie plus the glow pass, so .sharedMaterial (singular) would
-    // miss the glow slot and leave the lamp glow on the edit-preview path in a fresh play session
-    // until the manager re-enabled it.
-    void EnableLightshowKeyword()
-    {
-        var seen = new System.Collections.Generic.HashSet<Material>();
-        EnableKeywordOn(_manager.BeamRenderers, seen);
-        EnableKeywordOn(_manager.HeadRenderers, seen);
-        AssetDatabase.SaveAssets();
-    }
-
-    // Enables the keyword on each distinct shared material across a renderer array. `seen`
-    // dedupes across both arrays so a material shared by beam and head is touched once.
-    static void EnableKeywordOn(Renderer[] renderers, System.Collections.Generic.HashSet<Material> seen)
-    {
-        if (renderers == null) return;
-        foreach (var r in renderers)
-        {
-            if (r == null) continue;
-            foreach (var m in r.sharedMaterials)
-            {
-                if (m == null || !seen.Add(m)) continue;
-                // A material whose shader doesn't declare the keyword just
-                // never reports it enabled.
-                if (!m.IsKeywordEnabled("DIAMOND_LIGHTSHOW_TEX"))
-                {
-                    m.EnableKeyword("DIAMOND_LIGHTSHOW_TEX");
-                    EditorUtility.SetDirty(m);
-                }
-            }
-        }
     }
 
     // Stores the descriptor on the DiamondManager (runtime-readable serialized fields,

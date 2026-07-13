@@ -7,8 +7,9 @@
 // a change to the frame-lerp or the colour-row index reaches the lamp glow and the beam
 // colour together rather than desyncing them.
 //
-// Guarded by DIAMOND_LIGHTSHOW_TEX: a shader includes this unconditionally, but only the
-// texture-path variant compiles the body.
+// Always compiled: a shader includes this unconditionally and reads the sampler at runtime,
+// gated by the _UdonDiamondLightshowEnabled uniform (1 = texture path, 0 = proxy path) rather
+// than a compile-time keyword variant.
 //
 // Texture layout (RGB24), authored by DiamondLightshowBaker / DiamondLightshowFormat:
 //   column = frame f
@@ -20,7 +21,15 @@
 #ifndef DIAMOND_LIGHTSHOW_SAMPLE_INCLUDED
 #define DIAMOND_LIGHTSHOW_SAMPLE_INCLUDED
 
-#ifdef DIAMOND_LIGHTSHOW_TEX
+// Runtime selector between the baked-texture path and the proxy/edit path, replacing the old
+// DIAMOND_LIGHTSHOW_TEX shader keyword. 1 = sample the bake texture, 0 = use the per-instance
+// (proxy-driven) values. A plain uniform rather than a #pragma keyword so nothing has to toggle
+// sticky material-asset state: DiamondManager seeds it once at Start (and the editor preview
+// per tick) via SetGlobalFloat, and the shaders lerp between the two paths on it. It must start
+// with _Udon so Udon is allowed to write it as a global (VRChat blocks Udon from setting any
+// global outside that namespace); unset it reads 0, i.e. the proxy path, which is the safe
+// default (no bake seeded yet -> don't sample a texture nothing filled).
+float _UdonDiamondLightshowEnabled;
 
 // These are set from Udon via VRCShader.SetGlobal*, so they must start with _Udon: VRChat
 // blocks Udon from writing any global shader property outside that namespace. They're
@@ -108,5 +117,4 @@ void DiamondSampleLightshow(float fixtureRow, float showIndex,
     intensity = b.b * _UdonDiamondLightshowBeamScale;
 }
 
-#endif // DIAMOND_LIGHTSHOW_TEX
 #endif // DIAMOND_LIGHTSHOW_SAMPLE_INCLUDED

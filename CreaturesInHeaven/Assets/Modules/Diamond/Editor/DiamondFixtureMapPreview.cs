@@ -165,8 +165,7 @@ public static class DiamondFixtureMapPreview
         // materials, so their shaders read the proxy values we're about to write below instead of
         // the bake texture. Udon doesn't run in edit mode, so the texture path has no
         // _UdonDiamondLightshowFrames to sample, and without this the beam and lamp glow
-        // freeze/blank while scrubbing. DiamondManager re-enables it in play. Idempotent, and
-        // DisableKeyword on a shader lacking it is a no-op.
+        // freeze/blank while scrubbing. DiamondManager re-enables it in play.
         SetLightshowKeyword(def.BeamRenderer, false);
         SetLightshowKeyword(def.HeadRenderer, false);
 

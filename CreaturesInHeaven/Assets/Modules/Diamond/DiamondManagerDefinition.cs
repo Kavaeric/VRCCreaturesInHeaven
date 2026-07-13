@@ -9,14 +9,9 @@ using UnityEditor;
 // work: its job is to crawl the fixtures under the root and populate the manager's parallel
 // arrays, so at runtime the manager just reads serialized data.
 //
-// This is the "entities don't have inspectors; tooling projects a view onto the data" seam
-// (see DIAMOND-MANAGER.md, stage 3). The bake crawls DiamondFixtureDefinition components (the
-// same crawl DiamondFixtureMapWriter uses) and reads each fixture's object graph and derived
-// values straight off DiamondFixtureDefinition, which sources them from the profile and beam
-// material. Stable identity and index tracking is stage 3.
-//
-// Bake is manual (a "Bake fixtures" inspector button / context menu), never automatic, so it
-// can't clobber the arrays mid-edit.
+// The bake crawls DiamondFixtureDefinition components and reads each fixture's object graph
+// and derived values straight off DiamondFixtureDefinition, which sources them from the
+// profile and beam material.
 public class DiamondManagerDefinition : MonoBehaviour
 {
     // Display label for this manager (multi-manager organisation, presets, etc).
@@ -26,8 +21,7 @@ public class DiamondManagerDefinition : MonoBehaviour
     // The fixture map's presentation data, baked here by the same crawl that fills the runtime
     // DiamondManager arrays. Index-aligned with the manager's arrays: MapPositions[i] describes
     // the same fixture as DiamondManager's LampProps[i]. It lives on the Definition rather than
-    // the Udon manager, so it's stripped at build and never ships into the runtime world. See
-    // DIAMOND-MANAGER.md, stage 3.
+    // the Udon manager, so it's stripped at build and never ships into the runtime world.
 
     // Per-fixture display name (DisplayName override, else GameObject name).
     public string[]  MapNames;
@@ -35,7 +29,7 @@ public class DiamondManagerDefinition : MonoBehaviour
     public Vector2[] MapPositions;
     // Node footprint size: width (long axis) and depth (short axis), metres.
     public Vector2[] MapSizes;
-    // World yaw about Y, degrees clockwise from map +X (see DiamondFixtureMapWriter.GetMapYaw).
+    // World yaw about Y, degrees clockwise from map +X (see ComputeMapYaw).
     public float[]   MapYaw;
     // Beam cross-section: true = round (draw a disc), false = rect.
     public bool[]    MapRound;
@@ -78,8 +72,7 @@ public class DiamondManagerDefinition : MonoBehaviour
         }
 
         // Same crawl as the fixture map: every DiamondFixtureDefinition under the root, in
-        // hierarchy order. Order defines the fixture indices for now; stage 3 replaces this with
-        // a stable identity-to-index scheme.
+        // hierarchy order. Order defines the fixture indices for now.
         var defs = GetComponentsInChildren<DiamondFixtureDefinition>();
         int count = defs.Length;
 
@@ -95,8 +88,8 @@ public class DiamondManagerDefinition : MonoBehaviour
 
         // Map (presentation) data, index-aligned with the arrays above. Baked in the same crawl
         // so the runtime graph and the map view share one index space, which is the whole point
-        // of folding the map onto the manager (see DIAMOND-MANAGER.md, stage 3). These land on
-        // this Definition, not the runtime manager, so they're build-stripped.
+        // of folding the map onto the manager These land on this Definition, not the runtime
+        // manager, so they're build-stripped.
         var mapNames     = new string[count];
         var mapPositions = new Vector2[count];
         var mapSizes     = new Vector2[count];

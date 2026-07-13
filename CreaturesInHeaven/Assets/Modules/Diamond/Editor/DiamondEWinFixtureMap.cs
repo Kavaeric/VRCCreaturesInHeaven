@@ -11,8 +11,8 @@ using FixtureLayout      = DiamondFixtureMapLayout.FixtureLayout;
 using GroupLayout        = DiamondFixtureMapLayout.GroupLayout;
 using SelectionGroup     = DiamondFixtureMapLayout.SelectionGroup;
 
-// Graphical fixture map window. Displays fixtures loaded from a FixtureMap.json
-// (produced by DiamondEWinGenerateMap) as labelled nodes on a 2D canvas.
+// Graphical fixture map window. Displays fixtures read live off the manager's baked
+// map arrays (DiamondManagerDefinition.BakeFixtures) as labelled nodes on a 2D canvas.
 //
 // Open via: Tools > Fixture Map
 public class DiamondEWinFixtureMap : EditorWindow
@@ -85,9 +85,7 @@ public class DiamondEWinFixtureMap : EditorWindow
 
     // The manager whose baked fixture map this window displays. The map data
     // (fixtures, layout, groups) is baked onto DiamondManagerDefinition by
-    // DiamondManagerDefinition.BakeFixtures -- the on-script replacement for the
-    // old FixtureMap.json (see DIAMOND-MANAGER.md, stage 3). The window reads it
-    // directly; there is no file to load.
+    // DiamondManagerDefinition.BakeFixtures.
     private DiamondManagerDefinition   _managerDef          = null;
     private ObjectField                _managerField;
 
@@ -774,7 +772,7 @@ public class DiamondEWinFixtureMap : EditorWindow
 
     private void DrawEmptyState(Rect rect)
     {
-        GUI.Label(rect, "No fixture map loaded.\nUse Load map… to open a FixtureMap.json.", _emptyStateStyle);
+        GUI.Label(rect, "Assign a DiamondManager above to display its baked map.", _emptyStateStyle);
     }
 
     private bool IsGroupSelected(GroupEntry group, HashSet<UnityEngine.Object> selectionSet)

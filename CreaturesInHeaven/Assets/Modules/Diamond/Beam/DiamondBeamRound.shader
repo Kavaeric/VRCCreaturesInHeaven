@@ -112,8 +112,7 @@ Shader "Diamond/BeamRound"
             // texture instead of the instancing buffer, so DiamondManager never drives
             // them per frame on the CPU. multi_compile_local (not shader_feature) so both
             // variants always build and the keyword can be toggled at runtime/by the
-            // manager without depending on a material asset saving it. See
-            // DIAMOND-GPU-ACCEL.md.
+            // manager without depending on a material asset saving it.
             #pragma multi_compile_local __ DIAMOND_LIGHTSHOW_TEX
 
             // The debug scaffolding (component-isolation modes and surface probe) is

@@ -2,25 +2,10 @@ using UnityEngine;
 using UnityEditor;
 
 // Offline baker: steps a lighting-rig AnimationClip frame by frame and records each
-// fixture's driven shader values into an RGBA32 lookup texture, so at runtime the fixtures'
+// fixture's driven shader values into an RGB24 lookup texture, so at runtime the fixtures'
 // shaders sample their own row on the GPU instead of DiamondManager reading every proxy
-// transform in an Udon loop (which boxes a Vector3 per read, the whole reason this system
-// exists; see DIAMOND-GPU-ACCEL.md and memory udon_transform_read_boxing.md).
-//
-// This is the Diamond analogue of the Moment ALV baker, but far simpler: the sample is a
-// plain transform read (no Bakery render, no async finish callback), so the whole bake is
-// one synchronous loop with a progress bar. It reuses Moment's AnimationMode.
-// SampleAnimationClip pattern for force-evaluating a pose. Where Moment does a
-// GUID-preserving in-place .asset write, Diamond writes the result as a PNG next to the clip:
-// lossless for RGBA32, and a normal image you can open and eyeball. Correctness comes from
-// re-asserting the data-texture import settings on every bake, not from the file format; see
-// WriteTexturePng.
-//
-// Moment defers a tick after SampleAnimationClip before reading, because Bakery reads scene
-// geometry, which lags a frame. SampleAnimationClip writes transform local values
-// synchronously, so reading localPosition/localScale/localEulerAngles right after the call
-// returns the sampled pose, with no settle needed here. (If a baked frame ever looks
-// one-frame-stale, revisit this assumption.)
+// transform in an Udon loop. This is to avoid Udon performance overhead boxing every Vector3
+// read which adds up very quickly for large lightshows.
 //
 // The row order is the same crawl DiamondManagerDefinition.BakeFixtures uses
 // (GetComponentsInChildren<DiamondFixtureDefinition>), so fixture i's runtime _FixtureRow = i
@@ -36,14 +21,13 @@ public class DiamondLightshowBaker : EditorWindow
     AnimationClip _clip;
 
     // The Animator the clip's paths are relative to. SampleAnimationClip must be given this
-    // GameObject as root, or the proxy transforms won't move and the bake comes out all-static
-    // (a silent, nasty failure). Auto-resolved from the manager when possible
-    // (GetComponentInChildren<Animator>), but exposed so it can be corrected if the rig's
-    // Animator isn't under the manager root.
+    // GameObject as root, or the proxy transforms won't move and the bake comes out all-static.
+    // Auto-resolved from the manager when possible (GetComponentInChildren<Animator>), but
+    // exposed so it can be corrected,
     Animator _animator;
 
     // Bake resolution: frames sampled = round(clip length * frameRate) + 1 (inclusive
-    // of the final frame). Overridable so a quick low-res test bake is possible.
+    // of the final frame). For debugging.
     int _frameRate = 60;
     bool _overrideFrameRate = false;
 
@@ -90,12 +74,12 @@ public class DiamondLightshowBaker : EditorWindow
             int fixtures = _manager.LampProps != null ? _manager.LampProps.Length : 0;
             int w = DiamondLightshowFormat.FlatWidth(frames);
             int h = DiamondLightshowFormat.FlatHeight(fixtures);
-            long bytes = (long)w * h * 4;
+            long bytes = (long)w * h * 3;
             bool fits = DiamondLightshowFormat.FitsFlat(frames, fixtures);
 
             EditorGUILayout.HelpBox(
                 $"{fixtures} fixtures x {frames} frames @ {rate}fps\n" +
-                $"Texture: {w} x {h} RGBA32 ({bytes / (1024f * 1024f):0.0} MB), column=frame, row=fixture*2+slot" +
+                $"Texture: {w} x {h} RGB24 ({bytes / (1024f * 1024f):0.0} MB), column=frame, row=fixture*2+slot" +
                 (fits ? "" : $"\nAn axis exceeds the {DiamondLightshowFormat.MaxTextureAxis} cap; wrap is not yet implemented."),
                 fits ? MessageType.Info : MessageType.Error);
 
@@ -133,16 +117,14 @@ public class DiamondLightshowBaker : EditorWindow
 
         // Sample against the Animator's GameObject: the clip's paths are relative to it,
         // so this is the root SampleAnimationClip must be given for the proxy transforms
-        // to move. (Using the manager root would silently produce a static bake if the
-        // manager sits above the Animator.)
+        // to move.
         GameObject root = _animator.gameObject;
 
         // Two passes over cached samples. Pass 1 steps the clip once, reading every fixture's
         // channels into `raw` and measuring the HDR peaks (drivenColour and beamIntensity) across
         // the whole show. Pass 2 re-visits `raw`, not the clip, to scale by those peaks into
         // [0,1] and pack the pixels: the peak isn't known until every frame is seen, so the scale
-        // can only be applied after pass 1. Caching avoids stepping the clip twice; at 420x5568
-        // that's ~2.3M small structs, a few tens of MB transiently in the editor, which is fine.
+        // can only be applied after pass 1.
         var raw = new RawSample[frameCount * fixtureCount];
 
         bool started = !AnimationMode.InAnimationMode();
@@ -193,7 +175,7 @@ public class DiamondLightshowBaker : EditorWindow
                             s.cg = colour.y * brightness;
                             s.cb = colour.z * brightness;
 
-                            // colour proxy is assumed SDR [0,1]; flag if authored beyond.
+                            // colour proxy is assumed SDR [0,1]. Flags if authored beyond.
                             if (colour.x > 1f || colour.y > 1f || colour.z > 1f) colourOverflow = true;
 
                             if (beam != null)
@@ -248,17 +230,15 @@ public class DiamondLightshowBaker : EditorWindow
 
                     if (s.on)
                     {
-                        pixels[colourIdx] = new Color(
-                            s.cr * invColour, s.cg * invColour, s.cb * invColour, 1f);
-                        pixels[beamIdx] = new Color(
-                            s.zoom, s.focus, s.beam * invBeam, 1f);
+                        pixels[colourIdx] = new Color(s.cr * invColour, s.cg * invColour, s.cb * invColour);
+                        pixels[beamIdx]   = new Color(s.zoom, s.focus, s.beam * invBeam);
                     }
                     else
                     {
-                        // Off bakes as zero colour (shader early-outs on black), and the
-                        // beam row is irrelevant when colour is zero.
-                        pixels[colourIdx] = Color.clear;
-                        pixels[beamIdx]   = Color.clear;
+                        // Off bakes as zero colour (shader early-outs on black), and the beam row
+                        // is irrelevant when colour is zero.
+                        pixels[colourIdx] = Color.black;
+                        pixels[beamIdx]   = Color.black;
                     }
                 }
             }
@@ -271,8 +251,7 @@ public class DiamondLightshowBaker : EditorWindow
             WriteDescriptor(tex, frameCount, fixtureCount, colourPeak, beamPeak);
 
             // Enable the shader keyword on the beam materials at edit time so the texture path
-            // is on the moment the bake exists, independent of whether Udon's
-            // Material.EnableKeyword works at runtime. Persists on the material asset.
+            // is on the moment the bake exists. Persists on the material asset.
             EnableLightshowKeyword();
 
             Cleanup(started);
@@ -295,7 +274,7 @@ public class DiamondLightshowBaker : EditorWindow
                 $"ColourScale (peak) = {colourPeak:0.###}, BeamIntensityScale (peak) = {beamPeak:0.###}.{warn}{showSlotWarn}",
                 msgType);
             Debug.Log($"[Diamond] Lightshow bake complete: {assetPath} " +
-                      $"({w}x{h} RGBA32, ShowIndex={_manager.ShowIndex}, colourPeak={colourPeak:0.###}, beamPeak={beamPeak:0.###})", tex);
+                      $"({w}x{h} RGB24, ShowIndex={_manager.ShowIndex}, colourPeak={colourPeak:0.###}, beamPeak={beamPeak:0.###})", tex);
         }
         finally
         {
@@ -303,20 +282,13 @@ public class DiamondLightshowBaker : EditorWindow
         }
     }
 
-    // Encodes the pixels to a PNG file and enforces the import settings a data texture needs, so
-    // the imported Texture2D holds exactly the baked bytes (no gamma, no compression, no mips, no
-    // filtering or rows bleeding). PNG so the asset is a normal image you can open and eyeball;
-    // RGBA32 PNG is lossless, so nothing is lost versus a native .asset. The baker re-asserts
-    // these importer settings on every bake, so a stray manual change can't corrupt a later bake.
-    // Enforcing in code rather than relying on the file type is what actually guarantees
-    // correctness.
-    //
+    // Encodes the pixels to a PNG file and enforces the import settings a data texture needs.
     // Returns the imported Texture2D (loaded back after reimport) for the descriptor.
     static Texture2D WriteTexturePng(string assetPath, Color[] pixels, int w, int h)
     {
-        // Build a transient RGBA32 texture just to encode. filterMode and the like here don't
+        // Build a transient RGB24 texture just to encode. filterMode and the like here don't
         // matter; the imported asset's settings (below) are what the GPU sees.
-        var tmp = new Texture2D(w, h, TextureFormat.RGBA32, false, true);
+        var tmp = new Texture2D(w, h, TextureFormat.RGB24, false, true);
         tmp.SetPixels(pixels);
         tmp.Apply(false);
         byte[] png = tmp.EncodeToPNG();
@@ -328,21 +300,19 @@ public class DiamondLightshowBaker : EditorWindow
         System.IO.File.WriteAllBytes(absPath, png);
         AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
 
-        // Enforce data-texture import settings. Re-applied every bake so they can't drift.
+        // Enforce data-texture import settings.
         var importer = (TextureImporter)AssetImporter.GetAtPath(assetPath);
         if (importer != null)
         {
             importer.textureType        = TextureImporterType.Default;
-            importer.sRGBTexture        = false;                       // raw values, no gamma
+            importer.sRGBTexture        = false;
             importer.mipmapEnabled      = false;
             importer.isReadable         = false;                       // GPU-only; no CPU copy needed at runtime
             importer.filterMode         = FilterMode.Point;            // shader lerps frames itself; rows must not blend
             importer.wrapMode           = TextureWrapMode.Clamp;
             importer.npotScale          = TextureImporterNPOTScale.None;
             importer.textureCompression = TextureImporterCompression.Uncompressed;
-            importer.maxTextureSize     = 16384;                       // don't downscale the wide strip
-            importer.alphaSource        = TextureImporterAlphaSource.FromInput;
-            importer.alphaIsTransparency = false;
+            importer.maxTextureSize     = 16384;                       // don't downscale a wide strip
             importer.SaveAndReimport();
         }
         else
@@ -355,11 +325,12 @@ public class DiamondLightshowBaker : EditorWindow
 
     // Enables DIAMOND_LIGHTSHOW_TEX on every distinct material the manager owns (beam and
     // lamp-lens) at edit time, and marks them dirty so it saves onto the asset. Backs up the
-    // runtime EnableKeyword in DiamondManager.Start in case Udon can't call it. Matches the
-    // manager's runtime enable: both renderer arrays, and sharedMaterials (plural) since the lamp
-    // lens carries Mochie plus the glow pass, so .sharedMaterial (singular) would miss the glow
-    // slot and leave the lamp glow on the edit-preview path in a fresh play session until the
-    // manager re-enabled it.
+    // runtime EnableKeyword in DiamondManager.
+
+    // Matches the manager's runtime enable: both renderer arrays, and sharedMaterials (plural)
+    // since the lamp lens carries Mochie plus the glow pass, so .sharedMaterial (singular) would
+    // miss the glow slot and leave the lamp glow on the edit-preview path in a fresh play session
+    // until the manager re-enabled it.
     void EnableLightshowKeyword()
     {
         var seen = new System.Collections.Generic.HashSet<Material>();
@@ -376,11 +347,11 @@ public class DiamondLightshowBaker : EditorWindow
         foreach (var r in renderers)
         {
             if (r == null) continue;
-            foreach (var m in r.sharedMaterials)   // plural: lamp lens is Mochie + glow
+            foreach (var m in r.sharedMaterials)
             {
                 if (m == null || !seen.Add(m)) continue;
-                // A material whose shader doesn't declare the keyword (e.g. Mochie) just
-                // never reports it enabled; enabling is a harmless no-op there.
+                // A material whose shader doesn't declare the keyword just
+                // never reports it enabled.
                 if (!m.IsKeywordEnabled("DIAMOND_LIGHTSHOW_TEX"))
                 {
                     m.EnableKeyword("DIAMOND_LIGHTSHOW_TEX");

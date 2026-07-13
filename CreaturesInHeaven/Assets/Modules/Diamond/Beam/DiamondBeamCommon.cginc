@@ -167,7 +167,7 @@ struct v2f
 UNITY_DECLARE_DEPTH_TEXTURE(_CameraDepthTexture);
 
 // --- Mirror-camera oblique depth correction ----------------------------------
-// Mirror cameras use an OBLIQUE near plane to clip geometry behind the mirror
+// Mirror cameras use an oblique near plane to clip geometry behind the mirror
 // surface. The standard Unity helper LinearEyeDepth() assumes the projection
 // matrix's third row has its default shape, which obliques break. The fix is to
 // derive a per-pixel correction factor from the projection matrix and use it

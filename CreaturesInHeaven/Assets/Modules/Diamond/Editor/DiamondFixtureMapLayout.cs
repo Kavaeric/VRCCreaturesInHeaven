@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using UnityEditor;
 using UnityEngine;
 
 // Domain types and layout computation for the Diamond fixture map.
@@ -10,7 +8,7 @@ public static class DiamondFixtureMapLayout
 {
     // --- Data types --------------------------------------------------
 
-    // Node draw shape, parsed from the JSON "shape" string.
+    // Node draw shape, derived from the entry's "shape" string.
     public enum NodeShape { Rect, Round }
 
     [Serializable]
@@ -24,7 +22,7 @@ public static class DiamondFixtureMapLayout
         public float           yaw;   // world yaw in degrees, clockwise from map +X (0 = unrotated)
 
         // Parsed form of the shape string. Missing/unrecognised values fall back to Rect
-        // so older maps written before the shape field keep rendering as rectangles.
+        // so entries without an explicit shape keep rendering as rectangles.
         public NodeShape Shape =>
             string.Equals(shape, "round", StringComparison.OrdinalIgnoreCase)
                 ? NodeShape.Round
@@ -53,24 +51,6 @@ public static class DiamondFixtureMapLayout
         public List<int> fixtures;
     }
 
-    // RETIRED (DIAMOND-MANAGER.md, stage 3). On-disk form of a selection group,
-    // for the old FixtureMap.json.selections.json sidecar. Selection groups now
-    // persist on DiamondManagerDefinition (DiamondManagerDefinition.SelectionGroup),
-    // still keyed by GlobalObjectId. Kept only as a reference for the old format;
-    // nothing reads these types now.
-    [Serializable]
-    public struct SerialisedSelectionGroup
-    {
-        public string       name;
-        public List<string> fixtureGids;
-    }
-
-    [Serializable]
-    public struct SelectionGroupFile
-    {
-        public List<SerialisedSelectionGroup> groups;
-    }
-
     // Precomputed layout for a single fixture node (logical space).
     public struct FixtureLayout
     {
@@ -91,27 +71,6 @@ public static class DiamondFixtureMapLayout
         public List<FixtureLayout> fixtureLayouts;
         public List<GroupLayout>   groupLayouts;
         public Rect                logicalBounds;
-    }
-
-    // --- JSON parsing (RETIRED) --------------------------------------
-    // RETIRED (DIAMOND-MANAGER.md, stage 3). The map is no longer loaded from
-    // FixtureMap.json -- DiamondEWinFixtureMap reads it live off the manager's
-    // baked arrays. ParseMap/MapWrapper are kept only as a reference for the old
-    // JSON format; nothing calls ParseMap now. The layout math below
-    // (ComputeLogicalLayout and its helpers) is still live and shared.
-
-    [Serializable]
-    private struct MapWrapper
-    {
-        public List<FixtureEntry> items;
-        public List<GroupEntry>   groups;
-    }
-
-    public static void ParseMap(string json, out List<FixtureEntry> fixtures, out List<GroupEntry> groups)
-    {
-        var wrapper = JsonUtility.FromJson<MapWrapper>(json);
-        fixtures = wrapper.items  ?? new List<FixtureEntry>();
-        groups   = wrapper.groups ?? new List<GroupEntry>();
     }
 
     // --- Layout computation ------------------------------------------
@@ -294,16 +253,5 @@ public static class DiamondFixtureMapLayout
             }
         }
         return centres;
-    }
-
-    // --- Path utilities ----------------------------------------------
-
-    public static string ToProjectRelative(string absolutePath)
-    {
-        string dataPath = Application.dataPath.Replace('\\', '/');
-        string absNorm  = absolutePath.Replace('\\', '/');
-        if (absNorm.StartsWith(dataPath))
-            return "Assets" + absNorm.Substring(dataPath.Length);
-        return null;
     }
 }

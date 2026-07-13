@@ -8,13 +8,13 @@
 // colour together rather than desyncing them.
 //
 // Guarded by DIAMOND_LIGHTSHOW_TEX: a shader includes this unconditionally, but only the
-// texture-path variant compiles the body. See DIAMOND-GPU-ACCEL.md.
+// texture-path variant compiles the body.
 //
-// Texture layout (RGBA32), authored by DiamondLightshowBaker / DiamondLightshowFormat:
+// Texture layout (RGB24), authored by DiamondLightshowBaker / DiamondLightshowFormat:
 //   column = frame f
 //   row    = _FixtureRow * _UdonDiamondLightshowTexelsPerFixture + slot
-//            slot 0 = colour (drivenColour.rgb, 1) scaled by 1/ColourScale
-//            slot 1 = beam   (zoom, focus, beamIntensity/BeamScale, 1)
+//            slot 0 = colour (drivenColour.rgb) scaled by 1/ColourScale
+//            slot 1 = beam   (zoom, focus, beamIntensity/BeamScale)
 // The current frame column is _UdonDiamondLightshowFrames[_ShowIndex]; callers lerp the two
 // bracketing columns for smoothness, since the bake fps is below the render fps.
 #ifndef DIAMOND_LIGHTSHOW_SAMPLE_INCLUDED

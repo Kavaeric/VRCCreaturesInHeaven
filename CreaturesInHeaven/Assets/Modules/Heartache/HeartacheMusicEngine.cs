@@ -180,8 +180,8 @@ public class HeartacheMusicEngine : UdonSharpBehaviour
 
     void Update()
     {
-        MusicPlayerLobby.volume = _audienceManager.WatchingAnimation ? 0f : 0.6f;
-        MusicPlayer.volume = _audienceManager.WatchingAnimation ? 0.8f : 0f;
+        MusicPlayerLobby.volume = _audienceManager.WatchingAnimation ? 0f : 0.7f;
+        MusicPlayer.volume = _audienceManager.WatchingAnimation ? 1f : 0f;
 
         // Start is only available before playback; Join is only available during.
         _buttonStart.interactable = !_syncedPlaying;

@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 8900000, guid: b75f7588d29f1c6479a528e6ea8f8140, type: 3}
   m_Sun: {fileID: 396777394}
-  m_IndirectSpecularColor: {r: 0.019065998, g: 0.030158926, b: 0.075821824, a: 1}
+  m_IndirectSpecularColor: {r: 0.019065998, g: 0.030158926, b: 0.07582179, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -189,6 +189,51 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &160256741
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
+  m_Name: Lighting Seq 02 Concourse Night_LMA3
+  m_EditorClassIdentifier: 
+  resolution: 4096
+  bitmask: 1
+  id: 3
+  sortingID: 4
+  isImplicit: 1
+  area: 0
+  totalVertexCount: 0
+  vertexCounter: 0
+  sceneLodLevel: -1
+  autoResolution: 0
+  sceneName: 
+  tag: -1
+  containsTerrains: 0
+  probes: 0
+  mode: 1
+  renderMode: 1000
+  renderDirMode: 1000
+  atlasPacker: 1000
+  holeFilling: 0
+  vertexSamplingDensity: 0
+  computeSSS: 0
+  sssSamples: 16
+  sssDensity: 10
+  sssColor: {r: 1, g: 1, b: 1, a: 1}
+  sssScale: 1
+  fakeShadowBias: 0
+  transparentSelfShadow: 0
+  flipNormal: 0
+  parentName: 
+  overridePath: 
+  fixPos3D: 0
+  voxelSize: {x: 1, y: 1, z: 1}
+  passedFilter: 0
 --- !u!1 &170607187
 GameObject:
   m_ObjectHideFlags: 0
@@ -324,6 +369,51 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &317688842
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
+  m_Name: Lighting Seq 02 Concourse Night_LMA1
+  m_EditorClassIdentifier: 
+  resolution: 4096
+  bitmask: 1
+  id: 1
+  sortingID: 2
+  isImplicit: 1
+  area: 0
+  totalVertexCount: 0
+  vertexCounter: 0
+  sceneLodLevel: -1
+  autoResolution: 0
+  sceneName: 
+  tag: -1
+  containsTerrains: 0
+  probes: 0
+  mode: 1
+  renderMode: 1000
+  renderDirMode: 1000
+  atlasPacker: 1000
+  holeFilling: 0
+  vertexSamplingDensity: 0
+  computeSSS: 0
+  sssSamples: 16
+  sssDensity: 10
+  sssColor: {r: 1, g: 1, b: 1, a: 1}
+  sssScale: 1
+  fakeShadowBias: 0
+  transparentSelfShadow: 0
+  flipNormal: 0
+  parentName: 
+  overridePath: 
+  fixPos3D: 0
+  voxelSize: {x: 1, y: 1, z: 1}
+  passedFilter: 0
 --- !u!1 &371419750
 GameObject:
   m_ObjectHideFlags: 0
@@ -503,76 +593,7 @@ MonoBehaviour:
   cloudShadowOffsetY: 0
   supersample: 0
   UID: 1621708734
---- !u!23 &574030739 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 4568104950940869577, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &574030740 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 1740268160317430563, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &574030741 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 568419803748655477, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &574030742 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 3396111139172070749, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &579863759
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: Lighting Seq 02 Concourse Night_LM0
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 0
-  sortingID: 1
-  isImplicit: 1
-  area: 114250.3
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
---- !u!114 &710895868
+--- !u!114 &527621222
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -616,6 +637,75 @@ MonoBehaviour:
   overridePath: 
   fixPos3D: 0
   voxelSize: {x: 1, y: 1, z: 1}
+  passedFilter: 0
+--- !u!23 &574030739 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 7084774672866093257, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &574030740 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 3579795398878670785, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &574030741 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 8313778267518889577, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &574030742 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 4058778592035749673, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &750657347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
+  m_Name: volumes
+  m_EditorClassIdentifier: 
+  resolution: 16
+  bitmask: 1
+  id: 5
+  sortingID: 0
+  isImplicit: 1
+  area: 0
+  totalVertexCount: 32000
+  vertexCounter: 0
+  sceneLodLevel: -1
+  autoResolution: 0
+  sceneName: 
+  tag: -1
+  containsTerrains: 0
+  probes: 1
+  mode: 2
+  renderMode: 1000
+  renderDirMode: 5
+  atlasPacker: 1000
+  holeFilling: 0
+  vertexSamplingDensity: 0
+  computeSSS: 0
+  sssSamples: 16
+  sssDensity: 10
+  sssColor: {r: 1, g: 1, b: 1, a: 1}
+  sssScale: 1
+  fakeShadowBias: 0
+  transparentSelfShadow: 0
+  flipNormal: 0
+  parentName: 
+  overridePath: 
+  fixPos3D: 1
+  voxelSize: {x: 1.0125, y: 1.05, z: 1.00625}
   passedFilter: 0
 --- !u!1 &849486841
 GameObject:
@@ -770,7 +860,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: -92.843, y: 4.123993, z: -3.4700012}
---- !u!114 &976632507
+--- !u!114 &864030692
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -780,12 +870,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: Lighting Seq 02 Concourse Night_LMA3
+  m_Name: Lighting Seq 02 Concourse Night_LMA2
   m_EditorClassIdentifier: 
   resolution: 4096
   bitmask: 1
-  id: 3
-  sortingID: 4
+  id: 2
+  sortingID: 3
   isImplicit: 1
   area: 0
   totalVertexCount: 0
@@ -978,27 +1068,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
 --- !u!1 &1308534910 stripped
 GameObject:
-  m_CorrespondingSourceObject: {fileID: 2622738960096887324, guid: efa01545da4368645aa06e17ff070762,
+  m_CorrespondingSourceObject: {fileID: 8742280135969966364, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
     type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabInstance: {fileID: 8245858068660243440}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1308534911 stripped
 GameObject:
-  m_CorrespondingSourceObject: {fileID: 226957736297577206, guid: efa01545da4368645aa06e17ff070762,
+  m_CorrespondingSourceObject: {fileID: 3075114682803162644, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
     type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabInstance: {fileID: 8245858068660243440}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1308534912 stripped
 GameObject:
-  m_CorrespondingSourceObject: {fileID: 2081668793004966048, guid: efa01545da4368645aa06e17ff070762,
+  m_CorrespondingSourceObject: {fileID: 7521157857811419068, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
     type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabInstance: {fileID: 8245858068660243440}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1308534913 stripped
 GameObject:
-  m_CorrespondingSourceObject: {fileID: 3756447830642168968, guid: efa01545da4368645aa06e17ff070762,
+  m_CorrespondingSourceObject: {fileID: 2545468169245400828, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
     type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
+  m_PrefabInstance: {fileID: 8245858068660243440}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1631824993
 GameObject:
@@ -1049,51 +1139,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1656577870
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: Lighting Seq 02 Concourse Night_LMA1
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 1
-  sortingID: 2
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!1 &1664471457
 GameObject:
   m_ObjectHideFlags: 0
@@ -1274,23 +1319,23 @@ MonoBehaviour:
   - {fileID: 1664471457}
   - {fileID: 396777393}
   implicitGroups:
-  - {fileID: 1873715700}
-  - {fileID: 710895868}
-  - {fileID: 710895868}
-  - {fileID: 579863759}
-  - {fileID: 579863759}
-  - {fileID: 976632507}
-  - {fileID: 1815425067}
-  - {fileID: 579863759}
-  - {fileID: 1656577870}
-  - {fileID: 579863759}
-  - {fileID: 579863759}
-  - {fileID: 579863759}
-  - {fileID: 579863759}
-  - {fileID: 579863759}
-  - {fileID: 579863759}
-  - {fileID: 579863759}
-  - {fileID: 579863759}
+  - {fileID: 750657347}
+  - {fileID: 527621222}
+  - {fileID: 527621222}
+  - {fileID: 1897103762}
+  - {fileID: 1897103762}
+  - {fileID: 160256741}
+  - {fileID: 864030692}
+  - {fileID: 1897103762}
+  - {fileID: 317688842}
+  - {fileID: 1897103762}
+  - {fileID: 1897103762}
+  - {fileID: 1897103762}
+  - {fileID: 1897103762}
+  - {fileID: 1897103762}
+  - {fileID: 1897103762}
+  - {fileID: 1897103762}
+  - {fileID: 1897103762}
   implicitGroupedObjects:
   - {fileID: 0}
   - {fileID: 1308534910}
@@ -1490,18 +1535,18 @@ MonoBehaviour:
   sectors:
   - name: $G
     maps:
-    - {fileID: 2800000, guid: 135d8c328139b4e4c9f76792b77394fb, type: 3}
-    - {fileID: 2800000, guid: f2babe8059ee78e41928f85cf530edbe, type: 3}
-    - {fileID: 2800000, guid: beb936ee4a64101459b4dee4ec2090b7, type: 3}
-    - {fileID: 2800000, guid: 27e82dc6bf65bbd4a9c67c6ae0fbaecc, type: 3}
-    - {fileID: 2800000, guid: f18667d1c8decdd4ea3158924eb9e9e0, type: 3}
+    - {fileID: 2800000, guid: 70a64f98a74b5c14a82e602d62e706bb, type: 3}
+    - {fileID: 2800000, guid: 3a47c25f627dab245be5bd427eeabbce, type: 3}
+    - {fileID: 2800000, guid: f12fd3f23c1cc1c44af4e3299a96738d, type: 3}
+    - {fileID: 2800000, guid: 546ad4dd776ddd440aed1901f085e05d, type: 3}
+    - {fileID: 2800000, guid: 759fd749b4511c6459106246e139d204, type: 3}
     masks: []
     dirMaps:
-    - {fileID: 2800000, guid: 62f946a71cd0a64419dc70139352c825, type: 3}
-    - {fileID: 2800000, guid: 50101a2ea5c7a974c821e6bb0fe670da, type: 3}
-    - {fileID: 2800000, guid: dd889d9b5c9040c45835d2a2264946dd, type: 3}
-    - {fileID: 2800000, guid: 9ce90db5c0e8de748b54816d12c387ca, type: 3}
-    - {fileID: 2800000, guid: 3ad01a40eabf48645a0e2d967f396d02, type: 3}
+    - {fileID: 2800000, guid: 98dd34edee3422347b0965d6b17855e6, type: 3}
+    - {fileID: 2800000, guid: 02573717ed585ee42b7dc3c0d3094a02, type: 3}
+    - {fileID: 2800000, guid: 71f54a3c01ea3b74f9959bc4e82f3498, type: 3}
+    - {fileID: 2800000, guid: e8f7be51f885d2843a2f810c6907090c, type: 3}
+    - {fileID: 2800000, guid: 2977a2542ceca6f428b5c606c301d955, type: 3}
     rnmMaps0: []
     rnmMaps1: []
     rnmMaps2: []
@@ -1579,51 +1624,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1815425067
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: Lighting Seq 02 Concourse Night_LMA2
-  m_EditorClassIdentifier: 
-  resolution: 4096
-  bitmask: 1
-  id: 2
-  sortingID: 3
-  isImplicit: 1
-  area: 0
-  totalVertexCount: 0
-  vertexCounter: 0
-  sceneLodLevel: -1
-  autoResolution: 0
-  sceneName: 
-  tag: -1
-  containsTerrains: 0
-  probes: 0
-  mode: 1
-  renderMode: 1000
-  renderDirMode: 1000
-  atlasPacker: 1000
-  holeFilling: 0
-  vertexSamplingDensity: 0
-  computeSSS: 0
-  sssSamples: 16
-  sssDensity: 10
-  sssColor: {r: 1, g: 1, b: 1, a: 1}
-  sssScale: 1
-  fakeShadowBias: 0
-  transparentSelfShadow: 0
-  flipNormal: 0
-  parentName: 
-  overridePath: 
-  fixPos3D: 0
-  voxelSize: {x: 1, y: 1, z: 1}
-  passedFilter: 0
 --- !u!850595691 &1868073472
 LightingSettings:
   m_ObjectHideFlags: 0
@@ -1688,7 +1688,7 @@ LightingSettings:
   m_PVRTiledBaking: 0
   m_NumRaysToShootPerTexel: -1
   m_RespectSceneVisibilityWhenBakingGI: 0
---- !u!114 &1873715700
+--- !u!114 &1897103762
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1698,25 +1698,25 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ec0b4dd729a12d046982652f834580a2, type: 3}
-  m_Name: volumes
+  m_Name: Lighting Seq 02 Concourse Night_LM0
   m_EditorClassIdentifier: 
-  resolution: 16
+  resolution: 4096
   bitmask: 1
-  id: 5
-  sortingID: 0
+  id: 0
+  sortingID: 1
   isImplicit: 1
-  area: 0
-  totalVertexCount: 32000
+  area: 114250.3
+  totalVertexCount: 0
   vertexCounter: 0
   sceneLodLevel: -1
   autoResolution: 0
   sceneName: 
   tag: -1
   containsTerrains: 0
-  probes: 1
-  mode: 2
+  probes: 0
+  mode: 1
   renderMode: 1000
-  renderDirMode: 5
+  renderDirMode: 1000
   atlasPacker: 1000
   holeFilling: 0
   vertexSamplingDensity: 0
@@ -1730,10 +1730,154 @@ MonoBehaviour:
   flipNormal: 0
   parentName: 
   overridePath: 
-  fixPos3D: 1
-  voxelSize: {x: 1.0125, y: 1.05, z: 1.00625}
+  fixPos3D: 0
+  voxelSize: {x: 1, y: 1, z: 1}
   passedFilter: 0
---- !u!1001 &6158864631373787084
+--- !u!23 &6158864631373787085 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 2742207376603886719, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787086 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 9034596760780174837, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787087 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 9026437055510292307, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787088 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 2319458926466890321, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787089 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 5107277021118255281, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787090 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 6466735038228927920, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787091 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 6271548692753839779, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787092 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 2522832967955062679, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787093 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 232985084050909436, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787094 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 9136163464229945935, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787095 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 7489539480812786646, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &6158864631373787096 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 869038940104797726, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787108 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4399659927115765162, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787109 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7377364112388248608, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787110 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7369196162595849862, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787111 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4265089076589583236, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787112 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6764491388939366756, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787113 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4809432297715184741, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787114 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5479183370628355958, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787115 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4035818211931110978, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787116 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1746067084447451433, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787117 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7334903864111113114, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787118 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9002919997557944835, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6158864631373787119 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1661703193022828491, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
+    type: 3}
+  m_PrefabInstance: {fileID: 8245858068660243440}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &8245858068660243440
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -1741,57 +1885,57 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 3450333062393390212, guid: efa01545da4368645aa06e17ff070762,
+    - target: {fileID: 5001542048440241090, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
         type: 3}
       propertyPath: m_Name
       value: Airport lobby night
       objectReference: {fileID: 0}
-    - target: {fileID: 6012164612147720145, guid: efa01545da4368645aa06e17ff070762,
+    - target: {fileID: 7885853326237989956, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
         type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6012164612147720145, guid: efa01545da4368645aa06e17ff070762,
+    - target: {fileID: 7885853326237989956, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
         type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6012164612147720145, guid: efa01545da4368645aa06e17ff070762,
+    - target: {fileID: 7885853326237989956, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
         type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6012164612147720145, guid: efa01545da4368645aa06e17ff070762,
+    - target: {fileID: 7885853326237989956, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
         type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 6012164612147720145, guid: efa01545da4368645aa06e17ff070762,
+    - target: {fileID: 7885853326237989956, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
         type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6012164612147720145, guid: efa01545da4368645aa06e17ff070762,
+    - target: {fileID: 7885853326237989956, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
         type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6012164612147720145, guid: efa01545da4368645aa06e17ff070762,
+    - target: {fileID: 7885853326237989956, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
         type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6012164612147720145, guid: efa01545da4368645aa06e17ff070762,
+    - target: {fileID: 7885853326237989956, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6012164612147720145, guid: efa01545da4368645aa06e17ff070762,
+    - target: {fileID: 7885853326237989956, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6012164612147720145, guid: efa01545da4368645aa06e17ff070762,
+    - target: {fileID: 7885853326237989956, guid: d065bb3d89fa5c848bb7c93fd2a1488e,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
@@ -1800,151 +1944,7 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: efa01545da4368645aa06e17ff070762, type: 3}
---- !u!23 &6158864631373787085 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 6149229691421369997, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &6158864631373787086 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 2040553606343608284, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &6158864631373787087 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 3044307492547822076, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &6158864631373787088 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 1375785391663281666, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &6158864631373787089 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 170671947517459294, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &6158864631373787090 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 5489323001994989593, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &6158864631373787091 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 863549007893005548, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &6158864631373787092 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 6628105558587447762, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &6158864631373787093 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 1300801437677725991, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &6158864631373787094 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 2465226463152315562, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &6158864631373787095 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 6824211523616040789, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!23 &6158864631373787096 stripped
-MeshRenderer:
-  m_CorrespondingSourceObject: {fileID: 5406698470359980295, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &6158864631373787108 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5644857114034374488, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &6158864631373787109 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 527339802533520905, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &6158864631373787110 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3548680344828911657, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &6158864631373787111 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 582998407437440983, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &6158864631373787112 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1828080241680669323, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &6158864631373787113 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6281679666355204556, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &6158864631373787114 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1223586358379226425, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &6158864631373787115 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 4682405040269965319, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &6158864631373787116 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 652349543986661618, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &6158864631373787117 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 4122695917737983359, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &6158864631373787118 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5022784934833374848, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &6158864631373787119 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5767017570177382610, guid: efa01545da4368645aa06e17ff070762,
-    type: 3}
-  m_PrefabInstance: {fileID: 6158864631373787084}
-  m_PrefabAsset: {fileID: 0}
+  m_SourcePrefab: {fileID: 100100000, guid: d065bb3d89fa5c848bb7c93fd2a1488e, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1955,7 +1955,7 @@ SceneRoots:
   - {fileID: 849486845}
   - {fileID: 170607191}
   - {fileID: 1287831394}
-  - {fileID: 6158864631373787084}
+  - {fileID: 8245858068660243440}
   - {fileID: 1674270529}
   - {fileID: 14241699}
   - {fileID: 371419752}

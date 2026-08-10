@@ -1,8 +1,18 @@
+// Architectural glass shader by Kavaeric
+// Mimics the coloured, opaque-like edges of soda-lime plate glass commonly
+// used in architectural applications. Since this doesn't use GrabPass or
+// any kind of refractive effect, it's cheap as chips to run.
+
+// Currently doesn't sample the main directional light because I'm not actually
+// using a single one in this project. If this gets published or used elsewhere
+// that should probably be added.
+
 Shader "ArchGlass/ArchGlass" {
     Properties {
         _Smoothness("Smoothness", Range(0,1)) = 1
         _TintColor("Tint colour", Color) = (1,1,1,1)
         _TintOpacity("Tint opacity", Range(0,1)) = 0.1
+        _ReflStrength("Reflection strength", Range(0,1)) = 1
         _EdgeMix("Edge mix", Range(0,1)) = 1
         _EdgeDiffuse("Edge diffuse strength", Range(0,1)) = 0.3
         _EdgeDispersion("Edge dispersion", Range(0,1)) = 0.5
@@ -30,12 +40,14 @@ Shader "ArchGlass/ArchGlass" {
 
             // Project ambient source. Light Volumes replace Unity's SH probes here, so
             // the opaque edge is lit from the same volumes as the rest of the scene.
-            // Thanks, Mochie!
+            // Thanks, Mochie! Though should probably remove this dependency later down the line.
+            // I'm just lazy.
             #include "../../Mochie/Common/LightVolumes.cginc"
 
             float _Smoothness;
             float4 _TintColor;
             float _TintOpacity;
+            float _ReflStrength;
             float _EdgeMix;
             float _EdgeDiffuse;
             float _EdgeDispersion;
@@ -108,12 +120,11 @@ Shader "ArchGlass/ArchGlass" {
                 float perceptualRoughness = 1.0 - _Smoothness;
                 float mip = perceptualRoughness * UNITY_SPECCUBE_LOD_STEPS;
 
-                // Fresnel (Filament-style Schlick). Glass reflects weakly head-on and
-                // strongly at grazing angles; this is what breaks the "mirror" look.
+                // Fresnel (Filament-style Schlick).
                 // Use abs() not saturate() so that the function works with backfaces as well.
                 float NdotV = abs(dot(normalDir, viewDir));
 
-                // F0 = reflectance at normal incidence. ~0.04 is the standard value
+                // f0 = reflectance at normal incidence. ~0.04 is the standard value
                 // for common dielectrics (glass/plastic); f90 = 1 at grazing.
                 float f0 = 0.04;
 
@@ -123,6 +134,17 @@ Shader "ArchGlass/ArchGlass" {
 
                 // Schlick: lerp(f0, f90, (1 - NdotV)^5).
                 float fresnel = f0 + (f90 - f0) * pow(1.0 - NdotV, 5.0);
+
+                // Artistic reflection dial. Scaling the Fresnel term itself (rather than
+                // just reflCol) is deliberate: fresnel is the lerp weight for the whole
+                // reflection layer, so this pulls back the alpha ramp as well as the
+                // colour. Without that, dimming only the colour would still leave the
+                // pane ramping to near-opaque coverage at grazing angles and hiding
+                // whatever is behind it. Physically 1.0 is correct for bare glass; below
+                // that stands in for AR coatings and for the fact that a stack of panes
+                // in a transparent queue compounds coverage in a way one real window
+                // never does.
+                fresnel *= _ReflStrength;
 
                 // Sample the active reflection probe. Glass is dispersive (IOR varies by
                 // wavelength), which shows as coloured fringing at grazing angles and edges.
@@ -205,7 +227,7 @@ Shader "ArchGlass/ArchGlass" {
             float _EdgeMix;
 
             // Stock BakeryMetaInput/v2f_bakeryMeta carry no vertex colour, but our edge
-            // coverage lives in the GlassEdge vertex mask - so extend both to pass it.
+            // coverage lives in the GlassEdge vertex mask, so extend both to pass it.
             struct ArchGlassMetaInput
             {
                 float2 uv0 : TEXCOORD0;

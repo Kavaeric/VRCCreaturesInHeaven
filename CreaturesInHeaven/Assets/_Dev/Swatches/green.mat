@@ -12,6 +12,7 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
+  - BAKERY_MONOSH
   - _BICUBIC_SAMPLING_ON
   - _EMISSION_ON
   - _REFLECTIONS_ON
@@ -23,7 +24,8 @@ Material:
   m_CustomRenderQueue: 2000
   stringTagMap:
     RenderType: Opaque
-  disabledShaderPasses: []
+  disabledShaderPasses:
+  - ALWAYS
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
@@ -303,7 +305,7 @@ Material:
     - _LightVolumeSpecularity: 0
     - _LightVolumeSpecularityStrength: 1
     - _MaterialDebugMode: 0
-    - _MaterialResetCheck: 0
+    - _MaterialResetCheck: 1
     - _MaxHeightSteps: 16
     - _Metallic: 0
     - _MetallicChannel: 2

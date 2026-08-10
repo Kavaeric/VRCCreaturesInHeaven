@@ -13,7 +13,7 @@ ModelImporter:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
       name: P6 Concourse
-    second: {fileID: 2100000, guid: cef40daa9ecb9304fbab1313b4c53ee3, type: 2}
+    second: {fileID: 2100000, guid: 0b2bddf4b9d7a2f499b9c501b9b1574b, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -40,7 +40,12 @@ ModelImporter:
     animationScaleError: 0.5
     animationWrapMode: 0
     extraExposedTransformPaths: []
-    extraUserProperties: []
+    extraUserProperties:
+    - '#BAKERY{"meshName":["gate sliding door.001","boarding desk","ceiling","gate
+      sliding door.003","atrium railing","structure","1000 escalator.002","concourse
+      entry stairs","concourse entry lift","ceiling trim","ceiling end","atrium structure","1000
+      escalator.001","1000 escalator","gate sliding door","boarding desk.002","boarding
+      desk.001"],"padding":[26,24,2,26,9,2,13,25,14,9,5,8,13,13,26,24,24],"unwrapper":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]}'
     clipAnimations: []
     isReadable: 0
   meshes:
@@ -70,11 +75,11 @@ ModelImporter:
     optimizeBones: 1
     meshOptimizationFlags: -1
     indexFormat: 0
-    secondaryUVAngleDistortion: 8
-    secondaryUVAreaDistortion: 15.000001
+    secondaryUVAngleDistortion: 15
+    secondaryUVAreaDistortion: 15
     secondaryUVHardAngle: 88
     secondaryUVMarginMethod: 1
-    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinLightmapResolution: 20
     secondaryUVMinObjectScale: 1
     secondaryUVPackMargin: 4
     useFileScale: 1

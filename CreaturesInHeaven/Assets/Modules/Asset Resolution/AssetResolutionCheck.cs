@@ -10,7 +10,7 @@ public class AssetResolutionCheck : MonoBehaviour
 {
 #if UNITY_EDITOR
 
-    enum HeadsetPreset { ValveIndex, QuestPro, Beyond2E, SteamFrame, Custom }
+    enum HeadsetPreset { ValveIndex, SteamFrame, Quest3S, Quest3, QuestPro, Beyond2E, GalaxyXR, Custom }
 
     // How each density ring is drawn: a flat circle on the XZ plane, or a full wire sphere.
     enum RingShape { Circle, Sphere }
@@ -40,9 +40,12 @@ public class AssetResolutionCheck : MonoBehaviour
     HeadsetSpec GetSpec()
     {
         if (headset == HeadsetPreset.ValveIndex) return new HeadsetSpec { resX = 1440, resY = 1600, fovH = 108f, fovV = 104f };
+        if (headset == HeadsetPreset.SteamFrame) return new HeadsetSpec { resX = 2160, resY = 2160, fovH = 110f, fovV = 110f };
+        if (headset == HeadsetPreset.Quest3S) return new HeadsetSpec { resX = 1832, resY = 1920, fovH = 97f, fovV = 93f };
+        if (headset == HeadsetPreset.Quest3) return new HeadsetSpec { resX = 2064, resY = 2208, fovH = 104f, fovV = 96.4f };
         if (headset == HeadsetPreset.QuestPro) return new HeadsetSpec { resX = 1800, resY = 1920, fovH = 106f, fovV = 95.57f };
         if (headset == HeadsetPreset.Beyond2E) return new HeadsetSpec { resX = 2560, resY = 2560, fovH = 110f, fovV = 97f };
-        if (headset == HeadsetPreset.SteamFrame) return new HeadsetSpec { resX = 2160, resY = 2160, fovH = 110f, fovV = 110f };
+        if (headset == HeadsetPreset.GalaxyXR) return new HeadsetSpec { resX = 3552, resY = 3840, fovH = 108f, fovV = 100f };
         return new HeadsetSpec { resX = customResX, resY = customResY, fovH = customFovH, fovV = customFovV };
     }
 

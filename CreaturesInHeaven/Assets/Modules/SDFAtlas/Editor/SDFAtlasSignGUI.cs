@@ -35,6 +35,13 @@ public class SDFAtlasSignGUI : ShaderGUI
         EditorGUILayout.LabelField("Appearance", EditorStyles.boldLabel);
         materialEditor.ShaderProperty(FindProperty("_Color", properties), "Colour");
         materialEditor.ShaderProperty(FindProperty("_Intensity", properties), "Intensity");
+
+        MaterialProperty vertexColor = FindProperty("_VertexColor", properties, false);
+        if (vertexColor != null)
+        {
+            materialEditor.ShaderProperty(vertexColor, "Vertex base colour");
+        }
+
         materialEditor.ShaderProperty(FindProperty("_EdgeBias", properties), "Edge bias (texels)");
         materialEditor.ShaderProperty(FindProperty("_EdgeSoftness", properties), "Edge softness");
 

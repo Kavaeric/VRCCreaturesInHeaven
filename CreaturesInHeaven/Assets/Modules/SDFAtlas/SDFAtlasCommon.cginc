@@ -4,7 +4,7 @@
 //
 // The blend-mode-independent parts live here: UDIM cell addressing, atlas sampling with
 // correct derivatives, and edge reconstruction. Individual shaders add only their output
-// and blend state -- see SDFAtlasSignAdditive.shader.
+// and blend state.
 //
 // Atlas layout is described by SDFAtlasInfo.cs and the .sdfatlas.json manifest written
 // beside each atlas texture. The stored field is single-channel, where 0.5 is the shape
@@ -39,6 +39,7 @@ struct SDFAtlasVertexInput
 {
     float4 vertex : POSITION;
     float2 uv : TEXCOORD0;
+    float4 color : COLOR;
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
@@ -46,11 +47,15 @@ struct SDFAtlasFragmentInput
 {
     float4 pos : SV_POSITION;
     float2 uv : TEXCOORD0;
+    float4 color : COLOR;
     UNITY_VERTEX_OUTPUT_STEREO
 };
 
 // Standard vertex stage. UVs pass through unmodified, integer part included -- the whole
 // UDIM addressing scheme depends on the integer part surviving to the fragment stage.
+//
+// Vertex colour passes through unmodified too, whether or not a given shader ends up using
+// it, since it costs nothing to carry and keeps this stage usable by any blend mode.
 SDFAtlasFragmentInput SDFAtlasVert(SDFAtlasVertexInput v)
 {
     SDFAtlasFragmentInput o;
@@ -60,6 +65,7 @@ SDFAtlasFragmentInput SDFAtlasVert(SDFAtlasVertexInput v)
 
     o.pos = UnityObjectToClipPos(v.vertex);
     o.uv = v.uv;
+    o.color = v.color;
     return o;
 }
 
@@ -70,7 +76,7 @@ SDFAtlasFragmentInput SDFAtlasVert(SDFAtlasVertexInput v)
 //
 // The integer part of the mesh UV selects the cell; the fractional part positions within it.
 // Derivatives are returned separately because they cannot be recomputed correctly from the
-// atlas UV -- see SDFAtlasSample.
+// atlas UV.
 void SDFAtlasAddress(float2 meshUV, out float2 atlasUV, out float2 dx, out float2 dy)
 {
     float2 cell = floor(meshUV);
@@ -84,8 +90,8 @@ void SDFAtlasAddress(float2 meshUV, out float2 atlasUV, out float2 dx, out float
     local = meshUV - cell;
 
     // Cell coordinates follow UV space: (0,0) is the bottom-left cell, +Y runs up, exactly
-    // as UDIM tiles do. So the mesh UV's integer part *is* the cell coordinate with no
-    // remapping -- a UV island authored in tile (3,1) in Blender lands on cell (3,1) here.
+    // as UDIM tiles do, e.g. a UV island authored in tile (3,1) in Blender lands on cell
+    // (3,1) here.
     float2 gridSize = _GridSize.xy;
     float2 cellUV = cell;
 
@@ -102,7 +108,7 @@ void SDFAtlasAddress(float2 meshUV, out float2 atlasUV, out float2 dx, out float
 
     atlasUV = (cellUV + artworkLocal) / gridSize;
 
-    // Derivatives come from the *un-fracted* mesh UV. The fractional part is discontinuous at
+    // Derivatives come from the un-fracted mesh UV. The fractional part is discontinuous at
     // tile boundaries, so implicit derivatives spike to garbage along the seam of any quad
     // that straddles one, producing a line of wrong-mip pixels. The mesh UV is continuous
     // across the quad, so scaling its derivatives into atlas space gives a correct footprint
@@ -128,8 +134,7 @@ float SDFAtlasSample(float2 meshUV)
 // Converts a stored distance value into a 0..1 coverage value with an antialiased edge.
 //
 // fwidth gives how fast the field changes per screen pixel, so smoothstepping across that
-// width keeps the edge exactly one pixel wide at any distance or viewing angle -- sharp up
-// close, correctly antialiased far away, with no hand-tuned constant.
+// width keeps the edge exactly one pixel wide at any distance or viewing angle.
 //
 // _EdgeBias shifts the threshold rather than the field. It is expressed in cell texels and
 // converted to stored units by inverting the encoder's mapping (half the 0..1 range covers

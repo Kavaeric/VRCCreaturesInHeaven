@@ -20,6 +20,8 @@ Shader "SDFAtlas/SDF Additive"
         _Color ("Colour", Color) = (1, 1, 1, 1)
         _Intensity ("Intensity", Float) = 1.0
 
+        [Toggle(_VERTEX_COLOR_ON)] _VertexColor ("Vertex base colour", Float) = 0
+
         // --- Atlas layout ------------------------------------------------
         // These must match the manifest (.sdfatlas.json) written beside the atlas texture.
         // A mismatch will silently addresses the wrong cell, so read them off the manifest
@@ -50,8 +52,7 @@ Shader "SDFAtlas/SDF Additive"
         ZWrite Off
 
         // Signs sit on quads offset slightly in front of their wall, so the offset handles
-        // ordering and normal depth testing still applies -- geometry genuinely in front
-        // should occlude them.
+        // ordering and normal depth testing still applies.
         ZTest LEqual
 
         // Single-sided: a sign's back face is never meant to be seen, and drawing it would
@@ -63,8 +64,9 @@ Shader "SDFAtlas/SDF Additive"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma target 3.0
+            #pragma target 5.0
             #pragma multi_compile_instancing
+            #pragma shader_feature_local _VERTEX_COLOR_ON
 
             #include "SDFAtlasCommon.cginc"
 
@@ -82,6 +84,11 @@ Shader "SDFAtlas/SDF Additive"
                 // Additive: alpha is folded into the colour and the destination alpha is
                 // irrelevant, since the One One blend only ever adds RGB to the target.
                 float3 rgb = _Color.rgb * _Intensity * _Color.a * coverage;
+
+                #if defined(_VERTEX_COLOR_ON)
+                rgb *= i.color.rgb;
+                #endif
+
                 return fixed4(rgb, coverage);
             }
             ENDCG

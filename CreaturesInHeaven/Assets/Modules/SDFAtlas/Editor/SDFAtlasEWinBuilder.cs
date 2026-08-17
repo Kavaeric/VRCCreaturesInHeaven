@@ -22,6 +22,7 @@ public class SDFAtlasEWinBuilder : EditorWindow
     int _padding = 2;
     float _spread = 4f;
     SDFAtlasEncoder.CoverageChannel _channel = SDFAtlasEncoder.CoverageChannel.Alpha;
+    SDFAtlasEncoder.EdgeMode _edgeMode = SDFAtlasEncoder.EdgeMode.SubTexel;
     float _coverageThreshold = 0.5f;
 
     string _atlasName = "SignageAtlas";
@@ -89,7 +90,23 @@ public class SDFAtlasEWinBuilder : EditorWindow
         _channel = (SDFAtlasEncoder.CoverageChannel)EditorGUILayout.EnumPopup(
             new GUIContent("Coverage channel", "Which channel carries shape coverage."), _channel);
 
+        _edgeMode = (SDFAtlasEncoder.EdgeMode)EditorGUILayout.EnumPopup(
+            new GUIContent("Edge mode",
+                "Sub-texel uses the source's antialiased edge to place the boundary between " +
+                "pixel centres. Binary rounds it to the nearest pixel first, and is kept only " +
+                "for comparison."), _edgeMode);
+
         _coverageThreshold = EditorGUILayout.Slider("Coverage threshold", _coverageThreshold, 0.01f, 0.99f);
+
+        // Sub-texel refinement reads the grey values along the source's antialiased edge, so
+        // a source with a hard-edged alpha has nothing for it to read and falls back to
+        // binary behaviour on its own.
+        if (_edgeMode == SDFAtlasEncoder.EdgeMode.SubTexel)
+        {
+            EditorGUILayout.HelpBox(
+                "Sub-texel needs antialiased source alpha. Sources exported with hard-edged " +
+                "or 1-bit alpha gain nothing from it.", MessageType.None);
+        }
 
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Output", EditorStyles.boldLabel);
@@ -220,6 +237,7 @@ public class SDFAtlasEWinBuilder : EditorWindow
         var settings = SDFAtlasEncoder.Settings.Default;
         settings.channel = _channel;
         settings.coverageThreshold = _coverageThreshold;
+        settings.edgeMode = _edgeMode;
 
         var entries = new List<SDFAtlasPacker.Entry>();
         for (int i = 0; i < _sources.Count; i++)

@@ -15,10 +15,35 @@ using UnityEditor;
 public class SDFAtlasInfo
 {
     // Bump when the layout changes in a way that needs migration on load.
-    // 1 = initial: uniform grid, atlas-wide padding, single-channel SDF.
+    // 1 = initial: uniform grid, atlas-wide padding, and an encoding field distinguishing
+    //     single-channel SDF from multi-channel MSDF.
     public const int CurrentSchemaVersion = 1;
 
     public int schemaVersion;      // See CurrentSchemaVersion. Filled in by Load() if absent.
+
+    // --- Encoding ---------------------------------------------------------
+
+    // How distance is stored in the atlas texture.
+    //
+    // This is not a cosmetic label: the two need different shaders, and pairing an atlas
+    // with the wrong one degrades quality silently rather than failing. Recorded here so
+    // the material inspector can check the pairing and say so.
+    public enum AtlasEncoding
+    {
+        // R8, one distance per texel. Corners round off below roughly 128px cells.
+        SingleChannel = 0,
+
+        // RGB24, three distance fields whose median is the true distance. Corners stay
+        // sharp at small cell sizes, at three times the memory of single-channel.
+        MultiChannel = 1,
+    }
+
+    public AtlasEncoding encoding = AtlasEncoding.SingleChannel;
+
+    public bool IsMultiChannel => encoding == AtlasEncoding.MultiChannel;
+
+    // Bytes per texel implied by the encoding, for the size estimates the builder reports.
+    public int BytesPerTexel => encoding == AtlasEncoding.MultiChannel ? 3 : 1;
 
     // --- Grid layout ----------------------------------------------------
 
@@ -68,10 +93,6 @@ public class SDFAtlasInfo
     // a tap near the cell edge is still reading this cell's own data. Past that point
     // neighbouring cells start contaminating each other and no amount of shader clamping
     // helps, because the averaging already happened at texture-build time.
-    //
-    // Reported rather than enforced: mips are generated normally and bleed is treated as a
-    // padding question, the same way TextMeshPro handles its glyph atlases. If a distant sign
-    // shows contamination, raise the padding and rebuild.
     public int SafeMipLevel
     {
         get
@@ -85,7 +106,9 @@ public class SDFAtlasInfo
     // --- Construction ------------------------------------------------------
 
     // Creates an empty manifest for a grid of the given shape.
-    public static SDFAtlasInfo Create(int cellSize, int gridWidth, int gridHeight, int padding, float spread)
+    public static SDFAtlasInfo Create(int cellSize, int gridWidth, int gridHeight, int padding,
+                                      float spread,
+                                      AtlasEncoding encoding = AtlasEncoding.SingleChannel)
     {
         var info = new SDFAtlasInfo
         {
@@ -95,6 +118,7 @@ public class SDFAtlasInfo
             gridHeight = gridHeight,
             padding = padding,
             spread = spread,
+            encoding = encoding,
             cells = new CellEntry[gridWidth * gridHeight],
         };
         return info;

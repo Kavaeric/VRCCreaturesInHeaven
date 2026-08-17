@@ -1,16 +1,11 @@
 using UnityEngine;
 
 // Signed distance field generation from a binary coverage mask.
+// Mathematical core of the SDFAtlas encoder.
 //
-// This is the mathematical core of the SDFAtlas encoder, kept free of any Unity asset
-// or editor dependencies so it can be called from the encoder, the atlas packer, or a
-// test harness without dragging the rest of the module along.
-//
-// The technique is Green 2007, with one substitution: rather than the brute-force
-// nearest-neighbour search the paper describes, distances come from an exact Euclidean
-// distance transform (Felzenszwalb & Huttenlocher 2012). Both produce the same answer;
-// the EDT does it in O(n) per axis instead of O(n * searchArea), which matters because
-// we supersample heavily (a 4096x4096 source is 16.7M pixels).
+// Based on Green 2007. The brute-force nearest-neighbour search the paper describes has been
+// replaced with an exact Euclidean distance transform (Felzenszwalb & Huttenlocher 2012) as
+// it's more efficient, especially at larger resolutions.
 public static class SDFAtlasDistanceField
 {
     // Sentinel for "no seed pixel in this column/row" during the distance transform.
@@ -52,16 +47,81 @@ public static class SDFAtlasDistanceField
     }
 
     // Thresholds a coverage channel into a binary mask.
-    //
-    // coverage: 0..1 per pixel (alpha, for this module's sources. See the encoder).
-    // threshold: coverage at or above this counts as inside. 0.5 is the natural choice
-    // for antialiased sources, since that is where the antialiased edge sits.
     public static bool[] Threshold(float[] coverage, float threshold)
     {
         bool[] mask = new bool[coverage.Length];
         for (int i = 0; i < coverage.Length; i++)
             mask[i] = coverage[i] >= threshold;
         return mask;
+    }
+
+    // Computes a signed distance field directly from antialiased coverage, keeping the
+    // sub-pixel edge position that Compute(bool[]) discards.
+    //
+    // The problem with the binary path: an antialiased source already tells you where the
+    // edge is to a fraction of a pixel, in the grey values along it. Thresholding rounds
+    // every one of those to the nearest pixel centre, so a near-horizontal edge becomes a
+    // literal staircase and the transform faithfully measures distances to the stairs.
+    // Supersampling hides this (the steps get smaller) but never removes it.
+    //
+    // To work around this, run the binary transform to get whole-pixel distances, then correct
+    // each pixel near the boundary by the sub-pixel offset implied by its own coverage value.
+    // Pixels further than one pixel from the boundary keep their transform distance unchanged.
+    public static float[] ComputeAntialiased(float[] coverage, int width, int height, float threshold)
+    {
+        bool[] mask = Threshold(coverage, threshold);
+        float[] signed = Compute(mask, width, height);
+
+        // Sub-pixel offset of the true edge from each pixel centre, valid only for pixels
+        // whose coverage is actually intermediate. Elsewhere it is left at zero.
+        float[] offset = new float[coverage.Length];
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                int i = y * width + x;
+                float c = coverage[i];
+
+                // Fully inside or fully outside carries no sub-pixel information: the edge
+                // is elsewhere and the transform's own distance is already the best answer.
+                if (c <= 0f || c >= 1f) continue;
+
+                // Central differences, clamped at the border.
+                int xm = x > 0 ? x - 1 : x;
+                int xp = x < width - 1 ? x + 1 : x;
+                int ym = y > 0 ? y - 1 : y;
+                int yp = y < height - 1 ? y + 1 : y;
+
+                float gx = (coverage[y * width + xp] - coverage[y * width + xm]) * 0.5f;
+                float gy = (coverage[yp * width + x] - coverage[ym * width + x]) * 0.5f;
+
+                float gradient = Mathf.Sqrt(gx * gx + gy * gy);
+
+                // A flat neighbourhood means no reliable edge direction, so dividing by it
+                // would amplify noise into a large bogus offset. Skip and keep the
+                // transform's answer.
+                if (gradient < 1e-6f) continue;
+
+                // Distance from this pixel's centre to the threshold crossing, signed the
+                // same way as the field (positive inside). Clamped to half a pixel because
+                // the linear model is only trustworthy within the pixel it was measured in.
+                offset[i] = Mathf.Clamp((c - threshold) / gradient, -0.7071f, 0.7071f);
+            }
+        }
+
+        // Apply the correction only where the transform says we are close enough to the
+        // boundary for it to be meaningful. Beyond about one pixel, the nearest edge is not
+        // the one whose coverage gradient we just measured, so the offset would be wrong.
+        for (int i = 0; i < signed.Length; i++)
+        {
+            if (offset[i] == 0f) continue;
+            if (Mathf.Abs(signed[i]) > 1.5f) continue;
+
+            signed[i] = offset[i];
+        }
+
+        return signed;
     }
 
     // Remaps a signed distance field (in source pixels) to 0..1 for storage in a texture.
@@ -144,8 +204,6 @@ public static class SDFAtlasDistanceField
     // maintaining that envelope as a stack of parabolas (v) and the x-positions where
     // consecutive parabolas intersect (z), then walks it again sampling the winner at each
     // q. Both walks are linear, so the whole thing is O(n).
-    //
-    // Buffers are passed in rather than allocated so callers can reuse them across lines.
     static void Transform1D(float[] f, float[] d, int[] v, float[] z, int n)
     {
         int k = 0;          // index of the rightmost parabola currently in the envelope
@@ -203,7 +261,7 @@ public static class SDFAtlasDistanceField
         float fq = f[q];
 
         // Both parabolas are at infinity: neither can ever win, so push the intersection
-        // out of range rather than computing Infinity - Infinity.
+        // out of range rather than doing Infinity - Infinity.
         if (fp >= Infinity && fq >= Infinity) return Infinity;
 
         return ((q * (float)q + fq) - (p * (float)p + fp)) / denominator;

@@ -22,6 +22,21 @@ public static class SDFAtlasEncoder
         InvertedLuminance,
     }
 
+    // How the source's coverage values are turned into a distance field.
+    public enum EdgeMode
+    {
+        // Threshold to a binary mask, then measure distances to it. The source's
+        // antialiased edge is rounded to the nearest pixel centre before anything is
+        // measured, so the field describes a staircase approximation of the real edge.
+        // Kept as a baseline for comparison; SubTexel supersedes it for real work.
+        Binary,
+
+        // Use the antialiased coverage to place the edge at its true sub-pixel position.
+        // Recovers edge precision that Binary discards, which otherwise has to be bought
+        // back with source resolution.
+        SubTexel,
+    }
+
     // Everything needed to encode one graphic. Grouped so the settings can be passed
     // around and later serialised into the atlas manifest without a long argument list.
     public struct Settings
@@ -30,6 +45,7 @@ public static class SDFAtlasEncoder
         public float spreadPixels;            // Distance range mapped to 0..1, in *cell* texels
         public float coverageThreshold;       // Coverage at/above this is inside. 0.5 for antialiased art
         public CoverageChannel channel;
+        public EdgeMode edgeMode;
 
         // Sensible starting point, matching the module's agreed 64x64 cell target.
         // A 4-texel spread at cell resolution gives the shader enough gradient to
@@ -40,6 +56,7 @@ public static class SDFAtlasEncoder
             spreadPixels = 4f,
             coverageThreshold = 0.5f,
             channel = CoverageChannel.Alpha,
+            edgeMode = EdgeMode.SubTexel,
         };
     }
 
@@ -63,13 +80,21 @@ public static class SDFAtlasEncoder
     public static float[] EncodeCoverage(float[] coverage, int width, int height, Settings settings,
                                          int dstWidth, int dstHeight)
     {
-        bool[] mask = SDFAtlasDistanceField.Threshold(coverage, settings.coverageThreshold);
-
         // The distance transform runs in *source* space, where pixels are square and the
         // result is a true isotropic Euclidean distance. Squashing afterwards (if the
         // destination aspect differs) distorts the field along with the shape, which is
         // exactly what we want -- the quad's own aspect un-squashes both at render time.
-        float[] distance = SDFAtlasDistanceField.Compute(mask, width, height);
+        float[] distance;
+        if (settings.edgeMode == EdgeMode.SubTexel)
+        {
+            distance = SDFAtlasDistanceField.ComputeAntialiased(
+                coverage, width, height, settings.coverageThreshold);
+        }
+        else
+        {
+            bool[] mask = SDFAtlasDistanceField.Threshold(coverage, settings.coverageThreshold);
+            distance = SDFAtlasDistanceField.Compute(mask, width, height);
+        }
 
         // Downsample the *distance field*, not the mask. Distance is a smooth, slowly
         // varying function, so box-averaging it is well-behaved and preserves the

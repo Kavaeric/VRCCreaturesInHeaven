@@ -69,7 +69,7 @@ float  _Anisotropy;
 // nothing to it, though haze scatter still softens its edge. Because the spill is
 // zero at the emitter and added in metres to the wall, the source stays at radius r0.
 // Per-instance (not material-level) so each fixture can animate focus independently
-// without breaking GPU instancing -- a plain global float is shared by every
+// without breaking GPU instancing: a plain global float is shared by every
 // instance in a batch, so a per-fixture MaterialPropertyBlock write would either
 // silently desync instances sharing a material or break the batch.
 UNITY_INSTANCING_BUFFER_START(Props)

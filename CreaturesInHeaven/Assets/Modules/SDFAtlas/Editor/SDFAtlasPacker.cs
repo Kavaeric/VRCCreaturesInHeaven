@@ -6,9 +6,8 @@ using UnityEditor;
 // Packs encoded SDF graphics into a uniform-grid atlas texture.
 //
 // One source texture per cell; cells are addressed by index and the grid never reflows, so
-// a graphic's cell assignment is stable for the life of the atlas. That stability is load-
-// bearing: the cell index is baked into mesh UVs at authoring time, so a packer that
-// renumbered cells on rebuild would silently break every quad already placed in the scene.
+// a graphic's cell assignment should be stable for the life of the atlas, at least until
+// the user repacks the whole thing and reorders all the graphics.
 public static class SDFAtlasPacker
 {
     // One graphic queued for packing, and the cell it belongs in.
@@ -72,7 +71,7 @@ public static class SDFAtlasPacker
     // Encodes one source into a full cellSize x cellSize block, with the artwork inset by
     // the manifest's padding.
     //
-    // The inset is applied *before* the distance transform, by compositing the source into a
+    // The inset is applied before the distance transform, by compositing the source into a
     // larger transparent canvas. That way the transform measures real distances from the
     // border texels to artwork that genuinely sits inset, so the padding contains a true
     // continuation of the field rather than a synthesised or clamped fill. Post-filling the
@@ -128,8 +127,9 @@ public static class SDFAtlasPacker
 
     // Copies an encoded cell into its grid position in the atlas buffer.
     //
-    // The cell block is written whole, padding included -- the padding is part of the cell's
-    // encoded data, not a gap between cells.
+    // Note that the padding is part of the cell's encoded data, not a gap between cells.
+    // So a 64x64 cell in an atlas with padding set to 2px on all sides will output a graphic
+    // at 60x60.
     //
     // Cell Y and the texture buffer both run bottom-up (see SDFAtlasInfo's addressing notes),
     // so no row flip is needed here.
@@ -159,10 +159,6 @@ public static class SDFAtlasPacker
     // --- Texture output ---------------------------------------------------
 
     // Converts the packed float buffer into a single-channel texture.
-    //
-    // R8 is the natural format: one distance value per texel, no colour involved. Linear
-    // (not sRGB) because these are distances, not perceptual colour -- gamma-encoding them
-    // would warp the field and shift every edge.
     static Texture2D ToTexture(float[] atlas, int width, int height)
     {
         var texture = new Texture2D(width, height, TextureFormat.R8, mipChain: false, linear: true);
@@ -201,11 +197,6 @@ public static class SDFAtlasPacker
     }
 
     // Configures the atlas texture's importer for distance-field data.
-    //
-    // The settings here are not cosmetic: sRGB would gamma-warp the distances, compression
-    // would quantise exactly the edge precision the technique depends on, and point filtering
-    // would defeat the sub-texel edge reconstruction that makes an SDF sharper than its
-    // resolution.
     static void ApplyImportSettings(string assetPath, SDFAtlasInfo info)
     {
         var importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
@@ -220,23 +211,14 @@ public static class SDFAtlasPacker
         importer.mipmapEnabled = true;
         importer.maxTextureSize = Mathf.Max(info.TextureWidth, info.TextureHeight);
 
-        // Mips are generated normally. Cells are independent images sharing one texture, so
-        // deep mip levels do average across cell boundaries -- but that is a padding question
-        // rather than a reason to hand-build the chain, and it is how TextMeshPro's glyph
-        // atlases behave too. SDFAtlasInfo.SafeMipLevel reports which levels stay clean at a
-        // given padding; if a distant sign shows contamination, raise the padding and rebuild.
+        // Mips are generated normally.
         //
-        // preserveCoverage stays off because it is an alpha-testing feature: it rescales mip
-        // levels to hold a coverage ratio, which would distort the distance values.
+        // preserveCoverage rescales mip levels to hold a coverage ratio, which would distort
+        // the distance values, so disable it.
         importer.mipMapsPreserveCoverage = false;
 
-        // Which component a SingleChannel texture reads from lives on TextureImporterSettings,
-        // not on the importer itself, so it needs a read-modify-write rather than a direct set.
-        //
-        // Red rather than Alpha: the packer writes distances into the red channel with alpha
-        // forced opaque, so Red states what is actually true instead of leaving the importer
-        // to infer a channel from the source PNG. It also means the atlas previews visibly in
-        // the inspector, which matters when eyeballing a packed atlas for misplaced cells.
+        // Need to do this because we can't just do importer.singleChannelComponent = [Red]
+        // for whatever reason.
         var settings = new TextureImporterSettings();
         importer.ReadTextureSettings(settings);
         settings.singleChannelComponent = TextureImporterSingleChannelComponent.Red;

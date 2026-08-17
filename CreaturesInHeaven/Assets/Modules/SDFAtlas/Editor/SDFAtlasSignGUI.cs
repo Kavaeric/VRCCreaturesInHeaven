@@ -4,9 +4,8 @@ using UnityEditor;
 // Material inspector shared by the SDFAtlas sign shaders.
 //
 // The shaders need the atlas's grid layout as material constants, but those values already
-// exist in the atlas manifest. Rather than have the artist copy four numbers by hand -- a
-// mismatch does not fail loudly, it silently addresses the wrong cells -- this inspector
-// reads them off the manifest of whichever atlas is assigned and offers to apply them.
+// exist in the atlas manifest. This inspector reads them off the manifest of whichever atlas
+// is assigned and offers to apply them.
 //
 // Blend state is fixed per shader rather than exposed here, so this inspector covers only
 // the properties every SDFAtlas sign shader shares.
@@ -29,6 +28,7 @@ public class SDFAtlasSignGUI : ShaderGUI
         materialEditor.ShaderProperty(atlas, "SDF atlas");
 
         RefreshManifest(atlas);
+        DrawEncodingCheck(material);
         DrawLayoutSection(materialEditor, material, gridSize, cellSize, padding, spread);
 
         EditorGUILayout.Space();
@@ -50,6 +50,48 @@ public class SDFAtlasSignGUI : ShaderGUI
         EditorGUILayout.Space();
         materialEditor.RenderQueueField();
         materialEditor.DoubleSidedGIField();
+    }
+
+    // --- Encoding check ------------------------------------------------------
+
+    // Warns when the material's shader does not match the atlas's encoding.
+    //
+    // This mismatch is the reason the two encodings have separate shaders, and it is worth
+    // catching here because neither direction fails loudly:
+    //
+    //   MSDF atlas + single-channel shader: reads only the red channel, which is a valid
+    //   distance field covering a subset of the edges. Renders a recognisable but subtly
+    //   wrong shape, with the rounded corners MSDF was chosen to avoid.
+    //
+    //   Single-channel atlas + MSDF shader: all three channels hold the same value, so the
+    //   median returns it unchanged. Renders correctly but pays 3x the memory for nothing.
+    //
+    // Both look plausible enough to ship by accident, which is exactly what makes an
+    // explicit check worthwhile.
+    void DrawEncodingCheck(Material material)
+    {
+        if (_manifest == null || material == null || material.shader == null) return;
+
+        string shaderName = material.shader.name;
+
+        // Only comment on shaders from this module. A custom shader built on the same
+        // .cginc is a legitimate thing to have and should not be nagged about.
+        if (!shaderName.StartsWith("SDFAtlas/")) return;
+
+        // Detect the shader's channel count from its name rather than comparing against an
+        // exact expected string.
+        bool shaderIsMultiChannel = shaderName.IndexOf("MSDF", System.StringComparison.OrdinalIgnoreCase) >= 0;
+
+        if (shaderIsMultiChannel == _manifest.IsMultiChannel) return;
+
+        string detail = _manifest.IsMultiChannel
+            ? "This atlas is multi-channel (MSDF), but the material uses a single-channel " +
+              "shader. Only the red channel will be read, and corners will round off."
+            : "This atlas is single-channel, but the material uses an MSDF shader. It will " +
+              "render correctly but reads three identical channels, so the atlas is three " +
+              "times larger than it needs to be.";
+
+        EditorGUILayout.HelpBox(detail, MessageType.Warning);
     }
 
     // --- Cell reference ------------------------------------------------------

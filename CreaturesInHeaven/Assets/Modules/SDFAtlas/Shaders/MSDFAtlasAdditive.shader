@@ -20,8 +20,7 @@ Shader "SDFAtlas/MSDF Additive"
 
         // --- Atlas layout ------------------------------------------------
         // These must match the manifest (.sdfatlas.json) written beside the atlas texture.
-        // A mismatch silently addresses the wrong cell, so read them off the manifest and
-        // let the inspector apply them.
+        // If there's a mismatch, offer to apply them in the inspector.
 
         _GridSize ("Grid size (cells across, down)", Vector) = (16, 16, 0, 0)
         _CellSize ("Cell size (texels)", Float) = 64
@@ -46,13 +45,7 @@ Shader "SDFAtlas/MSDF Additive"
 
         Blend One One
         ZWrite Off
-
-        // Signs sit on quads offset slightly in front of their wall, so the offset handles
-        // ordering and normal depth testing still applies.
         ZTest LEqual
-
-        // Single-sided: a sign's back face is never meant to be seen, and drawing it would
-        // double the additive contribution wherever coplanar quads overlap.
         Cull Back
 
         Pass
@@ -80,8 +73,6 @@ Shader "SDFAtlas/MSDF Additive"
                 // corners.
                 float coverage = SDFAtlasCoverageMultiAt(i.uv);
 
-                // Additive: alpha is folded into the colour and the destination alpha is
-                // irrelevant, since the One One blend only ever adds RGB to the target.
                 float3 rgb = _Color.rgb * _Intensity * _Color.a * coverage;
 
                 #if defined(_VERTEX_COLOR_ON)

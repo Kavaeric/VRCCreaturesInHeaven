@@ -66,8 +66,17 @@ public class SDFAtlasEWinBuilder : EditorWindow
         _cellSize = EditorGUILayout.IntPopup(
             new GUIContent("Cell size", "Cell edge in texels, including padding."),
             _cellSize,
-            new[] { new GUIContent("32"), new GUIContent("64"), new GUIContent("128"), new GUIContent("256") },
-            new[] { 32, 64, 128, 256 });
+            new[] {
+                    new GUIContent("16"),
+                    new GUIContent("32"),
+                    new GUIContent("64"),
+                    new GUIContent("128"),
+                    new GUIContent("256"),
+                    new GUIContent("512"),
+                    new GUIContent("1024"),
+                    new GUIContent("2048"),
+                  },
+            new[] { 16, 32, 64, 128, 256, 512, 1024, 2048 });
 
         _gridWidth = Mathf.Max(1, EditorGUILayout.IntField("Grid width (cells)", _gridWidth));
         _gridHeight = Mathf.Max(1, EditorGUILayout.IntField("Grid height (cells)", _gridHeight));

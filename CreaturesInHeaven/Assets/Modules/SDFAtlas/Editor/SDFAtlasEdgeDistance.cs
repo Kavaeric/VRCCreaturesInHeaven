@@ -338,10 +338,87 @@ public static class SDFAtlasEdgeDistance
             hasNearEdge = false,
         };
 
+        // Whether an edge could possibly improve this channel, judging only from where it
+        // stood the last time it was evaluated (in `cache`) and how far the query point has
+        // moved since. Ported from PerpendicularDistanceSelectorBase::isEdgeRelevant.
+        //
+        // Ruling an edge out here skips its distance solve entirely (trig functions, and for
+        // curves a cubic or Newton search), which is what makes scanline generation cheap:
+        // most edges are nowhere near most texels, and this proves that without visiting them.
+        // The bound holds regardless of query order, but is tightest -- and this is worth
+        // calling -- when consecutive queries are close together, since `delta` is exactly
+        // how far the point moved since the edge's cache was last updated.
+        public readonly bool IsRelevant(in EdgeCache cache, Vector2 point)
+        {
+            double delta = DistanceDeltaFactor * (new Vector2d(point) - cache.point).Length;
+            double bestTrue = System.Math.Abs(minTrueDistance.distance);
+
+            return
+                cache.absDistance - delta <= bestTrue ||
+                System.Math.Abs(cache.aDomainDistance) < delta ||
+                System.Math.Abs(cache.bDomainDistance) < delta ||
+                (cache.aDomainDistance > 0.0 && (cache.aPerpendicular < 0.0 ?
+                    cache.aPerpendicular + delta >= minNegativePerpendicular :
+                    cache.aPerpendicular - delta <= minPositivePerpendicular)) ||
+                (cache.bDomainDistance > 0.0 && (cache.bPerpendicular < 0.0 ?
+                    cache.bPerpendicular + delta >= minNegativePerpendicular :
+                    cache.bPerpendicular - delta <= minPositivePerpendicular));
+        }
+
+        // The geometry shared by every channel an edge belongs to: which side of each
+        // neighbour bisector the point falls on, and the corresponding candidate
+        // perpendicular distances. Computed once per solved edge per texel in
+        // Geometry.Compute, then fanned out to each channel's Add -- msdfgen's
+        // MultiDistanceSelector::addEdge does the same fan-out, since none of this depends on
+        // which channels the edge carries, only on the edge and the query point.
+        public struct Geometry
+        {
+            public double add, bdd;
+            public double aCandidate, bCandidate;    // signed distance.distance if untouched by GetPerpendicularDistance
+            public bool aImproved, bImproved;         // whether GetPerpendicularDistance found a closer perpendicular
+
+            public static Geometry Compute(in SDFAtlasShape.Edge edge,
+                                           Vector2d aDir, Vector2d bDir, Vector2d prevDir, Vector2d nextDir,
+                                           SignedDistance distance, Vector2 origin)
+            {
+                Vector2d o = new Vector2d(origin);
+                Vector2d ap = o - new Vector2d(edge.Start);
+                Vector2d bp = o - new Vector2d(edge.End);
+
+                var g = new Geometry
+                {
+                    add = Vector2d.Dot(ap, (prevDir + aDir).Normalised),
+                    bdd = -Vector2d.Dot(bp, (bDir + nextDir).Normalised),
+                };
+
+                if (g.add > 0.0)
+                {
+                    double pd = distance.distance;
+                    g.aImproved = GetPerpendicularDistance(ref pd, ap, -aDir.x, -aDir.y);
+                    g.aCandidate = g.aImproved ? -pd : pd;
+                }
+
+                if (g.bdd > 0.0)
+                {
+                    double pd = distance.distance;
+                    g.bImproved = GetPerpendicularDistance(ref pd, bp, bDir.x, bDir.y);
+                    g.bCandidate = pd;
+                }
+
+                return g;
+            }
+        }
+
         // Folds in one edge's contribution: true distance for sign/near-edge tracking, plus
-        // its perpendicular extension into whichever neighbour's domain it reaches.
-        public void Add(in SDFAtlasShape.Edge edge, in SDFAtlasShape.Edge previous, in SDFAtlasShape.Edge next,
-                        SignedDistance distance, double param, Vector2 origin)
+        // its perpendicular extension into whichever neighbour's domain it reaches. Updates
+        // `cache` so later queries against this same edge can judge relevance against it.
+        //
+        // Takes the shared per-edge geometry precomputed by Geometry.Compute rather than
+        // deriving it here: `ap`/`bp`/`add`/`bdd` and the two perpendicular candidates do not
+        // depend on which channel is asking, only on the edge and the point, so an edge in two
+        // or three channels would otherwise pay for that work again for each one.
+        public void Add(in SDFAtlasShape.Edge edge, in Geometry geometry,
+                        SignedDistance distance, double param, ref EdgeCache cache)
         {
             if (distance.IsCloserThan(minTrueDistance))
             {
@@ -351,30 +428,22 @@ public static class SDFAtlasEdgeDistance
                 hasNearEdge = true;
             }
 
-            Vector2d o = new Vector2d(origin);
-            Vector2d ap = o - new Vector2d(edge.Start);
-            Vector2d bp = o - new Vector2d(edge.End);
-            Vector2d aDir = Direction(edge, 0.0).Normalised;
-            Vector2d bDir = Direction(edge, 1.0).Normalised;
-            Vector2d prevDir = Direction(previous, 1.0).Normalised;
-            Vector2d nextDir = Direction(next, 0.0).Normalised;
+            cache.absDistance = System.Math.Abs(distance.distance);
 
-            double add = Vector2d.Dot(ap, (prevDir + aDir).Normalised);
-            double bdd = -Vector2d.Dot(bp, (bDir + nextDir).Normalised);
-
-            if (add > 0.0)
+            if (geometry.add > 0.0)
             {
-                double pd = distance.distance;
-                if (GetPerpendicularDistance(ref pd, ap, -aDir.x, -aDir.y))
-                    AddPerpendicular(-pd);
+                if (geometry.aImproved) AddPerpendicular(geometry.aCandidate);
+                cache.aPerpendicular = geometry.aCandidate;
             }
 
-            if (bdd > 0.0)
+            if (geometry.bdd > 0.0)
             {
-                double pd = distance.distance;
-                if (GetPerpendicularDistance(ref pd, bp, bDir.x, bDir.y))
-                    AddPerpendicular(pd);
+                if (geometry.bImproved) AddPerpendicular(geometry.bCandidate);
+                cache.bPerpendicular = geometry.bCandidate;
             }
+
+            cache.aDomainDistance = geometry.add;
+            cache.bDomainDistance = geometry.bdd;
         }
 
         void AddPerpendicular(double distance)
@@ -403,6 +472,24 @@ public static class SDFAtlasEdgeDistance
         }
     }
 
+    // Per-edge memo of the last query against it, used by PerpendicularAccumulator.IsRelevant
+    // to skip edges that cannot possibly improve the current best. One of these persists per
+    // edge across an entire Generate call, exactly as msdfgen's shapeEdgeCache does, since the
+    // bound gets tighter -- and the skip more frequent -- the closer together consecutive
+    // queries against the same edge are.
+    public struct EdgeCache
+    {
+        public Vector2d point;
+        public double absDistance;
+        public double aDomainDistance, bDomainDistance;
+        public double aPerpendicular, bPerpendicular;
+    }
+
+    // msdfgen's fudge factor on the movement bound: `delta` is inflated slightly beyond the
+    // exact distance moved, so floating-point error in the bound can never wrongly discard an
+    // edge that was actually still relevant.
+    const double DistanceDeltaFactor = 1.001;
+
     // Perpendicular distance of `ep` against direction `edgeDir`, kept only if it both lies
     // ahead of the edge (ts > 0) and improves on the distance already in `distance`.
     //
@@ -425,7 +512,7 @@ public static class SDFAtlasEdgeDistance
     // --- Helpers ----------------------------------------------------------
 
     // Edge tangent at parameter t, in double precision.
-    static Vector2d Direction(in SDFAtlasShape.Edge edge, double t)
+    internal static Vector2d Direction(in SDFAtlasShape.Edge edge, double t)
     {
         Vector2d p0 = new Vector2d(edge.p0);
         Vector2d p1 = new Vector2d(edge.p1);

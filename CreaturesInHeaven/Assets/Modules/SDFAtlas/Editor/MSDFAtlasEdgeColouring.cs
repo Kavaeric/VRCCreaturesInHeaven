@@ -107,8 +107,7 @@ public static class MSDFAtlasEdgeColouring
     //
     // With one corner there is only one join to preserve, but colouring the loop with two
     // channels would make the corner's two sides identical somewhere around the back. The
-    // fix is three colours distributed around the loop, with white in the middle -- so the
-    // two edges at the corner always differ, whichever way the loop is walked.
+    // fix is three colours distributed around the loop, with white in the middle.
     static void ColourTeardrop(SDFAtlasShape.Contour contour, int corner,
                                ref SDFAtlasShape.EdgeColour colour, ref ulong seed)
     {
@@ -136,7 +135,7 @@ public static class MSDFAtlasEdgeColouring
         else
         {
             // Fewer than three edges cannot carry three colours, so subdivide until they
-            // can. Splitting is safe: the parts trace exactly the same curve.
+            // can. Splitting is safe as the parts trace exactly the same curve.
             SplitForTeardrop(contour, corner, colours);
         }
     }

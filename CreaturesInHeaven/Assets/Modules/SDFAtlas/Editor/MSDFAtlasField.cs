@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using UnityEngine;
 
 // Multi-channel signed distance field generation. Based on Victor Chlumský's msdfgen and
@@ -19,30 +21,188 @@ public static class MSDFAtlasField
 
     // --- Generation --------------------------------------------------------
 
+    // One edge plus the bisector directions its perpendicular accumulation needs, flattened
+    // out of the shape's contour structure so Generate can hand every texel the same flat
+    // list and a matching persistent EdgeCache array, as msdfgen's ShapeDistanceFinder does.
+    //
+    // The four tangent directions (this edge's own endpoints, and its neighbours' facing
+    // endpoints) are fixed for the whole shape, but PerpendicularAccumulator.Add needs them
+    // on every texel that finds the edge relevant. Computing them here once per edge, rather
+    // than re-deriving from control points inside Add, is the difference between paying for
+    // four Vector2d normalisations per edge and paying for four per edge per texel.
+    struct FlatEdge
+    {
+        public SDFAtlasShape.Edge edge;
+        public SDFAtlasEdgeDistance.Vector2d startDir;   // this edge's tangent at t=0, normalised
+        public SDFAtlasEdgeDistance.Vector2d endDir;     // this edge's tangent at t=1, normalised
+        public SDFAtlasEdgeDistance.Vector2d prevDir;    // previous edge's tangent at t=1, normalised
+        public SDFAtlasEdgeDistance.Vector2d nextDir;    // next edge's tangent at t=0, normalised
+    }
+
+    // Thrown by a progress callback to abort generation partway through. Caught by the
+    // packer/builder so a user cancel reads as a clean stop rather than an error.
+    public class GenerationCancelledException : Exception { }
+
     // Generates an MSDF over a pixel grid.
     //
     // The shape must be framed into the target pixel space and already coloured (see
     // MSDFAtlasEdgeColouring.Apply). Returns three interleaved floats per texel, row-major:
     // r, g, b, r, g, b... in raw signed pixel distances.
-    public static float[] Generate(SDFAtlasShape shape, int width, int height)
+    //
+    // `onProgress`, when non-null, is polled from the main thread between scanlines with
+    // progress in 0..1. Throw GenerationCancelledException from it to abort; the row loop
+    // notices on its next check and unwinds without finishing the field.
+    public static float[] Generate(SDFAtlasShape shape, int width, int height, Action<float> onProgress = null)
     {
         var field = new float[width * height * 3];
         if (shape == null || shape.EdgeCount == 0) return field;
 
-        for (int y = 0; y < height; y++)
-        {
-            for (int x = 0; x < width; x++)
-            {
-                var point = new Vector2(x + 0.5f, y + 0.5f);
-                MultiDistance distance = DistanceAt(shape, point);
+        FlatEdge[] edges = FlattenEdges(shape);
+        GenerateParallel(edges, field, width, height, onProgress);
 
-                int index = (y * width + x) * 3;
-                field[index + 0] = (float)distance.r;
-                field[index + 1] = (float)distance.g;
-                field[index + 2] = (float)distance.b;
+        return field;
+    }
+
+    // Parallel row loop used for every real bake. Rows are independent -- a texel's result
+    // depends only on the shape and its own position, never on another row -- so splitting
+    // work by row needs no synchronisation between workers beyond each having its own edge
+    // caches.
+    //
+    // EdgeCache tracks the last query point and distance seen for each edge, mutated on every
+    // texel that finds an edge relevant (see PerpendicularAccumulator.IsRelevant). That state
+    // is what makes the relevance test cheap under scanline-coherent queries, but it also
+    // means two threads touching the same cache array would race and could let one thread's
+    // texel see another's half-updated cache. Giving each worker thread its own cache arrays
+    // sidesteps that entirely, at the cost of losing cross-row coherence at the top of each
+    // worker's very first row -- a one-row cold start per thread, not per texel, so it's not
+    // worth reclaiming.
+    //
+    // Progress and cancellation are polled from the calling (main) thread only, between waits
+    // on the background task -- never from inside the Parallel.For body, since that runs on
+    // thread-pool workers and EditorUtility's progress bar is a UnityEditor API that is only
+    // safe to call from the main thread.
+    static void GenerateParallel(FlatEdge[] edges, float[] field, int width, int height,
+                                 Action<float> onProgress)
+    {
+        int completedRows = 0;
+        var cancelSource = new System.Threading.CancellationTokenSource();
+
+        // Each thread lazily gets its own set of per-edge caches on first use, rather than
+        // pre-allocating one set per row: Parallel.For's default partitioning reuses a small,
+        // stable set of worker threads for a range this size, so this allocates once per core
+        // in practice, not once per row.
+        var threadCaches = new System.Threading.ThreadLocal<(
+            SDFAtlasEdgeDistance.EdgeCache[] red,
+            SDFAtlasEdgeDistance.EdgeCache[] green,
+            SDFAtlasEdgeDistance.EdgeCache[] blue)>(() => (
+                new SDFAtlasEdgeDistance.EdgeCache[edges.Length],
+                new SDFAtlasEdgeDistance.EdgeCache[edges.Length],
+                new SDFAtlasEdgeDistance.EdgeCache[edges.Length]));
+
+        // The actual generation runs on a background task so this method's own thread (the
+        // caller's -- the Editor's main thread) stays free to poll progress and call
+        // EditorUtility below, instead of being the thread stuck inside Parallel.For.
+        Task generateTask = Task.Run(() =>
+        {
+            Parallel.For(0, height,
+                new ParallelOptions { CancellationToken = cancelSource.Token },
+                y =>
+            {
+                var (redCache, greenCache, blueCache) = threadCaches.Value;
+
+                for (int x = 0; x < width; x++)
+                {
+                    var point = new Vector2(x + 0.5f, y + 0.5f);
+                    MultiDistance distance = DistanceAt(edges, point, redCache, greenCache, blueCache);
+
+                    int index = (y * width + x) * 3;
+                    field[index + 0] = (float)distance.r;
+                    field[index + 1] = (float)distance.g;
+                    field[index + 2] = (float)distance.b;
+                }
+
+                System.Threading.Interlocked.Increment(ref completedRows);
+            });
+        });
+
+        bool userCancelled = false;
+
+        try
+        {
+            // Poll rather than await: this method is called synchronously from the Editor's
+            // main thread (via MSDFAtlasPacker), and short sleeps here just yield that thread
+            // back to the OS between checks instead of spinning it while the workers run.
+            //
+            // IsCompleted (rather than another Wait) is what ends the loop once cancelled:
+            // once cancelSource.Cancel() has been requested below, the task is left to wind
+            // down in the background of this same loop rather than blocked on synchronously,
+            // since Wait() would rethrow the AggregateException a cancelled Parallel.For
+            // completes with, and that exception is expected here, not a real failure.
+            while (!generateTask.IsCompleted)
+            {
+                System.Threading.Thread.Sleep(50);
+
+                if (onProgress == null || userCancelled) continue;
+
+                float progress = (float)System.Threading.Volatile.Read(ref completedRows) / height;
+                try
+                {
+                    onProgress(progress);
+                }
+                catch (GenerationCancelledException)
+                {
+                    userCancelled = true;
+                    cancelSource.Cancel();
+                }
+            }
+
+            if (userCancelled)
+                throw new GenerationCancelledException();
+
+            // Surface any exception thrown inside the parallel body (an aggregate of one,
+            // since the loop body itself never throws on its own) rather than letting it
+            // stay wrapped in the AggregateException Task.Run produced it in.
+            if (generateTask.IsFaulted)
+                throw generateTask.Exception?.Flatten().InnerException ?? new Exception("Generate failed.");
+        }
+        finally
+        {
+            threadCaches.Dispose();
+            cancelSource.Dispose();
+        }
+    }
+
+    // Flattens every contour's edges into one list, with each edge's bisector directions
+    // resolved against its neighbours up front, so the per-texel loop no longer has to walk
+    // contours, compute wraparound indices, or re-derive tangents that never change once the
+    // shape is fixed.
+    static FlatEdge[] FlattenEdges(SDFAtlasShape shape)
+    {
+        var edges = new FlatEdge[shape.EdgeCount];
+        int cursor = 0;
+
+        foreach (SDFAtlasShape.Contour contour in shape.contours)
+        {
+            int edgeCount = contour.edges.Count;
+            if (edgeCount == 0) continue;
+
+            for (int i = 0; i < edgeCount; i++)
+            {
+                SDFAtlasShape.Edge edge = contour.edges[i];
+                SDFAtlasShape.Edge previous = contour.edges[(i - 1 + edgeCount) % edgeCount];
+                SDFAtlasShape.Edge next = contour.edges[(i + 1) % edgeCount];
+
+                edges[cursor++] = new FlatEdge
+                {
+                    edge = edge,
+                    startDir = SDFAtlasEdgeDistance.Direction(edge, 0.0).Normalised,
+                    endDir = SDFAtlasEdgeDistance.Direction(edge, 1.0).Normalised,
+                    prevDir = SDFAtlasEdgeDistance.Direction(previous, 1.0).Normalised,
+                    nextDir = SDFAtlasEdgeDistance.Direction(next, 0.0).Normalised,
+                };
             }
         }
-        return field;
+        return edges;
     }
 
     // Per-channel signed distance at a single point.
@@ -53,43 +213,61 @@ public static class MSDFAtlasField
     // an edge in two channels would otherwise be solved twice.
     //
     // Each channel's result keeps its own sign -- see the note on per-channel signs below.
-    public static MultiDistance DistanceAt(SDFAtlasShape shape, Vector2 point)
+    static MultiDistance DistanceAt(FlatEdge[] edges, Vector2 point,
+                                    SDFAtlasEdgeDistance.EdgeCache[] redCache,
+                                    SDFAtlasEdgeDistance.EdgeCache[] greenCache,
+                                    SDFAtlasEdgeDistance.EdgeCache[] blueCache)
     {
         var red = ChannelState.Empty;
         var green = ChannelState.Empty;
         var blue = ChannelState.Empty;
 
-        foreach (SDFAtlasShape.Contour contour in shape.contours)
+        for (int i = 0; i < edges.Length; i++)
         {
-            int edgeCount = contour.edges.Count;
-            if (edgeCount == 0) continue;
+            SDFAtlasShape.Edge edge = edges[i].edge;
+            int channels = (int)edge.colour;
 
-            for (int i = 0; i < edgeCount; i++)
+            // An edge in no channel cannot contribute anything; skip before paying even for
+            // the relevance test.
+            if (channels == 0) continue;
+
+            bool useRed = (channels & (int)SDFAtlasShape.EdgeColour.Red) != 0;
+            bool useGreen = (channels & (int)SDFAtlasShape.EdgeColour.Green) != 0;
+            bool useBlue = (channels & (int)SDFAtlasShape.EdgeColour.Blue) != 0;
+
+            // The distance solve (trig for lines, a cubic or Newton search for curves) is
+            // shared by every channel this edge belongs to, so it only has to run if at least
+            // one of them still finds the edge relevant.
+            bool relevant =
+                (useRed && red.IsRelevant(redCache[i], point)) ||
+                (useGreen && green.IsRelevant(greenCache[i], point)) ||
+                (useBlue && blue.IsRelevant(blueCache[i], point));
+
+            if (!relevant) continue;
+
+            var distance = SDFAtlasEdgeDistance.Distance(edge, point, out double param);
+
+            // Shared by every channel this edge belongs to: none of it depends on which
+            // channel is asking, only on the edge and the point.
+            FlatEdge flat = edges[i];
+            var geometry = SDFAtlasEdgeDistance.PerpendicularAccumulator.Geometry.Compute(
+                edge, flat.startDir, flat.endDir, flat.prevDir, flat.nextDir, distance, point);
+            var cachePoint = new SDFAtlasEdgeDistance.Vector2d(point);
+
+            if (useRed)
             {
-                SDFAtlasShape.Edge edge = contour.edges[i];
-
-                int channels = (int)edge.colour;
-
-                // An edge in no channel cannot contribute anything; skip before paying for
-                // the distance solve.
-                if (channels == 0) continue;
-
-                var distance = SDFAtlasEdgeDistance.Distance(edge, point, out double param);
-
-                // Neighbours within the contour, wrapping at both ends. Every edge's
-                // perpendicular extension is bounded by the bisector with its neighbour, so
-                // the accumulator needs both regardless of which edge ends up nearest.
-                SDFAtlasShape.Edge previous = contour.edges[(i - 1 + edgeCount) % edgeCount];
-                SDFAtlasShape.Edge next = contour.edges[(i + 1) % edgeCount];
-
-                if ((channels & (int)SDFAtlasShape.EdgeColour.Red) != 0)
-                    red.Consider(edge, previous, next, distance, param, point);
-
-                if ((channels & (int)SDFAtlasShape.EdgeColour.Green) != 0)
-                    green.Consider(edge, previous, next, distance, param, point);
-
-                if ((channels & (int)SDFAtlasShape.EdgeColour.Blue) != 0)
-                    blue.Consider(edge, previous, next, distance, param, point);
+                redCache[i].point = cachePoint;
+                red.Consider(edge, geometry, distance, param, ref redCache[i]);
+            }
+            if (useGreen)
+            {
+                greenCache[i].point = cachePoint;
+                green.Consider(edge, geometry, distance, param, ref greenCache[i]);
+            }
+            if (useBlue)
+            {
+                blueCache[i].point = cachePoint;
+                blue.Consider(edge, geometry, distance, param, ref blueCache[i]);
             }
         }
 
@@ -114,11 +292,14 @@ public static class MSDFAtlasField
             accumulator = SDFAtlasEdgeDistance.PerpendicularAccumulator.Empty,
         };
 
-        public void Consider(SDFAtlasShape.Edge edge,
-                             SDFAtlasShape.Edge previous, SDFAtlasShape.Edge next,
-                             SDFAtlasEdgeDistance.SignedDistance distance, double param, Vector2 point)
+        public readonly bool IsRelevant(in SDFAtlasEdgeDistance.EdgeCache cache, Vector2 point) =>
+            accumulator.IsRelevant(cache, point);
+
+        public void Consider(SDFAtlasShape.Edge edge, in SDFAtlasEdgeDistance.PerpendicularAccumulator.Geometry geometry,
+                             SDFAtlasEdgeDistance.SignedDistance distance, double param,
+                             ref SDFAtlasEdgeDistance.EdgeCache cache)
         {
-            accumulator.Add(edge, previous, next, distance, param, point);
+            accumulator.Add(edge, geometry, distance, param, ref cache);
         }
 
         public double Resolve(Vector2 point) => accumulator.Resolve(point);

@@ -36,12 +36,25 @@ public static class MSDFAtlasPacker
 
     // --- Packing --------------------------------------------------------
 
+    // Reports progress while packing. `entryIndex`/`entryCount` place the current SVG within
+    // the whole batch; `cellProgress` (0..1) is how far that one SVG's own generation has got,
+    // so a batch of one slow, complex graphic still moves visibly rather than sitting at one
+    // fraction until it's entirely done. Return false to cancel -- Pack unwinds via
+    // MSDFAtlasField.GenerationCancelledException and returns null.
+    public delegate bool ProgressCallback(int entryIndex, int entryCount, string name, float cellProgress);
+
     // Builds the atlas texture from a set of entries.
     //
     // Returns an RGB24 texture sized to the manifest's grid, and fills in the manifest's
     // cell table as a side effect. Cells with no entry are left fully outside, so an
     // unaddressed cell renders as nothing rather than as a block of colour.
-    public static Texture2D Pack(IList<Entry> entries, SDFAtlasInfo info, Settings settings)
+    //
+    // Returns null if `onProgress` cancels partway through. The manifest may already reflect
+    // some entries packed before the cancel; the caller discards the whole attempt rather than
+    // trying to salvage a partial atlas, since a partial bake is not a state anyone wants to
+    // ship.
+    public static Texture2D Pack(IList<Entry> entries, SDFAtlasInfo info, Settings settings,
+                                 ProgressCallback onProgress = null)
     {
         int width = info.TextureWidth;
         int height = info.TextureHeight;
@@ -50,47 +63,55 @@ public static class MSDFAtlasPacker
         var atlas = new float[width * height * 3];
 
         // Start every channel fully outside. Stored 0 is the deepest-outside value, so the
-        // median of three zeroes is also fully outside -- an empty cell reads as empty.
+        // median of three zeroes is also fully outside.
         for (int i = 0; i < atlas.Length; i++) atlas[i] = 0f;
 
-        for (int i = 0; i < entries.Count; i++)
+        try
         {
-            Entry entry = entries[i];
-            if (string.IsNullOrEmpty(entry.svgPath)) continue;
-
-            if (entry.cellIndex < 0 || entry.cellIndex >= info.CellCount)
+            for (int i = 0; i < entries.Count; i++)
             {
-                Debug.LogWarning(
-                    $"[SDFAtlas] '{entry.name}' has out-of-range cell index {entry.cellIndex}; skipped.");
-                continue;
+                Entry entry = entries[i];
+                if (string.IsNullOrEmpty(entry.svgPath)) continue;
+
+                if (entry.cellIndex < 0 || entry.cellIndex >= info.CellCount)
+                {
+                    Debug.LogWarning(
+                        $"[SDFAtlas] '{entry.name}' has out-of-range cell index {entry.cellIndex}; skipped.");
+                    continue;
+                }
+
+                int entryIndex = i;
+                float[] cell = EncodeCell(entry.svgPath, info, settings, cellProgress =>
+                {
+                    if (onProgress != null && !onProgress(entryIndex, entries.Count, entry.name, cellProgress))
+                        throw new MSDFAtlasField.GenerationCancelledException();
+                });
+                if (cell == null) continue;
+
+                info.IndexToCoord(entry.cellIndex, out int cellX, out int cellY);
+                BlitCell(atlas, width, height, cell, info, cellX, cellY);
+
+                info.cells[entry.cellIndex] = new SDFAtlasInfo.CellEntry
+                {
+                    occupied = true,
+                    sourceGuid = AssetDatabase.AssetPathToGUID(entry.svgPath),
+                    name = string.IsNullOrEmpty(entry.name)
+                        ? Path.GetFileNameWithoutExtension(entry.svgPath)
+                        : entry.name,
+                };
             }
-
-            float[] cell = EncodeCell(entry.svgPath, info, settings);
-            if (cell == null) continue;
-
-            info.IndexToCoord(entry.cellIndex, out int cellX, out int cellY);
-            BlitCell(atlas, width, height, cell, info, cellX, cellY);
-
-            info.cells[entry.cellIndex] = new SDFAtlasInfo.CellEntry
-            {
-                occupied = true,
-                sourceGuid = AssetDatabase.AssetPathToGUID(entry.svgPath),
-                name = string.IsNullOrEmpty(entry.name)
-                    ? Path.GetFileNameWithoutExtension(entry.svgPath)
-                    : entry.name,
-            };
+        }
+        catch (MSDFAtlasField.GenerationCancelledException)
+        {
+            return null;
         }
 
         return ToTexture(atlas, width, height);
     }
 
     // Encodes one SVG into a full cellSize x cellSize x 3 block.
-    //
-    // Padding is handled by framing the shape into the artwork area with the padding as
-    // margin, rather than by compositing into an oversized canvas as the raster path does.
-    // Working from curves means the margin can simply be part of the framing transform --
-    // there is no source grid to preserve, so no resampling is involved.
-    static float[] EncodeCell(string svgPath, SDFAtlasInfo info, Settings settings)
+    static float[] EncodeCell(string svgPath, SDFAtlasInfo info, Settings settings,
+                              System.Action<float> onProgress)
     {
         SDFAtlasShape shape = SDFAtlasSvgLoader.Load(svgPath, out Vector2 documentSize);
         if (shape == null)
@@ -99,20 +120,15 @@ public static class MSDFAtlasPacker
             return null;
         }
 
-        // Frame the *document*, not the artwork's bounding box. Cropping to the artwork
-        // would strip any clear space the artboard deliberately included and rescale every
-        // graphic to fill its cell independently, so icons authored to a shared cap height
-        // would come out at different sizes. Framing the document also matches the raster
-        // pipeline, which composites its source at full pixel dimensions.
-        //
+        // Preserve any whitespace deliberately included by framing the document.
         // The padding is the margin, and the distance field continues naturally into it
-        // because it is measured from curves rather than filled in afterwards.
+        // as it's measured from the curves themselves.
         SDFAtlasShapeRasteriser.FitDocumentToBox(
             shape, documentSize, info.cellSize, info.cellSize, info.padding);
 
         MSDFAtlasEdgeColouring.Apply(shape, settings.angleThreshold, settings.seed);
 
-        float[] raw = MSDFAtlasField.Generate(shape, info.cellSize, info.cellSize);
+        float[] raw = MSDFAtlasField.Generate(shape, info.cellSize, info.cellSize, onProgress);
         float[] encoded = MSDFAtlasField.Encode(raw, info.spread);
 
         if (settings.errorCorrection)

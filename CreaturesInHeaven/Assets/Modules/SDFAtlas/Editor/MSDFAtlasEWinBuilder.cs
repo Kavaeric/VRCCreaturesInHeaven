@@ -70,8 +70,17 @@ public class MSDFAtlasEWinBuilder : EditorWindow
         _cellSize = EditorGUILayout.IntPopup(
             new GUIContent("Cell size", "Cell edge in texels, including padding."),
             _cellSize,
-            new[] { new GUIContent("32"), new GUIContent("64"), new GUIContent("128"), new GUIContent("256") },
-            new[] { 32, 64, 128, 256 });
+            new[] {
+                    new GUIContent("16"),
+                    new GUIContent("32"),
+                    new GUIContent("64"),
+                    new GUIContent("128"),
+                    new GUIContent("256"),
+                    new GUIContent("512"),
+                    new GUIContent("1024"),
+                    new GUIContent("2048"),
+                  },
+            new[] { 16, 32, 64, 128, 256, 512, 1024, 2048 });
 
         _gridWidth = Mathf.Max(1, EditorGUILayout.IntField("Grid width (cells)", _gridWidth));
         _gridHeight = Mathf.Max(1, EditorGUILayout.IntField("Grid height (cells)", _gridHeight));
@@ -281,8 +290,23 @@ public class MSDFAtlasEWinBuilder : EditorWindow
 
         try
         {
-            EditorUtility.DisplayProgressBar("MSDF atlas", "Encoding graphics...", 0.2f);
-            Texture2D atlas = MSDFAtlasPacker.Pack(entries, info, settings);
+            Texture2D atlas = MSDFAtlasPacker.Pack(entries, info, settings, (entryIndex, entryCount, name, cellProgress) =>
+            {
+                // Reserve the last 20% of the bar for writing the atlas out, same as before;
+                // encoding fills the other 80%, split evenly across entries and further split
+                // within an entry by its own generation progress, so one slow, complex
+                // graphic still visibly advances instead of parking the bar at its start.
+                float overall = (entryIndex + cellProgress) / entryCount * 0.8f;
+                return !EditorUtility.DisplayCancelableProgressBar(
+                    "MSDF atlas", $"Encoding '{name}' ({entryIndex + 1}/{entryCount})...", overall);
+            });
+
+            if (atlas == null)
+            {
+                _status = "Build cancelled.";
+                _statusType = MessageType.Warning;
+                return;
+            }
 
             EditorUtility.DisplayProgressBar("MSDF atlas", "Writing atlas...", 0.8f);
             string path = $"{_outputFolder}/{_atlasName}.png";

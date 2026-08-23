@@ -39,7 +39,8 @@ public static class SDFAtlasPacker
         // disagree. The artwork occupies the inner area; the padding border is filled by the
         // distance transform continuing outward past it.
         var settings = encodeSettings;
-        settings.cellSize = info.cellSize;
+        settings.cellWidth = info.cellWidth;
+        settings.cellHeight = info.cellHeight;
         settings.spreadPixels = info.spread;
 
         for (int i = 0; i < entries.Count; i++)
@@ -68,7 +69,7 @@ public static class SDFAtlasPacker
         return ToTexture(atlas, width, height);
     }
 
-    // Encodes one source into a full cellSize x cellSize block, with the artwork inset by
+    // Encodes one source into a full cellWidth x cellHeight block, with the artwork inset by
     // the manifest's padding.
     //
     // The inset is applied before the distance transform, by compositing the source into a
@@ -81,20 +82,25 @@ public static class SDFAtlasPacker
     {
         float[] coverage = SDFAtlasEncoder.ReadCoverage(source, settings.channel);
 
-        // Scale factor from cell to artwork area. The source is composited into a canvas
-        // proportionally larger than itself, so that after downsampling to cellSize the
-        // artwork lands in the inner ArtworkSize square.
-        float inset = (float)info.ArtworkSize / info.cellSize;
+        // Scale factor from cell to artwork area, per axis. The source is composited into a
+        // canvas proportionally larger than itself, so that after downsampling to the cell's
+        // dimensions the artwork lands in the inner ArtworkWidth x ArtworkHeight rectangle.
+        //
+        // The two axes are computed independently: padding is a fixed texel count, so on a
+        // non-square cell it is a different *fraction* of each axis, and a single shared
+        // inset would misplace the artwork on the longer one.
+        float insetX = (float)info.ArtworkWidth / info.cellWidth;
+        float insetY = (float)info.ArtworkHeight / info.cellHeight;
 
-        int canvasWidth = Mathf.Max(1, Mathf.RoundToInt(source.width / inset));
-        int canvasHeight = Mathf.Max(1, Mathf.RoundToInt(source.height / inset));
+        int canvasWidth = Mathf.Max(1, Mathf.RoundToInt(source.width / insetX));
+        int canvasHeight = Mathf.Max(1, Mathf.RoundToInt(source.height / insetY));
 
         float[] canvas = CompositeCentred(coverage, source.width, source.height, canvasWidth, canvasHeight);
 
         // Encode at full cell size. The transform runs across the whole canvas including the
         // border region, so border texels get correct distances to the inset artwork.
         return SDFAtlasEncoder.EncodeCoverage(canvas, canvasWidth, canvasHeight, settings,
-                                              info.cellSize, info.cellSize);
+                                              info.cellWidth, info.cellHeight);
     }
 
     // Composites a coverage buffer into the centre of a larger, empty (fully-outside) canvas.
@@ -136,18 +142,18 @@ public static class SDFAtlasPacker
     static void BlitCell(float[] atlas, int atlasWidth, int atlasHeight,
                          float[] cell, SDFAtlasInfo info, int cellX, int cellY)
     {
-        int originX = cellX * info.cellSize;
-        int originY = cellY * info.cellSize;
+        int originX = cellX * info.cellWidth;
+        int originY = cellY * info.cellHeight;
 
-        for (int y = 0; y < info.cellSize; y++)
+        for (int y = 0; y < info.cellHeight; y++)
         {
             int destY = originY + y;
             if (destY < 0 || destY >= atlasHeight) continue;
 
             int destRow = destY * atlasWidth;
-            int srcRow = y * info.cellSize;
+            int srcRow = y * info.cellWidth;
 
-            for (int x = 0; x < info.cellSize; x++)
+            for (int x = 0; x < info.cellWidth; x++)
             {
                 int destX = originX + x;
                 if (destX < 0 || destX >= atlasWidth) continue;
@@ -180,6 +186,9 @@ public static class SDFAtlasPacker
     // Writes the atlas texture and its manifest to disk, then applies import settings
     // appropriate for distance data.
     //
+    // A reference image is written alongside them, for use as a backdrop when authoring UVs.
+    // See SDFAtlasReference.
+    //
     // Returns the asset path of the written texture.
     public static string WriteAtlas(Texture2D atlas, SDFAtlasInfo info, string assetPath)
     {
@@ -192,6 +201,10 @@ public static class SDFAtlasPacker
 
         ApplyImportSettings(assetPath, info);
         info.Save(assetPath);
+
+        Texture2D reference = SDFAtlasReference.Build(atlas, info);
+        SDFAtlasReference.Write(reference, assetPath);
+        Object.DestroyImmediate(reference);
 
         return assetPath;
     }

@@ -85,8 +85,10 @@ public static class MSDFAtlasPacker
                 {
                     if (onProgress != null && !onProgress(entryIndex, entries.Count, entry.name, cellProgress))
                         throw new MSDFAtlasField.GenerationCancelledException();
-                });
+                }, out float anisotropy);
                 if (cell == null) continue;
+
+                WarnOnThinSpread(entry.name, info, anisotropy);
 
                 info.IndexToCoord(entry.cellIndex, out int cellX, out int cellY);
                 BlitCell(atlas, width, height, cell, info, cellX, cellY);
@@ -109,10 +111,12 @@ public static class MSDFAtlasPacker
         return ToTexture(atlas, width, height);
     }
 
-    // Encodes one SVG into a full cellSize x cellSize x 3 block.
+    // Encodes one SVG into a full cellWidth x cellHeight x 3 block.
     static float[] EncodeCell(string svgPath, SDFAtlasInfo info, Settings settings,
-                              System.Action<float> onProgress)
+                              System.Action<float> onProgress, out float anisotropy)
     {
+        anisotropy = 1f;
+
         SDFAtlasShape shape = SDFAtlasSvgLoader.Load(svgPath, out Vector2 documentSize);
         if (shape == null)
         {
@@ -123,19 +127,38 @@ public static class MSDFAtlasPacker
         // Preserve any whitespace deliberately included by framing the document.
         // The padding is the margin, and the distance field continues naturally into it
         // as it's measured from the curves themselves.
-        SDFAtlasShapeRasteriser.FitDocumentToBox(
-            shape, documentSize, info.cellSize, info.cellSize, info.padding);
+        //
+        // Under PreserveAspect, a graphic whose aspect does not match its cell is
+        // letterboxed rather than stretched: texels are wasted on margin, but the field
+        // stays isotropic and one stored unit means the same real distance on both axes.
+        //
+        // Under Stretch, each axis is scaled to fill the cell, so none of the cell's
+        // resolution is spent on margin. The field is then anisotropic, which the reported
+        // scale lets the caller warn about -- see the note in FitDocumentToBox.
+        Vector2 framingScale = SDFAtlasShapeRasteriser.FitDocumentToBox(
+            shape, documentSize, info.cellWidth, info.cellHeight, info.padding, FramingMode(info));
+
+        anisotropy = SDFAtlasShapeRasteriser.AnisotropyRatio(framingScale);
 
         MSDFAtlasEdgeColouring.Apply(shape, settings.angleThreshold, settings.seed);
 
-        float[] raw = MSDFAtlasField.Generate(shape, info.cellSize, info.cellSize, onProgress);
+        float[] raw = MSDFAtlasField.Generate(shape, info.cellWidth, info.cellHeight, onProgress);
         float[] encoded = MSDFAtlasField.Encode(raw, info.spread);
 
         if (settings.errorCorrection)
-            MSDFAtlasField.CorrectErrors(shape, encoded, info.cellSize, info.cellSize, info.spread);
+            MSDFAtlasField.CorrectErrors(shape, encoded, info.cellWidth, info.cellHeight, info.spread);
 
         return encoded;
     }
+
+    // Manifest framing translated into the rasteriser's own enum.
+    //
+    // The two enums are deliberately separate types (see SDFAtlasInfo.AtlasFraming), so the
+    // mapping lives here rather than either of them depending on the other.
+    static SDFAtlasShapeRasteriser.FramingMode FramingMode(SDFAtlasInfo info) =>
+        info.IsStretched
+            ? SDFAtlasShapeRasteriser.FramingMode.Stretch
+            : SDFAtlasShapeRasteriser.FramingMode.PreserveAspect;
 
     // Copies an encoded cell into its grid position.
     //
@@ -144,27 +167,54 @@ public static class MSDFAtlasPacker
     static void BlitCell(float[] atlas, int atlasWidth, int atlasHeight,
                          float[] cell, SDFAtlasInfo info, int cellX, int cellY)
     {
-        int originX = cellX * info.cellSize;
-        int originY = cellY * info.cellSize;
+        int originX = cellX * info.cellWidth;
+        int originY = cellY * info.cellHeight;
 
-        for (int y = 0; y < info.cellSize; y++)
+        for (int y = 0; y < info.cellHeight; y++)
         {
             int destY = originY + y;
             if (destY < 0 || destY >= atlasHeight) continue;
 
-            for (int x = 0; x < info.cellSize; x++)
+            for (int x = 0; x < info.cellWidth; x++)
             {
                 int destX = originX + x;
                 if (destX < 0 || destX >= atlasWidth) continue;
 
                 int destIndex = (destY * atlasWidth + destX) * 3;
-                int srcIndex = (y * info.cellSize + x) * 3;
+                int srcIndex = (y * info.cellWidth + x) * 3;
 
                 atlas[destIndex + 0] = cell[srcIndex + 0];
                 atlas[destIndex + 1] = cell[srcIndex + 1];
                 atlas[destIndex + 2] = cell[srcIndex + 2];
             }
         }
+    }
+
+    // Effective spread, in texels, below which the shader has too little gradient to
+    // antialias against and 8-bit quantisation starts to show as stepping along the edge.
+    const float MinUsableSpread = 1.5f;
+
+    // Warns when stretching has left one axis with too little effective spread.
+    //
+    // Stretch compresses the field along the axis that had to shrink more, and the stored
+    // spread is divided by exactly that ratio on that axis. A graphic stretched 4:1 with a
+    // stored spread of 2 has an effective spread of 0.5 on its narrow axis, which is not
+    // enough for the shader's smoothstep to resolve. Stretch and a small spread pull against
+    // each other, and this is where that shows up, so it is worth naming the graphic rather
+    // than leaving it to be spotted by eye later.
+    static void WarnOnThinSpread(string name, SDFAtlasInfo info, float anisotropy)
+    {
+        if (anisotropy <= 1.001f) return;
+
+        float effectiveSpread = info.spread / anisotropy;
+        if (effectiveSpread >= MinUsableSpread) return;
+
+        Debug.LogWarning(
+            $"[SDFAtlas] '{name}' is stretched {anisotropy:0.##}:1 to fill its cell, leaving an " +
+            $"effective spread of {effectiveSpread:0.##} texels on its narrow axis " +
+            $"(stored spread {info.spread}). Below about {MinUsableSpread} the shader has too " +
+            "little gradient to antialias against and edges may look stepped. Raise the spread, " +
+            "use a cell aspect closer to the artwork, or frame this atlas with preserved aspect.");
     }
 
     // --- Texture output ---------------------------------------------------
@@ -201,6 +251,9 @@ public static class MSDFAtlasPacker
     // --- Asset writing -----------------------------------------------------
 
     // Writes the atlas texture and its manifest, then applies import settings.
+    //
+    // A reference image is written alongside them, for use as a backdrop when authoring UVs.
+    // See SDFAtlasReference.
     public static string WriteAtlas(Texture2D atlas, SDFAtlasInfo info, string assetPath)
     {
         string dir = Path.GetDirectoryName(assetPath).Replace('\\', '/');
@@ -212,6 +265,10 @@ public static class MSDFAtlasPacker
 
         ApplyImportSettings(assetPath, info);
         info.Save(assetPath);
+
+        Texture2D reference = SDFAtlasReference.Build(atlas, info);
+        SDFAtlasReference.Write(reference, assetPath);
+        Object.DestroyImmediate(reference);
 
         return assetPath;
     }

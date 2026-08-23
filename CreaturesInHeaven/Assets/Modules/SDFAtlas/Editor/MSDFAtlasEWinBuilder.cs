@@ -19,11 +19,13 @@ public class MSDFAtlasEWinBuilder : EditorWindow
 {
     // --- Atlas configuration --------------------------------------------
 
-    int _cellSize = 64;
+    int _cellWidth = 64;
+    int _cellHeight = 64;
     int _gridWidth = 16;
     int _gridHeight = 16;
     int _padding = 4;
     float _spread = 4f;
+    SDFAtlasInfo.AtlasFraming _framing = SDFAtlasInfo.AtlasFraming.PreserveAspect;
 
     double _angleThreshold = MSDFAtlasEdgeColouring.DefaultAngleThreshold;
     ulong _seed = 0;
@@ -67,35 +69,33 @@ public class MSDFAtlasEWinBuilder : EditorWindow
     {
         EditorGUILayout.LabelField("Atlas layout", EditorStyles.boldLabel);
 
-        _cellSize = EditorGUILayout.IntPopup(
-            new GUIContent("Cell size", "Cell edge in texels, including padding."),
-            _cellSize,
-            new[] {
-                    new GUIContent("16"),
-                    new GUIContent("32"),
-                    new GUIContent("64"),
-                    new GUIContent("128"),
-                    new GUIContent("256"),
-                    new GUIContent("512"),
-                    new GUIContent("1024"),
-                    new GUIContent("2048"),
-                  },
-            new[] { 16, 32, 64, 128, 256, 512, 1024, 2048 });
+        SDFAtlasBuilderGUI.CellSizeFields(ref _cellWidth, ref _cellHeight);
 
         _gridWidth = Mathf.Max(1, EditorGUILayout.IntField("Grid width (cells)", _gridWidth));
         _gridHeight = Mathf.Max(1, EditorGUILayout.IntField("Grid height (cells)", _gridHeight));
 
+        // Clamped against the shorter axis: padding is uniform on all four sides, so the
+        // smaller dimension is what limits how much of it fits.
         _padding = Mathf.Clamp(EditorGUILayout.IntField(
             new GUIContent("Padding (texels)",
                 "Border inside each cell carrying distance data that continues past the " +
                 "artwork. Also the margin the shape is framed into."),
-            _padding), 0, _cellSize / 2 - 1);
+            _padding), 0, Mathf.Min(_cellWidth, _cellHeight) / 2 - 1);
 
         _spread = EditorGUILayout.Slider(
             new GUIContent("Spread (texels)",
                 "Distance range mapped to the stored 0..1. Larger leaves more gradient for " +
                 "the shader to antialias against, at the cost of edge precision."),
             _spread, 1f, 16f);
+
+        _framing = (SDFAtlasInfo.AtlasFraming)EditorGUILayout.EnumPopup(
+            new GUIContent("Framing",
+                "How artwork is fitted into its cell. Preserve aspect letterboxes non-square " +
+                "artwork, keeping the field isotropic. Stretch fills the whole cell, spending " +
+                "no texels on margin, at the cost of an anisotropic field."),
+            _framing);
+
+        DrawFramingNote();
 
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Encoding", EditorStyles.boldLabel);
@@ -125,22 +125,61 @@ public class MSDFAtlasEWinBuilder : EditorWindow
         _outputFolder = EditorGUILayout.TextField("Output folder", _outputFolder);
 
         int capacity = _gridWidth * _gridHeight;
-        int artwork = _cellSize - 2 * _padding;
+        int artworkWidth = _cellWidth - 2 * _padding;
+        int artworkHeight = _cellHeight - 2 * _padding;
 
-        int safeMip = 0;
-        while ((1 << (safeMip + 1)) <= Mathf.Max(_padding, 1)) safeMip++;
+        int safeMip = SDFAtlasBuilderGUI.SafeMipLevel(_padding);
 
         // Three bytes per texel rather than one. Worth stating plainly next to the number,
         // since the whole point of MSDF is trading memory for corner sharpness and the
         // trade is only sensible if the cell size comes down to match.
-        float megabytes = _cellSize * _gridWidth * _cellSize * _gridHeight * 3f / 1024f / 1024f;
+        long texels = (long)_cellWidth * _gridWidth * _cellHeight * _gridHeight;
+        float megabytes = texels * 3f / 1024f / 1024f;
 
         EditorGUILayout.HelpBox(
-            $"Atlas: {_cellSize * _gridWidth} x {_cellSize * _gridHeight} texels, " +
-            $"{capacity} cells, {artwork}x{artwork} artwork area per cell.\n" +
+            $"Atlas: {_cellWidth * _gridWidth} x {_cellHeight * _gridHeight} texels, " +
+            $"{capacity} cells, {artworkWidth}x{artworkHeight} artwork area per cell.\n" +
             $"RGB24 uncompressed: ~{megabytes:0.##} MB (3x single-channel at the same size).\n" +
             $"Padding {_padding} keeps mip levels 0-{safeMip} free of cross-cell bleed.",
             MessageType.None);
+    }
+
+    // Effective spread below which the shader has too little gradient to antialias against.
+    // Matches MSDFAtlasPacker.MinUsableSpread, which does the same check per graphic at
+    // build time with the real stretch ratio in hand.
+    const float MinUsableSpread = 1.5f;
+
+    // Explains what the chosen framing costs, and how much stretch the current spread can
+    // absorb before edges start to look stepped.
+    //
+    // The exact ratio is per-graphic and not known until each SVG is loaded, so this reports
+    // the budget rather than a verdict; the packer warns by name for any graphic that
+    // actually exceeds it.
+    void DrawFramingNote()
+    {
+        if (_framing == SDFAtlasInfo.AtlasFraming.PreserveAspect)
+        {
+            EditorGUILayout.HelpBox(
+                "Artwork keeps its authored proportions and is centred in the cell, so a " +
+                "graphic whose aspect differs from the cell's is letterboxed and spends some " +
+                "of the cell's resolution on empty margin.",
+                MessageType.None);
+            return;
+        }
+
+        // Stretch divides the stored spread by the stretch ratio on the compressed axis, so
+        // the tolerable ratio is however many times the spread exceeds the usable minimum.
+        float maxRatio = _spread / MinUsableSpread;
+
+        EditorGUILayout.HelpBox(
+            "Artwork is scaled per-axis to fill the cell, so none of the cell's resolution is " +
+            "spent on margin. The stored field is then anisotropic: one stored unit is worth " +
+            "more real distance along one axis than the other, which slightly widens the " +
+            "antialiasing band on that axis and makes Edge bias dilate unevenly.\n\n" +
+            $"At spread {_spread:0.##}, stretch up to about {maxRatio:0.##}:1 keeps at least " +
+            $"{MinUsableSpread} texels of effective spread on the narrow axis. Anything " +
+            "stretched harder than that is warned about by name at build time.",
+            maxRatio >= 2f ? MessageType.None : MessageType.Warning);
     }
 
     // --- Source list UI -------------------------------------------------------
@@ -149,10 +188,11 @@ public class MSDFAtlasEWinBuilder : EditorWindow
     {
         EditorGUILayout.LabelField("Graphics (SVG)", EditorStyles.boldLabel);
         EditorGUILayout.HelpBox(
-            "List position is the cell index, which gets baked into mesh UVs. " +
-            "Reordering or removing entries changes what already-placed quads display.\n\n" +
-            "Coordinates are UDIM tiles: (0,0) is the atlas's bottom-left cell and +Y runs " +
-            "up, so they match Blender's tile numbering directly.\n\n" +
+            "List position is the cell index, which decides where in the atlas a graphic " +
+            "lands. Reordering or removing entries moves the graphics already-placed quads " +
+            "have their UVs over.\n\n" +
+            "Coordinates are cells: (0,0) is the atlas's bottom-left and +Y runs up, matching " +
+            "UV space.\n\n" +
             "Sources must be flattened outlines. Strokes need outlining before export.",
             MessageType.Warning);
 
@@ -251,8 +291,10 @@ public class MSDFAtlasEWinBuilder : EditorWindow
 
     void Build()
     {
-        var info = SDFAtlasInfo.Create(_cellSize, _gridWidth, _gridHeight, _padding, _spread,
-                                       SDFAtlasInfo.AtlasEncoding.MultiChannel);
+        var info = SDFAtlasInfo.Create(_cellWidth, _cellHeight, _gridWidth, _gridHeight,
+                                       _padding, _spread,
+                                       SDFAtlasInfo.AtlasEncoding.MultiChannel,
+                                       _framing);
 
         var settings = MSDFAtlasPacker.Settings.Default;
         settings.angleThreshold = _angleThreshold;
@@ -314,7 +356,8 @@ public class MSDFAtlasEWinBuilder : EditorWindow
             DestroyImmediate(atlas);
 
             _status = $"Built {entries.Count} graphic(s) into {path}\n" +
-                      $"Manifest: {Path.GetFileName(SDFAtlasInfo.ManifestPath(path))}\n\n" +
+                      $"Manifest: {Path.GetFileName(SDFAtlasInfo.ManifestPath(path))}\n" +
+                      $"Reference: {Path.GetFileName(SDFAtlasReference.ReferencePath(path))}\n\n" +
                       $"Use the 'SDFAtlas/MSDF Additive' shader with this atlas.";
             _statusType = MessageType.Info;
         }

@@ -189,16 +189,40 @@ public static class SDFAtlasShapeRasteriser
 
     // --- Framing ------------------------------------------------------------
 
-    // Scales and translates a shape so its document fills a pixel box, preserving aspect
-    // and leaving a margin.
+    // How a document is fitted into its cell.
+    public enum FramingMode
+    {
+        // Scale both axes by the same factor, so the artwork keeps its authored proportions
+        // and the slack on the axis that did not drive the scale becomes empty margin.
+        // The stored field stays isotropic: one texel of distance means the same real
+        // distance on both axes.
+        PreserveAspect,
+
+        // Scale each axis independently so the artwork fills the whole cell. Non-square
+        // artwork stops wasting texels on margin, at the cost of an anisotropic field --
+        // see the note in FitDocumentToBox on what that costs.
+        Stretch,
+    }
+
+    // Scales and translates a shape so its document fills a pixel box, leaving a margin.
     //
     // documentSize comes from the SVG's viewBox (see SDFAtlasSvgLoader). Falls back to the
     // shape's own bounds only when the document has no usable size.
     //
-    // Returns the scale that was applied, which the distance generator needs in order to
-    // express its spread in the same pixel units.
-    public static float FitDocumentToBox(SDFAtlasShape shape, Vector2 documentSize,
-                                         int width, int height, float marginPixels)
+    // Returns the scale applied to each axis. Under PreserveAspect both components are
+    // equal; under Stretch they differ, and the caller needs both to reason about what the
+    // stored spread is worth per axis (see AnisotropyRatio).
+    //
+    // On Stretch and anisotropy: the distance solver runs after this transform, on the
+    // already-stretched geometry, so it measures true distances in the stretched space. The
+    // field is correct there, and the quad's own aspect un-squashes it at render time. What
+    // it is not is isotropic: one stored unit is worth more real distance along the axis
+    // that was compressed less. The consequences are that the shader's antialiasing band is
+    // slightly wider along one axis, and that _EdgeBias dilates unevenly. Both are
+    // proportional to the stretch ratio and negligible until that ratio gets large.
+    public static Vector2 FitDocumentToBox(SDFAtlasShape shape, Vector2 documentSize,
+                                           int width, int height, float marginPixels,
+                                           FramingMode mode = FramingMode.PreserveAspect)
     {
         Vector2 min, max;
 
@@ -211,24 +235,49 @@ public static class SDFAtlasShapeRasteriser
         }
         else if (!shape.Bounds(out min, out max))
         {
-            return 1f;
+            return Vector2.one;
         }
 
         Vector2 size = max - min;
-        if (size.x <= 0f || size.y <= 0f) return 1f;
+        if (size.x <= 0f || size.y <= 0f) return Vector2.one;
 
         float usableWidth = Mathf.Max(width - 2f * marginPixels, 1f);
         float usableHeight = Mathf.Max(height - 2f * marginPixels, 1f);
 
-        float scale = Mathf.Min(usableWidth / size.x, usableHeight / size.y);
+        Vector2 scale;
+        if (mode == FramingMode.Stretch)
+        {
+            // Each axis fills its own extent. No axis "drives" the scale, so the only slack
+            // left is the margin itself, which the centring below distributes evenly.
+            scale = new Vector2(usableWidth / size.x, usableHeight / size.y);
+        }
+        else
+        {
+            float uniform = Mathf.Min(usableWidth / size.x, usableHeight / size.y);
+            scale = new Vector2(uniform, uniform);
+        }
 
-        // Centre whatever slack remains on the axis that did not drive the scale.
-        Vector2 scaledSize = size * scale;
+        // Centre whatever slack remains. Under Stretch that is exactly the margin on both
+        // axes; under PreserveAspect it is the margin plus the letterboxing on one axis.
+        Vector2 scaledSize = Vector2.Scale(size, scale);
         var offset = new Vector2(
-            (width - scaledSize.x) * 0.5f - min.x * scale,
-            (height - scaledSize.y) * 0.5f - min.y * scale);
+            (width - scaledSize.x) * 0.5f - min.x * scale.x,
+            (height - scaledSize.y) * 0.5f - min.y * scale.y);
 
-        shape.Transform(new Vector2(scale, scale), offset);
+        shape.Transform(scale, offset);
         return scale;
+    }
+
+    // How far from isotropic a framing scale is, as a ratio of at least 1.
+    //
+    // 1 means square texels and a field where one stored unit means the same real distance
+    // in every direction. Larger means the field was compressed harder along one axis, which
+    // is what divides the effective spread on that axis -- see the builder's spread warning.
+    public static float AnisotropyRatio(Vector2 scale)
+    {
+        float x = Mathf.Abs(scale.x);
+        float y = Mathf.Abs(scale.y);
+        if (x <= 0f || y <= 0f) return 1f;
+        return Mathf.Max(x / y, y / x);
     }
 }

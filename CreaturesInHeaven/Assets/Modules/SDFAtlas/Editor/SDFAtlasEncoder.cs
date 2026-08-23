@@ -41,7 +41,8 @@ public static class SDFAtlasEncoder
     // around and later serialised into the atlas manifest without a long argument list.
     public struct Settings
     {
-        public int cellSize;                  // Output resolution, in texels (e.g. 64)
+        public int cellWidth;                 // Output width, in texels (e.g. 64)
+        public int cellHeight;                // Output height, in texels
         public float spreadPixels;            // Distance range mapped to 0..1, in *cell* texels
         public float coverageThreshold;       // Coverage at/above this is inside. 0.5 for antialiased art
         public CoverageChannel channel;
@@ -52,7 +53,8 @@ public static class SDFAtlasEncoder
         // antialias against without pushing 8-bit quantisation into visible banding.
         public static Settings Default => new Settings
         {
-            cellSize = 64,
+            cellWidth = 64,
+            cellHeight = 64,
             spreadPixels = 4f,
             coverageThreshold = 0.5f,
             channel = CoverageChannel.Alpha,
@@ -63,7 +65,7 @@ public static class SDFAtlasEncoder
     // --- Encoding -------------------------------------------------------
 
     // Encodes a source texture to a cell-sized SDF, returned as 0..1 values (row-major,
-    // cellSize * cellSize entries). Ready to be written into an atlas cell.
+    // cellWidth * cellHeight entries). Ready to be written into an atlas cell.
     public static float[] Encode(Texture2D source, Settings settings)
     {
         float[] coverage = ReadCoverage(source, settings.channel);
@@ -74,9 +76,9 @@ public static class SDFAtlasEncoder
     // the output dimensions. Split out so the contact sheet can render intermediate stages
     // without re-reading the texture, and preview non-square sources undistorted.
     //
-    // dstWidth/dstHeight are usually both cellSize (the atlas cell is square by design), but
-    // the validation harness passes an aspect-preserving size so encoder quality can be
-    // judged without the squash confusing the picture.
+    // dstWidth/dstHeight are usually the cell's own dimensions, but the validation harness
+    // passes an aspect-preserving size so encoder quality can be judged without the squash
+    // confusing the picture.
     public static float[] EncodeCoverage(float[] coverage, int width, int height, Settings settings,
                                          int dstWidth, int dstHeight)
     {
@@ -117,10 +119,10 @@ public static class SDFAtlasEncoder
         return SDFAtlasDistanceField.Encode(cellDistance, settings.spreadPixels);
     }
 
-    // Encodes into a square atlas cell, which is what the packer and shader expect.
-    // Non-square sources are squashed to fit; the quad's aspect restores them at render time.
+    // Encodes into the settings' atlas cell. Sources whose aspect differs from the cell's are
+    // squashed to fit; the quad's aspect restores them at render time.
     public static float[] EncodeCoverage(float[] coverage, int width, int height, Settings settings) =>
-        EncodeCoverage(coverage, width, height, settings, settings.cellSize, settings.cellSize);
+        EncodeCoverage(coverage, width, height, settings, settings.cellWidth, settings.cellHeight);
 
     // --- Source reading -------------------------------------------------
 

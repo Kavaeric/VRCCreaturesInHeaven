@@ -2,14 +2,13 @@
 //
 // Emissive graphic rendered from a packed SDF atlas
 //
-// Artwork is selected by UDIM tile: the integer part of the mesh UV is the atlas cell
-// coordinate, the fractional part is the position within that cell. A quad whose UV island
-// sits in tile (3,1) shows whatever was packed into cell (3,1), with no per-object material
-// or property block involved, so every sign shares one material and stays static-batchable.
+// Artwork is selected by UV placement: a quad's UV island sits over the graphic it should
+// show, in 0..1 atlas space. No per-object material or property block is involved, so every
+// sign shares one material and stays static-batchable.
 //
-// The addressing, sampling, and edge reconstruction live in SDFAtlasCommon.cginc; this file
-// adds only the additive output and blend state. Other blend behaviours belong in their own
-// shaders alongside this one rather than as switchable modes here.
+// The sampling and edge reconstruction live in SDFAtlasCommon.cginc; this file adds only the
+// additive output and blend state. Other blend behaviours belong in their own shaders
+// alongside this one rather than as switchable modes here.
 
 Shader "SDFAtlas/SDF Additive"
 {
@@ -23,13 +22,9 @@ Shader "SDFAtlas/SDF Additive"
         [Toggle(_VERTEX_COLOR_ON)] _VertexColor ("Vertex base colour", Float) = 0
 
         // --- Atlas layout ------------------------------------------------
-        // These must match the manifest (.sdfatlas.json) written beside the atlas texture.
-        // A mismatch will silently addresses the wrong cell, so read them off the manifest
-        // and offer to apply them automatically for the user.
+        // Must match the manifest (.sdfatlas.json) written beside the atlas texture, so read
+        // it off the manifest and offer to apply it automatically for the user.
 
-        _GridSize ("Grid size (cells across, down)", Vector) = (16, 16, 0, 0)
-        _CellSize ("Cell size (texels)", Float) = 64
-        _Padding ("Padding (texels)", Float) = 2
         _Spread ("Spread (texels)", Float) = 4
 
         // --- Edge shaping ------------------------------------------------

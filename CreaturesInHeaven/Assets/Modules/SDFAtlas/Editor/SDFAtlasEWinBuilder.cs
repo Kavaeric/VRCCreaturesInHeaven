@@ -16,7 +16,8 @@ public class SDFAtlasEWinBuilder : EditorWindow
 {
     // --- Atlas configuration --------------------------------------------
 
-    int _cellSize = 64;
+    int _cellWidth = 64;
+    int _cellHeight = 64;
     int _gridWidth = 16;
     int _gridHeight = 16;
     int _padding = 2;
@@ -63,29 +64,18 @@ public class SDFAtlasEWinBuilder : EditorWindow
     {
         EditorGUILayout.LabelField("Atlas layout", EditorStyles.boldLabel);
 
-        _cellSize = EditorGUILayout.IntPopup(
-            new GUIContent("Cell size", "Cell edge in texels, including padding."),
-            _cellSize,
-            new[] {
-                    new GUIContent("16"),
-                    new GUIContent("32"),
-                    new GUIContent("64"),
-                    new GUIContent("128"),
-                    new GUIContent("256"),
-                    new GUIContent("512"),
-                    new GUIContent("1024"),
-                    new GUIContent("2048"),
-                  },
-            new[] { 16, 32, 64, 128, 256, 512, 1024, 2048 });
+        SDFAtlasBuilderGUI.CellSizeFields(ref _cellWidth, ref _cellHeight);
 
         _gridWidth = Mathf.Max(1, EditorGUILayout.IntField("Grid width (cells)", _gridWidth));
         _gridHeight = Mathf.Max(1, EditorGUILayout.IntField("Grid height (cells)", _gridHeight));
 
+        // Clamped against the shorter axis: padding is uniform on all four sides, so the
+        // smaller dimension is what limits how much of it fits.
         _padding = Mathf.Clamp(EditorGUILayout.IntField(
             new GUIContent("Padding (texels)",
                 "Border inside each cell carrying distance data that continues past the artwork. " +
                 "Smaller values pack artwork more tightly but may result in bleeding."),
-            _padding), 0, _cellSize / 2 - 1);
+            _padding), 0, Mathf.Min(_cellWidth, _cellHeight) / 2 - 1);
 
         _spread = EditorGUILayout.Slider(
             new GUIContent("Spread (texels)",
@@ -124,18 +114,20 @@ public class SDFAtlasEWinBuilder : EditorWindow
 
         // Surface the derived numbers rather than making the user compute them.
         int capacity = _gridWidth * _gridHeight;
-        int artwork = _cellSize - 2 * _padding;
+        int artworkWidth = _cellWidth - 2 * _padding;
+        int artworkHeight = _cellHeight - 2 * _padding;
 
         // Padding buys clean mip levels: a level-N mip texel averages a 2^N block, so it only
         // stays within its own cell while the padding is at least that wide. Deeper levels
         // bleed between neighbours.
-        int safeMip = 0;
-        while ((1 << (safeMip + 1)) <= Mathf.Max(_padding, 1)) safeMip++;
+        int safeMip = SDFAtlasBuilderGUI.SafeMipLevel(_padding);
+
+        long texels = (long)_cellWidth * _gridWidth * _cellHeight * _gridHeight;
 
         EditorGUILayout.HelpBox(
-            $"Atlas: {_cellSize * _gridWidth} x {_cellSize * _gridHeight} texels, " +
-            $"{capacity} cells, {artwork}x{artwork} artwork area per cell.\n" +
-            $"R8 uncompressed: ~{_cellSize * _gridWidth * _cellSize * _gridHeight / 1024 / 1024f:0.##} MB.\n" +
+            $"Atlas: {_cellWidth * _gridWidth} x {_cellHeight * _gridHeight} texels, " +
+            $"{capacity} cells, {artworkWidth}x{artworkHeight} artwork area per cell.\n" +
+            $"R8 uncompressed: ~{texels / 1024f / 1024f:0.##} MB.\n" +
             $"Padding {_padding} keeps mip levels 0-{safeMip} free of cross-cell bleed.",
             MessageType.None);
     }
@@ -146,10 +138,11 @@ public class SDFAtlasEWinBuilder : EditorWindow
     {
         EditorGUILayout.LabelField("Graphics", EditorStyles.boldLabel);
         EditorGUILayout.HelpBox(
-            "List position is the cell index, which gets baked into mesh UVs. " +
-            "Reordering or removing entries changes what already-placed quads display.\n\n" +
-            "Coordinates are UDIM tiles: (0,0) is the atlas's bottom-left cell and +Y runs " +
-            "up, so they match Blender's tile numbering directly.",
+            "List position is the cell index, which decides where in the atlas a graphic " +
+            "lands. Reordering or removing entries moves the graphics already-placed quads " +
+            "have their UVs over.\n\n" +
+            "Coordinates are cells: (0,0) is the atlas's bottom-left and +Y runs up, matching " +
+            "UV space.",
             MessageType.Warning);
 
         int capacity = _gridWidth * _gridHeight;
@@ -158,9 +151,9 @@ public class SDFAtlasEWinBuilder : EditorWindow
         {
             EditorGUILayout.BeginHorizontal();
 
-            // Show the cell index and its UDIM tile coordinate, since that coordinate is what
-            // gets authored into the mesh UVs. Cell Y runs bottom-up to match UV space, so
-            // index 0 is the atlas's bottom-left cell and the list fills upward.
+            // Show the cell index and its grid coordinate, so a graphic can be found in the
+            // packed atlas. Cell Y runs bottom-up to match UV space, so index 0 is the
+            // atlas's bottom-left cell and the list fills upward.
             int cellX = i % _gridWidth;
             int cellY = i / _gridWidth;
             EditorGUILayout.LabelField($"{i}  ({cellX},{cellY})", GUILayout.Width(80));
@@ -241,7 +234,8 @@ public class SDFAtlasEWinBuilder : EditorWindow
 
     void Build()
     {
-        var info = SDFAtlasInfo.Create(_cellSize, _gridWidth, _gridHeight, _padding, _spread);
+        var info = SDFAtlasInfo.Create(_cellWidth, _cellHeight, _gridWidth, _gridHeight,
+                                       _padding, _spread);
 
         var settings = SDFAtlasEncoder.Settings.Default;
         settings.channel = _channel;
@@ -280,7 +274,8 @@ public class SDFAtlasEWinBuilder : EditorWindow
             DestroyImmediate(atlas);
 
             _status = $"Built {entries.Count} graphic(s) into {path}\n" +
-                      $"Manifest: {Path.GetFileName(SDFAtlasInfo.ManifestPath(path))}";
+                      $"Manifest: {Path.GetFileName(SDFAtlasInfo.ManifestPath(path))}\n" +
+                      $"Reference: {Path.GetFileName(SDFAtlasReference.ReferencePath(path))}";
             _statusType = MessageType.Info;
         }
         catch (UnityException e)

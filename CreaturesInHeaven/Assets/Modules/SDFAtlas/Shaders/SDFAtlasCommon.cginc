@@ -2,9 +2,12 @@
 //
 // Shared logic for shaders that render graphics from a packed SDF atlas.
 //
-// The blend-mode-independent parts live here: UDIM cell addressing, atlas sampling with
-// correct derivatives, and edge reconstruction. Individual shaders add only their output
-// and blend state.
+// The blend-mode-independent parts live here: atlas sampling with correct derivatives, and
+// edge reconstruction. Individual shaders add only their output and blend state.
+//
+// Mesh UVs are plain atlas texture coordinates: a quad's UV island is placed directly over
+// the graphic it should show, in 0..1 atlas space. Selecting a graphic is therefore purely a
+// UV authoring matter, and every sign shares one material.
 //
 // Atlas layout is described by SDFAtlasInfo.cs and the .sdfatlas.json manifest written
 // beside each atlas texture. The stored field is single-channel, where 0.5 is the shape
@@ -25,9 +28,6 @@ float4 _Atlas_TexelSize;
 float4 _Color;
 float _Intensity;
 
-float4 _GridSize;
-float _CellSize;
-float _Padding;
 float _Spread;
 
 float _EdgeBias;
@@ -51,8 +51,7 @@ struct SDFAtlasFragmentInput
     UNITY_VERTEX_OUTPUT_STEREO
 };
 
-// Standard vertex stage. UVs pass through unmodified, integer part included, as the whole
-// UDIM addressing scheme depends on the integer part surviving to the fragment stage.
+// Standard vertex stage. UVs pass through unmodified.
 //
 // Also pass through vertex colours as the end shader may use it for colouring/tinting graphics.
 SDFAtlasFragmentInput SDFAtlasVert(SDFAtlasVertexInput v)
@@ -68,58 +67,17 @@ SDFAtlasFragmentInput SDFAtlasVert(SDFAtlasVertexInput v)
     return o;
 }
 
-// --- Atlas addressing ----------------------------------------------------
-
-// Converts a mesh UV into the atlas UV of the corresponding cell, and returns the
-// derivatives to sample that atlas UV with.
-//
-// The integer part of the mesh UV selects the cell; the fractional part positions within it.
-// Return the derivative separately as it can't be recomputed correctly from the atlas UV.
-void SDFAtlasAddress(float2 meshUV, out float2 atlasUV, out float2 dx, out float2 dy)
-{
-    float2 cell = floor(meshUV);
-    float2 local = meshUV - cell;
-
-    // Guard the exact-integer case. A UV island whose far edge lands precisely on the next
-    // tile boundary (e.g. v = 4.0) has a fractional part of 0.0, which wraps to the wrong
-    // side of the cell and shows a sliver of the neighbouring graphic.
-    cell -= (local <= 0.0 && meshUV > 0.0) ? 1.0 : 0.0;
-    local = meshUV - cell;
-
-    // Cell coordinates follow UV space: (0,0) is the bottom-left cell, +Y runs up, exactly
-    // as UDIM tiles do, e.g. a UV island authored in tile (3,1) in Blender lands on cell
-    // (3,1) here.
-    float2 gridSize = _GridSize.xy;
-    float2 cellUV = cell;
-
-    // Inset the sampled region by the padding so `local` spans only the artwork area.
-    float paddingUV = _Padding / _CellSize;
-    float2 artworkLocal = lerp(paddingUV, 1.0 - paddingUV, local);
-
-    // Clamp half a texel inside the cell, so even a sample exactly on the boundary cannot reach
-    // into the neighbour.
-    float halfTexel = 0.5 / _CellSize;
-    artworkLocal = clamp(artworkLocal, halfTexel, 1.0 - halfTexel);
-
-    atlasUV = (cellUV + artworkLocal) / gridSize;
-
-    // Derivatives come from the un-fracted mesh UV. The fractional part is discontinuous at
-    // tile boundaries, so implicit derivatives spike along the seam of any quad that straddles one,
-    // producing a line of wrong-mip pixels. The mesh UV is continuous across the quad, so scaling its
-    // derivatives into atlas space gives a correct footprint everywhere.
-    dx = ddx(meshUV) / gridSize;
-    dy = ddy(meshUV) / gridSize;
-}
+// --- Atlas sampling ------------------------------------------------------
 
 // Samples the atlas at a mesh UV and returns the raw stored distance value.
 //
-// tex2Dgrad rather than tex2D because the derivatives must be the ones computed from the
-// un-fracted UV.
+// tex2Dgrad rather than tex2D so the mip footprint is stated explicitly. It matches what
+// tex2D would compute here, but the atlas packs unrelated graphics next to each other, so
+// mip selection is worth pinning down rather than leaving to be re-derived if this function
+// ever grows a UV transform.
 float SDFAtlasSample(float2 meshUV)
 {
-    float2 atlasUV, dx, dy;
-    SDFAtlasAddress(meshUV, atlasUV, dx, dy);
-    return tex2Dgrad(_Atlas, atlasUV, dx, dy).r;
+    return tex2Dgrad(_Atlas, meshUV, ddx(meshUV), ddy(meshUV)).r;
 }
 
 // --- Edge reconstruction -------------------------------------------------
@@ -166,9 +124,7 @@ float SDFAtlasMedian(float3 rgb)
 // Samples all three channels of an MSDF atlas. Same tex2Dgrad reasoning as single-channel path.
 float3 SDFAtlasSampleMulti(float2 meshUV)
 {
-    float2 atlasUV, dx, dy;
-    SDFAtlasAddress(meshUV, atlasUV, dx, dy);
-    return tex2Dgrad(_Atlas, atlasUV, dx, dy).rgb;
+    return tex2Dgrad(_Atlas, meshUV, ddx(meshUV), ddy(meshUV)).rgb;
 }
 
 // Reconstructs coverage from three channels.

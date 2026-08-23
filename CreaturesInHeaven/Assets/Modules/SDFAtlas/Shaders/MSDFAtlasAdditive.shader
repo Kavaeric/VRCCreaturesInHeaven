@@ -3,9 +3,9 @@
 // Emissive graphic rendered from a packed multi-channel (MSDF) atlas. The single-channel
 // counterpart is SDFAtlasAdditive.shader.
 //
-// Addressing is identical to the single-channel shader: the integer part of the mesh UV is
-// the atlas cell (UDIM tile), the fractional part is the position within it. One material
-// serves every sign, so signage stays static-batchable.
+// Artwork is selected the same way as in the single-channel shader: a quad's UV island sits
+// over the graphic it should show, in 0..1 atlas space. One material serves every sign, so
+// signage stays static-batchable.
 
 Shader "SDFAtlas/MSDF Additive"
 {
@@ -19,12 +19,9 @@ Shader "SDFAtlas/MSDF Additive"
         [Toggle(_VERTEX_COLOR_ON)] _VertexColor ("Vertex base colour", Float) = 0
 
         // --- Atlas layout ------------------------------------------------
-        // These must match the manifest (.sdfatlas.json) written beside the atlas texture.
-        // If there's a mismatch, offer to apply them in the inspector.
+        // Must match the manifest (.sdfatlas.json) written beside the atlas texture.
+        // If there's a mismatch, offer to apply it in the inspector.
 
-        _GridSize ("Grid size (cells across, down)", Vector) = (16, 16, 0, 0)
-        _CellSize ("Cell size (texels)", Float) = 64
-        _Padding ("Padding (texels)", Float) = 2
         _Spread ("Spread (texels)", Float) = 4
 
         // --- Edge shaping ------------------------------------------------

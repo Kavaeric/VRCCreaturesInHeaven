@@ -99,9 +99,8 @@ public static class MSDFAtlasField
                 new SDFAtlasEdgeDistance.EdgeCache[edges.Length],
                 new SDFAtlasEdgeDistance.EdgeCache[edges.Length]));
 
-        // The actual generation runs on a background task so this method's own thread (the
-        // caller's -- the Editor's main thread) stays free to poll progress and call
-        // EditorUtility below, instead of being the thread stuck inside Parallel.For.
+        // The actual generation runs on a background task so this method's own thread
+        // stays free to poll progress and call EditorUtility below.
         Task generateTask = Task.Run(() =>
         {
             Parallel.For(0, height,
@@ -131,7 +130,7 @@ public static class MSDFAtlasField
         {
             // Poll rather than await: this method is called synchronously from the Editor's
             // main thread (via MSDFAtlasPacker), and short sleeps here just yield that thread
-            // back to the OS between checks instead of spinning it while the workers run.
+            // back to the OS between checks.
             //
             // IsCompleted (rather than another Wait) is what ends the loop once cancelled:
             // once cancelSource.Cancel() has been requested below, the task is left to wind
@@ -140,7 +139,7 @@ public static class MSDFAtlasField
             // completes with, and that exception is expected here, not a real failure.
             while (!generateTask.IsCompleted)
             {
-                System.Threading.Thread.Sleep(50);
+                System.Threading.Thread.Sleep(100);
 
                 if (onProgress == null || userCancelled) continue;
 

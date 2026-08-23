@@ -9,6 +9,11 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: P6 Concourse
     second: {fileID: 2100000, guid: 0b2bddf4b9d7a2f499b9c501b9b1574b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: P6 Concourse MSDF Emissive
+    second: {fileID: 2100000, guid: ebf6516cce781974b8934024eeaecfb0, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -36,7 +41,7 @@ ModelImporter:
     animationWrapMode: 0
     extraExposedTransformPaths: []
     extraUserProperties:
-    - '#BAKERY{"meshName":["HeroFIDS"],"padding":[6],"unwrapper":[1]}'
+    - '#BAKERY{"meshName":["HeroFIDS"],"padding":[8],"unwrapper":[1]}'
     clipAnimations: []
     isReadable: 0
   meshes:

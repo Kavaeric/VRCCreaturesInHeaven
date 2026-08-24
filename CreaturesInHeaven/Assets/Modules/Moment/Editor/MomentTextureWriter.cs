@@ -10,7 +10,7 @@ using VRCLightVolumes;
 //
 // snapshotsPerColumn is the maximum that fit under Unity's 2048 cap on a single Texture3D axis;
 // numColumns is the count needed for numSnapshots given that stack height. Snapshot i lives at
-// column c = i / snapshotsPerColumn, row r = i % snapshotsPerColumn — i.e. pixel origin
+// column c = i / snapshotsPerColumn, row r = i % snapshotsPerColumn i.e. pixel origin
 // (c * spatialW, r * spatialH, 0). When numColumns == 1 the layout is identical to the legacy
 // vertical-stack flipbook, so old data and the single-column case both round-trip unchanged.
 //

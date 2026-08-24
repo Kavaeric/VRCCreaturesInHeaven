@@ -10,7 +10,8 @@ public class AssetResolutionCheck : MonoBehaviour
 {
 #if UNITY_EDITOR
 
-    enum HeadsetPreset { ValveIndex, SteamFrame, Quest3S, Quest3, QuestPro, Beyond2E, GalaxyXR, Custom }
+    // Shared with AssetResolutionProbe: HeadsetPreset/HeadsetSpec live in HeadsetSpecs.cs,
+    // the density math in TexelDensity.cs, and the gizmo helpers in ResolutionGizmos.cs.
 
     // How each density ring is drawn: a flat circle on the XZ plane, or a full wire sphere.
     enum RingShape { Circle, Sphere }
@@ -35,44 +36,9 @@ public class AssetResolutionCheck : MonoBehaviour
     [SerializeField] private int circleSegments = 64;
     [SerializeField] private Color gizmosColor = Color.red;
 
-    struct HeadsetSpec { public int resX, resY; public float fovH, fovV; }
-
     HeadsetSpec GetSpec()
     {
-        if (headset == HeadsetPreset.ValveIndex) return new HeadsetSpec { resX = 1440, resY = 1600, fovH = 108f, fovV = 104f };
-        if (headset == HeadsetPreset.SteamFrame) return new HeadsetSpec { resX = 2160, resY = 2160, fovH = 110f, fovV = 110f };
-        if (headset == HeadsetPreset.Quest3S) return new HeadsetSpec { resX = 1832, resY = 1920, fovH = 97f, fovV = 93f };
-        if (headset == HeadsetPreset.Quest3) return new HeadsetSpec { resX = 2064, resY = 2208, fovH = 104f, fovV = 96.4f };
-        if (headset == HeadsetPreset.QuestPro) return new HeadsetSpec { resX = 1800, resY = 1920, fovH = 106f, fovV = 95.57f };
-        if (headset == HeadsetPreset.Beyond2E) return new HeadsetSpec { resX = 2560, resY = 2560, fovH = 110f, fovV = 97f };
-        if (headset == HeadsetPreset.GalaxyXR) return new HeadsetSpec { resX = 3552, resY = 3840, fovH = 108f, fovV = 100f };
-        return new HeadsetSpec { resX = customResX, resY = customResY, fovH = customFovH, fovV = customFovV };
-    }
-
-    // Returns the distance (m) at which texel density equals targetDensity px/m for the given headset.
-    // texelDensity = 1 / minDetail, minDetail = 2 * dist * tan(π / (ppd * 360))
-    // => dist = minDetail / (2 * tan(...))
-    static float DensityToDistance(float targetDensity, HeadsetSpec hs)
-    {
-        float ppdH = hs.resX / hs.fovH;
-        float ppdV = hs.resY / hs.fovV;
-        float ppdMin = Mathf.Min(ppdH, ppdV); // worst axis → largest detail → most conservative
-        float minDetail = 1f / targetDensity;
-        float tanHalfPixel = Mathf.Tan(Mathf.PI / (ppdMin * 360f));
-        return minDetail / (2f * tanHalfPixel);
-    }
-
-    static void DrawCircle(Vector3 center, float radius, int segments)
-    {
-        float step = 2f * Mathf.PI / segments;
-        Vector3 prev = center + new Vector3(radius, 0f, 0f);
-        for (int i = 1; i <= segments; i++)
-        {
-            float angle = i * step;
-            Vector3 next = center + new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
-            Gizmos.DrawLine(prev, next);
-            prev = next;
-        }
+        return HeadsetSpecs.Get(headset, customResX, customResY, customFovH, customFovV);
     }
 
     void OnDrawGizmos()
@@ -83,11 +49,10 @@ public class AssetResolutionCheck : MonoBehaviour
         // otherwise they stay axis-aligned at the object's position. Everything below is drawn in this
         // local space, so the center is the origin.
         Quaternion rot = orientToTransform ? transform.rotation : Quaternion.identity;
-        Matrix4x4 gizmoMatrix = Matrix4x4.TRS(transform.position, rot, Vector3.one);
-        Gizmos.matrix = gizmoMatrix;
+        Gizmos.matrix = Matrix4x4.TRS(transform.position, rot, Vector3.one);
         Vector3 center = Vector3.zero;
 
-        float anchorOffset = referenceRadius - DensityToDistance(referenceDensity, hs);
+        float anchorOffset = referenceRadius - TexelDensity.DensityToDistance(referenceDensity, hs);
 
         int ringsInside = 0, ringsOutside = 0;
         foreach (int t in densityThresholds)
@@ -100,7 +65,7 @@ public class AssetResolutionCheck : MonoBehaviour
         for (int i = 0; i < densityThresholds.Length; i++)
         {
             float density = densityThresholds[i];
-            float radius = DensityToDistance(density, hs) + anchorOffset;
+            float radius = TexelDensity.DensityToDistance(density, hs) + anchorOffset;
 
             if (density == referenceDensity)
             {
@@ -108,25 +73,21 @@ public class AssetResolutionCheck : MonoBehaviour
             }
             else if (density > referenceDensity)
             {
-                float t = ringsInside > 1 ? (float)insideIdx / (ringsInside - 1) : 0f;
-                Gizmos.color = new Color(gizmosColor.r, gizmosColor.g, gizmosColor.b, gizmosColor.a * Mathf.Lerp(1f, 0.2f, t));
+                Gizmos.color = ResolutionGizmos.FadeAlpha(gizmosColor, insideIdx, ringsInside, 1f, 0.2f);
                 insideIdx++;
             }
             else
             {
-                float t = ringsOutside > 1 ? (float)outsideIdx / (ringsOutside - 1) : 0f;
-                Gizmos.color = new Color(gizmosColor.r, gizmosColor.g, gizmosColor.b, gizmosColor.a * Mathf.Lerp(0.8f, 0.15f, t));
+                Gizmos.color = ResolutionGizmos.FadeAlpha(gizmosColor, outsideIdx, ringsOutside, 0.8f, 0.15f);
                 outsideIdx++;
             }
 
             if (ringShape == RingShape.Sphere)
                 Gizmos.DrawWireSphere(center, radius);
             else
-                DrawCircle(center, radius, circleSegments);
+                ResolutionGizmos.DrawCircle(center, radius, circleSegments);
 
-            // Handles.Label ignores Gizmos.matrix, so transform the local label position into world space.
-            Vector3 labelPos = gizmoMatrix.MultiplyPoint3x4(center + new Vector3(radius, 0f, 0f));
-            Handles.Label(labelPos, $"{density:0} px/m\n{radius:0.##}m");
+            ResolutionGizmos.DrawLabel(center + new Vector3(radius, 0f, 0f), $"{density:0} px/m\n{radius:0.##}m");
         }
 
         Gizmos.matrix = Matrix4x4.identity;
@@ -150,7 +111,9 @@ public class AssetResolutionCheckEditor : Editor
         EditorGUILayout.PropertyField(headsetProp,
             new GUIContent("Preset", "The headset whose display specs are used to calculate texel density at distance."));
 
-        bool isCustom = headsetProp.enumValueIndex == 4; // HeadsetPreset.Custom
+        // Compare against the enum value rather than a hardcoded index, so adding presets
+        // to HeadsetPreset can't silently break the custom-field toggle.
+        bool isCustom = headsetProp.enumValueIndex == (int)HeadsetPreset.Custom;
         EditorGUI.indentLevel++;
         EditorGUI.BeginDisabledGroup(!isCustom);
         EditorGUILayout.PropertyField(serializedObject.FindProperty("customResX"), new GUIContent("Horiz. resolution", "Horizontal display resolution in pixels."));

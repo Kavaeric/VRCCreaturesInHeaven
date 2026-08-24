@@ -2,13 +2,15 @@
 using UnityEngine;
 using UnityEditor;
 
+// AssetResolutionProbe
 // Editor-only tool: attach to an asset, point vantagePoint at a camera/empty in the scene,
 // and the inspector shows the max resolvable texel density from that viewpoint.
-public class AssetTexelDensityProbe : MonoBehaviour
+//
+// Shared with AssetResolutionCheck: HeadsetPreset/HeadsetSpec live in HeadsetSpecs.cs and
+// the density math in TexelDensity.cs.
+public class AssetResolutionProbe : MonoBehaviour
 {
 #if UNITY_EDITOR
-
-    enum HeadsetPreset { ValveIndex, QuestPro, Beyond2E, SteamFrame, Custom }
 
     [SerializeField] private HeadsetPreset headset = HeadsetPreset.ValveIndex;
 
@@ -25,33 +27,10 @@ public class AssetTexelDensityProbe : MonoBehaviour
 
     [SerializeField] private Color gizmosColor = Color.cyan;
 
-    struct HeadsetSpec { public int resX, resY; public float fovH, fovV; }
-
-    HeadsetSpec GetSpec()
+    // Exposed so the custom editor can resolve the spec without duplicating the preset table.
+    public HeadsetSpec GetSpec()
     {
-        if (headset == HeadsetPreset.ValveIndex)  return new HeadsetSpec { resX = 1440, resY = 1600, fovH = 108f,  fovV = 104f   };
-        if (headset == HeadsetPreset.QuestPro)    return new HeadsetSpec { resX = 1800, resY = 1920, fovH = 106f,  fovV = 95.57f };
-        if (headset == HeadsetPreset.Beyond2E)    return new HeadsetSpec { resX = 2560, resY = 2560, fovH = 110f,  fovV = 97f    };
-        if (headset == HeadsetPreset.SteamFrame)  return new HeadsetSpec { resX = 2160, resY = 2160, fovH = 110f,  fovV = 110f   };
-        return new HeadsetSpec { resX = customResX, resY = customResY, fovH = customFovH, fovV = customFovV };
-    }
-
-    // Inverts DensityToDistance: given a distance, returns the max resolvable texel density (px/m).
-    // texelDensity = 1 / (2 * dist * tan(π / (ppd * 360)))
-    static float DistanceToDensity(float dist, HeadsetSpec hs)
-    {
-        float ppdH = hs.resX / hs.fovH;
-        float ppdV = hs.resY / hs.fovV;
-        float ppdMin = Mathf.Min(ppdH, ppdV);
-        float tanHalfPixel = Mathf.Tan(Mathf.PI / (ppdMin * 360f));
-        return 1f / (2f * dist * tanHalfPixel);
-    }
-
-    // Returns the minimum detail size (mm) the headset can resolve at the given distance.
-    static float DistanceToMinDetail(float dist, HeadsetSpec hs)
-    {
-        float density = DistanceToDensity(dist, hs);
-        return (1f / density) * 1000f; // convert m to mm
+        return HeadsetSpecs.Get(headset, customResX, customResY, customFovH, customFovV);
     }
 
     void OnDrawGizmos()
@@ -66,7 +45,7 @@ public class AssetTexelDensityProbe : MonoBehaviour
         float dist = Vector3.Distance(transform.position, vantagePoint.position);
         if (dist <= 0f) return;
 
-        float density = DistanceToDensity(dist, hs);
+        float density = TexelDensity.DistanceToDensity(dist, hs);
         string label = $"{density:0.##} px/m";
 
         if (assetSize > 0f)
@@ -82,14 +61,14 @@ public class AssetTexelDensityProbe : MonoBehaviour
 }
 
 #if UNITY_EDITOR
-[CustomEditor(typeof(AssetTexelDensityProbe))]
-public class AssetTexelDensityProbeEditor : Editor
+[CustomEditor(typeof(AssetResolutionProbe))]
+public class AssetResolutionProbeEditor : Editor
 {
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
 
-        var target = (AssetTexelDensityProbe)this.target;
+        var probe = (AssetResolutionProbe)this.target;
         var headsetProp = serializedObject.FindProperty("headset");
 
         // --- Headset ----------------------------------------------------------------
@@ -97,7 +76,9 @@ public class AssetTexelDensityProbeEditor : Editor
         EditorGUILayout.PropertyField(headsetProp,
             new GUIContent("Preset", "The headset whose display specs are used to calculate texel density."));
 
-        bool isCustom = headsetProp.enumValueIndex == 4; // HeadsetPreset.Custom
+        // Compare against the enum value rather than a hardcoded index, so adding presets
+        // to HeadsetPreset can't silently break the custom-field toggle.
+        bool isCustom = headsetProp.enumValueIndex == (int)HeadsetPreset.Custom;
         EditorGUI.indentLevel++;
         EditorGUI.BeginDisabledGroup(!isCustom);
         EditorGUILayout.PropertyField(serializedObject.FindProperty("customResX"), new GUIContent("Horiz. resolution", "Horizontal display resolution in pixels."));
@@ -128,36 +109,17 @@ public class AssetTexelDensityProbeEditor : Editor
         }
         else
         {
-            float dist = Vector3.Distance(target.transform.position, vp.position);
+            float dist = Vector3.Distance(probe.transform.position, vp.position);
 
-            // Use reflection to call the private methods on the MonoBehaviour instance.
-            // Since the struct and methods are private, we duplicate the math here inline.
-            var headsetIndex = headsetProp.enumValueIndex;
-            int resX, resY; float fovH, fovV;
-            switch (headsetIndex)
-            {
-                case 0: resX = 1440; resY = 1600; fovH = 108f;  fovV = 104f;   break; // ValveIndex
-                case 1: resX = 1800; resY = 1920; fovH = 106f;  fovV = 95.57f; break; // QuestPro
-                case 2: resX = 2560; resY = 2560; fovH = 110f;  fovV = 97f;    break; // Beyond2E
-                case 3: resX = 2160; resY = 2160; fovH = 110f;  fovV = 110f;   break; // SteamFrame
-                default:
-                    resX = serializedObject.FindProperty("customResX").intValue;
-                    resY = serializedObject.FindProperty("customResY").intValue;
-                    fovH = serializedObject.FindProperty("customFovH").floatValue;
-                    fovV = serializedObject.FindProperty("customFovV").floatValue;
-                    break;
-            }
+            // Apply any pending edits to the preset/custom fields before reading the spec back
+            // off the instance, so the readout reflects this frame's inspector values.
+            serializedObject.ApplyModifiedProperties();
+            HeadsetSpec hs = probe.GetSpec();
 
-            float ppdH = resX / fovH;
-            float ppdV = resY / fovV;
-            float ppdMin = Mathf.Min(ppdH, ppdV);
-            float tanHalfPixel = Mathf.Tan(Mathf.PI / (ppdMin * 360f));
-            float density = dist > 0f ? 1f / (2f * dist * tanHalfPixel) : float.PositiveInfinity;
-            float minDetailMm = dist > 0f ? (1f / density) * 1000f : 0f;
-            float minDetailMeters = minDetailMm / 1000f;
+            float density = TexelDensity.DistanceToDensity(dist, hs);
+            float minDetailMeters = TexelDensity.DistanceToMinDetail(dist, hs);
+            float minDetailMm = minDetailMeters * 1000f;
 
-            // Draw readout as a styled box
-            var boxStyle = new GUIStyle(EditorStyles.helpBox) { richText = true, fontSize = 12 };
             var labelStyle = new GUIStyle(EditorStyles.label) { richText = true };
 
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);

@@ -32,6 +32,15 @@ public class AssetResolutionZone : MonoBehaviour
     // perimeter is the anchor, so a density's ring always sits its own falloff distance out.
     [SerializeField] private int referenceDensity = 512;
 
+    // Optional second line on each ring label: the smallest triangle edge worth authoring at
+    // that ring's density, as a rule of thumb against quad overdraw. See
+    // TexelDensity.DensityToMinTriangleEdge for what the number means.
+    [SerializeField] private bool showMinTriangleEdge = false;
+
+    // Pixel count the triangle-edge rule targets. Six is the default: comfortably above the
+    // 2x2 quad the GPU rasterises in, without being so strict it rules out ordinary geometry.
+    [SerializeField] private float triangleEdgePixels = 6f;
+
     // When true, the zone inherits the object's rotation. Otherwise it stays axis-aligned.
     [SerializeField] private bool orientToTransform = true;
 
@@ -191,7 +200,16 @@ public class AssetResolutionZone : MonoBehaviour
 
             ResolutionGizmos.DrawRoundedRect(center, halfExtents, offset, cornerSegments, axisA, axisB);
             Vector3 labelPos = ResolutionGizmos.PointOnRoundedRect(center, halfExtents, offset, labelPosition, axisA, axisB);
-            ResolutionGizmos.DrawLabel(labelPos, $"{density:0} px/m\n{offset:0.##}m");
+
+            // The triangle-edge figure follows from the density alone, so it is the same on
+            // every slice and every ring of this threshold, unlike the offset above it.
+            string label = $"{density:0} px/m\n{offset:0.##}m";
+            if (showMinTriangleEdge)
+            {
+                float minEdge = TexelDensity.DensityToMinTriangleEdge(density, triangleEdgePixels);
+                label += $"\n>{ResolutionGizmos.FormatLength(minEdge)} tris";
+            }
+            ResolutionGizmos.DrawLabel(labelPos, label);
         }
     }
 
@@ -252,6 +270,17 @@ public class AssetResolutionZoneEditor : Editor
             new GUIContent("Reference density", "The texel density (px/m) being designed against. Drawn in the zone colour; other rings fade relative to it."));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("densityThresholds"),
             new GUIContent("Thresholds", "List of texel densities (px/m) to draw rings for. The entry matching the reference density is drawn in the zone colour; others fade with distance from it."));
+
+        var showEdge = serializedObject.FindProperty("showMinTriangleEdge");
+        EditorGUILayout.PropertyField(showEdge,
+            new GUIContent("Min triangle edge", "Add a second readout to each ring label: the smallest triangle edge worth authoring at that ring's density. A rule of thumb against quad overdraw, since the GPU rasterises in 2x2 pixel quads and a triangle smaller than that still costs a full quad to shade."));
+
+        EditorGUI.indentLevel++;
+        EditorGUI.BeginDisabledGroup(!showEdge.boolValue);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("triangleEdgePixels"),
+            new GUIContent("Pixel floor", "How many pixels across a triangle should stay at minimum. The readout is this many pixels converted to a world-space length at each ring's density. Six is a reasonable default: above the 2x2 rasterisation quad, without being strict enough to rule out ordinary geometry."));
+        EditorGUI.EndDisabledGroup();
+        EditorGUI.indentLevel--;
 
         EditorGUILayout.Space(8f);
 

@@ -186,6 +186,16 @@ public static class ResolutionGizmos
         Handles.Label(worldPos, text);
     }
 
+    // Formats a length in metres for a gizmo label, switching to millimetres below a metre.
+    // Small triangle-edge figures are unreadable as "0.01m", and large ones are noise as
+    // "1170mm", so the unit follows the magnitude.
+    public static string FormatLength(float meters)
+    {
+        if (float.IsInfinity(meters) || float.IsNaN(meters)) return "-";
+        if (Mathf.Abs(meters) < 1f) return $"{meters * 1000f:0.#}mm";
+        return $"{meters:0.##}m";
+    }
+
     // Fades a base colour's alpha across a sequence of items, for stacked rings that
     // should get fainter with distance from the reference. index/count-1 drives the lerp;
     // a single item sits at the near end.

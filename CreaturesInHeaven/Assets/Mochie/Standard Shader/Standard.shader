@@ -14,12 +14,15 @@ Shader "Mochie/Standard" {
         [Enum(Local,0, World,1)]_TriplanarCoordSpace("Triplanar Coordinate Space", Int) = 0
 
         // Primary Textures
-        [Enum(Separate,0, Packed,1)]_PrimaryWorkflow("Primary Workflow", Int) = 0
+        [Enum(Metallic,0, Packed Metallic,1, Specular,2)]_PrimaryWorkflow("Primary Workflow", Int) = 0
         [Enum(Default,0, Stochastic,1, Supersampling,2, Triplanar,3)]_PrimarySampleMode("Primary Sampling Mode", Int) = 0
         _MainTex("Base Color", 2D) = "white" {}
         _Color("Color", Color) = (1,1,1,1)
         _NormalMap("Normal Map", 2D) = "bump" {}
         _NormalStrength("Normal Strength", Range(0,1)) = 1
+        _SampleSpecular("Sample Specular Map", Int) = 0
+        _SpecGlossMap("Specular Map", 2D) = "white" {}
+        _SpecCol("Specular Color", Color) = (1,1,1,1)
         _SampleMetallic("Sample Metallic Map", Int) = 0
         _MetallicMap("Metallic Map", 2D) = "white" {}
         _MetallicStrength("Metallic Strength", Range(0,1)) = 0
@@ -35,9 +38,13 @@ Shader "Mochie/Standard" {
         [IntRange]_HeightSteps("Height Steps", Range(1,16)) = 8
         [IntRange]_MaxHeightSteps("Max Height Steps", Range(16,64)) = 16
         [IntRange]_MinHeightSteps("Min Height Steps", Range(8, 16)) = 8
+        [ToggleUI]_HeightFalloff("Height Falloff", Int) = 0
+        _HeightMinRange("Min Range", Float) = 25
+        _HeightMaxRange("Max Range", Float) = 50
 
         _PackedMap("Packed Map", 2D) = "white" {}
         [Enum(Off,0, On,1)]_PackedHeight("Packed Height", Int) = 0
+        [Enum(Roughness Map,0, Specular Alpha,1)]_SmoothnessSource("Smoothness Source", Int) = 0
         _PackedRoughnessStrength("Packed Roughness Strength", Range(0,1)) = 1
         _PackedMetallicStrength("Packed Metallic Strength", Range(0,1)) = 1
         _PackedOcclusionStrength("Packed Occlusion Strength", Range(0,1)) = 1
@@ -165,8 +172,7 @@ Shader "Mochie/Standard" {
         _GSAAStrength("GSAA Strength", Float) = 1
         _IndirectSpecularOcclusionStrength("Baked Spec Occlusion Strength", Range(0,1)) = 0.2
         _RealtimeSpecularOcclusionStrength("Realtime Spec Occlusion Strength", Range(0,1)) = 0
-        [ToggleUI]_LightVolumeSpecularity("Light Volume Specularity", Int) = 0
-        _LightVolumeSpecularityStrength("Light Volume Specularity Strength", Float) = 1
+
         
         // Vertex Manipulation
         [ToggleUI]_VertexManipulationToggle("Vertex Manipulation Toggle", Int) = 0
@@ -281,7 +287,7 @@ Shader "Mochie/Standard" {
         _ColorGradingLUT("Color Grading LUT", 2D) = "white" {}
         _ColorGradingLUTStrength("LUT Strength", Range(0,2)) = 1 
 
-        // Lightmapping stuff
+        // Lightmapping
         [ToggleUI] _BAKERY_LMSPEC ("Lightmap Specular", Float) = 0
         _BakeryLMSpecStrength("Lightmap Specular Strength", Float) = 1
         [ToggleUI] _BAKERY_SHNONLINEAR ("Non-Linear SH", Float) = 0
@@ -289,11 +295,18 @@ Shader "Mochie/Standard" {
         [ToggleUI]_ApplyHeightOffset("Apply Height Offset", Int) = 0
         [Enum(None, 0, SH, 1, RNM, 2, MONOSH, 3)] _BakeryMode ("Bakery Mode", Int) = 0
         [ToggleUI]_IgnoreRealtimeGI("Ignore Realtime GI", Int) = 0
-        [ToggleUI]_AdditiveLightVolumesToggle("Additive Light Volumes", Int) = 1
-        _LightVolumeBias("Light Volume Bias", Float) = 0
         _RNM0("RNM0", 2D) = "black" {}
         _RNM1("RNM1", 2D) = "black" {}
         _RNM2("RNM2", 2D) = "black" {}
+
+        // Light Volumes
+        [ToggleUI]_LightVolumesToggle("Light Volume Toggle", Int) = 1
+        _LightVolumeStrength("Light Volume Strength", Range(0,1)) = 1
+        [ToggleUI]_AdditiveLightVolumesToggle("Additive Light Volumes", Int) = 1
+        _AdditiveLightVolumeStrength("Additive Light Volume Strength", Float) = 1
+        [ToggleUI]_LightVolumeSpecularity("Light Volume Specularity", Int) = 0
+        _LightVolumeSpecularityStrength("Light Volume Specularity Strength", Float) = 1
+        _LightVolumeBias("Light Volume Bias", Float) = 0
 
         // AreaLit
         [ToggleUI]_AreaLitToggle("Enable", Int) = 0
@@ -353,8 +366,8 @@ Shader "Mochie/Standard" {
             "LTCGI"="_LTCGI"
         }
         GrabPass {
-            Tags {"LightMode"="Always"}
-            "_GrabTexture"
+            Tags {"LightMode"="GrabPass"}
+            "_StandardGrab"
         }
         Cull [_Culling]
         ZTest [_ZTest]
@@ -376,7 +389,7 @@ Shader "Mochie/Standard" {
             #pragma shader_feature_local _ _RAIN_DROPLETS_ON _RAIN_RIPPLES_ON _RAIN_AUTO_ON
             #pragma shader_feature_local _REFLECTIONS_ON
             #pragma shader_feature_local _SPECULAR_HIGHLIGHTS_ON
-            #pragma shader_feature_local _WORKFLOW_PACKED_ON
+            #pragma shader_feature_local _ _WORKFLOW_PACKED_ON _WORKFLOW_SPECULAR_ON
             #pragma shader_feature_local _WORKFLOW_DETAIL_PACKED_ON
             #pragma shader_feature_local _EMISSION_ON
             #pragma shader_feature_local _PARALLAX_ON
@@ -422,7 +435,7 @@ Shader "Mochie/Standard" {
             #pragma shader_feature_local _ _STOCHASTIC_DETAIL_ON _TRIPLANAR_DETAIL_ON _SUPERSAMPLING_DETAIL_ON
             #pragma shader_feature_local _ _RAIN_DROPLETS_ON _RAIN_RIPPLES_ON _RAIN_AUTO_ON
             #pragma shader_feature_local _SPECULAR_HIGHLIGHTS_ON
-            #pragma shader_feature_local _WORKFLOW_PACKED_ON
+            #pragma shader_feature_local _ _WORKFLOW_PACKED_ON _WORKFLOW_SPECULAR_ON
             #pragma shader_feature_local _WORKFLOW_DETAIL_PACKED_ON
             #pragma shader_feature_local _PARALLAX_ON
             #pragma shader_feature_local _SUBSURFACE_ON
@@ -452,7 +465,7 @@ Shader "Mochie/Standard" {
             #pragma shader_feature_local _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
             #pragma shader_feature_local _ _STOCHASTIC_ON _TRIPLANAR_ON _SUPERSAMPLING_ON
             #pragma shader_feature_local _ _STOCHASTIC_DETAIL_ON _TRIPLANAR_DETAIL_ON _SUPERSAMPLING_DETAIL_ON
-            #pragma shader_feature_local _WORKFLOW_PACKED_ON
+            #pragma shader_feature_local _ _WORKFLOW_PACKED_ON _WORKFLOW_SPECULAR_ON
             #pragma shader_feature_local _WORKFLOW_DETAIL_PACKED_ON
             #pragma shader_feature_local _DETAIL_METALLIC_ON
             #pragma shader_feature_local _VERTEX_MANIPULATION_ON
@@ -477,7 +490,7 @@ Shader "Mochie/Standard" {
             #pragma shader_feature_local _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
             #pragma shader_feature_local _ _STOCHASTIC_ON _TRIPLANAR_ON _SUPERSAMPLING_ON
             #pragma shader_feature_local _ _STOCHASTIC_DETAIL_ON _TRIPLANAR_DETAIL_ON _SUPERSAMPLING_DETAIL_ON
-            #pragma shader_feature_local _WORKFLOW_PACKED_ON
+            #pragma shader_feature_local _ _WORKFLOW_PACKED_ON _WORKFLOW_SPECULAR_ON
             #pragma shader_feature_local _WORKFLOW_DETAIL_PACKED_ON
             #pragma shader_feature_local _EMISSION_ON
             #pragma shader_feature_local _NORMALMAP_ON

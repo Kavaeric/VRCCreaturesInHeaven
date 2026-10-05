@@ -46,6 +46,7 @@ float _ThisValueIsZero;
 MOCHIE_DECLARE_TEX2D_NOSAMPLER(_MainTex);
 MOCHIE_DECLARE_TEX2D_NOSAMPLER(_NormalMap);
 MOCHIE_DECLARE_TEX2D_NOSAMPLER(_PackedMap);
+MOCHIE_DECLARE_TEX2D_NOSAMPLER(_SpecGlossMap);
 MOCHIE_DECLARE_TEX2D_NOSAMPLER(_MetallicMap);
 MOCHIE_DECLARE_TEX2D_NOSAMPLER(_RoughnessMap);
 MOCHIE_DECLARE_TEX2D_NOSAMPLER(_OcclusionMap);
@@ -59,6 +60,7 @@ int _UVMainSet;
 int _UVMainSwizzle;
 
 float4 _Color;
+float4 _SpecCol;
 float _MetallicStrength;
 float _PackedMetallicStrength;
 float _RoughnessStrength;
@@ -71,10 +73,15 @@ float _HeightOffset;
 float _HeightSteps;
 float _MaxHeightSteps;
 float _MinHeightSteps;
+int _HeightFalloff;
+float _HeightMinRange;
+float _HeightMaxRange;
 
 int _SampleMetallic;
+int _SampleSpecular;
 int _SampleOcclusion;
 int _SampleRoughness;
+int _SmoothnessSource;
 int _MetallicChannel;
 int _RoughnessChannel;
 int _OcclusionChannel;
@@ -197,7 +204,7 @@ int _ShadingModel;
 int _SSRToggle;
 int _VRSSR;
 MOCHIE_DECLARE_TEX2D_SCREENSPACE(_CameraDepthTexture);
-MOCHIE_DECLARE_TEX2D_SCREENSPACE(_GrabTexture);
+MOCHIE_DECLARE_TEX2D_SCREENSPACE(_StandardGrab);
 MOCHIE_DECLARE_TEX2D(_NoiseTexSSR);
 float4 _CameraDepthTexture_TexelSize;
 float4 _GrabTexture_TexelSize;
@@ -316,9 +323,7 @@ int _UnityFogToggle;
 int _VertexBaseColor;
 int _BAKERY_SHNONLINEAR;
 int _FlipBackfaceNormals;
-int _AdditiveLightVolumesToggle;
 float _BakeryLMSpecStrength;
-float _LightVolumeBias;
 
 // Debug Toggles
 int _MaterialDebugMode;
@@ -441,6 +446,7 @@ struct InputData {
     float4 height;
     float4 emission;
     float4 packedMap;
+    float4 specular;
     float rainFlipbook;
     float puddleMask;
     float facingAngle;

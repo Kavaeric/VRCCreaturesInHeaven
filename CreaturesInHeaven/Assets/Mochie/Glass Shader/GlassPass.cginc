@@ -1,4 +1,4 @@
-﻿#ifndef GLASS_PASS_INCLUDED
+#ifndef GLASS_PASS_INCLUDED
 #define GLASS_PASS_INCLUDED
 
 v2f vert (appdata v){
@@ -22,6 +22,13 @@ v2f vert (appdata v){
     v.normal = normalize(v.normal);
     float3x3 objectToTangent = float3x3(v.tangent.xyz, (cross(v.normal, v.tangent.xyz) * v.tangent.w), v.normal);
     o.tangentViewDir = mul(objectToTangent, ObjSpaceViewDir(v.vertex));
+    
+    #if defined(LIGHTMAP_ON)
+        o.lightmapUV.xy = v.uv1 * unity_LightmapST.xy + unity_LightmapST.zw;
+    #endif
+    #if defined(DYNAMICLIGHTMAP_ON)
+        o.lightmapUV.zw = v.uv2.xy * unity_DynamicLightmapST.xy + unity_DynamicLightmapST.zw;
+    #endif
 
     #if defined(LIGHTMAP_ON)
         o.lightmapUV.xy = v.uv1 * unity_LightmapST.xy + unity_LightmapST.zw;
@@ -82,7 +89,7 @@ float4 frag (v2f i, bool isFrontFace : SV_IsFrontFace) : SV_Target {
         normalMap = UnpackScaleNormal(SampleTexture(_NormalMap, TRANSFORM_TEX(i.uv, _NormalMap)), _NormalStrength);
     #endif
     #if defined(_RAIN_ON)
-        float rainMask = tex2D(_RainMask, maskUV);
+        float rainMask = tex2D(_RainMask, maskUV)[(int)_RainMaskChannel];
         float3 rainNormal = normalDir;
         #if defined(_RAINMODE_RIPPLE)
             rainNormal = GetRipplesNormal(i.uv, _RippleScale, _RippleStrength*rainMask, _RippleSpeed, _RippleSize, _RippleDensity);
@@ -115,7 +122,16 @@ float4 frag (v2f i, bool isFrontFace : SV_IsFrontFace) : SV_Target {
     float3 lightDir = normalize(UnityWorldSpaceLightDir(i.worldPos));
     float3 reflDir = reflect(-viewDir, normalDir);
 
-    float roughnessMap = SampleTexture(_RoughnessMap, TRANSFORM_TEX(i.uv, _RoughnessMap)) * _Roughness;
+    #if defined(_WORKFLOW_PACKED_ON)
+        float4 packedMap = SampleTexture(_PackedMap, TRANSFORM_TEX(i.uv, _PackedMap));
+        float roughnessMap = packedMap[_RoughnessChannel] * _PackedRoughnessStrength;
+        float3 occlusion = lerp(1, packedMap[_OcclusionChannel], _PackedOcclusionStrength);
+        float metallic = packedMap[_MetallicChannel] * _PackedMetallicStrength;
+    #else
+        float roughnessMap = SampleTexture(_RoughnessMap, TRANSFORM_TEX(i.uv, _RoughnessMap)) * _Roughness;
+        float3 occlusion = lerp(1, SampleTexture(_OcclusionMap, TRANSFORM_TEX(i.uv, _OcclusionMap)), _Occlusion);
+        float metallic = SampleTexture(_MetallicMap, TRANSFORM_TEX(i.uv, _MetallicMap)) * _Metallic;
+    #endif
     flipbookBase = smoothstep(0, 0.1, flipbookBase);
     flipbookBase *= smoothstep(0, 0.1, rainStrength);
     #if defined(_RAINMODE_AUTO)
@@ -123,26 +139,24 @@ float4 frag (v2f i, bool isFrontFace : SV_IsFrontFace) : SV_Target {
     #endif
     float roughness = saturate(roughnessMap-flipbookBase);
     ApplyGSAA(i.normal, roughness);
-    float3 occlusion = lerp(1, SampleTexture(_OcclusionMap, TRANSFORM_TEX(i.uv, _OcclusionMap)), _Occlusion);
     float indirectRough = roughness;
 
     #if defined(_SPECULAR_HIGHLIGHTS_ON) || defined(_REFLECTIONS_ON) || defined(_SSR_ON) || AREALIT_ENABLED || LTCGI_ENABLED
         float roughSq = roughness * roughness;
         float roughBRDF = max(roughSq, 0.003);
-        float metallic = SampleTexture(_MetallicMap, TRANSFORM_TEX(i.uv, _MetallicMap)) * _Metallic;
         float omr = unity_ColorSpaceDielectricSpec.a - metallic * unity_ColorSpaceDielectricSpec.a;
         float3 specularTint = lerp(unity_ColorSpaceDielectricSpec.rgb, 1, metallic);
         indirectRough = roughSq;
 
-        float3 halfVector = normalize(lightDir + viewDir);
-        float NdotL = dot(normalDir, lightDir);
+        float3 halfVector = Unity_SafeNormalize(lightDir + viewDir);
+        float NdotL = saturate(dot(normalDir, lightDir));
         float NdotH = Safe_DotClamped(normalDir, halfVector);
         float LdotH = Safe_DotClamped(lightDir, halfVector);
         float NdotV = abs(dot(normalDir, viewDir));
 
         #if defined(_REFLECTIONS_ON) || defined(_SSR_ON) || LTCGI_ENABLED
             float surfaceReduction = 1.0 / (roughBRDF*roughBRDF + 1.0);
-            float grazingTerm = saturate((1-_Roughness) + (1-omr));
+            float grazingTerm = saturate((1-roughness) + (1-omr));
             float3 fresnel = FresnelLerp(specularTint, grazingTerm, NdotV);
             float3 reflAdjust = fresnel * surfaceReduction;
         #endif
@@ -157,7 +171,7 @@ float4 frag (v2f i, bool isFrontFace : SV_IsFrontFace) : SV_Target {
 
         #if defined(_SSR_ON)
             float4 ssrCol = GetSSR(i.worldPos, viewDir, reflDir, normalDir, 1-roughness, baseColorTex, metallic, ComputeGrabScreenPos(i.pos));
-            reflCol = lerp(reflCol, ssrCol.rgb, ssrCol.a);
+            reflCol = lerp(reflCol, ssrCol.rgb, ssrCol.a * saturate(_SSRStrength));
         #endif
 
         #if defined(_SPECULAR_HIGHLIGHTS_ON)
@@ -177,23 +191,35 @@ float4 frag (v2f i, bool isFrontFace : SV_IsFrontFace) : SV_Target {
             half4 diffTerm, specTerm;
             if (_AreaLitStrength > 0){
                 ShadeAreaLights(ai, diffTerm, specTerm, true, !IsSpecularOff(), IsStereo());
+                float areaLitMask = tex2D(_AreaLitMask, TRANSFORM_TEX(i.uv, _AreaLitMask)).r;
+                diffTerm *= _AreaLitStrength * areaLitMask;
+                specTerm *= _AreaLitStrength * areaLitMask;
             }
             else {
                 diffTerm = 0;
                 specTerm = 0;
             }
         #endif
-
     #endif
 
-    CalculateTangentViewDir(i);
     float3 indirectCol, lmSpec;
-    i.lightmapUV.xy += normalMap.xy * _LightmapDistortion * 0.05;
-    i.lightmapUV.zw += normalMap.xy * _LightmapDistortion * 0.05;
-    GetIndirectLighting(indirectCol, lmSpec, i.lightmapUV, normalDir, normalMap, i.worldPos, viewDir, i.tangentViewDir, indirectRough, atten);
-    indirectCol = GetSaturation(indirectCol, _IndirectSaturation);
-    indirectCol = linearstep(-0.5, 0.5, indirectCol);
-    indirectCol = saturate(lerp(1, indirectCol, _IndirectStrength));
+    #if defined(UNITY_PASS_FORWARDBASE)
+        CalculateTangentViewDir(i);
+        i.lightmapUV.xy += normalMap.xy * _LightmapDistortion * 0.05;
+        i.lightmapUV.zw += normalMap.xy * _LightmapDistortion * 0.05;
+        GetIndirectLighting(indirectCol, lmSpec, i.lightmapUV, normalDir, normalMap, i.worldPos, viewDir, i.tangentViewDir, indirectRough, metallic, baseColorTex, i.normal, atten);
+        #if !(IS_OPAQUE)
+            indirectCol = GetSaturation(indirectCol, _IndirectSaturation);
+            indirectCol = linearstep(-0.5, 0.5, indirectCol);
+            indirectCol = saturate(lerp(1, indirectCol, _IndirectStrength));
+        #endif
+        if (_UdonLightVolumeEnabled == 0 || _LightVolumesToggle == 0 || _LightVolumeSpecularity == 0)
+            lvSpec = 0;
+    #else
+        indirectCol = 1;
+        lmSpec = 0;
+        lvSpec = 0;
+    #endif
 
     float3 grabCol = 0;
     float2 blurStr = _Blur * 0.017578125 * roughness;
@@ -220,24 +246,27 @@ float4 frag (v2f i, bool isFrontFace : SV_IsFrontFace) : SV_Target {
         // _Blur *= 1-min(dist/10, 1);
 
 
-        if (_Roughness > 0 && _Blur > 0)
+        if (roughness > 0 && _Blur > 0)
             grabCol = BlurredGrabpassSample(screenUV, blurStr);
         else
             grabCol = MOCHIE_SAMPLE_TEX2D_SCREENSPACE(_GlassGrab, screenUV);
         grabCol *= _GrabpassTint;
     #endif
 
-    #if defined(_AREALIT_ON) && defined(_LITBASECOLOR_ON)
-        baseColorTex.rgb += diffTerm;
-    #endif
     float3 baseColor = baseColorTex.rgb * baseColorTex.a;
+    #if AREALIT_ENABLED && defined(_LIT_BASECOLOR_ON) && defined(UNITY_PASS_FORWARDBASE)
+        float3 areaLitDiffuse = baseColor * diffTerm.rgb;
+    #endif
     #if defined(_LIT_BASECOLOR_ON) || defined(UNITY_PASS_FORWARDADD)
         #if defined(UNITY_PASS_FORWARDBASE)
         if (any(_WorldSpaceLightPos0.xyz))
         #endif
-        baseColor *= _LightColor0 * atten;   
+        baseColor *= _LightColor0 * atten;
     #endif
-    float3 specularity = specCol + reflCol + lmSpec;
+    #if AREALIT_ENABLED && defined(_LIT_BASECOLOR_ON) && defined(UNITY_PASS_FORWARDBASE)
+        baseColor += areaLitDiffuse;
+    #endif
+    float3 specularity = specCol + reflCol + lmSpec + lvSpec;
     #if defined(_AREALIT_ON)
         specularity += specTerm * specularTint;
     #endif

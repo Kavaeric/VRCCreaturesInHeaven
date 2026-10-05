@@ -1,4 +1,4 @@
-﻿using UnityEditor;
+using UnityEditor;
 using UnityEngine;
 using System;
 using System.Linq;
@@ -34,15 +34,17 @@ namespace Mochie {
                 "Emission",
                 "LTCGI",
                 "AreaLit",
+                "Light Volumes",
                 "Lightmap Settings",
                 "Render Settings"
         }, 0);
 
-        string versionLabel = "v1.27.1";
+        string versionLabel = "v1.29.1";
 
         MaterialProperty _Color = null;
         MaterialProperty _NonGrabColor = null;
         MaterialProperty _AngleTint = null;
+        MaterialProperty _OpaqueAngleTint = null;
         MaterialProperty _BackfaceTint = null;
         MaterialProperty _MainTex = null;
         MaterialProperty _MainTexScroll = null;
@@ -116,6 +118,7 @@ namespace Mochie {
         MaterialProperty _CausticsDistortionTex = null;
         MaterialProperty _CausticsDistortionScale = null;
         MaterialProperty _CausticsDistortionSpeed = null;
+        MaterialProperty _CausticsRotateWithLight = null;
         MaterialProperty _CausticsRotation = null;
         MaterialProperty _CausticsColor = null;
         MaterialProperty _CausticsPower = null;
@@ -250,6 +253,7 @@ namespace Mochie {
         MaterialProperty _VRSSR = null;
         MaterialProperty _CausticsFlipbookBlend = null;
         MaterialProperty _HorizonTint = null;
+        MaterialProperty _OpaqueHorizonTint = null;
         MaterialProperty _HorizonTintDistance = null;
         MaterialProperty _HorizonTintStrength = null;
         MaterialProperty _FoamMap = null;
@@ -257,9 +261,20 @@ namespace Mochie {
         MaterialProperty _FoamMapUVSet = null;
         MaterialProperty _FoamVertexColorChannel = null;
         MaterialProperty _FoamStrength = null;
+        // MaterialProperty _BackfaceFadeColor = null;
+        // MaterialProperty _BackfaceFadeStrength = null;
         // MaterialProperty _WireframeVisualization = null;
         // MaterialProperty _WireframeColor = null;
 
+        // Light Volumes
+        MaterialProperty _LightVolumesToggle = null;
+        MaterialProperty _LightVolumeStrength = null;
+        MaterialProperty _AdditiveLightVolumesToggle = null;
+        MaterialProperty _AdditiveLightVolumeStrength = null;
+        MaterialProperty _LightVolumeSpecularity = null;
+        MaterialProperty _LightVolumeSpecularityStrength = null;
+        MaterialProperty _LightVolumeBias = null;
+        
         // Lightmapping Settings
         MaterialProperty _BAKERY_LMSPEC = null;
         MaterialProperty _BakeryLMSpecStrength = null;
@@ -352,22 +367,33 @@ namespace Mochie {
                                 me.ShaderProperty(_Color, "Surface Tint");
                             else
                                 me.ShaderProperty(_NonGrabColor, "Surface Tint");
-                            me.ShaderProperty(_AngleTint, "Glancing Tint");
+                            if (transMode == 0)
+                                me.ShaderProperty(_OpaqueAngleTint, "Glancing Tint");
+                            else
+                                me.ShaderProperty(_AngleTint, "Glancing Tint");
                             if (transMode == 2)
                                 me.ShaderProperty(_BackfaceTint, "Backface Tint");
                             else
                                 me.ShaderProperty(_NonGrabBackfaceTint, "Backface Tint");
-                            me.ShaderProperty(_HorizonTint, "Horizon Tint");
-                            me.ShaderProperty(_HorizonTintDistance, "Horizon Tint Distance");
-                            me.ShaderProperty(_HorizonTintStrength, "Horizon Tint Strength");
                         });
+                        MGUI.PropertyGroup(() => {
+                            if (transMode == 0)
+                                me.ShaderProperty(_OpaqueHorizonTint, "Horizon Tint");
+                            else
+                                me.ShaderProperty(_HorizonTint, "Horizon Tint");
+                            me.ShaderProperty(_HorizonTintDistance, "Horizon Tint Distance");
+                            me.ShaderProperty(_HorizonTintStrength, "Horizon Tint Strength"); 
+                        });
+                        // MGUI.PropertyGroup(() => {
+                        //     me.ShaderProperty(_BackfaceFadeColor, "Backface Fade Color");
+                        //     me.ShaderProperty(_BackfaceFadeStrength, "Backface Fade Strength");
+                        // });
                     });
                 }
 
                 // Normal Maps
-                if (Foldouts.DoFoldout(foldouts, mat, "Normal Maps", Foldouts.Style.Standard)) {
+                if (Foldouts.DoFoldout(foldouts, mat, me, _NormalMapMode, "Normal Maps", Foldouts.Style.StandardToggle)) {
                     MGUI.PropertyGroupParent(()=>{
-                        me.ShaderProperty(_NormalMapMode, "Mode");
                         me.ShaderProperty(_DistortionStrength, "Refraction Strength");
                         me.ShaderProperty(_HorizonAdjustment, Tips.horizonAdjustmentText);
                         me.ShaderProperty(_HorizonAdjustmentDistance, "Horizon Adjustment Distance");
@@ -630,7 +656,10 @@ namespace Mochie {
                                 me.ShaderProperty(_CausticsScale, "Scale");
                                 me.ShaderProperty(_CausticsFade, Tips.causticsFade);
                                 // me.ShaderProperty(_CausticsSurfaceFade, Tips.causticsSurfaceFade);
-                                MGUI.Vector3Field(_CausticsRotation, "Rotation", false);
+                                MGUI.ToggleGroup(_CausticsRotateWithLight.floatValue == 1);
+                                MGUI.Vector3Field(_CausticsRotation, Tips.causticsRotation, false);
+                                MGUI.ToggleGroupEnd();
+                                me.ShaderProperty(_CausticsRotateWithLight, Tips.causticsRotateWithLight);
                             });
                             if (_CausticsToggle.floatValue != 3){
                                 MGUI.PropertyGroup( ()=>{
@@ -830,6 +859,20 @@ namespace Mochie {
                     }
                 }
 
+                // Light Volumes
+                if (Foldouts.DoFoldout(foldouts, mat, me, _LightVolumesToggle, "Light Volumes", Foldouts.Style.StandardToggle)) {
+                    MGUI.ToggleGroup(_LightVolumesToggle.floatValue == 0);
+                    MGUI.PropertyGroupParent(() => {
+                        MGUI.PropertyGroup(() => {
+                            me.ShaderProperty(_LightVolumeStrength, "Strength");
+                            MGUI.ToggleFloat(me, Tips.additiveLightVolumeText, _AdditiveLightVolumesToggle, _AdditiveLightVolumeStrength);
+                            MGUI.ToggleFloat(me, Tips.lightVolumeSpecText, _LightVolumeSpecularity, _LightVolumeSpecularityStrength);
+                            me.ShaderProperty(_LightVolumeBias, Tips.lightVolumeBiasText);
+                        });
+                    });
+                    MGUI.ToggleGroupEnd();
+                }
+
                 // Lightmap Settings
                 if (Foldouts.DoFoldout(foldouts, mat, "Lightmap Settings", Foldouts.Style.Standard)) {
                     MGUI.PropertyGroupParent(()=>{
@@ -918,7 +961,7 @@ namespace Mochie {
                     mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
                     mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
                     mat.SetInt("_ZWrite", 1);
-                    mat.SetShaderPassEnabled("Always", false);
+                    mat.SetShaderPassEnabled("GrabPass", false);
                     mat.EnableKeyword("_OPAQUE_MODE_ON");
                     mat.DisableKeyword("_PREMUL_MODE_ON");
                     mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Geometry+mat.GetInt("_QueueOffset");
@@ -930,7 +973,7 @@ namespace Mochie {
                     mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
                     mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
                     mat.SetInt("_ZWrite", 0);
-                    mat.SetShaderPassEnabled("Always", false);
+                    mat.SetShaderPassEnabled("GrabPass", false);
                     mat.DisableKeyword("_OPAQUE_MODE_ON");
                     mat.EnableKeyword("_PREMUL_MODE_ON");
                     mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent+mat.GetInt("_QueueOffset");
@@ -942,7 +985,7 @@ namespace Mochie {
                     mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
                     mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
                     mat.SetInt("_ZWrite", 0);
-                    mat.SetShaderPassEnabled("Always", true);
+                    mat.SetShaderPassEnabled("GrabPass", true);
                     mat.DisableKeyword("_OPAQUE_MODE_ON");
                     mat.DisableKeyword("_PREMUL_MODE_ON");
                     mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent+mat.GetInt("_QueueOffset");

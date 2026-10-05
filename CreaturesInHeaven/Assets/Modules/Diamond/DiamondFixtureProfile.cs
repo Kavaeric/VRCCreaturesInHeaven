@@ -41,7 +41,7 @@ public class DiamondFixtureProfile : ScriptableObject
     //           Diamond/Beam shader and a Bakery mesh or point light.
     //   Round - circular emitter + symmetric cone (a true spotlight). Uses the
     //           Diamond/BeamRound shader and a Bakery cone (spot) light.
-    //           FixtureWidth is the emitter DIAMETER; FixtureHeight is unused.
+    //           FixtureWidth is the emitter diameter; FixtureHeight is unused.
     public enum BeamShape { Rect, Round }
     public BeamShape Shape = BeamShape.Rect;
 

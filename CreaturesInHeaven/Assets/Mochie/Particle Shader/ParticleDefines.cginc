@@ -20,7 +20,7 @@
 #define PBR_ENABLED defined(_REFLECTIONS_ON) || defined(_SPECULAR_HIGHLIGHTS_ON)
 
 MOCHIE_DECLARE_TEX2D_SCREENSPACE(_CameraDepthTexture);
-MOCHIE_DECLARE_TEX2D_SCREENSPACE(_MPSGrab); float4 _MPSGrab_TexelSize;
+MOCHIE_DECLARE_TEX2D_SCREENSPACE(_ParticleGrab); float4 _ParticleGrab_TexelSize;
 float4 _CameraDepthTexture_TexelSize;
 sampler2D _MainTex;
 float4 _MainTex_ST;
@@ -60,6 +60,7 @@ float _SecondTexPolarRotation;
 float _SecondTexPolarSpeed;
 float _SecondTexPolarRadius;
 
+
 sampler2D _MetallicMap;
 float4 _MetallicMap_ST;
 int _MetallicMapUVMode;
@@ -80,10 +81,36 @@ float _RoughnessMapPolarSpeed;
 float _RoughnessMapPolarRadius;
 float _Roughness;
 
+sampler2D _OcclusionMap;
+float4 _OcclusionMap_ST;
+int _OcclusionMapUVMode;
+float2 _OcclusionMapSpeed;
+float _OcclusionMapRotation;
+float _OcclusionMapPolarRotation;
+float _OcclusionMapPolarSpeed;
+float _OcclusionMapPolarRadius;
+float _Occlusion;
+
+sampler2D _PackedMap;
+float4 _PackedMap_ST;
+int _PackedMapUVMode;
+float2 _PackedMapSpeed;
+float _PackedMapRotation;
+float _PackedMapPolarRotation;
+float _PackedMapPolarSpeed;
+float _PackedMapPolarRadius;
+int _MetallicChannel;
+int _RoughnessChannel;
+int _OcclusionChannel;
+float _PackedMetallicStrength;
+float _PackedRoughnessStrength;
+float _PackedOcclusionStrength;
+
 float _ReflectionStrength;
 float _SpecularHighlightStrength;
-float _LightVolumeStrength;
-int _LightVolumes;
+int _SharpHighlights;
+int _SharpHighlightSteps;
+int _SphericalHarmonics;
 
 sampler2D _NormalMap;
 float4 _NormalMap_ST;
@@ -94,6 +121,7 @@ float _NormalMapPolarRotation;
 float _NormalMapPolarSpeed;
 float _NormalMapPolarRadius;
 
+// Emission
 int _Emission;
 float4 _EmissionColor;
 sampler2D _EmissionMap;
@@ -108,6 +136,7 @@ float _EmissionLightReactivityMin;
 float _EmissionLightReactivityMax;
 int _EmissionLightReactivity;
 
+// Dissolve
 sampler2D _DissolveNoise;
 float4 _DissolveNoise_ST;
 int _DissolveNoiseUVMode;
@@ -127,7 +156,7 @@ float _DissolveAgeThresholdMin;
 float _DissolveAgeThresholdMax;
 float _DissolveAmount;
 
-// Core surface
+// Base
 float4 _Color;
 float4 _SecondColor;
 
@@ -137,7 +166,6 @@ int _IsCutout;
 int _Softening;
 int _FlipbookBlending;
 int _AlphaSource;
-int _Layering;
 int _TexBlendMode;
 int _Filtering;
 
@@ -157,7 +185,6 @@ int _CutoutRimBlend;
 float _CutoutRimWidth;
 float4 _CutoutRimColor;
 
-
 // Pulse
 int _Pulse;
 int _Waveform;
@@ -167,9 +194,32 @@ float _PulseSpeed;
 // Distortion
 int _Distortion;
 int _DistortMainTex;
+int _MeshRefraction;
+float _RefractionIOR;
 float _DistortionStr;
 float _DistortionBlend;
 float2 _DistortionSpeed;
+
+// Rim Light
+sampler2D _RimTex;
+float4 _RimTex_ST;
+int _RimLight;
+int _RimBlending;
+float4 _RimColor;
+float _RimStrength;
+float _RimWidth;
+float _RimEdge;
+int _RimTexUVMode;
+float2 _RimTexSpeed;
+float _RimTexRotation;
+float _RimTexPolarRotation;
+float _RimTexPolarSpeed;
+float _RimTexPolarRadius;
+int _RimLifetime;
+float _RimLifetimeMin;
+float _RimLifetimeMax;
+float _RimStartWidth;
+float _RimEndWidth;
 
 // Color manipulation
 float _Hue;
@@ -178,7 +228,7 @@ float _Contrast;
 float _HDR;
 float _Brightness;
 float _AutoShiftSpeed;
-float _HueMode;
+int _HueMode;
 int _AutoShift;
 int _MonoTint;
 
@@ -240,6 +290,7 @@ float2 panoUV;
 float globalAlpha;
 float falloff;
 float pulse;
+float3 offset;
 
 struct appdata {
     float3 vertex : POSITION;
@@ -298,6 +349,7 @@ struct InputData {
     float3 vNormal;
     float roughness;
     float metallic;
+    float occlusion;
 };
 
 struct audioLinkData {

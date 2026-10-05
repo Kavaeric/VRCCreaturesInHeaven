@@ -28,13 +28,12 @@ public class AssetResolutionZone : MonoBehaviour
     [SerializeField] private int[] densityThresholds = { 512, 256, 128, 64 };
 
     // The threshold drawn in white, as the one being designed against. Other rings fade
-    // relative to it. Unlike AssetResolutionCheck there is no radius to pin it to: the zone
-    // perimeter is the anchor, so a density's ring always sits its own falloff distance out.
+    // relative to it.
     [SerializeField] private int referenceDensity = 512;
 
     // Optional second line on each ring label: the smallest triangle edge worth authoring at
-    // that ring's density, as a rule of thumb against quad overdraw. See
-    // TexelDensity.DensityToMinTriangleEdge for what the number means.
+    // that ring's density, as a rule of thumb against quad overdraw. See TexelDensity.DensityToMinTriangleEdge
+    // for what the number means.
     [SerializeField] private bool showMinTriangleEdge = false;
 
     // Pixel count the triangle-edge rule targets. Six is the default: comfortably above the
@@ -48,10 +47,6 @@ public class AssetResolutionZone : MonoBehaviour
     // zone's cross-section and its rings drawn flat on that plane, so an XZ slice at 0 is the
     // floor and one at 1 is a metre up. Stacking several is a way to read the falloff at
     // several places at once without a wire box cluttering the view.
-    //
-    // Each list is positioned along the axis its plane does not span: XZ slices along Y, XY
-    // slices along Z, YZ slices along X. A slice beyond the zone's extent on that axis has its
-    // rings shrunk, because part of the viewing distance is spent covering the gap. See DrawSlice.
     [SerializeField] private float[] sliceHeightsXZ = { 0f };
     [SerializeField] private float[] slicePositionsXY = { };
     [SerializeField] private float[] slicePositionsYZ = { };
@@ -73,7 +68,7 @@ public class AssetResolutionZone : MonoBehaviour
 
     // Where each plane's labels sit, as a fraction of the way around a ring's perimeter.
     // Measured by arc length from the corner nearest +A/+B, so 0.125 is the middle of the
-    // first side on a square zone. Per-plane so labels on crossing planes can be moved apart.
+    // first side on a square zone.
     [SerializeField, Range(0f, 1f)] private float labelPositionXZ = 0.125f;
     [SerializeField, Range(0f, 1f)] private float labelPositionXY = 0.125f;
     [SerializeField, Range(0f, 1f)] private float labelPositionYZ = 0.125f;

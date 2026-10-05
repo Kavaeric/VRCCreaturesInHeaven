@@ -130,7 +130,7 @@ void CalculateFilamentModel(InputData id, inout LightingData ld, float2 dfg, flo
 
 void CalculateBRDF(v2f i, InputData id, inout LightingData ld){
 
-    float roughSq = max(id.roughness * id.roughness, 0.003);
+    float roughSq = lerp(0.003, 1, id.roughness * id.roughness); // max(id.roughness * id.roughness, 0.003);
     float3 halfVector = Unity_SafeNormalize(ld.lightDir + ld.viewDir);
     float NdotV = abs(dot(id.normal, ld.viewDir));
     float NdotH = saturate(dot(id.normal, halfVector));
@@ -142,8 +142,12 @@ void CalculateBRDF(v2f i, InputData id, inout LightingData ld){
     [branch]
     if (_ShadingModel == 1){
         float2 dfg;
-        float reflectance = 0.5;
-        float3 f0 = 0.16 * reflectance * reflectance * ld.omr + id.baseColor * id.metallic;
+        #if defined(_WORKFLOW_SPECULAR_ON)
+            float3 f0 = ld.specularTint;
+        #else
+            float reflectance = 0.5;
+            float3 f0 = 0.16 * reflectance * reflectance * ld.omr + id.baseColor * id.metallic;
+        #endif
         diffuseTerm = GetFilamentEnergyConservation(NdotV, id.roughness, f0, dfg);
         CalculateFilamentModel(id, ld, dfg, NdotV, roughSq, f0, horizon);
         #if defined(_REFLECTIONS_ON)
@@ -151,7 +155,7 @@ void CalculateBRDF(v2f i, InputData id, inout LightingData ld){
         #endif
     }
     else {
-        diffuseTerm = DisneyDiffuse(NdotV, ld.NdotL, LdotH, id.roughness);
+        diffuseTerm = 1; // DisneyDiffuse(NdotV, ld.NdotL, LdotH, id.roughness);
         float surfaceReduction = 1.0 / (roughSq*roughSq + 1.0);
         float grazingTerm = saturate((1-id.roughness) + (1-ld.omr));
         float3 fresnel = FresnelLerp(ld.specularTint, grazingTerm, lerp(1, NdotV, _FresnelStrength*_FresnelToggle));
@@ -176,7 +180,11 @@ void CalculateBRDF(v2f i, InputData id, inout LightingData ld){
         float4 ssr = 0;
         [branch]
         if (((_VRSSR == 0 && IsNotVR()) || _VRSSR == 1) && _SSRStrength > 0){
+        #if defined(_WORKFLOW_SPECULAR_ON)
+            ssr = GetSSR(i.worldPos, ld.viewDir, reflDir, id.normal, 1-id.roughness, id.baseColor, max(max(id.specular.r, id.specular.g), id.specular.b), ComputeGrabScreenPos(i.pos));
+        #else
             ssr = GetSSR(i.worldPos, ld.viewDir, reflDir, id.normal, 1-id.roughness, id.baseColor, id.metallic, ComputeGrabScreenPos(i.pos));
+        #endif
             if (_SSREdgeFade == 0)
                 ssr.a = ssr.a > 0 ? 1 : 0;
             ssr.rgb *= ld.reflAdjust * ld.specularOcclusion * id.occlusion;
@@ -203,10 +211,9 @@ void CalculateBRDF(v2f i, InputData id, inout LightingData ld){
     #endif
         
     #if defined(BASE_PASS)
-        [branch]
-        if (_UdonLightVolumeEnabled == 1 && _LightVolumeSpecularity == 1 && _LightVolumeSpecularityStrength > 0){
-            ld.lightVolumeSpecularity = LightVolumeSpecularDominant(id.baseColor, 1-id.roughness, id.metallic, id.normal, ld.viewDir, lightVolumeL0, lightVolumeL1r, lightVolumeL1g, lightVolumeL1b) * _LightVolumeSpecularityStrength * ld.specularOcclusion;
-        }
+        if (_UdonLightVolumeEnabled == 0 || _LightVolumesToggle == 0 || _LightVolumeSpecularity == 0)
+            lvSpec = 0;
+        ld.lightVolumeSpecularity = lvSpec * _LightVolumeSpecularityStrength;
     #endif
 
     ld.lmSpec *= ld.reflAdjust * UNITY_PI * ld.specularOcclusion * ld.specularTint * _BakeryLMSpecStrength;

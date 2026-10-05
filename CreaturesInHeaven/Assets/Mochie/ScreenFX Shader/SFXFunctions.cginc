@@ -1,8 +1,25 @@
 #ifndef SFX_FUNCS_INCLUDED
 #define SFX_FUNCS_INCLUDED
 
+float GetGlobalFalloff(float3 cameraPos, float3 objPos, float objDist){
+    if (_FalloffMode == 1){
+        return GetBoxFalloff(cameraPos, objPos, _BoxSize.xyz, _BoxOffset.xyz, _BlendDistance);
+    }
+    else {
+        return SmoothFalloff(_MinRange, _MaxRange, objDist);
+    }
+}
+
+float GetFalloff(int useGlobal, float globalFalloff, int falloffMode, float minRange, float maxRange, float3 boxSize, float3 boxOffset, float blendDistance, float3 cameraPos, float3 objPos, float objDist){
+    if (useGlobal == 1)
+        return globalFalloff;
+    if (falloffMode == 1)
+        return GetBoxFalloff(cameraPos, objPos, boxSize, boxOffset, blendDistance);
+    return SmoothFalloff(minRange, maxRange, objDist);
+}
+
 float GetFalloff(int useGlobal, float globalFalloff, float minRange, float maxRange, float distance){
-    return lerp(smoothstep(maxRange, clamp(minRange, 0, maxRange-0.001), distance), globalFalloff, useGlobal);
+    return lerp(SmoothFalloff(minRange, maxRange, distance), globalFalloff, useGlobal);
 }
 
 // ---------------------------
@@ -166,7 +183,10 @@ void ApplyColor(v2f i, inout float3 col, audioLinkData ald){
     }
     float3 filteredCol = hsv*_RGB;
     ApplyGeneralFilters(filteredCol);
-    float interpolator = _FilterStrength * i.colorF * i.pulseSpeed;
+    float interpolator = _FilterStrength * i.colorF;
+    #if X_FEATURES
+        interpolator *= lerp(1, i.pulseSpeed, _PulseColor);
+    #endif
     #if AUDIOLINK_ENABLED
         interpolator *= GetAudioLinkBand(ald, _AudioLinkFilteringStrength, _AudioLinkFilteringBand, _AudioLinkFilteringMin, _AudioLinkFilteringMax);
     #endif

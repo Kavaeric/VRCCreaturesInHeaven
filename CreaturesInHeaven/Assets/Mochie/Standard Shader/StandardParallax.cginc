@@ -68,47 +68,51 @@ float2 GetParallaxOffset(Texture2D heightMap, float2 uvs, float3 normalWorld, fl
 // Catlike Coding POM
 float2 GetParallaxOffset(Texture2D heightMap, float2 uv, float3 tangentViewDir, float strength, int channel){
     float2 uvOffset = 0;
-    // int numSteps = lerp(_MaxHeightSteps, _MinHeightSteps, saturate(tangentViewDir.z));
-    float stepSize = 1.0/_HeightSteps;
-    tangentViewDir.xy = Rotate2DCentered(tangentViewDir.xy, _UVMainRotation);
-    float2 uvDelta = tangentViewDir.xy * stepSize * strength;
-    
-    float stepHeight = 1;
-    float surfaceHeight = SampleTexture(heightMap, uv)[channel];
-    surfaceHeight = clamp(surfaceHeight, 0, 0.999);
-    initialSurfaceHeight = surfaceHeight;
+    finalSurfaceHeight = 0;
 
-    float2 prevUVOffset = uvOffset;
-    float prevStepHeight = stepHeight;
-    float prevSurfaceHeight = surfaceHeight;
-    
-    [unroll(16)]
-    for (int j = 1; j <= _HeightSteps && stepHeight > surfaceHeight; j++){
-        prevUVOffset = uvOffset;
-        prevStepHeight = stepHeight;
-        prevSurfaceHeight = surfaceHeight;
-        uvOffset -= uvDelta;
-        stepHeight -= stepSize;
-        surfaceHeight = SampleTexture(heightMap, uv+uvOffset)[channel] + _HeightOffset;
-    }
-    
-    [unroll(5)]
-    for (int k = 0; k < 5; k++) {
-        uvDelta *= 0.5;
-        stepSize *= 0.5;
+    if (strength > 0){
+        // int numSteps = lerp(_MaxHeightSteps, _MinHeightSteps, saturate(tangentViewDir.z));
+        float stepSize = 1.0/_HeightSteps;
+        tangentViewDir.xy = Rotate2DCentered(tangentViewDir.xy, _UVMainRotation);
+        float2 uvDelta = tangentViewDir.xy * stepSize * strength;
+        
+        float stepHeight = 1;
+        float surfaceHeight = SampleTexture(heightMap, uv)[channel];
+        surfaceHeight = clamp(surfaceHeight, 0, 0.999);
+        initialSurfaceHeight = surfaceHeight;
 
-        if (stepHeight < surfaceHeight) {
-            uvOffset += uvDelta;
-            stepHeight += stepSize;
-        }
-        else {
+        float2 prevUVOffset = uvOffset;
+        float prevStepHeight = stepHeight;
+        float prevSurfaceHeight = surfaceHeight;
+        
+        [unroll(16)]
+        for (int j = 1; j <= _HeightSteps && stepHeight > surfaceHeight; j++){
+            prevUVOffset = uvOffset;
+            prevStepHeight = stepHeight;
+            prevSurfaceHeight = surfaceHeight;
             uvOffset -= uvDelta;
             stepHeight -= stepSize;
+            surfaceHeight = SampleTexture(heightMap, uv+uvOffset)[channel] + _HeightOffset;
         }
-        surfaceHeight = SampleTexture(heightMap, uv+uvOffset)[channel] + _HeightOffset;
-    }
+        
+        [unroll(5)]
+        for (int k = 0; k < 5; k++) {
+            uvDelta *= 0.5;
+            stepSize *= 0.5;
 
-    finalSurfaceHeight = surfaceHeight;
+            if (stepHeight < surfaceHeight) {
+                uvOffset += uvDelta;
+                stepHeight += stepSize;
+            }
+            else {
+                uvOffset -= uvDelta;
+                stepHeight -= stepSize;
+            }
+            surfaceHeight = SampleTexture(heightMap, uv+uvOffset)[channel] + _HeightOffset;
+        }
+
+        finalSurfaceHeight = surfaceHeight;
+    }
 
     return uvOffset;
 }
@@ -117,7 +121,8 @@ void ApplyParallaxHeight(inout v2f i, float3 viewDir, float3 tangentViewDir, boo
     #if defined(_PARALLAX_ON)
         if (isFrontFace){
             float mask = MOCHIE_SAMPLE_TEX2D_SAMPLER(_HeightMask, sampler_DefaultSampler, i.uv1.zw)[_HeightMaskChannel];
-            float strength = _HeightStrength * mask;
+            float falloff = _HeightFalloff == 1 ? SmoothFalloff(_HeightMinRange, _HeightMaxRange, distance(i.worldPos, GetCameraPos())) : 1;
+            float strength = _HeightStrength * mask * falloff;
 
             // Catlike Coding POM
             #if defined(_WORKFLOW_PACKED_ON)

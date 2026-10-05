@@ -1,4 +1,4 @@
-﻿#ifndef GLASS_META_INCLUDED
+#ifndef GLASS_META_INCLUDED
 #define GLASS_META_INCLUDED
 
 #include "UnityMetaPass.cginc"
@@ -45,8 +45,14 @@ float4 frag_meta (v2f i, bool isFrontFace : SV_IsFrontFace) : SV_Target {
     i.uv.xy *= abs(_GlobalTexCoordScale);
 
     float4 baseColor = SampleTexture(_MainTex, TRANSFORM_TEX(i.uv, _MainTex)) * _BaseColorTint;
-    float metallic = SampleTexture(_MetallicMap, TRANSFORM_TEX(i.uv, _MetallicMap)) * _Metallic;
-    float roughness = SampleTexture(_RoughnessMap, TRANSFORM_TEX(i.uv, _RoughnessMap)) * _Roughness;
+    #if defined(_WORKFLOW_PACKED_ON)
+        float4 packedMap = SampleTexture(_PackedMap, TRANSFORM_TEX(i.uv, _PackedMap));
+        float metallic = packedMap[_MetallicChannel] * _PackedMetallicStrength;
+        float roughness = packedMap[_RoughnessChannel] * _PackedRoughnessStrength;
+    #else
+        float metallic = SampleTexture(_MetallicMap, TRANSFORM_TEX(i.uv, _MetallicMap)) * _Metallic;
+        float roughness = SampleTexture(_RoughnessMap, TRANSFORM_TEX(i.uv, _RoughnessMap)) * _Roughness;
+    #endif
     float3 specularTint = lerp(unity_ColorSpaceDielectricSpec.rgb, 1, metallic);
 
     UnityMetaInput o = (UnityMetaInput)0;

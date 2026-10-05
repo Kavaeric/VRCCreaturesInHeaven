@@ -11,18 +11,18 @@
     #define ALPASS_AUDIOTREBLE              uint2(0,3)  //Size: 128, 1
     #define ALPASS_AUDIOLINKHISTORY         uint2(1,0)  //Size: 127, 4
     #define ALPASS_GENERALVU                uint2(0,22) //Size: 12, 1
-    #define ALPASS_GENERALVU_INSTANCE_TIME  uint2(2,22)
-    #define ALPASS_GENERALVU_LOCAL_TIME     uint2(3,22)
-    #define ALPASS_GENERALVU_NETWORK_TIME   uint2(4,22)
-    #define ALPASS_GENERALVU_PLAYERINFO     uint2(6,22)
-    #define ALPASS_THEME_COLOR0             uint2(0,23)
-    #define ALPASS_THEME_COLOR1             uint2(1,23)
-    #define ALPASS_THEME_COLOR2             uint2(2,23)
-    #define ALPASS_THEME_COLOR3             uint2(3,23)
-    #define ALPASS_GENERALVU_UNIX_DAYS      uint2(5,23)
-    #define ALPASS_GENERALVU_UNIX_SECONDS   uint2(6,23)
-    #define ALPASS_GENERALVU_SOURCE_POS     uint2(7,23)
-    #define ALPASS_MEDIASTATE               uint2(5,22)
+    #define ALPASS_GENERALVU_INSTANCE_TIME  uint2(2,22) //Size: 1, 1
+    #define ALPASS_GENERALVU_LOCAL_TIME     uint2(3,22) //Size: 1, 1
+    #define ALPASS_GENERALVU_NETWORK_TIME   uint2(4,22) //Size: 1, 1
+    #define ALPASS_GENERALVU_PLAYERINFO     uint2(6,22) //Size: 1, 1
+    #define ALPASS_THEME_COLOR0             uint2(0,23) //Size: 1, 1
+    #define ALPASS_THEME_COLOR1             uint2(1,23) //Size: 1, 1
+    #define ALPASS_THEME_COLOR2             uint2(2,23) //Size: 1, 1
+    #define ALPASS_THEME_COLOR3             uint2(3,23) //Size: 1, 1
+    #define ALPASS_GENERALVU_UNIX_DAYS      uint2(5,23) //Size: 1, 1
+    #define ALPASS_GENERALVU_UNIX_SECONDS   uint2(6,23) //Size: 1, 1
+    #define ALPASS_GENERALVU_SOURCE_POS     uint2(7,23) //Size: 1, 1
+    #define ALPASS_MEDIASTATE               uint2(5,22) //Size: 1, 1
 
     #define ALPASS_CCINTERNAL               uint2(12,22) //Size: 12, 2
     #define ALPASS_CCCOLORS                 uint2(25,22) //Size: 12, 1 (Note Color #0 is always black, Colors start at 1)
@@ -124,7 +124,7 @@
     //Tests to see if Audio Link texture is available
     bool AudioLinkIsAvailable()
     {
-        #if !defined(AUDIOLINK_STANDARD_INDEXING)
+        #if !defined(AUDIOLINK_STANDARD_INDEXING) && !SHADER_API_GLCORE
             int width, height;
             _AudioTexture.GetDimensions(width, height);
             return width > 16;
@@ -255,6 +255,28 @@
         }
         float val = intensity - 0.1;
         return AudioLinkHSVtoRGB(float3(fmod(hue, 1.0), 1.0, clamp(val, 0.0, 1.0)));
+    }
+
+    float AudioLinkGetSphericalMappedAutoCorrelatorValue(float3 pos)
+    {
+        // Generate a value for how far around the circle you are.
+        // atan2 generates a number from -pi to pi.  We want to map
+        // this from -1..1.  Tricky: add 0.001 to x otherwise
+        // we lose a vertex at the poll because atan2 is undefined.
+        float phi = atan2(pos.x + 0.001, pos.z) / 3.14159;
+
+        // We want to mirror the -1..1 so that it's actually 0..1 but
+        // mirrored.
+        float placeInAutoCorrelator = abs(phi);
+
+        // Note: We don't need lerp multiline because the autocorrelator
+        // is only a single line.
+        float autoCorrValue = AudioLinkLerp(ALPASS_AUTOCORRELATOR +
+            float2(placeInAutoCorrelator * AUDIOLINK_WIDTH, 0.));
+
+        // Squish in the sides, and make it so it only perterbs
+        // the surface.
+        return autoCorrValue * (.5 - abs(pos.y)) * 0.4 + .6;
     }
 
     // Sample the amplitude of a given frequency in the DFT, supports frequencies in [13.75; 14080].

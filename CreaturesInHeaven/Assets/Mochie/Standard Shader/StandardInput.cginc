@@ -24,20 +24,24 @@ void apply_debug(int index, inout float4 current, float3 value){
 void DebugView(v2f i, InputData id, LightingData ld, inout float4 diffuse){
     if (_MaterialDebugMode == 1 && _DebugFlags != 0){
         diffuse = float4(0,0,0,1);
-        apply_debug(0, diffuse, id.baseColor);
-        apply_debug(1, diffuse, id.alpha.rrrr);
-        apply_debug(2, diffuse, id.normal);
-        apply_debug(3, diffuse, id.tsNormal);
-        apply_debug(4, diffuse, id.vNormal);
-        apply_debug(5, diffuse, id.roughness);
-        apply_debug(6, diffuse, id.metallic);
-        apply_debug(7, diffuse, id.occlusion);
-        apply_debug(8, diffuse, id.height);
-        apply_debug(9, diffuse, ld.lightCol);
-        apply_debug(10, diffuse, (ld.atten * ld.NdotL).rrrr);
-        apply_debug(11, diffuse, ld.reflectionCol);
-        apply_debug(12, diffuse, ld.specHighlightCol);
-        apply_debug(13, diffuse, i.color);
+        apply_debug(0, diffuse, float4(id.baseColor.rgb, 1));
+        apply_debug(1, diffuse, float4(id.alpha.rrr, 1));
+        apply_debug(2, diffuse, float4(id.normal.rgb, 1));
+        apply_debug(3, diffuse, float4(id.tsNormal.rgb, 1));
+        apply_debug(4, diffuse, float4(id.vNormal.rgb, 1));
+        apply_debug(5, diffuse, float4(id.roughness.rgb, 1));
+        #if defined(_WORKFLOW_SPECULAR_ON)
+            apply_debug(6, diffuse, float4(id.specular.rgb, 1));
+        #else
+            apply_debug(6, diffuse, float4(id.metallic.rgb, 1));
+        #endif
+        apply_debug(7, diffuse, float4(id.occlusion.rgb, 1));
+        apply_debug(8, diffuse, float4(id.height.rgb, 1));
+        apply_debug(9, diffuse, float4(ld.lightCol.rgb, 1));
+        apply_debug(10, diffuse, float4((ld.atten * ld.NdotL).rrr, 1));
+        apply_debug(11, diffuse, float4(ld.reflectionCol.rgb, 1));
+        apply_debug(12, diffuse, float4(ld.specHighlightCol.rgb, 1));
+        apply_debug(13, diffuse, float4(i.color.rgb, 1));
         apply_debug(14, diffuse, saturate(float4(i.wind.xyz, 1)));
     }
 }
@@ -350,6 +354,15 @@ float4 SampleDetailPackedMap(float2 uv){
     return SampleDetailTexture(_DetailPackedMap, uv);
 }
 
+float4 SampleSpecularMap(float2 uv){
+    float4 spec = _SpecCol;
+    [branch]
+    if (_SampleSpecular == 1){
+        spec = SampleTexture(_SpecGlossMap, uv) * _SpecCol;
+    }
+    return spec;
+}
+
 float4 SampleMetallicMap(float2 uv){
     float4 metallic = _MetallicStrength;
     [branch]
@@ -598,6 +611,14 @@ void InitializeInputData(v2f i, inout InputData id, float3x3 tangentToWorld, boo
         id.metallic = packedMap[_MetallicChannel] * _PackedMetallicStrength;
         id.roughness = packedMap[_RoughnessChannel] * _PackedRoughnessStrength;
         id.occlusion = lerp(1, packedMap[_OcclusionChannel], _PackedOcclusionStrength);
+    #elif defined(_WORKFLOW_SPECULAR_ON)
+        id.specular = SampleSpecularMap(i.uv0.xy);
+        if (_SmoothnessSource == 1)
+            id.roughness = id.specular.a * _RoughnessStrength;
+        else
+            id.roughness = SampleRoughnessMap(i.uv0.xy).g;
+        id.occlusion = SampleOcclusionMap(i.uv0.xy).g;
+        id.metallic = 0;
     #else
         id.metallic = SampleMetallicMap(i.uv0.xy).g;
         id.roughness = SampleRoughnessMap(i.uv0.xy).g;

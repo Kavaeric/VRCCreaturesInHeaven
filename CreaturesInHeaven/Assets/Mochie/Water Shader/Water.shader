@@ -1,16 +1,18 @@
-// By Mochie#8794
+// By Mochie
 
 Shader "Mochie/Water" {
     Properties {
         
         _Color("Color", Color) = (1,1,1,1)
-        _NonGrabColor("Non Grabpass Color", Color) = (0,0,0,0)
+        _NonGrabColor("Non Grabpass Color", Color) = (0,0,0,1)
         _AngleTint("Angle Tint", Color) = (1,1,1,1)
+        _OpaqueAngleTint("Glancing Tint", Color) = (0,0,0,1)
         _BackfaceTint("Backface Tint", Color) = (1,1,1,1)
         _HorizonTint("Horizon Tint", Color) = (1,1,1,1)
+        _OpaqueHorizonTint("Horizon Tint", Color) = (0,0,0,1)
         _HorizonTintDistance("Horizon Tint Distance", Range(0,1)) = 0.7
         _HorizonTintStrength("Horizon Tint Strength", Range(0,1)) = 1
-        _NonGrabBackfaceTint("Non Grabpass Backface Tint", Color) = (0,0,0,0)
+        _NonGrabBackfaceTint("Non Grabpass Backface Tint", Color) = (0,0,0,1)
         _MainTex("Base Color", 2D) = "white" {}
         _MainTexScroll("Scrolling", Vector) = (0,0.1,0,0)
         _BaseColorOffset("Parallax Offset", Float) = 0
@@ -31,6 +33,8 @@ Shader "Mochie/Water" {
         _OpacityMask("Opacity Mask", 2D) = "white" {}
         _OpacityMaskScroll("Opacity Mask Scrolling", Vector) = (0,0,0,0)
         _ShadowStrength("Shadow Strength", Range(0,1)) = 0
+        _BackfaceFadeColor("Backface Fade Color", Color) = (0.11,0.26,0.26,1)
+        _BackfaceFadeStrength("Backface Fade Strength", Float) = 3
         
         [Toggle(_EMISSIONMAP_STOCHASTIC_ON)]_EmissionMapStochasticToggle("Stochastic Sampling", Int) = 0
         _EmissionMap("Emission Map", 2D) = "white" {}
@@ -155,6 +159,7 @@ Shader "Mochie/Water" {
         _CausticsSpeed("Speed", Float) = 1
         _CausticsFade("Depth Fade", Float) = 5
         _CausticsRotation("Rotation", Vector) = (-20,0,20,0)
+        [ToggleUI]_CausticsRotateWithLight("Rotate With Light", Int) = 0
         _CausticsSurfaceFade("Surface Fade", Float) = 100
         _CausticsFlipbookSpeed("Flipbook Speed", Float) = 16
         [Enum(Add,0, Overlay,1)]_CausticsFlipbookBlend("Flipbook Blend", Int) = 1
@@ -239,7 +244,16 @@ Shader "Mochie/Water" {
         [Enum(XY,0, XZ,1, YZ,2)]_TexCoordSpaceSwizzle("Swizzle", Int) = 1
         _GlobalTexCoordScaleUV("Global Scale", Float) = 1
         _GlobalTexCoordScaleWorld("Global Scale", Float) = 0.1
-        
+
+        // Light Volumes
+        [ToggleUI]_LightVolumesToggle("Light Volume Toggle", Int) = 1
+        _LightVolumeStrength("Light Volume Strength", Range(0,1)) = 1
+        [ToggleUI]_AdditiveLightVolumesToggle("Additive Light Volumes", Int) = 1
+        _AdditiveLightVolumeStrength("Additive Light Volume Strength", Float) = 1
+        [ToggleUI]_LightVolumeSpecularity("Light Volume Specularity", Int) = 0
+        _LightVolumeSpecularityStrength("Light Volume Specularity Strength", Float) = 1
+        _LightVolumeBias("Light Volume Bias", Float) = 0
+
         [ToggleUI] _BAKERY_LMSPEC ("Lightmap Specular", Float) = 0
         _BakeryLMSpecStrength("Lightmap Specular Strength", Float) = 1
         _FogContribution("Fog Contribution", Range(0,1)) = 1
@@ -289,7 +303,7 @@ Shader "Mochie/Water" {
             ZFail Keep
         }
         GrabPass {
-            Tags {"LightMode"="Always"}
+            Tags {"LightMode"="GrabPass"}
             "_MWGrab"
         }
         ZWrite [_ZWrite]
@@ -389,6 +403,8 @@ Shader "Mochie/Water" {
             #pragma multi_compile_shadowcaster
             #pragma shader_feature_local _ _NOISE_TEXTURE_ON _GERSTNER_WAVES_ON _VORONOI_ON _VERT_FLIPBOOK_ON
             #pragma shader_feature_local _ _OPAQUE_MODE_ON _PREMUL_MODE_ON
+            #pragma shader_feature_local _FLOW_ON
+            #pragma shader_feature_local _NORMALMAP_FLIPBOOK_ON
             #pragma multi_compile_instancing
             #pragma target 5.0
 

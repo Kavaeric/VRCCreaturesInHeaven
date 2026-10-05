@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System.Linq;
 using UnityEngine.SceneManagement;
+using UnityEngine.Rendering;
 using System.IO;
 
 namespace Mochie {
@@ -10,12 +11,12 @@ namespace Mochie {
         private static readonly int MaterialDebugModeID = Shader.PropertyToID("_MaterialDebugMode");
         private static readonly int DebugFlagID = Shader.PropertyToID("_DebugFlags");
 
-        enum HueMode {HSV, Oklab, Unchanged}
-        enum ToggleOffOn {Off, On, Unchanged}
-        enum BakeryMode {None, SH, RNM, MonoSH, Unchanged}
-        enum SpecularityShadingModel {Unity_Standard, Google_Filament, Unchanged}
-        enum AreaLitOcclusionUVSet {UV0, UV1, UV2, UV3, UV4, LightmapUV, UV5, Unchanged}
-        enum SrcShaderSelection {Unity_Standard, M_Standard, M_Standard_Lite, M_Standard_Mobile}
+        enum HueMode {HSV, Oklab}
+        enum ToggleOffOn {Off, On}
+        enum BakeryMode {None, SH, RNM, MonoSH}
+        enum SpecularityShadingModel {Unity_Standard, Google_Filament}
+        enum AreaLitOcclusionUVSet {UV0, UV1, UV2, UV3, UV4, LightmapUV}
+        enum SrcShaderSelection {Unity_Standard, Filamented, M_Standard, M_Standard_Lite, M_Standard_Mobile}
         enum DestShaderSelection {M_Standard, M_Standard_Lite, M_Standard_Mobile}
         bool applyToScene = true;
         bool inactive = true;
@@ -23,6 +24,7 @@ namespace Mochie {
         Shader standardShader;
         Shader standardLiteShader;
         Shader standardMobileShader;
+        Shader filamentShader;
 
         SrcShaderSelection srcShader = SrcShaderSelection.M_Standard;
         DestShaderSelection destShader = DestShaderSelection.M_Standard_Lite;
@@ -33,40 +35,71 @@ namespace Mochie {
         List<Material> standardLiteMaterials = new List<Material>();
         List<Material> standardMobileMaterials = new List<Material>();
         List<Material> standardUnityMaterials = new List<Material>();
+        List<Material> filamentedMaterials = new List<Material>();
 
-        // Bakery settings
-        BakeryMode dirMode = BakeryMode.Unchanged;
-        ToggleOffOn bicubicSampling = ToggleOffOn.Unchanged;
-        ToggleOffOn nonLinearSH = ToggleOffOn.Unchanged;
-        ToggleOffOn lightmapSpecular = ToggleOffOn.Unchanged;
-        ToggleOffOn additiveLightVolumes = ToggleOffOn.Unchanged;
+        // Lightmap settings
+        BakeryMode dirMode = BakeryMode.None;
+        ToggleOffOn bicubicSampling = ToggleOffOn.On;
+        ToggleOffOn nonLinearSH = ToggleOffOn.Off;
+        ToggleOffOn lightmapSpecular = ToggleOffOn.Off;
+        ToggleOffOn additiveLightVolumes = ToggleOffOn.On;
+
+        bool applyDirMode = false;
+        bool applyBicubicSampling = false;
+        bool applyNonLinearSH = false;
+        bool applyLightmapSpecular = false;
+        bool applyAdditiveLightVolumes = false;
 
         // Filtering settings
-        HueMode hueMode = HueMode.Unchanged;
-        ToggleOffOn filteringToggle = ToggleOffOn.Unchanged;
+        HueMode hueMode = HueMode.HSV;
+        ToggleOffOn filteringToggle = ToggleOffOn.Off;
         float filteringHue = 0f;
         float filteringSat = 1f;
         float filteringBright = 1f;
         float filteringCont = 1f;
         float filteringACES = 0f;
+
+        bool applyFilteringToggle = false;
+        bool applyHueMode = false;
+        bool applyFilteringHue = false;
+        bool applyFilteringSat = false;
+        bool applyFilteringBright = false;
+        bool applyFilteringCont = false;
+        bool applyFilteringACES = false;
         
         // Specularity Settings
-        SpecularityShadingModel shadingModel = SpecularityShadingModel.Unchanged;
-        ToggleOffOn reflToggle = ToggleOffOn.Unchanged;
-        ToggleOffOn specToggle = ToggleOffOn.Unchanged;
+        SpecularityShadingModel shadingModel = SpecularityShadingModel.Unity_Standard;
+        ToggleOffOn reflToggle = ToggleOffOn.On;
+        ToggleOffOn specToggle = ToggleOffOn.On;
+
+        bool applyShadingModel = false;
+        bool applyReflToggle = false;
+        bool applySpecToggle = false;
         
         // AreaLit settings
-        ToggleOffOn areaLitToggle = ToggleOffOn.Unchanged;
-        ToggleOffOn areaLitSpecularOcclusion = ToggleOffOn.Unchanged;
+        ToggleOffOn areaLitToggle = ToggleOffOn.Off;
+        ToggleOffOn areaLitSpecularOcclusion = ToggleOffOn.Off;
         float areaLitStrength = 1f;
         float areaLitRoughnessMultiplier = 1f;
-        Texture2D lightMesh;
-        Texture2D lightTex0;
-        Texture2D lightTex1;
-        Texture2D lightTex2;
-        Texture2D lightTex3;
-        Texture2D areaLitOcclusion;
-        AreaLitOcclusionUVSet areaLitOcclusionUVSet = AreaLitOcclusionUVSet.Unchanged;
+        Texture lightMesh;
+        Texture lightTex0;
+        Texture lightTex1;
+        Texture lightTex2;
+        Texture lightTex3;
+        Texture areaLitOcclusion;
+        AreaLitOcclusionUVSet areaLitOcclusionUVSet = AreaLitOcclusionUVSet.UV0;
+
+        bool applyAreaLitToggle = false;
+        bool applyAreaLitSpecularOcclusion = false;
+        bool applyAreaLitStrength = false;
+        bool applyAreaLitRoughnessMultiplier = false;
+        bool applyLightMesh = false;
+        bool applyLightTex0 = false;
+        bool applyLightTex1 = false;
+        bool applyLightTex2 = false;
+        bool applyLightTex3 = false;
+        bool applyAreaLitOcclusion = false;
+        bool applyAreaLitOcclusionUVSet = false;
 
         DebugFlags globalDebugFlags;
         Vector2 scrollPos;
@@ -87,10 +120,32 @@ namespace Mochie {
             RefreshMaterials();
         }
 
+        bool DrawToggleProperty(bool toggleState, System.Action drawControl) {
+            EditorGUILayout.BeginHorizontal();
+            bool newToggleState = EditorGUILayout.Toggle(toggleState, GUILayout.Width(15));
+            float oldLabelWidth = EditorGUIUtility.labelWidth;
+            float currentLw = oldLabelWidth > 0 ? oldLabelWidth : (EditorGUIUtility.currentViewWidth > 0 ? EditorGUIUtility.currentViewWidth * 0.4f : 120f);
+            EditorGUIUtility.labelWidth = currentLw - 20f;
+            EditorGUI.BeginDisabledGroup(!newToggleState);
+            drawControl();
+            EditorGUI.EndDisabledGroup();
+            EditorGUIUtility.labelWidth = oldLabelWidth;
+            EditorGUILayout.EndHorizontal();
+            return newToggleState;
+        }
+
+        // Accepts any texture class (Texture2D, RenderTexture, etc.) as long as its dimension matches the shader property
+        Texture DrawTextureField(string label, Texture tex, TextureDimension dimension){
+            Texture newTex = (Texture)EditorGUILayout.ObjectField(label, tex, typeof(Texture), true, GUILayout.Height(EditorGUIUtility.singleLineHeight));
+            if (newTex != null && newTex.dimension != dimension){
+                Debug.LogWarning(label + " only accepts " + (dimension == TextureDimension.Tex2DArray ? "texture arrays" : "2D textures") + ", but " + newTex.name + " is " + newTex.dimension + ".");
+                return tex;
+            }
+            return newTex;
+        }
+
         void OnGUI(){
             float buttonWidth = MGUI.GetInspectorWidth()-6f;
-            float scrollButtonWidth = MGUI.GetInspectorWidth()-19f;
-            float groupButtonWidth = MGUI.GetInspectorWidth()-27f;
             
             EditorGUI.BeginChangeCheck();
             applyToScene = EditorGUILayout.Toggle("Scene Materials Only", applyToScene);
@@ -139,6 +194,12 @@ namespace Mochie {
                     MigrateFromUnityStandardToLite();
                 else if (srcShader == SrcShaderSelection.Unity_Standard && destShader == DestShaderSelection.M_Standard_Mobile)
                     MigrateFromUnityStandardToMobile();
+                else if (srcShader == SrcShaderSelection.Filamented && destShader == DestShaderSelection.M_Standard)
+                    MigrateFromFilamentedToStandard();
+                else if (srcShader == SrcShaderSelection.Filamented && destShader == DestShaderSelection.M_Standard_Lite)
+                    MigrateFromFilamentedToLite();
+                else if (srcShader == SrcShaderSelection.Filamented && destShader == DestShaderSelection.M_Standard_Mobile)
+                    MigrateFromFilamentedToMobile();
             }
 
             scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
@@ -146,66 +207,204 @@ namespace Mochie {
             MGUI.Space8();
             MGUI.BoldLabel("Specularity Settings");
             MGUI.PropertyGroup(()=>{
-                shadingModel = (SpecularityShadingModel)EditorGUILayout.EnumPopup("Shading Model", shadingModel);
-                reflToggle = (ToggleOffOn)EditorGUILayout.EnumPopup("Reflections", reflToggle);
-                specToggle = (ToggleOffOn)EditorGUILayout.EnumPopup("Specular Highlights", specToggle);
+                applyShadingModel = DrawToggleProperty(applyShadingModel, () => {
+                    shadingModel = (SpecularityShadingModel)EditorGUILayout.EnumPopup("Shading Model", shadingModel);
+                });
+                applyReflToggle = DrawToggleProperty(applyReflToggle, () => {
+                    reflToggle = (ToggleOffOn)EditorGUILayout.EnumPopup("Reflections", reflToggle);
+                });
+                applySpecToggle = DrawToggleProperty(applySpecToggle, () => {
+                    specToggle = (ToggleOffOn)EditorGUILayout.EnumPopup("Specular Highlights", specToggle);
+                });
             });
-            if (MGUI.SimpleButton("Apply", scrollButtonWidth, 0f)){
-                ApplySpecSettings();
-            }
 
             MGUI.Space8();
             MGUI.BoldLabel("Lightmapping Settings");
             MGUI.PropertyGroup(()=>{
-                dirMode = (BakeryMode)EditorGUILayout.EnumPopup("Directional Mode", dirMode);
-                bicubicSampling = (ToggleOffOn)EditorGUILayout.EnumPopup("Bicubic Sampling", bicubicSampling);
-                nonLinearSH = (ToggleOffOn)EditorGUILayout.EnumPopup("Non-Linear SH", nonLinearSH);
-                lightmapSpecular = (ToggleOffOn)EditorGUILayout.EnumPopup("Lightmap Specular", lightmapSpecular);
-                additiveLightVolumes = (ToggleOffOn)EditorGUILayout.EnumPopup("Additive Light Volumes", additiveLightVolumes);
+                applyDirMode = DrawToggleProperty(applyDirMode, () => {
+                    dirMode = (BakeryMode)EditorGUILayout.EnumPopup("Directional Mode", dirMode);
+                });
+                applyBicubicSampling = DrawToggleProperty(applyBicubicSampling, () => {
+                    bicubicSampling = (ToggleOffOn)EditorGUILayout.EnumPopup("Bicubic Sampling", bicubicSampling);
+                });
+                applyNonLinearSH = DrawToggleProperty(applyNonLinearSH, () => {
+                    nonLinearSH = (ToggleOffOn)EditorGUILayout.EnumPopup("Non-Linear SH", nonLinearSH);
+                });
+                applyLightmapSpecular = DrawToggleProperty(applyLightmapSpecular, () => {
+                    lightmapSpecular = (ToggleOffOn)EditorGUILayout.EnumPopup("Lightmap Specular", lightmapSpecular);
+                });
+                applyAdditiveLightVolumes = DrawToggleProperty(applyAdditiveLightVolumes, () => {
+                    additiveLightVolumes = (ToggleOffOn)EditorGUILayout.EnumPopup("Additive Light Volumes", additiveLightVolumes);
+                });
             });
-            if (MGUI.SimpleButton("Apply", scrollButtonWidth, 0f)){
-                ApplyBakerySettings();
-            }
 
             MGUI.Space8();
             MGUI.BoldLabel("Filtering Settings");
             MGUI.PropertyGroup(()=>{
-                filteringToggle = (ToggleOffOn)EditorGUILayout.EnumPopup("Enable", filteringToggle);
-                hueMode = (HueMode)EditorGUILayout.EnumPopup("Hue Mode", hueMode);
-                filteringHue = EditorGUILayout.Slider("Hue", filteringHue, 0f, 1f);
-                filteringSat = EditorGUILayout.FloatField("Saturation", filteringSat);
-                filteringBright = EditorGUILayout.FloatField("Brightness", filteringBright);
-                filteringCont = EditorGUILayout.FloatField("Contrast", filteringCont);
-                filteringACES = EditorGUILayout.FloatField("ACES", filteringACES);
+                applyFilteringToggle = DrawToggleProperty(applyFilteringToggle, () => {
+                    filteringToggle = (ToggleOffOn)EditorGUILayout.EnumPopup("Enable", filteringToggle);
+                });
+                applyHueMode = DrawToggleProperty(applyHueMode, () => {
+                    hueMode = (HueMode)EditorGUILayout.EnumPopup("Hue Mode", hueMode);
+                });
+                applyFilteringHue = DrawToggleProperty(applyFilteringHue, () => {
+                    filteringHue = EditorGUILayout.Slider("Hue", filteringHue, 0f, 1f);
+                });
+                applyFilteringSat = DrawToggleProperty(applyFilteringSat, () => {
+                    filteringSat = EditorGUILayout.FloatField("Saturation", filteringSat);
+                });
+                applyFilteringBright = DrawToggleProperty(applyFilteringBright, () => {
+                    filteringBright = EditorGUILayout.FloatField("Brightness", filteringBright);
+                });
+                applyFilteringCont = DrawToggleProperty(applyFilteringCont, () => {
+                    filteringCont = EditorGUILayout.FloatField("Contrast", filteringCont);
+                });
+                applyFilteringACES = DrawToggleProperty(applyFilteringACES, () => {
+                    filteringACES = EditorGUILayout.FloatField("ACES", filteringACES);
+                });
             });
-            if (MGUI.SimpleButton("Apply", scrollButtonWidth, 0f)){
-                ApplyFilterSettings();
-            }
 
             MGUI.Space8();
             MGUI.BoldLabel("AreaLit Settings");
             MGUI.PropertyGroup(()=>{
-                areaLitToggle = (ToggleOffOn)EditorGUILayout.EnumPopup("Enable", areaLitToggle);
-                areaLitSpecularOcclusion = (ToggleOffOn)EditorGUILayout.EnumPopup("Specular Occlusion", areaLitSpecularOcclusion);
-                areaLitStrength = EditorGUILayout.FloatField("Strength", areaLitStrength);
-                areaLitRoughnessMultiplier = EditorGUILayout.FloatField("Roughness Multiplier", areaLitRoughnessMultiplier);
-                lightMesh = (Texture2D)EditorGUILayout.ObjectField("Light Mesh", lightMesh, typeof(Texture2D), true, GUILayout.Height(EditorGUIUtility.singleLineHeight));
-                lightTex0 = (Texture2D)EditorGUILayout.ObjectField("Light Texture 0", lightTex0, typeof(Texture2D), true, GUILayout.Height(EditorGUIUtility.singleLineHeight));
-                lightTex1 = (Texture2D)EditorGUILayout.ObjectField("Light Texture 1", lightTex1, typeof(Texture2D), true, GUILayout.Height(EditorGUIUtility.singleLineHeight));
-                lightTex2 = (Texture2D)EditorGUILayout.ObjectField("Light Texture 2", lightTex2, typeof(Texture2D), true, GUILayout.Height(EditorGUIUtility.singleLineHeight));
-                lightTex3 = (Texture2D)EditorGUILayout.ObjectField("Light Texture 3", lightTex3, typeof(Texture2D), true, GUILayout.Height(EditorGUIUtility.singleLineHeight));
-                areaLitOcclusion = (Texture2D)EditorGUILayout.ObjectField("Occlusion", areaLitOcclusion, typeof(Texture2D), true, GUILayout.Height(EditorGUIUtility.singleLineHeight));
-                areaLitOcclusionUVSet = (AreaLitOcclusionUVSet)EditorGUILayout.EnumPopup("Occlusion UV Set", areaLitOcclusionUVSet);
+                applyAreaLitToggle = DrawToggleProperty(applyAreaLitToggle, () => {
+                    areaLitToggle = (ToggleOffOn)EditorGUILayout.EnumPopup("Enable", areaLitToggle);
+                });
+                applyAreaLitSpecularOcclusion = DrawToggleProperty(applyAreaLitSpecularOcclusion, () => {
+                    areaLitSpecularOcclusion = (ToggleOffOn)EditorGUILayout.EnumPopup("Specular Occlusion", areaLitSpecularOcclusion);
+                });
+                applyAreaLitStrength = DrawToggleProperty(applyAreaLitStrength, () => {
+                    areaLitStrength = EditorGUILayout.FloatField("Strength", areaLitStrength);
+                });
+                applyAreaLitRoughnessMultiplier = DrawToggleProperty(applyAreaLitRoughnessMultiplier, () => {
+                    areaLitRoughnessMultiplier = EditorGUILayout.FloatField("Roughness Multiplier", areaLitRoughnessMultiplier);
+                });
+                applyLightMesh = DrawToggleProperty(applyLightMesh, () => {
+                    lightMesh = DrawTextureField("Light Mesh", lightMesh, TextureDimension.Tex2D);
+                });
+                applyLightTex0 = DrawToggleProperty(applyLightTex0, () => {
+                    lightTex0 = DrawTextureField("Light Texture 0", lightTex0, TextureDimension.Tex2D);
+                });
+                applyLightTex1 = DrawToggleProperty(applyLightTex1, () => {
+                    lightTex1 = DrawTextureField("Light Texture 1", lightTex1, TextureDimension.Tex2D);
+                });
+                applyLightTex2 = DrawToggleProperty(applyLightTex2, () => {
+                    lightTex2 = DrawTextureField("Light Texture 2", lightTex2, TextureDimension.Tex2D);
+                });
+                applyLightTex3 = DrawToggleProperty(applyLightTex3, () => {
+                    lightTex3 = DrawTextureField("Light Texture 3", lightTex3, TextureDimension.Tex2DArray);
+                });
+                applyAreaLitOcclusion = DrawToggleProperty(applyAreaLitOcclusion, () => {
+                    areaLitOcclusion = DrawTextureField("Occlusion", areaLitOcclusion, TextureDimension.Tex2D);
+                });
+                applyAreaLitOcclusionUVSet = DrawToggleProperty(applyAreaLitOcclusionUVSet, () => {
+                    areaLitOcclusionUVSet = (AreaLitOcclusionUVSet)EditorGUILayout.EnumPopup("Occlusion UV Set", areaLitOcclusionUVSet);
+                });
             });
-            if (MGUI.SimpleButton("Apply", scrollButtonWidth, 0f)){
-                ApplyAreaLitSettings();
-            }
             EditorGUILayout.EndScrollView();
-            MGUI.DisplayWarning("Please note that changes made with this utility cannot be undone, pick your settings carefully!");
+
+            MGUI.Space4();
+            Rect applyBtnRect = EditorGUILayout.GetControlRect(false, 36f);
+            applyBtnRect.width = buttonWidth;
+            if (GUI.Button(applyBtnRect, "Apply Changes")){
+                ApplyAllSettings();
+            }
+            MGUI.Space6();
+        }
+
+        void ApplyAllSettings(){
+            List<Material> materials = new List<Material>();
+            materials.AddRange(standardMaterials);
+            materials.AddRange(standardLiteMaterials);
+            materials.AddRange(standardMobileMaterials);
+            materials = materials.Where(m => m != null).Distinct().ToList();
+
+            if (materials.Count > 0)
+                Undo.RecordObjects(materials.ToArray(), "Apply Standard Shader Settings");
+
+            foreach (Material m in materials){
+                // Specular Settings
+                if (applyShadingModel)
+                    m.SetInt("_ShadingModel", (int)shadingModel);
+                if (applyReflToggle){
+                    m.SetInt("_ReflectionsToggle", (int)reflToggle);
+                    MGUI.SetKeyword(m, "_REFLECTIONS_ON", (int)reflToggle == 1);
+                }
+                if (applySpecToggle){
+                    m.SetInt("_SpecularHighlightsToggle", (int)specToggle);
+                    MGUI.SetKeyword(m, "_SPECULAR_HIGHLIGHTS_ON", (int)specToggle == 1);
+                }
+
+                // Bakery Settings
+                if (applyDirMode){
+                    m.SetInt("_BakeryMode", (int)dirMode);
+                    MGUI.SetKeyword(m, "BAKERY_SH", dirMode == BakeryMode.SH);
+                    MGUI.SetKeyword(m, "BAKERY_RNM", dirMode == BakeryMode.RNM);
+                    MGUI.SetKeyword(m, "BAKERY_MONOSH", dirMode == BakeryMode.MonoSH);
+                }
+                if (applyBicubicSampling){
+                    m.SetInt("_BicubicSampling", (int)bicubicSampling);
+                    MGUI.SetKeyword(m, "_BICUBIC_SAMPLING_ON", (int)bicubicSampling == 1);
+                }
+                if (applyNonLinearSH){
+                    m.SetInt("_BAKERY_SHNONLINEAR", (int)nonLinearSH);
+                    MGUI.SetKeyword(m, "BAKERY_SHNONLINEAR", (int)nonLinearSH == 1);
+                }
+                if (applyLightmapSpecular){
+                    m.SetInt("_BAKERY_LMSPEC", (int)lightmapSpecular);
+                    MGUI.SetKeyword(m, "BAKERY_LMSPEC", (int)lightmapSpecular == 1);
+                }
+                if (applyAdditiveLightVolumes){
+                    m.SetInt("_AdditiveLightVolumesToggle", (int)additiveLightVolumes);
+                }
+
+                // Filtering Settings
+                if (applyFilteringToggle)
+                    m.SetInt("_Filtering", (int)filteringToggle);
+                if (applyFilteringHue)
+                    m.SetFloat("_HuePost", filteringHue);
+                if (applyHueMode)
+                    m.SetFloat("_HueMode", (int)hueMode);
+                if (applyFilteringSat)
+                    m.SetFloat("_SaturationPost", filteringSat);
+                if (applyFilteringBright)
+                    m.SetFloat("_BrightnessPost", filteringBright);
+                if (applyFilteringCont)
+                    m.SetFloat("_ContrastPost", filteringCont);
+                if (applyFilteringACES)
+                    m.SetFloat("_ACES", filteringACES);
+
+                // AreaLit Settings
+                if (applyAreaLitToggle){
+                    m.SetInt("_AreaLitToggle", (int)areaLitToggle);
+                    MGUI.SetKeyword(m, "_AREALIT_ON", (int)areaLitToggle == 1);
+                }
+                if (applyAreaLitSpecularOcclusion)
+                    m.SetInt("_AreaLitSpecularOcclusion", (int)areaLitSpecularOcclusion);
+                if (applyAreaLitStrength)
+                    m.SetFloat("_AreaLitStrength", areaLitStrength);
+                if (applyAreaLitRoughnessMultiplier)
+                    m.SetFloat("_AreaLitRoughnessMultiplier", areaLitRoughnessMultiplier);
+                if (applyLightMesh)
+                    m.SetTexture("_LightMesh", lightMesh);
+                if (applyLightTex0)
+                    m.SetTexture("_LightTex0", lightTex0);
+                if (applyLightTex1)
+                    m.SetTexture("_LightTex1", lightTex1);
+                if (applyLightTex2)
+                    m.SetTexture("_LightTex2", lightTex2);
+                if (applyLightTex3)
+                    m.SetTexture("_LightTex3", lightTex3);
+                if (applyAreaLitOcclusion)
+                    m.SetTexture("_AreaLitOcclusion", areaLitOcclusion);
+                if (applyAreaLitOcclusionUVSet)
+                    m.SetInt("_AreaLitOcclusionUVSet", (int)areaLitOcclusionUVSet);
+            }
         }
         
         void MigrateFromStandardToLite(){
-            if (standardMaterials != null){
+            if (standardMaterials != null && standardMaterials.Count > 0){
+                Undo.RecordObjects(standardMaterials.ToArray(), "Swap Shaders");
                 foreach(Material m in standardMaterials){
                     m.shader = standardLiteShader;
                 }
@@ -214,7 +413,8 @@ namespace Mochie {
         }
 
         void MigrateFromStandardToMobile(){
-            if (standardMaterials != null){
+            if (standardMaterials != null && standardMaterials.Count > 0){
+                Undo.RecordObjects(standardMaterials.ToArray(), "Swap Shaders");
                 foreach(Material m in standardMaterials){
                     m.shader = standardMobileShader;
                 }
@@ -223,7 +423,8 @@ namespace Mochie {
         }
 
         void MigrateFromLiteToStandard(){
-            if (standardLiteMaterials != null){
+            if (standardLiteMaterials != null && standardLiteMaterials.Count > 0){
+                Undo.RecordObjects(standardLiteMaterials.ToArray(), "Swap Shaders");
                 foreach(Material m in standardLiteMaterials){
                     m.shader = standardShader;
                 }
@@ -232,7 +433,8 @@ namespace Mochie {
         }
 
         void MigrateFromLiteToMobile(){
-            if (standardLiteMaterials != null){
+            if (standardLiteMaterials != null && standardLiteMaterials.Count > 0){
+                Undo.RecordObjects(standardLiteMaterials.ToArray(), "Swap Shaders");
                 foreach(Material m in standardLiteMaterials){
                     m.shader = standardMobileShader;
                 }
@@ -241,7 +443,8 @@ namespace Mochie {
         }
 
         void MigrateFromMobileToStandard(){
-            if (standardMobileMaterials != null){
+            if (standardMobileMaterials != null && standardMobileMaterials.Count > 0){
+                Undo.RecordObjects(standardMobileMaterials.ToArray(), "Swap Shaders");
                 foreach(Material m in standardMobileMaterials){
                     m.shader = standardShader;
                 }
@@ -250,7 +453,8 @@ namespace Mochie {
         }
 
         void MigrateFromMobileToLite(){
-            if (standardMobileMaterials != null){
+            if (standardMobileMaterials != null && standardMobileMaterials.Count > 0){
+                Undo.RecordObjects(standardMobileMaterials.ToArray(), "Swap Shaders");
                 foreach(Material m in standardMobileMaterials){
                     m.shader = standardLiteShader;
                 }
@@ -259,7 +463,8 @@ namespace Mochie {
         }
 
         void MigrateFromUnityStandardToStandard(){
-            if (standardUnityMaterials != null){
+            if (standardUnityMaterials != null && standardUnityMaterials.Count > 0){
+                Undo.RecordObjects(standardUnityMaterials.ToArray(), "Swap Shaders");
                 foreach (Material m in standardUnityMaterials){
                     m.shader = standardShader;
                 }
@@ -268,7 +473,8 @@ namespace Mochie {
         }
 
         void MigrateFromUnityStandardToLite(){
-            if (standardUnityMaterials != null){
+            if (standardUnityMaterials != null && standardUnityMaterials.Count > 0){
+                Undo.RecordObjects(standardUnityMaterials.ToArray(), "Swap Shaders");
                 foreach (Material m in standardUnityMaterials){
                     m.shader = standardLiteShader;
                 }
@@ -277,7 +483,8 @@ namespace Mochie {
         }
 
         void MigrateFromUnityStandardToMobile(){
-            if (standardUnityMaterials != null){
+            if (standardUnityMaterials != null && standardUnityMaterials.Count > 0){
+                Undo.RecordObjects(standardUnityMaterials.ToArray(), "Swap Shaders");
                 foreach (Material m in standardUnityMaterials){
                     m.shader = standardMobileShader;
                 }
@@ -285,106 +492,34 @@ namespace Mochie {
             RefreshMaterials();
         }
 
-        void ApplyBakerySettings(){
-            List<Material> materials = new List<Material>();
-            materials.AddRange(standardMaterials);
-            materials.AddRange(standardLiteMaterials);
-            materials.AddRange(standardMobileMaterials);
-            foreach (Material m in materials){
-
-                // Directional Mode
-                if (dirMode != BakeryMode.Unchanged){
-                    m.SetInt("_BakeryMode", (int)dirMode);
-                    MGUI.SetKeyword(m, "BAKERY_SH", dirMode == BakeryMode.SH);
-                    MGUI.SetKeyword(m, "BAKERY_RNM", dirMode == BakeryMode.RNM);
-                    MGUI.SetKeyword(m, "BAKERY_MONOSH", dirMode == BakeryMode.MonoSH);
-                }
-
-                // Bicubic Lightmapping
-                if (bicubicSampling != ToggleOffOn.Unchanged){
-                    m.SetInt("_BicubicSampling", (int)bicubicSampling);
-                    MGUI.SetKeyword(m, "_BICUBIC_SAMPLING_ON", (int)bicubicSampling == 1);
-                }
-
-                // Nonlinear SH
-                if (nonLinearSH != ToggleOffOn.Unchanged){
-                    m.SetInt("_BAKERY_SHNONLINEAR", (int)nonLinearSH);
-                    MGUI.SetKeyword(m, "BAKERY_SHNONLINEAR", (int)nonLinearSH == 1);
-                }
-
-                // Lightmapped Specular
-                if (lightmapSpecular != ToggleOffOn.Unchanged){
-                    m.SetInt("_BAKERY_LMSPEC", (int)lightmapSpecular);
-                    MGUI.SetKeyword(m, "BAKERY_LMSPEC", (int)lightmapSpecular == 1);
-                }
-
-                // Additive light volumes
-                if (additiveLightVolumes != ToggleOffOn.Unchanged){
-                    m.SetInt("_AdditiveLightVolumesToggle", (int)additiveLightVolumes);
+        void MigrateFromFilamentedToStandard(){
+            if (filamentedMaterials != null && filamentedMaterials.Count > 0){
+                Undo.RecordObjects(filamentedMaterials.ToArray(), "Swap Shaders");
+                foreach (Material m in filamentedMaterials){
+                    m.shader = standardShader;
                 }
             }
+            RefreshMaterials();
         }
 
-        void ApplyFilterSettings(){
-            List<Material> materials = new List<Material>();
-            materials.AddRange(standardMaterials);
-            materials.AddRange(standardLiteMaterials);
-            materials.AddRange(standardMobileMaterials);
-            foreach (Material m in materials){
-                if (filteringToggle != ToggleOffOn.Unchanged)
-                    m.SetInt("_Filtering", (int)filteringToggle);
-                m.SetFloat("_HuePost", filteringHue);
-                if (hueMode != HueMode.Unchanged)
-                    m.SetFloat("_HueMode", (int)hueMode);
-                m.SetFloat("_SaturationPost", filteringSat);
-                m.SetFloat("_BrightnessPost", filteringBright);
-                m.SetFloat("_ContrastPost", filteringCont);
-                m.SetFloat("_ACES", filteringACES);
+        void MigrateFromFilamentedToLite(){
+            if (filamentedMaterials != null && filamentedMaterials.Count > 0){
+                Undo.RecordObjects(filamentedMaterials.ToArray(), "Swap Shaders");
+                foreach (Material m in filamentedMaterials){
+                    m.shader = standardLiteShader;
+                }
             }
+            RefreshMaterials();
         }
 
-        void ApplySpecSettings(){
-            List<Material> materials = new List<Material>();
-            materials.AddRange(standardMaterials);
-            materials.AddRange(standardLiteMaterials);
-            materials.AddRange(standardMobileMaterials);
-            foreach (Material m in materials){
-                if (shadingModel != SpecularityShadingModel.Unchanged)
-                    m.SetInt("_ShadingModel", (int)shadingModel);
-                if (reflToggle != ToggleOffOn.Unchanged){
-                    m.SetInt("_ReflectionsToggle", (int)reflToggle);
-                    MGUI.SetKeyword(m, "_REFLECTIONS_ON", (int)reflToggle == 1);
-                }
-                if (specToggle != ToggleOffOn.Unchanged){
-                    m.SetInt("_SpecularHighlightsToggle", (int)specToggle);
-                    MGUI.SetKeyword(m, "_SPECULARHIGHLIGHTS_ON", (int)specToggle == 1);
+        void MigrateFromFilamentedToMobile(){
+            if (filamentedMaterials != null && filamentedMaterials.Count > 0){
+                Undo.RecordObjects(filamentedMaterials.ToArray(), "Swap Shaders");
+                foreach (Material m in filamentedMaterials){
+                    m.shader = standardMobileShader;
                 }
             }
-        }
-
-        void ApplyAreaLitSettings(){
-            List<Material> materials = new List<Material>();
-            materials.AddRange(standardMaterials);
-            materials.AddRange(standardLiteMaterials);
-            materials.AddRange(standardMobileMaterials);
-            foreach (Material m in materials){
-                if (areaLitToggle != ToggleOffOn.Unchanged){
-                    m.SetInt("_AreaLitToggle", (int)areaLitToggle);
-                    MGUI.SetKeyword(m, "_AREALIT_ON", (int)areaLitToggle == 1);
-                }
-                if (areaLitSpecularOcclusion != ToggleOffOn.Unchanged)
-                    m.SetInt("_AreaLitSpecularOcclusion", (int)areaLitSpecularOcclusion);
-                m.SetFloat("_AreaLitStrength", areaLitStrength);
-                m.SetFloat("_AreaLitRoughnessMultiplier", areaLitRoughnessMultiplier);
-                m.SetTexture("_LightMesh", lightMesh);
-                m.SetTexture("_LightTex0", lightTex0);
-                m.SetTexture("_LightTex1", lightTex1);
-                m.SetTexture("_LightTex2", lightTex2);
-                m.SetTexture("_LightTex3", lightTex3);
-                m.SetTexture("_AreaLitOcclusion", areaLitOcclusion);
-                if (areaLitOcclusionUVSet != AreaLitOcclusionUVSet.Unchanged)
-                    m.SetInt("_AreaLitOcclusionUVSet", (int)areaLitOcclusionUVSet);
-            }
+            RefreshMaterials();
         }
 
         void ApplyDebugView(){
@@ -392,6 +527,8 @@ namespace Mochie {
             materials.AddRange(standardMaterials);
             materials.AddRange(standardLiteMaterials);
             materials.AddRange(standardMobileMaterials);
+            if (materials.Count > 0)
+                Undo.RecordObjects(materials.ToArray(), "Apply Debug View");
             foreach (Material m in materials){
                 HandleDebugView(m);
             }
@@ -402,6 +539,8 @@ namespace Mochie {
             materials.AddRange(standardMaterials);
             materials.AddRange(standardLiteMaterials);
             materials.AddRange(standardMobileMaterials);
+            if (materials.Count > 0)
+                Undo.RecordObjects(materials.ToArray(), "Restore Default Textures");
             string texFolder = "Assets/Mochie/Unity/Textures/";
             Texture dfgTex = AssetDatabase.LoadAssetAtPath(texFolder + "dfg-multiscatter.exr", typeof(Texture)) as Texture;
             Texture rainSheetTex = AssetDatabase.LoadAssetAtPath(texFolder + "Glass_Rain_Texturesheet.png", typeof(Texture)) as Texture;
@@ -430,6 +569,7 @@ namespace Mochie {
             projectMaterials.Clear();
             sceneMaterials.Clear();
             standardMaterials.Clear();
+            filamentedMaterials.Clear();
             standardLiteMaterials.Clear();
             standardMobileMaterials.Clear();
             standardUnityMaterials.Clear();
@@ -461,6 +601,9 @@ namespace Mochie {
                     }
                     else if (shaderName == "Standard" || shaderName == "Autodesk Interactive"){
                         standardUnityMaterials.Add(m);
+                    }
+                    else if (shaderName == "Silent/Filamented"){
+                        filamentedMaterials.Add(m);
                     }
                 }
             }

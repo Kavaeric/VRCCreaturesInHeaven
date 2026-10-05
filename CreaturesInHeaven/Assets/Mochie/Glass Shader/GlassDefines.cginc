@@ -1,4 +1,4 @@
-﻿#include "UnityCG.cginc"
+#include "UnityCG.cginc"
 #include "AutoLight.cginc"
 #include "UnityPBSLighting.cginc"
 #include "../Common/Sampling.cginc"
@@ -21,6 +21,7 @@ sampler2D _RoughnessMap;
 sampler2D _OcclusionMap;
 sampler2D _MetallicMap;
 sampler2D _NormalMap;
+sampler2D _PackedMap;
 sampler2D _RainMask;
 sampler2D _DropletMask;
 sampler2D _EmissionMap;
@@ -31,6 +32,7 @@ float4 _RoughnessMap_ST;
 float4 _OcclusionMap_ST;
 float4 _MetallicMap_ST;
 float4 _NormalMap_ST;
+float4 _PackedMap_ST;
 float4 _RainSheet_ST;
 float4 _MainTex_ST;
 float4 _BaseColorTint;
@@ -44,6 +46,13 @@ float _NormalStrength;
 float _Roughness;
 float _Metallic;
 float _Occlusion;
+float _PackedRoughnessStrength;
+float _PackedMetallicStrength;
+float _PackedOcclusionStrength;
+int _RoughnessChannel;
+int _MetallicChannel;
+int _OcclusionChannel;
+int _Workflow;
 float _Rows, _Columns;
 float _XScale, _YScale;
 float _Strength, _Speed;
@@ -88,6 +97,7 @@ float _LTCGIRoughness;
 
 float _AreaLitStrength;
 float _AreaLitRoughnessMult;
+sampler2D _AreaLitMask;
 float4 _AreaLitMask_ST;
 
 float rainStrength;

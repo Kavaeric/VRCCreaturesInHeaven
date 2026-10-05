@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -96,6 +96,7 @@ namespace Mochie {
                 "Oscilloscope",
                 "Primary Matcap",
                 "Secondary Matcap",
+                "Light Volumes",
                 "Debug"
         }, 0);
 
@@ -114,7 +115,7 @@ namespace Mochie {
         static readonly int blendingLabelPos = 111;
 
         static readonly string unityFolderPath = "Assets/Mochie/Unity";
-        string versionLabel = "v1.34.2";
+        string versionLabel = "v1.35.1";
         // β
         
         MaterialProperty _RenderMode = null; 
@@ -660,10 +661,15 @@ namespace Mochie {
         MaterialProperty _HueMode = null;
         MaterialProperty _MonoTint = null;
         MaterialProperty _LitCubemap = null;
-        MaterialProperty _LightVolumeSpecularity = null;
-        MaterialProperty _LightVolumeSpecularityStrength = null;
         MaterialProperty _IridescenceMode = null;
         MaterialProperty _IridescenceRamp = null;
+
+        // Light Volumes
+        MaterialProperty _LightVolumesToggle = null;
+        MaterialProperty _LightVolumeStrength = null;
+        MaterialProperty _LightVolumeSpecularity = null;
+        MaterialProperty _LightVolumeSpecularityStrength = null;
+        MaterialProperty _LightVolumeBias = null;
 
         MaterialProperty _VRCFallback = null;
         MaterialProperty _NaNLmao = null;
@@ -828,6 +834,7 @@ namespace Mochie {
                         MGUI.BoldLabel("Primary Maps");
                         me.ShaderProperty(_PBRWorkflow, "Workflow");
                         MGUI.PropertyGroup(() => {
+                            me.TexturePropertySingleLine(Tips.normalTexLabel, _BumpMap, _BumpMap.textureValue ? _BumpScale : null);
                             switch ((int)workflow){
 
                                 // Metallic
@@ -860,8 +867,8 @@ namespace Mochie {
                                     me.ShaderProperty(_OcclusionStrength, "Occlusion Strength");
                                     MGUI.ToggleSlider(me, "Height Strength", _EnablePackedHeight, _Parallax);
                                     if (_EnablePackedHeight.floatValue > 0){
-                                        me.ShaderProperty(_ParallaxOffset, Tips.heightOffsetText, 1);
-                                        me.ShaderProperty(_ParallaxSteps, Tips.heightStepsText, 1);
+                                        me.ShaderProperty(_ParallaxOffset, Tips.heightOffsetText);
+                                        me.ShaderProperty(_ParallaxSteps, Tips.heightStepsText);
                                     }
                                     break;
                                     
@@ -869,13 +876,37 @@ namespace Mochie {
                             }
                             if (workflow < 3)
                                 me.TexturePropertySingleLine(Tips.occlusionTexLabel, _OcclusionMap, _OcclusionMap.textureValue ? _OcclusionStrength : null);
-                            me.TexturePropertySingleLine(Tips.normalTexLabel, _BumpMap, _BumpMap.textureValue ? _BumpScale : null);
                             if (workflow < 3){
                                 me.TexturePropertySingleLine(Tips.heightTexLabel, _ParallaxMap, _ParallaxMap.textureValue ? _Parallax : null);
                                 if (_ParallaxMap.textureValue){
                                     me.ShaderProperty(_ParallaxOffset, Tips.parallaxOfsText, 2);
                                     me.ShaderProperty(_ParallaxSteps, Tips.stepsText, 2);
                                 }
+                            }
+                            if (workflow == 0){
+                                bool hasAnyTexture = _OcclusionMap.textureValue != null || _SpecGlossMap.textureValue != null || _MetallicGlossMap.textureValue != null || _ParallaxMap.textureValue != null;
+                                MGUI.ToggleGroup(!hasAnyTexture);
+                                if (MGUI.PropertyButton("Pack Textures")){
+                                    float roughStrength = _SpecGlossMap.textureValue != null ? 1f : _Glossiness.floatValue;
+                                    float metalStrength = _MetallicGlossMap.textureValue != null ? 1f : _Metallic.floatValue;
+                                    float occStrength = _OcclusionStrength.floatValue;
+                                    TexturePacker.PackTextures(mat, _OcclusionMap, occStrength, _SpecGlossMap, roughStrength, _MetallicGlossMap, metalStrength, _ParallaxMap, 1f, _PackedMap);
+                                    _PBRWorkflow.floatValue = 3f;
+                                    mat.SetInt("_PBRWorkflow", 3);
+                                    _OcclusionChannel.floatValue = 0f;
+                                    mat.SetInt("_OcclusionChannel", 0);
+                                    _RoughnessChannel.floatValue = 1f;
+                                    mat.SetInt("_RoughnessChannel", 1);
+                                    _MetallicChannel.floatValue = 2f;
+                                    mat.SetInt("_MetallicChannel", 2);
+                                    _HeightChannel.floatValue = 3f;
+                                    mat.SetInt("_HeightChannel", 3);
+                                    bool hasHeight = _ParallaxMap.textureValue != null;
+                                    _EnablePackedHeight.floatValue = hasHeight ? 1f : 0f;
+                                    mat.SetInt("_EnablePackedHeight", hasHeight ? 1 : 0);
+                                    ApplyMaterialSettings(mat);
+                                }
+                                MGUI.ToggleGroupEnd();
                             }
                         });
 
@@ -888,12 +919,12 @@ namespace Mochie {
                             bool usingDetNormal = _DetailNormalMap.textureValue;
                             bool usingDetMetal = _DetailMetallic.textureValue;
                             me.TexturePropertySingleLine(Tips.baseColorLabel, _DetailAlbedoMap, usingDetAlbedo ? _DetailAlbedoStrength : null, usingDetAlbedo ? _DetailAlbedoBlending : null);
+                            me.TexturePropertySingleLine(Tips.normalTexLabel, _DetailNormalMap, usingDetNormal ? _DetailNormalMapScale : null);
                             if (workflow == 0 || workflow >= 3){
                                 me.TexturePropertySingleLine(Tips.metallicTexLabel, _DetailMetallic, usingDetMetal ? _DetailMetallicStrength : null, usingDetMetal ? _DetailMetallicBlending : null);
                                 me.TexturePropertySingleLine(Tips.roughnessTexLabel, _DetailRoughnessMap, usingDetRough ? _DetailRoughStrength : null, usingDetRough ? _DetailRoughBlending : null);
                             }
                             me.TexturePropertySingleLine(Tips.occlusionTexLabel, _DetailOcclusionMap, usingDetOcc ? _DetailOcclusionStrength : null, usingDetOcc ? _DetailOcclusionBlending : null);
-                            me.TexturePropertySingleLine(Tips.normalTexLabel, _DetailNormalMap, usingDetNormal ? _DetailNormalMapScale : null);
 
                             if (usingDetAlbedo || usingDetNormal || usingDetRough || usingDetOcc || usingDetMetal) {
                                 MGUI.TextureSOScroll(me, _DetailAlbedoMap, _DetailScroll);
@@ -1216,7 +1247,6 @@ namespace Mochie {
                                 me.ShaderProperty(_SpecCol, "Tint");
                                 if (_Specular.floatValue == 1){
                                     me.ShaderProperty(_SpecStr, "Strength");
-                                    MGUI.ToggleFloat(me, "Light Volume Specularity", _LightVolumeSpecularity, _LightVolumeSpecularityStrength);
                                     MGUI.ToggleSlider(me, "Manual Roughness", _SpecUseRough, _SpecRough);
                                     MGUI.ToggleSlider(me, Tips.specBiasOverride, _SpecBiasOverrideToggle, _SpecBiasOverride);
                                     MGUI.ToggleIntSlider(me, "Stepping", _SharpSpecular, _SharpSpecStr);
@@ -1225,7 +1255,6 @@ namespace Mochie {
                                 }
                                 else if (_Specular.floatValue == 2){
                                     me.ShaderProperty(_AnisoStr, "Strength");
-                                    MGUI.ToggleFloat(me, "Light Volume Specularity", _LightVolumeSpecularity, _LightVolumeSpecularityStrength);
                                     me.ShaderProperty(_RealtimeSpec, Tips.realtimeSpec);
                                     MGUI.ToggleIntSlider(me, "Stepping", _SharpSpecular, _AnisoSteps);
                                     MGUI.SpaceN1();
@@ -1233,7 +1262,6 @@ namespace Mochie {
                                 else {
                                     me.ShaderProperty(_SpecStr, "GGX Strength");
                                     me.ShaderProperty(_AnisoStr, "Aniso Strength");
-                                    MGUI.ToggleFloat(me, "Light Volume Specularity", _LightVolumeSpecularity, _LightVolumeSpecularityStrength);
                                     me.ShaderProperty(_RealtimeSpec, Tips.realtimeSpec);
                                     me.ShaderProperty(_ManualSpecBright, Tips.manualSpecBright);
                                     me.ShaderProperty(_SharpSpecular, "Stepping");
@@ -1459,6 +1487,19 @@ namespace Mochie {
                             });
                         });
                     };
+
+                    // Light volumes
+                    if (Foldouts.DoFoldout(foldouts, mat, me, _LightVolumesToggle, "Light Volumes", Foldouts.Style.ThinToggle)) {
+                        MGUI.ToggleGroup(_LightVolumesToggle.floatValue == 0);
+                        MGUI.PropertyGroupParent(() => {
+                            MGUI.PropertyGroup(() => {
+                                me.ShaderProperty(_LightVolumeStrength, "Strength");
+                                MGUI.ToggleFloat(me, Tips.lightVolumeSpecText, _LightVolumeSpecularity, _LightVolumeSpecularityStrength);
+                                me.ShaderProperty(_LightVolumeBias, Tips.lightVolumeBiasText);
+                            });
+                        });
+                        MGUI.ToggleGroupEnd();
+                    }
                     MGUI.Space6();
                 }
             }

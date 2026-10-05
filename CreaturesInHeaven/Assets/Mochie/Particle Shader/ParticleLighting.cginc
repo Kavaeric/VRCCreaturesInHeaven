@@ -1,28 +1,45 @@
 #ifndef PARTICLE_LIGHTING_INCLUDED
 #define PARTICLE_LIGHTING_INCLUDED
 
-float3 GetSH(v2f i, InputData id){
+float3 GetUnitySH(float3 normal){
+    #if defined(BAKERY_SHNONLINEAR)
+        float3 SH = max(0, ShadeSHNL(normal));
+    #else
+        float3 SH = max(0, ShadeSH9(float4(normal, 1)));
+    #endif
+    return lerp(1, SH, _SphericalHarmonics);
+}
+
+float3 GetSH(v2f i, InputData id, float3 viewDir){
     [branch]
-    if (_UdonLightVolumeEnabled == 1 && _LightVolumes != 0){
-        LightVolumeSH(i.worldPos, lightVolumeL0, lightVolumeL1r, lightVolumeL1g, lightVolumeL1b);
-        return LightVolumeEvaluate(id.normal, lightVolumeL0, lightVolumeL1r, lightVolumeL1g, lightVolumeL1b) * _LightVolumeStrength;
+    if (_UdonLightVolumeEnabled == 1 && _LightVolumesToggle == 1){
+        LightVolumeSHSpecular(i.worldPos, lightVolumeL0, lightVolumeL1r, lightVolumeL1g, lightVolumeL1b, lvSpec, id.albedo, 1-id.roughness, id.metallic, id.normal, viewDir, i.normal*_LightVolumeBias, 1);
+        [branch]
+        if (_LightVolumeStrength < 1){
+            float3 lvSH = LightVolumeEvaluate(id.normal, lightVolumeL0, lightVolumeL1r, lightVolumeL1g, lightVolumeL1b);
+            float3 unitySH = GetUnitySH(id.normal);
+            return lerp(unitySH, lvSH, _LightVolumeStrength);
+        }
+        else {
+            return LightVolumeEvaluate(id.normal, lightVolumeL0, lightVolumeL1r, lightVolumeL1g, lightVolumeL1b);
+        }
     }
     else {
-        return max(0, ShadeSH9(float4(id.normal, 1)));
+        return GetUnitySH(id.normal);
     }
 }
 
-float3 GetRealtimeIndirectLighting(v2f i, InputData id){
+float3 GetRealtimeIndirectLighting(v2f i, InputData id, float3 viewDir){
     float3 indirectCol = 0;
     #if UNITY_LIGHT_PROBE_PROXY_VOLUME
         if (unity_ProbeVolumeParams.x == 1){
             indirectCol = max(0, SHEvalLinearL0L1_SampleProbeVolume(float4(id.normal, 1), i.worldPos));
         }
         else {
-            indirectCol = GetSH(i, id);
+            indirectCol = GetSH(i, id, viewDir);
         }
     #else
-        indirectCol = GetSH(i, id);
+        indirectCol = GetSH(i, id, viewDir);
     #endif
     return indirectCol;
 }
@@ -88,7 +105,7 @@ void InitializeLightingData(v2f i, InputData id, inout LightingData ld, float at
     bool isRealtime = any(_WorldSpaceLightPos0.xyz);
 
     float3 directCol = (_LightColor0 * atten * NdotL) + GetVertexLightColor(id, i);
-    float3 indirectCol = GetRealtimeIndirectLighting(i, id);
+    float3 indirectCol = GetRealtimeIndirectLighting(i, id, viewDir) * id.occlusion;
 
     ld.lightCol = (indirectCol + directCol) * omr;
     ld.directCol = directCol;

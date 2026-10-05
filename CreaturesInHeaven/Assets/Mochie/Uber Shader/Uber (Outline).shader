@@ -201,7 +201,6 @@ Shader "Mochie/Uber (Outline)" {
         // REFLECTIONS
         [Enum(Off,0, Environment,1, Cubemap,2)]_Reflections("en3", Int) = 0
         _ReflCube("tex", CUBE) = "white" {}
-        [ToggleUI]_ReflCubeFallback("tog", Int) = 0
         _ReflCol("col", Color) = (1,1,1,1)
         _ReflectionStr("fl", Float) = 1
         [ToggleUI]_ReflUseRough("tog", Int) = 0
@@ -221,8 +220,6 @@ Shader "Mochie/Uber (Outline)" {
         [ToggleUI]_FresnelToggle("tog", Int) = 1
         _FresnelStrength("fl", Float) = 1
         [ToggleUI]_LitCubemap("tog", Int) = 0
-        [ToggleUI]_LightVolumeSpecularity("tog", Int) = 0
-        _LightVolumeSpecularityStrength("fl", Float) = 1
         
         // SPECULAR
         [Enum(Off,0, GGX,1, Anisotropic,2, Combined,3)]_Specular("en4", Int) = 0
@@ -467,7 +464,6 @@ Shader "Mochie/Uber (Outline)" {
         //----------------------------
         // OUTLINE
         //----------------------------
-        [ToggleUI]_OutlineToggle("tog", Int) = 0
         [ToggleUI]_StencilToggle("tog", Int) = 0
         [ToggleUI]_ApplyOutlineLighting("tog", Int) = 0
         [ToggleUI]_ApplyOutlineEmiss("tog", Int) = 0
@@ -513,6 +509,15 @@ Shader "Mochie/Uber (Outline)" {
         _VertexRoundingMask("tex", 2D) = "white" {}
         _VertexRotation("vec", Vector) = (0,0,0,0)
         _VertexPosition("vec", Vector) = (0,0,0,0)
+
+        //----------------------------
+        // LIGHT VOLUMES
+        //----------------------------
+        [ToggleUI]_LightVolumesToggle("Light Volume Toggle", Int) = 1
+        _LightVolumeStrength("Light Volume Strength", Range(0,1)) = 1
+        [ToggleUI]_LightVolumeSpecularity("Light Volume Specularity", Int) = 0
+        _LightVolumeSpecularityStrength("Light Volume Specularity Strength", Float) = 1
+        _LightVolumeBias("Light Volume Bias", Float) = 0
 
         //----------------------------
         // AUDIO LINK
@@ -736,7 +741,7 @@ Shader "Mochie/Uber (Outline)" {
             #pragma fragment frag
             #pragma shader_feature_local _SHADING_ON
             #pragma shader_feature_local _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
-            #pragma shader_feature_local _ _CUBEMAP_ON _COMBINED_CUBEMAP_ON
+            #pragma shader_feature_local _ _CUBEMAP_ON _CUBEMAP_COMBINED_ON
             #pragma shader_feature_local _ _PACKED_WORKFLOW_ON _SPECULAR_WORKFLOW_ON
             #pragma shader_feature_local _ _SPECULAR_ANISO_ON _SPECULAR_COMBINED_ON
             #pragma shader_feature_local _CUBEMAP_REFLECTIONS_ON
@@ -802,7 +807,7 @@ Shader "Mochie/Uber (Outline)" {
             #pragma fragment frag
             #pragma shader_feature_local _SHADING_ON
             #pragma shader_feature_local _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
-            #pragma shader_feature_local _ _CUBEMAP_ON _COMBINED_CUBEMAP_ON
+            #pragma shader_feature_local _ _CUBEMAP_ON _CUBEMAP_COMBINED_ON
             #pragma shader_feature_local _ _PACKED_WORKFLOW_ON _SPECULAR_WORKFLOW_ON
             #pragma shader_feature_local _ _SPECULAR_ANISO_ON _SPECULAR_COMBINED_ON
             #pragma shader_feature_local _REFLECTIONS_ON
@@ -856,7 +861,7 @@ Shader "Mochie/Uber (Outline)" {
             #pragma fragment frag
             #pragma shader_feature_local _SHADING_ON
             #pragma shader_feature_local _ _ALPHATEST_ON _ALPHABLEND_ON _ALPHAPREMULTIPLY_ON
-            #pragma shader_feature_local _ _CUBEMAP_ON _COMBINED_CUBEMAP_ON
+            #pragma shader_feature_local _ _CUBEMAP_ON _CUBEMAP_COMBINED_ON
             #pragma shader_feature_local _ _PACKED_WORKFLOW_ON _SPECULAR_WORKFLOW_ON
             #pragma shader_feature_local _ _SPECULAR_ANISO_ON _SPECULAR_COMBINED_ON
             #pragma shader_feature_local _CUBEMAP_REFLECTIONS_ON

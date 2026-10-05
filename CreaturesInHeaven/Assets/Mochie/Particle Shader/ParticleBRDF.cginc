@@ -42,9 +42,9 @@ void CalculateBRDF(v2f i, InputData id, inout LightingData ld){
         float grazingTerm = saturate((1-id.roughness) + (1-ld.omr));
         float3 fresnel = FresnelLerp(specularTint, grazingTerm, NdotV);
         float horizon = min(1 + dot(reflDir, id.normal), 1);
-        float3 reflAdjust = fresnel * surfaceReduction * horizon * horizon;
+        float3 reflAdjust = fresnel * surfaceReduction * horizon * horizon * id.occlusion;
         float3 reflCol = GetEnvironmentReflections(reflDir, i.worldPos, id.roughness) * _ReflectionStrength;
-        ld.reflectionCol += (reflCol * reflAdjust);
+        ld.reflectionCol = reflCol * reflAdjust;
     #endif
 
     #if defined(_SPECULAR_HIGHLIGHTS_ON)
@@ -57,14 +57,15 @@ void CalculateBRDF(v2f i, InputData id, inout LightingData ld){
             float D = GGXTerm(NdotH, roughSq);
             float specularTerm = V * D * UNITY_PI;
             ld.specHighlightCol = ld.directCol * fresnelTerm * specularTerm * _SpecularHighlightStrength;
+            if (_SharpHighlights == 1)
+                ld.specHighlightCol = floor(ld.specHighlightCol * _SharpHighlightSteps) / _SharpHighlightSteps;
         }
     #endif
 
     #if defined(UNITY_PASS_FORWARDBASE)
-        [branch]
-        if (_UdonLightVolumeEnabled == 1 && _LightVolumeSpecularity == 1 && _LightVolumeSpecularityStrength > 0){
-            ld.lightVolumeSpecularity = LightVolumeSpecularDominant(id.albedo, 1-id.roughness, id.metallic, id.normal, i.worldPos, lightVolumeL0, lightVolumeL1r, lightVolumeL1g, lightVolumeL1b) * _LightVolumeSpecularityStrength;
-        }
+        if (_UdonLightVolumeEnabled == 0 || _LightVolumesToggle == 0 || _LightVolumeSpecularity == 0)
+            lvSpec = 0;
+        ld.lightVolumeSpecularity = lvSpec * _LightVolumeSpecularityStrength;
     #endif
 }
 

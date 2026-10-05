@@ -176,8 +176,9 @@ namespace Mochie.ShaderUpgrader
                 default:
                     #if MOCHIE_DEV
                     throw new ArgumentException($"Unsupported property type {PropertyType}. Failed when running {GetType().Name} ({TargetPropertyName})");
-                    #endif
+                    #else
                     break;
+                    #endif
             }
         }
     }

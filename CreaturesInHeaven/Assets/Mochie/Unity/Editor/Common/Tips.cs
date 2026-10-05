@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 using UnityEditor;
 
@@ -26,7 +26,7 @@ namespace Mochie {
         public static GUIContent smoothnessModeText = new GUIContent("Smoothness Mode", "Use smoothness maps/values instead of roughness.");
         public static GUIContent swizzleText = new GUIContent("Swizzle", "Which two axis should be used as UVs for sampling textures");
         public static GUIContent texCoordSpaceText = new GUIContent("Texture Coordinate Space", "UV:\nUses the regular UVs baked into the mesh data.\n\nWorld:\nUses the world space coordinates of the mesh as UVs");
-        public static GUIContent workflowText = new GUIContent("Workflow", "Separated:\nAll textures are separate and sampled individually. Samples occlusion from the red channel, roughness from the green channel, metallic from the blue channel, and height from the alpha channel.\n\nPacked:\nPBR textures are packed into a single texture sample to improve performance and file size.");
+        public static GUIContent workflowText = new GUIContent("Workflow", "Separated:\nAll textures are separate and sampled individually. Samples occlusion from the red channel, roughness from the green channel, metallic from the blue channel, and height from the alpha channel.\n\nPacked:\nPBR textures are packed into a single texture sample to improve performance and file size.\n\nSpecular:\nUses a specular map workflow to define specular reflection color/tint and smoothness/roughness instead of metallic.");
         public static GUIContent packedHeightText = new GUIContent("Packed Height", "Enable height mapping utilizing whichever channel is selected from the packed texture.");
         public static GUIContent defaultSamplerText = new GUIContent("Primary Wrap/Filter Settings", "The import settings of this texture will determine the wrap mode and filtering settings used across all textures other than those in the detail textures section.");
         public static GUIContent defaultDetailSamplerText = new GUIContent("Detail Wrap/Filter Settings", "The import settings of this texture will determine the wrap mode and filtering settings used for the textures in the detail textures section.");
@@ -39,10 +39,14 @@ namespace Mochie {
         public static GUIContent colorGradingLUTText = new GUIContent("Custom LUT", "Custom LUT for color grading.");
         public static GUIContent splatHeightText = new GUIContent("Height Mapping", "Enables the use of height-based features including Parallax Occlusion, Layer Blending, and Puddles.");
         public static GUIContent flipBackfaceNormalsText = new GUIContent("Flip Normals on Backfaces", "This both causes and fixes issues with backfaces appearing black when lightmapped. It appears to be random which way it goes. We love Unity.");
-        public static GUIContent lightVolumeSpecText = new GUIContent("Light Volume Highlights", "Specular highlights derived from VRC Light Volumes.");
-        public static GUIContent lightVolumeBiasText = new GUIContent("Light Volume Bias", "Offsets the sampling position of the light volume to help avoid light leaking.");
-        public static GUIContent horizonAdjustmentText = new GUIContent("Horizon Adjustment", "Adjusts the strength of the effect at sharper viewing angles to avoid artifacts");
-        
+        public static GUIContent lightVolumeSpecText = new GUIContent("Specular Highlights", "Specular highlights derived from VRC Light Volumes.");
+        public static GUIContent lightVolumeBiasText = new GUIContent("Bias", "Offsets the sampling position of the light volume to help avoid light leaking.");
+        public static GUIContent horizonAdjustmentText = new GUIContent("Horizon Adjustment", "Adjusts the strength of the effect at sharper viewing angles to avoid artifacts.");
+        public static GUIContent hueModeText = new GUIContent("Hue Mode", "HSV:\nStandard hue shift model.\n\nOklab:\nA more subtle, less saturated hue shift.");
+        public static GUIContent additiveLightVolumeText = new GUIContent("Additive Volumes", "Enables additive light volumes. See Light Volumes documentation for more info.");
+        public static GUIContent heightFalloffText = new GUIContent("Height Falloff", "Fades the effect out based on distance. This can help with performance in larger scale environments.");
+        public static GUIContent parallaxFalloffText = new GUIContent("Parallax Falloff", "Fades the effect out based on distance. This can help with performance in larger scale environments.");
+
         // Standard
         public static GUIContent standWorkflow = new GUIContent("Workflow", "Standard:\nDefault packing mode of visually separated texture slots for PBR maps, uses MAHS format.\n\nPacked: \nModular packing mode that combines all PBR texture slots into one and allows channel selection.");
         public static GUIContent standBlendMode = new GUIContent("Blending Mode", "Opaque:\nDefault blending mode, has no transparency support.\n\nCutout:\nPixels outside the alpha threshold will be discarded and not rendered.\n\nFade:\nCreates a smoothly blended transparency that takes all alpha values from 0-1 into account when determining opacity.\n\nTransparent:\nFunctions similarily to Fade, but maintains reflections and specular behavior on transparent areas (ie. glass).");
@@ -116,6 +120,7 @@ namespace Mochie {
         public static GUIContent mirrorNormalSwizzleText = new GUIContent("Normal Swizzle", "Determines the axis of offset when applying the normal maps to mirror based reflections. If reflections look broken or incorrect, try each of these options to see which matches the orientation of your surface.");
         public static GUIContent ignoreRealtimeGIText = new GUIContent("Ignore Realtime GI", "When enabled this material will ignore Enlighten realtime GI.");
         public static GUIContent monoTintText = new GUIContent("Mono Tint", "Forces all colors to be a similar shade, varying only in brightness and saturation");
+        public static GUIContent shadingModelText = new GUIContent("Shading Model", "Unity Standard:\nDefault unity standard shading style.\n\nGoogle Filament:\nA shading model developed by Google, primarily characterized by its handling of specular occlusion, and the less intense fresnel in its specular reflections.");
         
         // Uber
         public static GUIContent renderModeLabel = new GUIContent("Shading", "Enables or disables shading. If you aren't using any shading features, disabling this can provide a huge performance boost");
@@ -226,6 +231,8 @@ namespace Mochie {
         public static GUIContent foamNoiseTexStrength = new GUIContent("Edge Noise", "How strongly the noise texture should affect edge foam.");
         public static GUIContent causticsFade = new GUIContent("Depth Fade", "Determines how strongly caustics will fade out at greater depths.");
         public static GUIContent causticsSurfaceFade = new GUIContent("Surface Fade", "Determines how strongly caustics will fade out close to the surface.");
+        public static GUIContent causticsRotation = new GUIContent("Rotation", "Rotates the caustics projection in 3D space.");
+        public static GUIContent causticsRotateWithLight = new GUIContent("Rotate With Light", "Rotates the caustics projection to align with the directional light vector in the scene. If no directional light is present, falls back to the manual rotation setting.");
         public static GUIContent turbulence = new GUIContent("Strength", "Adds variation to the height of waves.");
         public static GUIContent blendNoise = new GUIContent("Blend Noise", "Each normal map (and some other textures) are sampled twice with different uvs. This texture will determine the pattern for blending between the two samples.");
         public static GUIContent detailMode = new GUIContent("Decal Mode", "Uses the alpha and UVs of the decal base color for blending and sampling these textures.");
@@ -240,7 +247,7 @@ namespace Mochie {
         // Taken
         public static GUIContent gradientRestriction = new GUIContent("Gradient Masking", "Masks the rim effect inside the gradient, so it will only be visible where the gradient is.");
         public static GUIContent emissionGradRestrict = new GUIContent("Gradient Masking", "Masks the emission inside the gradient, so it will only be visible where the gradient is.");
-        public static GUIContent restrictionMask = new GUIContent("Gradient Exemption Mask", "White areas will be exempt from the gradient masking.");
+        public static GUIContent restrictionMask = new GUIContent("Gradient Exemption Mask", "Black areas will be exempt from the gradient masking.");
         public static GUIContent gradientAxis = new GUIContent("Axis", "The direction the gradient will be applied. Y will come from below, Z will come from the front or behind, and X will come from the left or right. These directions are based on the mesh root position.");
         public static GUIContent endPos = new GUIContent("End Position", "How far from the start position the gradient will reach.");
         public static GUIContent startPos = new GUIContent("Start Position", "The position on the chosen axis that the gradient will start, measured by the distance from the mesh origin.");

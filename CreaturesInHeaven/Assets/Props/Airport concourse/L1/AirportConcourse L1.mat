@@ -14,6 +14,7 @@ Material:
   m_ValidKeywords:
   - BAKERY_LMSPEC
   - BAKERY_MONOSH
+  - _ALPHATEST_ON
   - _BICUBIC_SAMPLING_ON
   - _NORMALMAP_ON
   - _REFLECTIONS_ON
@@ -21,9 +22,9 @@ Material:
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 1
-  m_CustomRenderQueue: 2000
+  m_CustomRenderQueue: 2450
   stringTagMap:
-    RenderType: Opaque
+    RenderType: TransparentCutout
   disabledShaderPasses:
   - ALWAYS
   m_LockedProperties: _UVMainRotation
@@ -31,7 +32,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _AlphaMask:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: dbe236fa7c084534db94454e2286b4d7, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _AreaLitOcclusion:
@@ -217,8 +218,8 @@ Material:
     - _AdditiveLightVolumesToggle: 1
     - _AlphaMaskChannel: 0
     - _AlphaMaskOpacity: 1
-    - _AlphaSource: 0
-    - _AlphaToMask: 0
+    - _AlphaSource: 1
+    - _AlphaToMask: 1
     - _ApplyHeightOffset: 0
     - _AreaLitOcclusionUVSet: 0
     - _AreaLitRoughnessMultiplier: 1
@@ -235,7 +236,7 @@ Material:
     - _BakeryLMSpecStrength: 0.5
     - _BakeryMode: 3
     - _BicubicSampling: 1
-    - _BlendMode: 0
+    - _BlendMode: 1
     - _Brightness: 1
     - _BrightnessDet: 1
     - _BrightnessEmiss: 1

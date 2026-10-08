@@ -14,7 +14,6 @@ Material:
   m_ValidKeywords:
   - BAKERY_LMSPEC
   - BAKERY_MONOSH
-  - _BICUBIC_SAMPLING_ON
   - _NORMALMAP_ON
   - _REFLECTIONS_ON
   - _WORKFLOW_PACKED_ON
@@ -225,14 +224,14 @@ Material:
     - _BAKERY_SHNONLINEAR: 0
     - _BakeryLMSpecStrength: 0.5
     - _BakeryMode: 3
-    - _BicubicSampling: 1
+    - _BicubicSampling: 0
     - _BlendMode: 0
     - _Brightness: 1
     - _BrightnessDet: 1
     - _BrightnessEmiss: 1
     - _BrightnessPost: 1
     - _ColorGradingLUTStrength: 1
-    - _ContactHardening: 0.5
+    - _ContactHardening: 0
     - _Contrast: 1
     - _ContrastDet: 1
     - _ContrastEmiss: 1

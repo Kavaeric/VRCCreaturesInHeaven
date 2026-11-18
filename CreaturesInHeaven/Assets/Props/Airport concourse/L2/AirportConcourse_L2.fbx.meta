@@ -17,6 +17,11 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: Glass Arch
+    second: {fileID: 2100000, guid: a39b10f4775d68648a1c4c8eaf0b69de, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: P6 Concourse MSDF Emissive
     second: {fileID: 2100000, guid: ebf6516cce781974b8934024eeaecfb0, type: 2}
   materials:
@@ -49,7 +54,7 @@ ModelImporter:
     - '#BAKERY{"meshName":["lod2 ceiling","glazing structure.002","floor.003","floor
       trim.001","walls","TerminalSeating_L2.001","TerminalSeating_L2","lod2 ceiling
       cap","wc","BoardingDesk_L2.005","BoardingDesk_L2.004","BoardingDesk_L2.003","BoardingDesk_L2.002","BoardingDesk_L2.001","BoardingDesk_L2","L2
-      bins side.001","L2 bins side","L2 bins front"],"padding":[3,26,7,40,9,57,45,22,37,134,134,134,134,134,134,256,256,172],"unwrapper":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]}'
+      bins side.001","L2 bins side","L2 bins front","L2_WC","walkway.001"],"padding":[3,26,6,40,9,57,45,22,37,134,134,134,134,134,134,256,256,172,16,24],"unwrapper":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]}'
     clipAnimations: []
     isReadable: 0
   meshes:

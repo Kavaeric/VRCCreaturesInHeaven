@@ -25,6 +25,7 @@ Material:
     RenderType: Opaque
   disabledShaderPasses:
   - ALWAYS
+  - GRABPASS
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
@@ -229,6 +230,7 @@ Material:
     - _DebugFlags: 0
     m_Floats:
     - _ACES: 0
+    - _AdditiveLightVolumeStrength: 1
     - _AdditiveLightVolumesToggle: 1
     - _AlphaMaskChannel: 0
     - _AlphaMaskOpacity: 1
@@ -314,7 +316,10 @@ Material:
     - _Glossiness: 0
     - _GlossyReflections: 1
     - _HeightChannel: 3
+    - _HeightFalloff: 0
     - _HeightMaskChannel: 0
+    - _HeightMaxRange: 50
+    - _HeightMinRange: 25
     - _HeightOffset: 0
     - _HeightSteps: 8
     - _HeightStrength: 0.02
@@ -333,6 +338,8 @@ Material:
     - _LightVolumeBias: 0
     - _LightVolumeSpecularity: 0
     - _LightVolumeSpecularityStrength: 1
+    - _LightVolumeStrength: 1
+    - _LightVolumesToggle: 1
     - _LightmapEmissionScale: 1
     - _LightmapSpecular: 1
     - _LightmapSpecularMaxSmoothness: 0.9
@@ -401,6 +408,7 @@ Material:
     - _SampleMetallic: 0
     - _SampleOcclusion: 0
     - _SampleRoughness: 0
+    - _SampleSpecular: 0
     - _Saturation: 1
     - _SaturationDet: 1
     - _SaturationEmiss: 1
@@ -412,6 +420,7 @@ Material:
     - _ScatterPow: 1
     - _ScatterShadow: 1
     - _ShadingModel: 1
+    - _SmoothnessSource: 0
     - _SmoothnessTextureChannel: 0
     - _SmoothnessToggle: 0
     - _SpecularHighlightStrength: 1
@@ -495,6 +504,7 @@ Material:
     - _RainScale: {r: 1, g: 1, b: 0, a: 0}
     - _RippleScale: {r: 40, g: 40, b: 0, a: 0}
     - _ScatterCol: {r: 1, g: 1, b: 1, a: 1}
+    - _SpecCol: {r: 1, g: 1, b: 1, a: 1}
     - _SpecularOcclusionTint: {r: 1, g: 1, b: 1, a: 1}
     - _UVAlphaMaskScroll: {r: 0, g: 0, b: 0, a: 0}
     - _UVDetailMaskScroll: {r: 0, g: 0, b: 0, a: 0}

@@ -7,32 +7,39 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: texture_01
+  m_Name: AirportExterior
   m_Shader: {fileID: 4800000, guid: cc6f91d2b31e3e4408db75c7c6a5f034, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
+  - BAKERY_LMSPEC
+  - BAKERY_MONOSH
   - _BICUBIC_SAMPLING_ON
+  - _NORMALMAP_ON
   - _REFLECTIONS_ON
-  - _SPECULAR_HIGHLIGHTS_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
+  m_DoubleSidedGI: 1
   m_CustomRenderQueue: 2000
   stringTagMap:
     RenderType: Opaque
   disabledShaderPasses:
   - ALWAYS
+  - GRABPASS
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
     - _AlphaMask:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: dbe236fa7c084534db94454e2286b4d7, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _AreaLitOcclusion:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -50,6 +57,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     - _DefaultSampler:
         m_Texture: {fileID: 2800000, guid: b5f34bbf55503c942821a982c6756e38, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailAlbedoMap:
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailMainTex:
@@ -129,11 +140,15 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 2dd51310faea5e24396511abd48d97aa, type: 3}
+        m_Texture: {fileID: 2800000, guid: cd00bb3fd2458824790fb9e7f9913ecf, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MetallicGlossMap:
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 9e71e9abfbd1fb845946829296b4fd54, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NoiseTexSSR:
@@ -141,7 +156,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NormalMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: ae992590073c0bd42a02cfcf29bfcd99, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
@@ -149,6 +164,10 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _PackedMap:
+        m_Texture: {fileID: 2800000, guid: 77b0e9e1638f07d46a9438c0ac55acdc, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ParallaxMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -177,6 +196,10 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _RoughnessMap:
+        m_Texture: {fileID: 2800000, guid: 67d8fd3490b1be34a9cec5bf6e9f94b9, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SpecGlossMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -196,10 +219,11 @@ Material:
     - _DebugFlags: 0
     m_Floats:
     - _ACES: 0
+    - _AdditiveLightVolumeStrength: 1
     - _AdditiveLightVolumesToggle: 1
     - _AlphaMaskChannel: 0
     - _AlphaMaskOpacity: 1
-    - _AlphaSource: 0
+    - _AlphaSource: 1
     - _AlphaToMask: 0
     - _ApplyHeightOffset: 0
     - _AreaLitOcclusionUVSet: 0
@@ -212,16 +236,17 @@ Material:
     - _AudioLinkEmissionStrength: 1
     - _AudioLinkMax: 1
     - _AudioLinkMin: 0
-    - _BAKERY_LMSPEC: 0
+    - _BAKERY_LMSPEC: 1
     - _BAKERY_SHNONLINEAR: 0
-    - _BakeryLMSpecStrength: 1
-    - _BakeryMode: 0
+    - _BakeryLMSpecStrength: 0.5
+    - _BakeryMode: 3
     - _BicubicSampling: 1
     - _BlendMode: 0
     - _Brightness: 1
     - _BrightnessDet: 1
     - _BrightnessEmiss: 1
     - _BrightnessPost: 1
+    - _BumpScale: 1
     - _ColorGradingLUTStrength: 1
     - _ContactHardening: 0
     - _Contrast: 1
@@ -238,6 +263,7 @@ Material:
     - _DetailMetallicChannel: 2
     - _DetailMetallicMultiplier: 0
     - _DetailMetallicStrength: 0
+    - _DetailNormalMapScale: 1
     - _DetailNormalStrength: 1
     - _DetailOcclusionBlend: 2
     - _DetailOcclusionChannel: 0
@@ -262,8 +288,14 @@ Material:
     - _FresnelToggle: 1
     - _GSAAStrength: 1
     - _GSAAToggle: 0
+    - _GlossMapScale: 1
+    - _Glossiness: 0.5
+    - _GlossyReflections: 1
     - _HeightChannel: 3
+    - _HeightFalloff: 0
     - _HeightMaskChannel: 0
+    - _HeightMaxRange: 50
+    - _HeightMinRange: 25
     - _HeightOffset: 0
     - _HeightSteps: 8
     - _HeightStrength: 0.02
@@ -273,22 +305,26 @@ Material:
     - _HueMode: 0
     - _HuePost: 0
     - _IgnoreRealtimeGI: 0
-    - _IndirectSpecularOcclusionStrength: 0.2
+    - _IndirectSpecularOcclusionStrength: 1
     - _LTCGI: 0
     - _LTCGIRoughness: 1
     - _LTCGISpecularOcclusion: 0
     - _LTCGIStrength: 1
     - _LightVolumeBias: 0
-    - _LightVolumeSpecularity: 0
+    - _LightVolumeSpecularity: 1
     - _LightVolumeSpecularityStrength: 1
+    - _LightVolumeStrength: 1
+    - _LightVolumesToggle: 1
     - _MaterialDebugMode: 0
     - _MaterialResetCheck: 1
     - _MaxHeightSteps: 16
+    - _Metallic: 0
     - _MetallicChannel: 2
-    - _MetallicStrength: 0
+    - _MetallicStrength: 1
     - _MinHeightSteps: 8
     - _MipMapRescaling: 1
     - _MipMapScale: 0.25
+    - _Mode: 0
     - _MonoTint: 0
     - _NormalStrength: 1
     - _OcclusionChannel: 0
@@ -298,6 +334,7 @@ Material:
     - _PackedMetallicStrength: 1
     - _PackedOcclusionStrength: 1
     - _PackedRoughnessStrength: 1
+    - _Parallax: 0.02
     - _PrimarySampleMode: 0
     - _PrimaryWorkflow: 0
     - _PuddleHeightBasedTint: 0
@@ -333,15 +370,16 @@ Material:
     - _RippleSpeed: 18
     - _RippleStrength: 1
     - _RoughnessChannel: 1
-    - _RoughnessStrength: 0.6
+    - _RoughnessStrength: 1
     - _SSREdgeFade: 0.1
     - _SSRHeight: 0.2
     - _SSRStrength: 1
     - _SSRToggle: 0
     - _SampleCustomLUT: 0
-    - _SampleMetallic: 0
+    - _SampleMetallic: 1
     - _SampleOcclusion: 0
-    - _SampleRoughness: 0
+    - _SampleRoughness: 1
+    - _SampleSpecular: 0
     - _Saturation: 1
     - _SaturationDet: 1
     - _SaturationEmiss: 1
@@ -352,10 +390,13 @@ Material:
     - _ScatterIntensity: 1
     - _ScatterPow: 1
     - _ScatterShadow: 1
-    - _ShadingModel: 0
+    - _ShadingModel: 1
+    - _SmoothnessSource: 0
+    - _SmoothnessTextureChannel: 0
     - _SmoothnessToggle: 0
     - _SpecularHighlightStrength: 1
-    - _SpecularHighlightsToggle: 1
+    - _SpecularHighlights: 1
+    - _SpecularHighlightsToggle: 0
     - _SpecularOcclusionBrightness: 20
     - _SpecularOcclusionContrast: 1
     - _SpecularOcclusionHDR: 1
@@ -396,12 +437,13 @@ Material:
     - _UVRippleRotation: 0
     - _UVRippleSet: 0
     - _UVRippleSwizzle: 0
+    - _UVSec: 0
     - _UVVertexMaskRotation: 0
     - _UVVertexMaskSet: 0
     - _UVVertexMaskSwizzle: 0
-    - _UnityFogToggle: 1
+    - _UnityFogToggle: 0
     - _VRSSR: 1
-    - _VertexBaseColor: 0
+    - _VertexBaseColor: 1
     - _VertexManipulationToggle: 0
     - _VertexMaskChannel: 0
     - _WindContribution0: 1
@@ -428,6 +470,7 @@ Material:
     - _RainScale: {r: 1, g: 1, b: 0, a: 0}
     - _RippleScale: {r: 40, g: 40, b: 0, a: 0}
     - _ScatterCol: {r: 1, g: 1, b: 1, a: 1}
+    - _SpecCol: {r: 1, g: 1, b: 1, a: 1}
     - _SpecularOcclusionTint: {r: 1, g: 1, b: 1, a: 1}
     - _UVAlphaMaskScroll: {r: 0, g: 0, b: 0, a: 0}
     - _UVDetailMaskScroll: {r: 0, g: 0, b: 0, a: 0}

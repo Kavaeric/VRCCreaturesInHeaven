@@ -3,7 +3,12 @@ guid: 312c61a48ca6535419aa45ba6ac3d8ed
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: AirportExterior
+    second: {fileID: 2100000, guid: 7ecb0a805d4264b4dac31e4bd846e671, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -31,7 +36,11 @@ ModelImporter:
     animationWrapMode: 0
     extraExposedTransformPaths: []
     extraUserProperties:
-    - '#BAKERY{"meshName":["island terminals","buildings","taxiways","runways","stands"],"padding":[6,2,1,1,1],"unwrapper":[1,1,1,1,1]}'
+    - '#BAKERY{"meshName":["island terminals","buildings","taxiways","runways","stands","runway
+      7R 25L","runway 7L 25R","runway 7C 25C","taxiways.001","runway 7C 25C.001","taxiway
+      islands","pavement","markings taxiways edge line","markings taxiways centreline","markings
+      taxiway hold lines","markings runway 7C 25C","markings road service edge lines","markings
+      road service centreline","markings aircraft stands","apron near","apron"],"padding":[6,2,1,1,2,1,2,1,1,2,1,1,5,7,63,3,9,20,8,1,1],"unwrapper":[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]}'
     clipAnimations: []
     isReadable: 0
   meshes:
